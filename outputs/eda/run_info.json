@@ -1,0 +1,61 @@
+{
+  "input": "data/raw/train_FD001.txt",
+  "input_sha256": "963b5e22825b34d8b21c69e1aeb4af3e647050eb672ee8834ba4b5d91d2de0f8",
+  "python": "3.12.14",
+  "versions": {
+    "cmapss-rul": "0.1.0",
+    "pandas": "2.3.3",
+    "numpy": "2.3.3",
+    "scipy": "1.16.2",
+    "matplotlib": "3.10.6",
+    "seaborn": "0.13.2",
+    "ipykernel": "6.30.1"
+  },
+  "sample_std_ddof": 1,
+  "quantile_interpolation": "linear",
+  "histogram_bins": 20,
+  "test_data_used": false,
+  "observations": 20631,
+  "engines": 100,
+  "example_engine_ids": [
+    87,
+    26,
+    75
+  ],
+  "constant_measurements": [
+    "setting_3",
+    "sensor_1",
+    "sensor_5",
+    "sensor_10",
+    "sensor_16",
+    "sensor_18",
+    "sensor_19"
+  ],
+  "tables": [
+    "constant_engine_counts.csv",
+    "engine_lifetimes.csv",
+    "example_engines.csv",
+    "input_summary.csv",
+    "lifetime_summary.csv",
+    "measurement_summary.csv",
+    "rul_summary.csv",
+    "schema.csv",
+    "sensor_rul_by_engine.csv",
+    "sensor_rul_summary.csv",
+    "sensor_spearman_pooled.csv",
+    "within_engine_variability.csv"
+  ],
+  "figures": [
+    "engine_lifetimes.png",
+    "rul_distribution.png",
+    "sensor_distributions_1.png",
+    "sensor_distributions_2.png",
+    "sensor_distributions_3.png",
+    "sensor_rul_by_engine.png",
+    "sensor_spearman_pooled.png",
+    "sensor_trajectories_1.png",
+    "sensor_trajectories_2.png",
+    "sensor_trajectories_3.png",
+    "settings_distributions.png"
+  ]
+}

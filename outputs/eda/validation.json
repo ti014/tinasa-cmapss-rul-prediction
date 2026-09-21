@@ -1,0 +1,27 @@
+{
+  "status": "passed",
+  "scope": "Local milestone 1 validation on 2026-09-22; not automatically refreshed by notebook execution",
+  "requirements_dev_pip_install": "passed",
+  "pip_check": "passed",
+  "jupyterlab_readiness_http_status": 200,
+  "temporary_jupyterlab_stopped": true,
+  "visual_review": {"png_figures": 11, "drawio_export": true},
+  "executed_code_cells": 8,
+  "repeat_seconds": 14.76,
+  "fresh_kernel": true,
+  "isolated_input_files": [
+    "train_FD001.txt"
+  ],
+  "test_reads_blocked_by_runtime_audit": true,
+  "audit_negative_proof": [
+    "test_FD001.txt",
+    "RUL_FD001.txt"
+  ],
+  "identical_csv_files": 12,
+  "identical_png_files": 11,
+  "raw_sha256_unchanged": true,
+  "pytest": {
+    "passed": 69,
+    "failed": 0
+  }
+}

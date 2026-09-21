@@ -8,23 +8,25 @@ Repository này phục vụ báo cáo cuối kỳ môn Phân tích dữ liệu l
 
 ## Trạng thái
 
-Repository đã có **package kiểm tra dữ liệu FD001 và tạo nhãn train RUL**.
+Repository đã có **package kiểm tra FD001, train RUL và notebook EDA chỉ dùng train đã hoàn thành ở mốc 1**.
 
 Đã có:
 
 - Các file NASA C-MAPSS FD001 nguyên bản và tài liệu mô tả nguồn.
 - Reader, validator và kiểm thử số dòng, số động cơ, schema, khóa, cycle và train RUL.
 - [Data contract](data/CONTRACTS.md), CLI xuất báo cáo JSON và dependency lockfile.
+- [Notebook EDA đã chạy](notebooks/01_fd001_eda.ipynb), 12 bảng CSV,
+  11 hình và [diễn giải kết quả, bằng chứng kiểm tra](outputs/eda/README.md).
 - Danh mục tài liệu tham khảo và hướng dẫn đọc.
 
 Chưa triển khai:
 
-- Pipeline xử lý bằng Pandas và PySpark.
-- Phân tích thống kê và xây dựng đặc trưng (feature engineering).
+- Pipeline ETL Silver/Gold bằng Pandas và PySpark.
+- Thống kê suy luận và xây dựng đặc trưng (feature engineering).
 - Các mô hình RUL và phân tích ARIMA.
 - Dashboard Streamlit và báo cáo LaTeX hoàn chỉnh.
 
-Lệnh cài đặt và kiểm tra dữ liệu có ở phần Bắt đầu. Huấn luyện, đánh giá mô hình và dashboard chưa có entry point.
+Lệnh cài đặt, kiểm tra dữ liệu và mở notebook có ở phần Bắt đầu. Huấn luyện, đánh giá mô hình và dashboard chưa có entry point.
 
 ## Mục tiêu
 
@@ -90,7 +92,7 @@ Phân tích thống kê      Mô hình dự đoán RUL
        và báo cáo LaTeX cuối kỳ
 ```
 
-Pandas được dùng cho EDA, thống kê và chuẩn bị dữ liệu mô hình. PySpark tái hiện quy trình ETL và phục vụ thử nghiệm khả năng mở rộng (scalability benchmark). Bộ dữ liệu gốc chỉ có dung lượng vài MB, vì vậy repository không tuyên bố FD001 tự thân chứng minh khả năng xử lý dữ liệu quy mô lớn.
+Pandas đã được dùng trong notebook EDA và sẽ tiếp tục phục vụ thống kê, chuẩn bị dữ liệu mô hình. PySpark sẽ tái hiện quy trình ETL và phục vụ thử nghiệm khả năng mở rộng (scalability benchmark). Bộ dữ liệu gốc chỉ có dung lượng vài MB, vì vậy repository không tuyên bố FD001 tự thân chứng minh khả năng xử lý dữ liệu quy mô lớn.
 
 ## Phương pháp dự kiến
 
@@ -167,15 +169,15 @@ Dữ liệu nhân bản cho thử nghiệm khả năng mở rộng sử dụng e
 
 Báo cáo không đặt trước một mức điểm mục tiêu. Kết quả âm vẫn hợp lệ nếu quy trình đánh giá được giữ nguyên và các nhóm lỗi được phân tích trung thực.
 
-## Trực quan hóa dự kiến
+## Trực quan hóa
 
-- Phân phối vòng đời động cơ.
-- Tóm tắt mức biến thiên và xu hướng của cảm biến.
-- Quỹ đạo của cảm biến và Health Index theo vòng đời đã chuẩn hóa.
-- RUL thật và RUL dự đoán trên các động cơ validation.
-- Biểu đồ phân tán giá trị dự đoán và phân phối phần dư trên tập test.
-- Phân tích sai số theo động cơ và khoảng RUL.
-- Dashboard Streamlit để xem quỹ đạo và kết quả mô hình của từng động cơ.
+- Phân phối vòng đời động cơ (đã có ở mốc 1).
+- Biến thiên và quỹ đạo sensor theo cycle gốc (đã có ở mốc 1).
+- Dự kiến: quỹ đạo sensor và Health Index theo vòng đời đã chuẩn hóa.
+- Dự kiến: RUL thật và RUL dự đoán trên các động cơ validation.
+- Dự kiến: biểu đồ phân tán giá trị dự đoán và phân phối phần dư trên tập test.
+- Dự kiến: phân tích sai số theo động cơ và khoảng RUL.
+- Dự kiến: dashboard Streamlit để xem quỹ đạo và kết quả mô hình của từng động cơ.
 
 Dashboard có thể minh họa cảnh báo khi RUL dự đoán không quá 30 cycles. Đây không phải ngưỡng bảo trì tối ưu vì FD001 không cung cấp chi phí bảo trì, downtime hoặc intervention records.
 
@@ -189,13 +191,15 @@ Cấu trúc public hiện tại và dự kiến:
 │   ├── raw/                 # FD001 nguyên bản và ghi chú nguồn
 │   └── archive/             # Dữ liệu lưu để đối chiếu, không dùng cho mô hình chính
 ├── references/              # Bibliography, hướng dẫn đọc và các bài báo hiện có
-├── notebooks/               # Notebook EDA và thực nghiệm dự kiến
-├── src/cmapss/              # Reader, validator, train targets và CLI hiện có
-├── tests/                   # Kiểm thử contract, reader, targets và CLI
+├── notebooks/               # Notebook EDA train FD001 đã chạy
+├── src/cmapss/              # data/: contract; eda.py: phân tích; validate.py: CLI
+├── tests/                   # Kiểm thử data contract, CLI và EDA
 ├── outputs/validation/      # Báo cáo kiểm tra dữ liệu hiện có
+├── outputs/eda/             # Bảng, hình, phương pháp và kiểm tra EDA
+├── assets/diagrams/         # Nguồn draw.io và bản xuất SVG
 ├── pyproject.toml           # Package và dependencies trực tiếp
 ├── requirements.txt         # Cài bằng pip: package và thư viện chạy chương trình
-├── requirements-dev.txt     # Thêm thư viện kiểm thử
+├── requirements-dev.txt     # Thư viện notebook và kiểm thử
 ├── uv.lock                  # Phiên bản dependencies đã khóa
 ├── report/                  # Báo cáo LaTeX dự kiến
 ├── app.py                   # Entry point Streamlit dự kiến
@@ -236,7 +240,7 @@ rồi ghi [báo cáo validation](outputs/validation/fd001.json).
 Test labels không được đọc trong luồng này.
 
 [`requirements.txt`](requirements.txt) chứa các thư viện cần để chạy chương
-trình và cài package hiện tại qua `-e .`. Nếu cần phát triển hoặc chạy test,
+trình và cài package hiện tại qua `-e .`. Nếu cần notebook, phát triển hoặc chạy test,
 thay bằng [`requirements-dev.txt`](requirements-dev.txt) ở bước cài đặt.
 
 Luồng code nằm trong `src/cmapss/data/`:
@@ -251,6 +255,30 @@ targets.py       Tạo và kiểm tra train RUL
 Ví dụ: engine train kết thúc tại cycle 200 thì `rul = 200 - cycle`.
 Hàm tạo nhãn từ chối test observations. Xem [data contract](data/CONTRACTS.md)
 để biết các điều kiện và giới hạn kiểm tra.
+
+### Chạy notebook EDA
+
+Sau khi cài `requirements-dev.txt`, mở notebook từ thư mục gốc:
+
+```powershell
+.venv\Scripts\python -m jupyterlab notebooks/01_fd001_eda.ipynb
+```
+
+Chọn kernel Python của `.venv` và **Restart Kernel and Run All Cells**.
+Notebook chỉ phân tích train và tạo lại 12 bảng CSV, 11 hình PNG.
+Các lần kiểm tra dùng kernel mới cho artifact giống nhau trong cùng môi
+trường; toàn bộ suite đạt **69 tests**.
+
+![Quy trình EDA train FD001](assets/diagrams/fd001-eda.svg)
+
+[Nguồn sơ đồ](assets/diagrams/fd001-eda.drawio) ·
+[Phương pháp, kết quả và giới hạn](outputs/eda/README.md)
+
+Ví dụ: median tuổi thọ của 100 train engines là 199 cycles. Sáu sensors hằng
+trên toàn train; `sensor_6` biến thiên toàn tập nhưng hằng trong 38 engines.
+Đây là kết quả mô tả, chưa phải feature selection hoặc kết luận có ý nghĩa
+thống kê. Mốc 2 sẽ thực hiện paired analysis, effect size, bootstrap và hiệu
+chỉnh nhiều kiểm định.
 
 <details>
 <summary>Dành cho phát triển và kiểm tra riêng</summary>

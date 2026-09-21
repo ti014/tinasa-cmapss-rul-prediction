@@ -8,23 +8,25 @@ A reproducible Big Data course project for analyzing multivariate turbofan senso
 
 ## Project Status
 
-This repository now provides a **FD001 data-validation package and train RUL targets**.
+This repository now provides **FD001 data validation, train RUL targets, and a completed train-only EDA notebook (milestone 1)**.
 
 Available now:
 
 - The original NASA C-MAPSS FD001 files and source documentation.
 - Readers, validators, and tests for row counts, engines, schema, keys, cycles, and train RUL.
 - A [data contract](data/CONTRACTS.md), JSON validation CLI, and dependency lockfile.
+- An [executed EDA notebook](notebooks/01_fd001_eda.ipynb), 12 CSV tables,
+  11 figures, and [analysis notes and validation evidence](outputs/eda/README.md).
 - A curated bibliography and reading guide.
 
 Not implemented yet:
 
-- Pandas and PySpark processing pipelines.
-- Statistical analysis and feature engineering.
+- Silver/Gold ETL pipelines in Pandas and PySpark.
+- Inferential statistical analysis and feature engineering.
 - RUL models and ARIMA analysis.
 - Streamlit dashboard and final LaTeX report.
 
-Installation and data-validation commands are available below. Model training, evaluation, and dashboard entry points are not implemented yet.
+Installation, data validation, and notebook instructions are available below. Model training, evaluation, and dashboard entry points are not implemented yet.
 
 ## Objectives
 
@@ -90,7 +92,7 @@ Statistical analysis   RUL prediction models
         and final LaTeX report
 ```
 
-Pandas will be used for exploratory analysis, statistics, and model preparation. PySpark will reproduce the ETL path and support a transparent scalability benchmark. The original dataset is only a few megabytes, so the repository will not claim that FD001 itself demonstrates large-scale data processing.
+Pandas is used in the EDA notebook and will also support statistics and model preparation. PySpark will reproduce the ETL path and support a transparent scalability benchmark. The original dataset is only a few megabytes, so the repository will not claim that FD001 itself demonstrates large-scale data processing.
 
 ## Planned Methodology
 
@@ -167,15 +169,15 @@ Replicated records used in the scalability benchmark will receive remapped engin
 
 No target score is declared in advance. A negative result remains valid if the protocol is preserved and the failure modes are analyzed honestly.
 
-## Planned Visualizations
+## Visualizations
 
-- Engine-life distribution.
-- Sensor variability and trend summaries.
-- Sensor and Health Index trajectories over normalized life.
-- True versus predicted RUL on validation engines.
-- Test-set prediction scatter and residual distributions.
-- Per-engine and RUL-range error analysis.
-- A Streamlit dashboard for inspecting individual engine trajectories and model outputs.
+- Engine-life distribution (completed in milestone 1).
+- Sensor variability and raw-cycle trajectories (completed in milestone 1).
+- Planned: sensor and Health Index trajectories over normalized life.
+- Planned: true versus predicted RUL on validation engines.
+- Planned: test-set prediction scatter and residual distributions.
+- Planned: per-engine and RUL-range error analysis.
+- Planned: a Streamlit dashboard for inspecting individual engine trajectories and model outputs.
 
 An illustrative warning may be shown when predicted RUL is at most 30 cycles. This is not presented as an optimized maintenance threshold because FD001 contains no maintenance costs, downtime, or intervention records.
 
@@ -189,13 +191,15 @@ Current and planned public project structure:
 │   ├── raw/                 # Original FD001 files and provenance notes
 │   └── archive/             # Data retained for comparison, not active modeling
 ├── references/              # Bibliography, reading guide, and available papers
-├── notebooks/               # Planned EDA and experiment notebooks
-├── src/cmapss/              # Readers, validators, train targets, and CLI
-├── tests/                   # Contract, reader, target, and CLI tests
+├── notebooks/               # Executed FD001 train EDA
+├── src/cmapss/              # data/: contracts; eda.py: analysis; validate.py: CLI
+├── tests/                   # Data contract, CLI, and EDA tests
 ├── outputs/validation/      # Data-validation reports
+├── outputs/eda/             # EDA tables, figures, methods, and validation
+├── assets/diagrams/         # Editable draw.io sources and SVG exports
 ├── pyproject.toml           # Package and direct dependencies
 ├── requirements.txt         # Pip installation: local package and runtime libraries
-├── requirements-dev.txt     # Additional test dependencies
+├── requirements-dev.txt     # Notebook and test dependencies
 ├── uv.lock                  # Locked dependency versions
 ├── report/                  # Planned LaTeX report
 ├── app.py                   # Planned Streamlit dashboard entry point
@@ -237,7 +241,7 @@ and writes the [validation report](outputs/validation/fd001.json).
 It does not read test labels.
 
 [`requirements.txt`](requirements.txt) includes runtime dependencies and installs
-the local package through `-e .`. For development or tests, install
+the local package through `-e .`. For notebooks, development, or tests, install
 [`requirements-dev.txt`](requirements-dev.txt) instead.
 
 The data flow lives in `src/cmapss/data/`:
@@ -252,6 +256,30 @@ targets.py       Create and validate train RUL
 For example, a train engine ending at cycle 200 has `rul = 200 - cycle`.
 The target function rejects test observations. See the [data contract](data/CONTRACTS.md)
 for conditions and validation limits.
+
+### Run the EDA notebook
+
+After installing `requirements-dev.txt`, open the notebook from the repository root:
+
+```powershell
+.venv\Scripts\python -m jupyterlab notebooks/01_fd001_eda.ipynb
+```
+
+Select the `.venv` Python kernel and **Restart Kernel and Run All Cells**.
+This analyzes only train and recreates 12 CSV tables and 11 PNG figures.
+The validated runs used fresh kernels and produced identical artifacts in the
+same environment; the full test suite passed **69 tests**.
+
+![FD001 train EDA workflow](assets/diagrams/fd001-eda.svg)
+
+[Editable diagram](assets/diagrams/fd001-eda.drawio) ·
+[Methods, findings, and limits](outputs/eda/README.md)
+
+For example, the 100 train engines have a median lifetime of 199 cycles.
+Six sensors are globally constant; `sensor_6` varies globally but is constant
+within 38 engines. These are descriptive findings, not model feature selection
+or inferential significance claims. Milestone 2 will address paired analysis,
+effect sizes, bootstrap, and multiple testing.
 
 <details>
 <summary>Development and optional checks</summary>

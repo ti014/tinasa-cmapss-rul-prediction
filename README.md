@@ -284,6 +284,9 @@ effect sizes, bootstrap, and multiple testing.
 <details>
 <summary>Development and optional checks</summary>
 
+- Security update: pytest 9.0.3, JupyterLab 4.5.10, and nbconvert 7.17.1.
+  Reinstall `requirements-dev.txt` for an existing environment. See the
+  [dependency patch and regression evidence](outputs/validation/dependencies.md).
 - After installing `requirements-dev.txt`, run `.venv\Scripts\python -m pytest`.
 - Add `--check-test-labels` to the main command for a separate label integrity
   check. It does not join labels or compute model metrics.

@@ -1,0 +1,6 @@
+# Normalize project text files while preserving source datasets byte-for-byte.
+* text=auto
+
+data/raw/*.txt -text
+*.pdf binary
+*.png binary

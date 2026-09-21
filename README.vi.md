@@ -8,12 +8,13 @@ Repository này phục vụ báo cáo cuối kỳ môn Phân tích dữ liệu l
 
 ## Trạng thái
 
-Repository hiện ở **giai đoạn lập kế hoạch và chuẩn bị dữ liệu**.
+Repository đã có **package kiểm tra dữ liệu FD001 và tạo nhãn train RUL**.
 
 Đã có:
 
 - Các file NASA C-MAPSS FD001 nguyên bản và tài liệu mô tả nguồn.
-- Kết quả kiểm tra số dòng, số động cơ, schema, khóa và tính liên tục của cycle.
+- Reader, validator và kiểm thử số dòng, số động cơ, schema, khóa, cycle và train RUL.
+- [Data contract](data/CONTRACTS.md), CLI xuất báo cáo JSON và dependency lockfile.
 - Danh mục tài liệu tham khảo và hướng dẫn đọc.
 
 Chưa triển khai:
@@ -23,7 +24,7 @@ Chưa triển khai:
 - Các mô hình RUL và phân tích ARIMA.
 - Dashboard Streamlit và báo cáo LaTeX hoàn chỉnh.
 
-Các lệnh cài đặt, huấn luyện, đánh giá và chạy dashboard chỉ được bổ sung sau khi code và dependency manifest tương ứng tồn tại.
+Lệnh cài đặt và kiểm tra dữ liệu có ở phần Bắt đầu. Huấn luyện, đánh giá mô hình và dashboard chưa có entry point.
 
 ## Mục tiêu
 
@@ -189,9 +190,13 @@ Cấu trúc public hiện tại và dự kiến:
 │   └── archive/             # Dữ liệu lưu để đối chiếu, không dùng cho mô hình chính
 ├── references/              # Bibliography, hướng dẫn đọc và các bài báo hiện có
 ├── notebooks/               # Notebook EDA và thực nghiệm dự kiến
-├── src/                     # Module pipeline và xây dựng mô hình dự kiến
-├── tests/                   # Kiểm thử data contract và pipeline dự kiến
-├── outputs/                 # Metric, hình và artifact dự kiến
+├── src/cmapss/              # Reader, validator, train targets và CLI hiện có
+├── tests/                   # Kiểm thử contract, reader, targets và CLI
+├── outputs/validation/      # Báo cáo kiểm tra dữ liệu hiện có
+├── pyproject.toml           # Package và dependencies trực tiếp
+├── requirements.txt         # Cài bằng pip: package và thư viện chạy chương trình
+├── requirements-dev.txt     # Thêm thư viện kiểm thử
+├── uv.lock                  # Phiên bản dependencies đã khóa
 ├── report/                  # Báo cáo LaTeX dự kiến
 ├── app.py                   # Entry point Streamlit dự kiến
 ├── README.md                # Tài liệu tiếng Anh
@@ -213,16 +218,66 @@ Khi hoàn thành, repository sẽ cung cấp một quy trình được ghi chép
 
 ## Bắt đầu
 
-Pipeline thực thi chưa được triển khai. Trước khi có dependency manifest và runnable entry points, đây là một repository nghiên cứu đang phát triển, chưa phải package có thể chạy ngay.
+Cần Python 3.12. Từ thư mục gốc, tạo môi trường và cài dependencies một lần:
 
-Khi bắt đầu triển khai, phần này sẽ mô tả:
+```powershell
+python -m venv .venv
+.venv\Scripts\python -m pip install -r requirements.txt
+```
 
-1. Phiên bản Python và Java được hỗ trợ.
-2. Cách tạo môi trường và cài dependencies.
-3. Lệnh kiểm tra dữ liệu và chạy pipeline.
-4. Lệnh huấn luyện và đánh giá cuối.
-5. Cách khởi động dashboard Streamlit.
-6. Cách biên dịch báo cáo bằng XeLaTeX.
+Sau đó chạy kiểm tra dữ liệu:
+
+```powershell
+.venv\Scripts\python -m cmapss.validate
+```
+
+Lệnh đọc FD001, kiểm tra dữ liệu, tạo và kiểm tra train RUL trong bộ nhớ,
+rồi ghi [báo cáo validation](outputs/validation/fd001.json).
+Test labels không được đọc trong luồng này.
+
+[`requirements.txt`](requirements.txt) chứa các thư viện cần để chạy chương
+trình và cài package hiện tại qua `-e .`. Nếu cần phát triển hoặc chạy test,
+thay bằng [`requirements-dev.txt`](requirements-dev.txt) ở bước cài đặt.
+
+Luồng code nằm trong `src/cmapss/data/`:
+
+```text
+contracts.py     Tên cột, kiểu dữ liệu và exception
+readers.py       Đọc file thành DataFrame
+validation.py    Kiểm tra schema, khóa và cycle
+targets.py       Tạo và kiểm tra train RUL
+```
+
+Ví dụ: engine train kết thúc tại cycle 200 thì `rul = 200 - cycle`.
+Hàm tạo nhãn từ chối test observations. Xem [data contract](data/CONTRACTS.md)
+để biết các điều kiện và giới hạn kiểm tra.
+
+<details>
+<summary>Dành cho phát triển và kiểm tra riêng</summary>
+
+- Sau khi cài `requirements-dev.txt`, chạy test: `.venv\Scripts\python -m pytest`.
+- Kiểm tra thêm tính toàn vẹn test labels: thêm `--check-test-labels` vào lệnh
+  chính. Tùy chọn này không join nhãn hoặc tính metric mô hình.
+- `--raw-dir` và `--output` chỉ cần khi muốn thay đường dẫn mặc định.
+- `requirements*.txt` được xuất từ `uv.lock` và giữ nguyên phiên bản đã khóa,
+  kể cả dependency bắc cầu. `pyproject.toml` vẫn khai báo metadata của package.
+  Môi trường đã kiểm chứng là Python 3.12.14 trên Windows.
+- Nếu đã dùng uv, có thể chạy `uv run cmapss-validate`; không bắt buộc cài uv
+  khi dùng cách cài bằng pip ở trên.
+
+Nếu pytest không có quyền truy cập Temp trên Windows, dùng thư mục riêng:
+
+```powershell
+New-Item -ItemType Directory -Force tmp | Out-Null
+.venv\Scripts\python -m pytest --basetemp=tmp/pytest-data-contract
+```
+
+Pytest dọn thư mục `--basetemp` khi chạy lại; chỉ dành thư mục đó cho test.
+
+</details>
+
+ETL Silver/Gold, PySpark, rolling features, mô hình, dashboard và LaTeX chưa
+được triển khai.
 
 ## Bối cảnh học thuật và khai báo AI
 

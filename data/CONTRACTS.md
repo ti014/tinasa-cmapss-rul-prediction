@@ -1,0 +1,178 @@
+# Data contract cho NASA C-MAPSS FD001
+
+Contract hiện thực thi việc đọc observations, kiểm tra dữ liệu và tạo train RUL.
+Contract của rolling features và predictions mới mô tả phần đã chốt trong kế
+hoạch; chưa có code tạo hoặc kiểm tra hai artifact này.
+
+## Nguồn quy tắc và phạm vi
+
+- [README](../README.vi.md): chất lượng dữ liệu, window, chia theo engine và đánh
+  giá cuối; đây là nguồn public của các quy tắc pipeline.
+- [Nguồn FD001](raw/DATA_SOURCE.md) và [mô tả NASA](raw/readme.txt): 26 cột,
+  ý nghĩa cycle, engine, train/test và ánh xạ nhãn.
+- Kế hoạch local `docs/plans/active/2026-09-21-cmapss-rul-final-report.md`:
+  raw RUL, window 30 cycles, 100 final predictions và phạm vi triển khai.
+- Quy tắc đã được yêu cầu triển khai trong đợt data contract ngày 2026-09-22.
+
+Các kiểm tra không tự điền giá trị thiếu, loại dòng lỗi, nối engine giữa split,
+cap RUL hoặc sửa raw. Sai dữ liệu được báo bằng `ContractError` có mã quy tắc,
+đối tượng vi phạm, nguồn và hướng xử lý. Các kiểm tra chung áp dụng cho bảng
+observations trước khi lọc window. Profile FD001 áp dụng riêng cho file đầy đủ,
+không dùng cho fold, window hoặc dữ liệu benchmark.
+
+## Schema hiện có
+
+| Bảng | Cột theo thứ tự | Kiểu và khóa |
+| --- | --- | --- |
+| Raw text | `engine_id`, `cycle`, `setting_1`–`setting_3`, `sensor_1`–`sensor_21` | 26 cột whitespace, không header; hai cột đầu là số nguyên |
+| Observations | `split`, sau đó 26 cột raw | Reader trả `split` dạng Pandas string; ID/cycle `int64`; settings/sensors `float64`; khóa `(split, engine_id, cycle)` |
+| Train targets | `split`, `engine_id`, `cycle`, `rul` | Khóa khớp observations train; `rul` nguyên, không âm, đơn vị cycle |
+| Test labels | `split`, `engine_id`, `rul` | `split=test`; ID và RUL `int64`; khóa `(split, engine_id)` |
+
+Reader observations nhận `split` do bên gọi xác định; CLI gán train/test từ tên
+file cố định. Không thể suy ra split chỉ từ 26 giá trị của một dòng. Validator
+chấp nhận hai engine cùng ID nếu khác split. Nó không thể phát hiện một bên gọi
+cố ý gán sai split cho toàn bộ file có nội dung hợp lệ.
+
+## Quy tắc và bằng chứng
+
+### RAW_WIDTH
+
+Mỗi dòng observations có đúng 26 trường; mỗi dòng nhãn có đúng một trường.
+Whitespace đầu/cuối, nhiều spaces và tabs được chấp nhận; dòng trống bị báo lỗi
+để không làm lệch ánh xạ dòng nhãn sang engine. Ví dụ: một dòng observations
+chỉ có 25 trường bị báo lỗi ngay tại số dòng đó, không được pad bằng null.
+
+### SCHEMA
+
+DataFrame phải có đúng tên và thứ tự cột trong bảng schema. Không nhận thêm
+cột `rul` vào observations. Fixture bỏ `sensor_21` hoặc thêm `rul` phải bị từ chối.
+
+### NONEMPTY
+
+File hoặc bảng cần ít nhất một dòng. Fixture nhỏ được dùng cho kiểm thử chung;
+file rỗng không được xem là validation thành công.
+
+### NUMERIC
+
+ID/cycle là số nguyên dương; RUL là số nguyên không âm. Trong raw text, các
+trường này được Pandas chuyển trực tiếp từ chuỗi sang `int64`, không làm tròn
+`1.5` hoặc ép `1.0` thành ID. Settings/sensors là số thực hữu hạn, không null. Không áp đặt ngưỡng vật lý
+cho sensor khi chưa có nguồn. Ví dụ: `nan`, `inf` hoặc `bad` trong sensor bị
+từ chối; sensor âm hữu hạn vẫn được chấp nhận.
+
+### SPLIT
+
+Observations chỉ nhận `train` hoặc `test`, không null. Profile của từng file
+chỉ nhận split tương ứng; test labels chỉ thuộc `test`. Validation folds sau
+này lấy từ train, không tạo split raw mới có tên `validation`.
+
+### UNIQUE_KEY
+
+Khóa observations và train targets là `(split, engine_id, cycle)`; khóa test
+labels là `(split, engine_id)`. Ví dụ `(train, 1, 1)` và `(test, 1, 1)` được
+chấp nhận cùng nhau; lặp hai lần `(train, 1, 1)` phải bị phát hiện.
+
+### CYCLE_CONTINUITY
+
+Sau khi sắp xếp theo khóa, chênh lệch giữa hai cycle liên tiếp trong cùng engine
+và split phải bằng 1. Validator không sửa thứ tự dữ liệu đầu vào. `1, 2, 4`
+không hợp lệ; các dòng `3, 1, 2` hợp lệ vì chuỗi đủ cycle sau khi sắp xếp.
+
+### FD001_PROFILE
+
+Chỉ áp dụng cho bản FD001 đầy đủ đã xác minh:
+
+| Dữ liệu | Số dòng | Engine ID | Cycle đầu |
+| --- | ---: | --- | --- |
+| Train | 20.631 | 1–100 | 1 trong mỗi engine |
+| Test | 13.096 | 1–100 | 1 trong mỗi engine |
+| Test labels | 100 | 1–100 | Không áp dụng |
+
+Fixture hai engines có thể đạt contract chung nhưng phải trượt profile này.
+Row count và tính liên tục không chứng minh rằng giá trị sensor hoặc phần cuối
+chuỗi chưa bị thay đổi; báo cáo lưu SHA-256 để đối chiếu phiên bản đầu vào,
+không thay thế việc xác minh provenance.
+
+### LABEL_MAPPING
+
+Dòng thứ `i` của `RUL_FD001.txt` được reader gán cho test engine `i`. Không sort
+nhãn theo giá trị RUL. Nhãn `[30, 10, 0]` phải ánh xạ lần lượt đến engine
+`[1, 2, 3]`. Validator kiểm tra ID 1–N và khóa; nếu giá trị bị hoán đổi trước
+khi đọc mà cấu trúc vẫn đúng thì cần đối chiếu checksum nguồn để phát hiện.
+
+### TRAIN_ONLY
+
+Chỉ tạo nhãn theo max cycle cho lịch sử train đầy đủ đến khi hỏng. Hàm
+`make_train_targets` từ chối test và bảng trộn train/test, không đọc file nhãn
+test. Bên gọi phải cung cấp toàn bộ lịch sử trước khi lọc window: một chuỗi
+train bị cắt đuôi nhưng vẫn liên tục không thể được nhận diện chỉ từ công thức.
+
+### TARGET_KEYS
+
+Train targets phải có đúng tập khóa observations, không thiếu/thêm dòng. Bảng
+targets được đổi thứ tự vẫn hợp lệ; validator đối chiếu bằng khóa, không ghép
+theo vị trí dòng.
+
+### TRAIN_RUL
+
+`rul = max_cycle - cycle` trong từng train engine, không cap ở đợt này. Ví dụ
+engine có cycle `1, 2, 3, 4` nhận RUL `3, 2, 1, 0`; engine khác kết thúc ở
+cycle 2 nhận `1, 0`. Test kiểm tra các giá trị tính tay và trường hợp sai RUL.
+
+### RAW_IMMUTABLE
+
+CLI không cho ghi báo cáo vào thư mục raw được truyền qua `--raw-dir`. Kiểm
+thử thử ghi đè file nguồn phải thất bại và giữ nguyên bytes. Đây là bảo vệ tại
+CLI, không phải filesystem permission áp dụng cho mọi chương trình khác.
+
+## Test labels và phạm vi cô lập
+
+Lệnh validation mặc định chỉ đọc observations, không mở `RUL_FD001.txt`.
+`--check-test-labels` đọc riêng để kiểm tra tính toàn vẹn; báo cáo chỉ lưu số
+nhãn, checksum và trạng thái, không lưu giá trị nhãn, không join observations
+và không tính metric. Kiểm thử chạy mặc định trong thư mục không có file nhãn.
+
+`read_test_labels` là API riêng, không được bảo vệ bằng quyền truy cập hệ điều
+hành. Ranh giới không dùng test labels để chọn model còn cần được kiểm tra tại
+pipeline mô hình khi thành phần đó được triển khai.
+
+## Contract đã chốt cho giai đoạn sau
+
+| Artifact | Quy tắc đã chốt | Phần chưa triển khai |
+| --- | --- | --- |
+| Rolling features | Khóa observation tại cycle cuối window; trailing window đủ 30 cycles, cùng engine/split, không dùng tương lai; `last`, `mean`, `std`, `min`, `max`, slope | Cách đặt tên cột artifact, quy ước `std`, tập sensor theo training fold, xử lý test engine không đủ 30 cycles; chưa có transformer hoặc validator |
+| Final predictions | Khóa `(split, engine_id, cycle)` tại cycle cuối test; một giá trị RUL dự đoán mỗi engine, đúng 100 dòng; tạo trước khi join test labels | Tên cột prediction, metadata model và validator; chưa quy định clip prediction âm |
+
+Ví dụ window tại cycle 170 là cycle 141–170 của cùng engine. Các chi tiết còn
+mở ở bảng trên cần được chốt trước bước xây dựng đặc trưng và mô hình; không
+được coi là đã có implementation hoặc bằng chứng runtime.
+
+## Chạy kiểm tra
+
+Hướng dẫn cài bằng `venv` và `pip install -r requirements.txt` nằm trong
+[README](../README.vi.md#bắt-đầu). `requirements-dev.txt` bổ sung công cụ test;
+hai file này giữ nguyên phiên bản từ `uv.lock`. Không cần uv khi cài bằng pip.
+
+Nếu đã dùng uv, từ thư mục gốc chỉ cần:
+
+```powershell
+uv run cmapss-validate
+```
+
+Lệnh tự chuẩn bị môi trường trước khi kiểm tra dữ liệu. Thêm
+`--check-test-labels` nếu cần kiểm tra riêng tính toàn vẹn nhãn test; dùng
+`uv run pytest` cho kiểm thử khi phát triển.
+
+Dependency trực tiếp nằm trong `pyproject.toml`; `uv.lock` khóa cả dependency
+bắc cầu. Môi trường được kiểm chứng ở đợt đầu là Python 3.12.14 trên Windows.
+CLI trả mã 0 khi đạt, 1 khi lỗi đầu vào/contract, 2 khi đường output không hợp
+lệ hoặc không ghi được. Lỗi dữ liệu tạo báo cáo `status=failed`, thay báo cáo
+cũ tại đường output được chọn để tránh đọc nhầm kết quả thành công trước đó.
+
+Nếu gặp lỗi quyền thư mục tạm mặc định của pytest trên Windows, dùng hướng dẫn
+`--basetemp` trong [README](../README.vi.md#bắt-đầu). Thư mục đó chỉ dành cho
+pytest và được pytest dọn khi chạy lại.
+
+Owner của validation là pytest và CLI trong package `cmapss`. Chưa có optional
+hook hoặc CI gọi các kiểm tra này; branch protection chưa được xác minh.

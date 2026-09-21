@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools==80.9.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cmapss-rul"
+version = "0.1.0"
+description = "FD001 data contracts and validation for a reproducible RUL study"
+requires-python = ">=3.12,<3.13"
+dependencies = ["pandas==2.3.3", "numpy==2.3.3"]
+
+[project.scripts]
+cmapss-validate = "cmapss.validate:main"
+
+[dependency-groups]
+dev = ["pytest==8.4.2"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"

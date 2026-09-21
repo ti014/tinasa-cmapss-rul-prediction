@@ -8,12 +8,13 @@ A reproducible Big Data course project for analyzing multivariate turbofan senso
 
 ## Project Status
 
-This repository is currently in the **planning and data-preparation stage**.
+This repository now provides a **FD001 data-validation package and train RUL targets**.
 
 Available now:
 
 - The original NASA C-MAPSS FD001 files and source documentation.
-- Verified row, engine, schema, key, and cycle-continuity checks.
+- Readers, validators, and tests for row counts, engines, schema, keys, cycles, and train RUL.
+- A [data contract](data/CONTRACTS.md), JSON validation CLI, and dependency lockfile.
 - A curated bibliography and reading guide.
 
 Not implemented yet:
@@ -23,7 +24,7 @@ Not implemented yet:
 - RUL models and ARIMA analysis.
 - Streamlit dashboard and final LaTeX report.
 
-Commands for installation, training, evaluation, and dashboard execution will be added only after their corresponding code and dependency manifests exist.
+Installation and data-validation commands are available below. Model training, evaluation, and dashboard entry points are not implemented yet.
 
 ## Objectives
 
@@ -189,9 +190,13 @@ Current and planned public project structure:
 │   └── archive/             # Data retained for comparison, not active modeling
 ├── references/              # Bibliography, reading guide, and available papers
 ├── notebooks/               # Planned EDA and experiment notebooks
-├── src/                     # Planned reusable pipeline and modeling modules
-├── tests/                   # Planned data-contract and pipeline tests
-├── outputs/                 # Planned metrics, figures, and reproducible artifacts
+├── src/cmapss/              # Readers, validators, train targets, and CLI
+├── tests/                   # Contract, reader, target, and CLI tests
+├── outputs/validation/      # Data-validation reports
+├── pyproject.toml           # Package and direct dependencies
+├── requirements.txt         # Pip installation: local package and runtime libraries
+├── requirements-dev.txt     # Additional test dependencies
+├── uv.lock                  # Locked dependency versions
 ├── report/                  # Planned LaTeX report
 ├── app.py                   # Planned Streamlit dashboard entry point
 ├── README.md                # English documentation
@@ -213,16 +218,67 @@ The completed repository will provide one documented path from immutable raw dat
 
 ## Getting Started
 
-The executable pipeline has not been implemented yet. Until a dependency manifest and runnable entry points are added, the repository should be treated as a research project under active development rather than a ready-to-run package.
+With Python 3.12 available, create the environment and install dependencies
+once from the repository root:
 
-Once implementation begins, this section will document:
+```powershell
+python -m venv .venv
+.venv\Scripts\python -m pip install -r requirements.txt
+```
 
-1. Supported Python and Java versions.
-2. Environment creation and dependency installation.
-3. Data validation and pipeline commands.
-4. Model training and final evaluation commands.
-5. Streamlit dashboard startup.
-6. XeLaTeX report compilation.
+Then run data validation:
+
+```powershell
+.venv\Scripts\python -m cmapss.validate
+```
+
+This reads FD001, validates the data, creates and checks train RUL in memory,
+and writes the [validation report](outputs/validation/fd001.json).
+It does not read test labels.
+
+[`requirements.txt`](requirements.txt) includes runtime dependencies and installs
+the local package through `-e .`. For development or tests, install
+[`requirements-dev.txt`](requirements-dev.txt) instead.
+
+The data flow lives in `src/cmapss/data/`:
+
+```text
+contracts.py     Column names, dtypes, and the validation exception
+readers.py       Read source files into DataFrames
+validation.py    Validate schemas, keys, and cycles
+targets.py       Create and validate train RUL
+```
+
+For example, a train engine ending at cycle 200 has `rul = 200 - cycle`.
+The target function rejects test observations. See the [data contract](data/CONTRACTS.md)
+for conditions and validation limits.
+
+<details>
+<summary>Development and optional checks</summary>
+
+- After installing `requirements-dev.txt`, run `.venv\Scripts\python -m pytest`.
+- Add `--check-test-labels` to the main command for a separate label integrity
+  check. It does not join labels or compute model metrics.
+- Use `--raw-dir` or `--output` only to change the default paths.
+- `requirements*.txt` is exported from `uv.lock`, retaining pinned direct and
+  transitive dependencies. `pyproject.toml` still declares package metadata.
+  The validated environment is Python 3.12.14 on Windows.
+- Existing uv users can run `uv run cmapss-validate`. The pip workflow above
+  does not require uv.
+
+If pytest cannot access the Windows Temp directory, use a dedicated directory:
+
+```powershell
+New-Item -ItemType Directory -Force tmp | Out-Null
+.venv\Scripts\python -m pytest --basetemp=tmp/pytest-data-contract
+```
+
+Pytest clears its `--basetemp` directory on subsequent runs; reserve it for tests.
+
+</details>
+
+Silver/Gold ETL, PySpark, rolling features, models, dashboard, and the LaTeX
+report are not implemented yet.
 
 ## Academic Context and AI Disclosure
 

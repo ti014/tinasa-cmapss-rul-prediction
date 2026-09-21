@@ -67,7 +67,7 @@ ptyprocess==0.7.0 ; os_name != 'nt' or (sys_platform != 'emscripten' and sys_pla
 pure-eval==0.2.4
 pycparser==3.0 ; implementation_name != 'PyPy'
 pygments==2.21.0
-pytest==8.4.2
+pytest==9.0.3
 python-dateutil==2.9.0.post0
 python-json-logger==4.2.0
 pywinpty==3.0.5 ; os_name == 'nt'

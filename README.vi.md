@@ -283,6 +283,9 @@ chỉnh nhiều kiểm định.
 <details>
 <summary>Dành cho phát triển và kiểm tra riêng</summary>
 
+- Bản vá bảo mật: pytest 9.0.3, JupyterLab 4.5.10 và nbconvert 7.17.1.
+  Cài lại `requirements-dev.txt` nếu đã có môi trường. Xem
+  [nội dung bản vá và bằng chứng regression](outputs/validation/dependencies.md).
 - Sau khi cài `requirements-dev.txt`, chạy test: `.venv\Scripts\python -m pytest`.
 - Kiểm tra thêm tính toàn vẹn test labels: thêm `--check-test-labels` vào lệnh
   chính. Tùy chọn này không join nhãn hoặc tính metric mô hình.

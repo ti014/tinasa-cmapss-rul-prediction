@@ -1,0 +1,274 @@
+{
+  "date": "2026-09-22",
+  "scope": "Local verification of the 24 open Dependabot alerts fetched before the fix",
+  "remote_status": "Not captured in this local pre-push proof; query GitHub for current state",
+  "open_alerts_before": 24,
+  "unique_advisories": 12,
+  "versions": {
+    "pytest": {
+      "before": "8.4.2",
+      "after": "9.0.3"
+    },
+    "jupyterlab": {
+      "before": "4.4.9",
+      "after": "4.5.10"
+    },
+    "nbconvert": {
+      "before": "7.16.6",
+      "after": "7.17.1"
+    }
+  },
+  "old_pins_detected": true,
+  "updated_pins_outside_all_fetched_affected_ranges": true,
+  "installed_lock_requirements_match": true,
+  "uv_pip_check": "passed",
+  "pip_install_requirements_dev": "passed",
+  "pip_check": "passed",
+  "pytest": {
+    "passed": 69,
+    "failed": 0,
+    "seconds": 6.15
+  },
+  "notebook": {
+    "status": "passed",
+    "executed_code_cells": 8,
+    "repeat_seconds": 12.97,
+    "fresh_kernel": true,
+    "isolated_input_files": [
+      "train_FD001.txt"
+    ],
+    "test_reads_blocked_by_runtime_audit": true,
+    "audit_negative_proof": [
+      "test_FD001.txt",
+      "RUL_FD001.txt"
+    ],
+    "identical_csv_files": 12,
+    "identical_png_files": 11,
+    "raw_sha256_unchanged": true,
+    "pytest": {
+      "passed": 69,
+      "failed": 0
+    }
+  },
+  "jupyterlab_http_status": 200,
+  "temporary_jupyterlab_stopped": true,
+  "nbconvert_html": "passed; accessibility warning: 11 images missing alternative text",
+  "alerts": [
+    {
+      "number": 24,
+      "package": "jupyterlab",
+      "manifest": "uv.lock",
+      "ghsa": "GHSA-pppj-hq3g-57pj",
+      "severity": "high",
+      "affected_range": ">= 3.3.0, <= 4.5.9",
+      "advisory_url": "https://github.com/advisories/GHSA-pppj-hq3g-57pj"
+    },
+    {
+      "number": 23,
+      "package": "jupyterlab",
+      "manifest": "uv.lock",
+      "ghsa": "GHSA-gx64-gj6p-pc4c",
+      "severity": "high",
+      "affected_range": "<= 4.5.9",
+      "advisory_url": "https://github.com/advisories/GHSA-gx64-gj6p-pc4c"
+    },
+    {
+      "number": 22,
+      "package": "jupyterlab",
+      "manifest": "uv.lock",
+      "ghsa": "GHSA-h5v5-8746-g7mm",
+      "severity": "medium",
+      "affected_range": ">= 4.1.0, <= 4.5.9",
+      "advisory_url": "https://github.com/advisories/GHSA-h5v5-8746-g7mm"
+    },
+    {
+      "number": 21,
+      "package": "jupyterlab",
+      "manifest": "uv.lock",
+      "ghsa": "GHSA-whvh-wf3x-g77j",
+      "severity": "low",
+      "affected_range": "<= 4.5.9",
+      "advisory_url": "https://github.com/advisories/GHSA-whvh-wf3x-g77j"
+    },
+    {
+      "number": 20,
+      "package": "jupyterlab",
+      "manifest": "uv.lock",
+      "ghsa": "GHSA-vmhf-c436-hxj4",
+      "severity": "medium",
+      "affected_range": "<= 4.5.8",
+      "advisory_url": "https://github.com/advisories/GHSA-vmhf-c436-hxj4"
+    },
+    {
+      "number": 19,
+      "package": "jupyterlab",
+      "manifest": "uv.lock",
+      "ghsa": "GHSA-mqcg-5x36-vfcg",
+      "severity": "high",
+      "affected_range": "<= 4.5.6",
+      "advisory_url": "https://github.com/advisories/GHSA-mqcg-5x36-vfcg"
+    },
+    {
+      "number": 18,
+      "package": "jupyterlab",
+      "manifest": "uv.lock",
+      "ghsa": "GHSA-37w4-hwhx-4rc4",
+      "severity": "high",
+      "affected_range": ">= 4.0.0, <= 4.5.6",
+      "advisory_url": "https://github.com/advisories/GHSA-37w4-hwhx-4rc4"
+    },
+    {
+      "number": 17,
+      "package": "jupyterlab",
+      "manifest": "uv.lock",
+      "ghsa": "GHSA-rch3-82jr-f9w9",
+      "severity": "high",
+      "affected_range": "<= 4.5.6",
+      "advisory_url": "https://github.com/advisories/GHSA-rch3-82jr-f9w9"
+    },
+    {
+      "number": 16,
+      "package": "nbconvert",
+      "manifest": "uv.lock",
+      "ghsa": "GHSA-7jqv-fw35-gmx9",
+      "severity": "medium",
+      "affected_range": ">= 6.5.0, < 7.17.1",
+      "advisory_url": "https://github.com/advisories/GHSA-7jqv-fw35-gmx9"
+    },
+    {
+      "number": 15,
+      "package": "nbconvert",
+      "manifest": "uv.lock",
+      "ghsa": "GHSA-4c99-qj7h-p3vg",
+      "severity": "medium",
+      "affected_range": ">= 6.5.0, < 7.17.1",
+      "advisory_url": "https://github.com/advisories/GHSA-4c99-qj7h-p3vg"
+    },
+    {
+      "number": 14,
+      "package": "nbconvert",
+      "manifest": "uv.lock",
+      "ghsa": "GHSA-xm59-rqc7-hhvf",
+      "severity": "high",
+      "affected_range": "< 7.17.0",
+      "advisory_url": "https://github.com/advisories/GHSA-xm59-rqc7-hhvf"
+    },
+    {
+      "number": 13,
+      "package": "jupyterlab",
+      "manifest": "requirements-dev.txt",
+      "ghsa": "GHSA-pppj-hq3g-57pj",
+      "severity": "high",
+      "affected_range": ">= 3.3.0, <= 4.5.9",
+      "advisory_url": "https://github.com/advisories/GHSA-pppj-hq3g-57pj"
+    },
+    {
+      "number": 12,
+      "package": "jupyterlab",
+      "manifest": "requirements-dev.txt",
+      "ghsa": "GHSA-gx64-gj6p-pc4c",
+      "severity": "high",
+      "affected_range": "<= 4.5.9",
+      "advisory_url": "https://github.com/advisories/GHSA-gx64-gj6p-pc4c"
+    },
+    {
+      "number": 11,
+      "package": "jupyterlab",
+      "manifest": "requirements-dev.txt",
+      "ghsa": "GHSA-h5v5-8746-g7mm",
+      "severity": "medium",
+      "affected_range": ">= 4.1.0, <= 4.5.9",
+      "advisory_url": "https://github.com/advisories/GHSA-h5v5-8746-g7mm"
+    },
+    {
+      "number": 10,
+      "package": "jupyterlab",
+      "manifest": "requirements-dev.txt",
+      "ghsa": "GHSA-whvh-wf3x-g77j",
+      "severity": "low",
+      "affected_range": "<= 4.5.9",
+      "advisory_url": "https://github.com/advisories/GHSA-whvh-wf3x-g77j"
+    },
+    {
+      "number": 9,
+      "package": "jupyterlab",
+      "manifest": "requirements-dev.txt",
+      "ghsa": "GHSA-vmhf-c436-hxj4",
+      "severity": "medium",
+      "affected_range": "<= 4.5.8",
+      "advisory_url": "https://github.com/advisories/GHSA-vmhf-c436-hxj4"
+    },
+    {
+      "number": 8,
+      "package": "jupyterlab",
+      "manifest": "requirements-dev.txt",
+      "ghsa": "GHSA-mqcg-5x36-vfcg",
+      "severity": "high",
+      "affected_range": "<= 4.5.6",
+      "advisory_url": "https://github.com/advisories/GHSA-mqcg-5x36-vfcg"
+    },
+    {
+      "number": 7,
+      "package": "jupyterlab",
+      "manifest": "requirements-dev.txt",
+      "ghsa": "GHSA-37w4-hwhx-4rc4",
+      "severity": "high",
+      "affected_range": ">= 4.0.0, <= 4.5.6",
+      "advisory_url": "https://github.com/advisories/GHSA-37w4-hwhx-4rc4"
+    },
+    {
+      "number": 6,
+      "package": "jupyterlab",
+      "manifest": "requirements-dev.txt",
+      "ghsa": "GHSA-rch3-82jr-f9w9",
+      "severity": "high",
+      "affected_range": "<= 4.5.6",
+      "advisory_url": "https://github.com/advisories/GHSA-rch3-82jr-f9w9"
+    },
+    {
+      "number": 5,
+      "package": "nbconvert",
+      "manifest": "requirements-dev.txt",
+      "ghsa": "GHSA-7jqv-fw35-gmx9",
+      "severity": "medium",
+      "affected_range": ">= 6.5.0, < 7.17.1",
+      "advisory_url": "https://github.com/advisories/GHSA-7jqv-fw35-gmx9"
+    },
+    {
+      "number": 4,
+      "package": "nbconvert",
+      "manifest": "requirements-dev.txt",
+      "ghsa": "GHSA-4c99-qj7h-p3vg",
+      "severity": "medium",
+      "affected_range": ">= 6.5.0, < 7.17.1",
+      "advisory_url": "https://github.com/advisories/GHSA-4c99-qj7h-p3vg"
+    },
+    {
+      "number": 3,
+      "package": "nbconvert",
+      "manifest": "requirements-dev.txt",
+      "ghsa": "GHSA-xm59-rqc7-hhvf",
+      "severity": "high",
+      "affected_range": "< 7.17.0",
+      "advisory_url": "https://github.com/advisories/GHSA-xm59-rqc7-hhvf"
+    },
+    {
+      "number": 2,
+      "package": "pytest",
+      "manifest": "uv.lock",
+      "ghsa": "GHSA-6w46-j5rx-g56g",
+      "severity": "medium",
+      "affected_range": "< 9.0.3",
+      "advisory_url": "https://github.com/advisories/GHSA-6w46-j5rx-g56g"
+    },
+    {
+      "number": 1,
+      "package": "pytest",
+      "manifest": "requirements-dev.txt",
+      "ghsa": "GHSA-6w46-j5rx-g56g",
+      "severity": "medium",
+      "affected_range": "< 9.0.3",
+      "advisory_url": "https://github.com/advisories/GHSA-6w46-j5rx-g56g"
+    }
+  ]
+}

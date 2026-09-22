@@ -21,11 +21,16 @@ Tại cycle $t$, một mẫu chỉ chứa các quan sát hiện có của cùng 
  \in\mathbb{R}^{w\times p},\qquad t\geq w.
  \label{eq:window}
 \end{equation}
-
-Trong Công thức~\ref{eq:window}, $i$ là engine; $t$ là cycle cuối của window;
-$w=30$ là số cycles trong window; $p=21$ là số sensor; $\mathbf{x}_{i,t}$ là
-vector sensor tại cycle $t$; và $W_{i,t}$ là ma trận đầu vào có $w$ hàng, $p$
-cột. Ví dụ, mẫu tại cycle 170 dùng cycles 141--170 và không dùng cycle 171.
+\noindent Trong đó:
+\begin{itemize}[label={+},leftmargin=1.6em,itemsep=0.15em,topsep=0.25em]
+\item $i$: engine đang được xét.
+\item $t$: cycle cuối của window.
+\item $w$: số cycle trong window, với cấu hình hiện tại $w=30$.
+\item $p$: số sensor, với cấu hình hiện tại $p=21$.
+\item $\mathbf{x}_{i,t}$: vector sensor của engine $i$ tại cycle $t$.
+\item $W_{i,t}$: ma trận đầu vào có $w$ hàng và $p$ cột.
+\end{itemize}
+Ví dụ, mẫu tại cycle 170 dùng cycles 141--170 và không dùng cycle 171.
 
 Mỗi sensor trong window được tóm tắt bằng giá trị cuối, mean, sample standard
 deviation, min, max và linear slope. Với dãy $z_1,\ldots,z_w$ của một sensor,
@@ -35,10 +40,16 @@ slope được tính bởi
  {\sum_{k=1}^{w}(k-\bar{k})^2}.
  \label{eq:slope}
 \end{equation}
-Trong Công thức~\ref{eq:slope}, $k$ là vị trí cycle trong window; $z_k$ là giá
-trị sensor tại vị trí $k$; $\bar{k}$ và $\bar{z}$ là mean tương ứng; $b$ là mức
-thay đổi tuyến tính ước lượng trên mỗi cycle. Slope mô tả xu hướng cục bộ, không
-tự chứng minh utility dự đoán.
+\noindent Trong đó:
+\begin{itemize}[label={+},leftmargin=1.6em,itemsep=0.15em,topsep=0.25em]
+\item $k$: vị trí cycle trong window.
+\item $w$: độ dài window.
+\item $z_k$: giá trị sensor tại vị trí $k$.
+\item $\bar{k}$: mean của các vị trí cycle trong window.
+\item $\bar{z}$: mean của các giá trị sensor trong window.
+\item $b$: mức thay đổi tuyến tính ước lượng trên mỗi cycle.
+\end{itemize}
+Slope mô tả xu hướng cục bộ, không tự chứng minh utility dự đoán.
 
 \subsection{Paired analysis, bootstrap và nhiều kiểm định}
 Paired analysis ghép hai phép đo của cùng một engine để phân tích thay đổi trong

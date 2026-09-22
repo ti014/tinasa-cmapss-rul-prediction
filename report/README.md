@@ -57,6 +57,6 @@ Push-Location report
 Pop-Location
 ```
 
-Lần build ngày 22/09/2026 tạo PDF 26 trang, không có lỗi biên dịch, citation
+Lần build ngày 22/09/2026 tạo PDF 27 trang, không có lỗi biên dịch, citation
 undefined, reference undefined hoặc overfull/underfull box. Tectonic vẫn ghi
 cảnh báo môi trường về Fontconfig và font Windows; đây không phải lỗi nội dung.

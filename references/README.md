@@ -2,9 +2,14 @@
 
 Danh sách đọc phục vụ **Đề tài 8: Phân tích dữ liệu IoT và bảo trì dự đoán**,
 tập trung vào **NASA C-MAPSS FD001** đang dùng trong báo cáo cuối kỳ. Nguồn được
-kiểm chứng ngày **20/09/2026**.
+kiểm chứng nền tảng ngày **20/09/2026**, bổ sung nguồn phương pháp ngày
+**22/09/2026**.
 
-Nên đọc **R1 → R2 → R3 → R4 → R5** trước. R6–R8 phục vụ mở rộng mô hình hoặc phần Big Data. Đây là tuyển chọn nền tảng theo mức độ phù hợp, không phải tổng quan toàn bộ nghiên cứu mới nhất.
+Nên đọc **R1 → R3 → R4 → R5** cho FD001 và đánh giá; R2 hỗ trợ tổng quan nhưng
+chưa đọc toàn văn. Tiếp theo đọc các nguồn thống kê M1–M6 bên dưới để chuẩn bị
+mốc 2. R8 phục vụ phần Spark đã nằm trong phạm vi; R6 và R7 là đọc thêm về
+LSTM/streaming. Đây là tuyển chọn theo phương pháp sử dụng, không phải tổng
+quan toàn bộ nghiên cứu mới nhất.
 
 ## Cấu trúc
 
@@ -12,7 +17,7 @@ Nên đọc **R1 → R2 → R3 → R4 → R5** trước. R6–R8 phục vụ m�
 references/
 ├── README.md          # Danh mục và thứ tự đọc
 ├── reading-guide.md   # Đọc phần nào, áp dụng ra sao, giới hạn
-├── bibliography.bib   # 8 bài báo và 1 nguồn dữ liệu
+├── bibliography.bib   # Nguồn FD001, bài nền tảng và tài liệu phương pháp
 └── papers/            # PDF để đọc offline và bảng nguồn tải
 ```
 
@@ -30,6 +35,35 @@ references/
 | R8 | Zaharia et al. (2012), [Resilient Distributed Datasets: A Fault-Tolerant Abstraction for In-Memory Cluster Computing](https://www.usenix.org/conference/nsdi12/technical-sessions/presentation/zaharia) | Nền tảng Spark nếu lựa chọn xử lý phân tán |
 
 Xem [hướng dẫn đọc](reading-guide.md) để biết phần cần đọc, liên kết toàn văn và ví dụ áp dụng. Metadata trích dẫn nằm trong [bibliography.bib](bibliography.bib).
+
+## Nguồn phương pháp bổ sung ngày 22/09/2026
+
+| Mã / citation key | Nguồn chính thức | Vai trò và mức kiểm chứng |
+| --- | --- | --- |
+| M1 `wilcoxon1945` | Wilcoxon (1945), [Individual Comparisons by Ranking Methods](https://doi.org/10.2307/3001968) | Metadata Crossref và mục References của SciPy; chưa đọc toàn văn bài gốc |
+| M2 `efron1979bootstrap` | Efron (1979), [Bootstrap Methods: Another Look at the Jackknife](https://doi.org/10.1214/aos/1176344552) | Metadata Crossref và nguồn dẫn; chưa đọc toàn văn bài gốc |
+| M3 `benjamini1995fdr` | Benjamini & Hochberg (1995), [Controlling the False Discovery Rate](https://doi.org/10.1111/j.2517-6161.1995.tb02031.x) | Metadata và abstract nhà xuất bản; chưa đọc toàn bộ chứng minh |
+| M4 `scipyWilcoxon` | [SciPy 1.16.2 — Wilcoxon](https://docs.scipy.org/doc/scipy-1.16.2/reference/generated/scipy.stats.wilcoxon.html) | Đã đọc định nghĩa, giả định, ties/zeros và lựa chọn phương pháp p-value |
+| M5 `scipyBootstrap` | [SciPy 1.16.2 — bootstrap](https://docs.scipy.org/doc/scipy-1.16.2/reference/generated/scipy.stats.bootstrap.html) | Đã đọc resampling, paired, percentile/BCa và giới hạn suy biến |
+| M6 `statsmodelsFDR` | [statsmodels — FDR correction](https://www.statsmodels.org/stable/generated/statsmodels.stats.multitest.fdrcorrection.html) | Đã đối chiếu BH/BY và điều kiện phụ thuộc; chưa chọn phiên bản triển khai |
+| M7 `sklearnRidge` | [scikit-learn — Ridge](https://scikit-learn.org/stable/modules/linear_model.html#ridge-regression-and-classification) | Hàm mục tiêu và L2 regularization |
+| M8 `sklearnHistBoost` | [scikit-learn — histogram gradient boosting](https://scikit-learn.org/stable/modules/ensemble.html#histogram-based-gradient-boosting) | Boosting và binning; chưa có hyperparameter được chọn |
+| M9 `sklearnGroupedCV` | [scikit-learn — grouped cross-validation](https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation-iterators-for-grouped-data) | Ranh giới group trong cross-validation |
+| M10 `sklearnPCA` | [scikit-learn — PCA](https://scikit-learn.org/stable/modules/decomposition.html#pca) | Phép chiếu và phương sai; không chứng minh PCA tự tạo health signal |
+| M11 `hyndman2021fpp3` | Hyndman & Athanasopoulos (2021), [Forecasting: Principles and Practice, 3rd ed.](https://otexts.com/fpp3/) | Đã đọc các mục 5.4, 9.1, 9.5, 9.7; dùng lý thuyết, không chuyển pipeline sang R |
+| M12 `statsmodelsADF` | [statsmodels — ADF](https://www.statsmodels.org/stable/generated/statsmodels.tsa.stattools.adfuller.html) | Giả thuyết unit root và cấu hình diagnostic |
+| M13 `sparkSQLGuide` | [Apache Spark — SQL and DataFrames](https://spark.apache.org/docs/latest/sql-programming-guide.html) | Dữ liệu có schema; chưa có benchmark hoặc phiên bản Spark được chọn |
+
+Không tải thêm PDF trong lượt này. Các URL `stable`/`latest` là tài liệu online
+được truy cập ngày 22/09/2026; không coi phiên bản trang web là phiên bản đã cài
+trong repository. Hai nguồn SciPy được cố định ở 1.16.2, khớp manifest lúc rà
+soát. Các bài gốc M1–M3 cung cấp attribution; phần thao tác và giả định được
+đối chiếu với tài liệu chính thức đã đọc, không tuyên bố đã đọc chứng minh gốc.
+
+Báo cáo có [cơ sở lý thuyết](../report/sections/theory.tex) và
+[protocol mốc 2](../report/sections/statistical-protocol.tex). Chỉ tài liệu
+được trích trong thân báo cáo xuất hiện trong bibliography của PDF; danh mục
+đọc rộng hơn không đồng nghĩa tất cả nguồn đã được sử dụng hoặc đọc toàn văn.
 
 ## Dữ liệu và phạm vi
 

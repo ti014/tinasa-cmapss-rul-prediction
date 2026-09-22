@@ -18,13 +18,19 @@ Repository đã có **package kiểm tra FD001, train RUL và notebook EDA chỉ
 - [Notebook EDA đã chạy](notebooks/01_fd001_eda.ipynb), 12 bảng CSV,
   11 hình và [diễn giải kết quả, bằng chứng kiểm tra](outputs/eda/README.md).
 - Danh mục tài liệu tham khảo và hướng dẫn đọc.
+- [Báo cáo LaTeX cập nhật theo tiến độ](report/README.md) và [bản PDF](report/main.pdf),
+  có nhật ký công việc, lý do lựa chọn và nguồn đối chiếu kết quả validation/EDA ban đầu.
+  Mốc 1 EDA đã được kiểm tra độc lập; thống kê suy luận thuộc mốc 2 tiếp theo.
+- Cơ sở lý thuyết có trích dẫn và [protocol thống kê mốc 2](report/sections/statistical-protocol.tex).
+  Đã chốt so sánh mean 30 cycles đầu và 30 cycles cuối theo từng engine.
+  Cấu hình thống kê chi tiết còn là đề xuất; chưa chạy kiểm định suy luận.
 
 Chưa triển khai:
 
 - Pipeline ETL Silver/Gold bằng Pandas và PySpark.
 - Thống kê suy luận và xây dựng đặc trưng (feature engineering).
 - Các mô hình RUL và phân tích ARIMA.
-- Dashboard Streamlit và báo cáo LaTeX hoàn chỉnh.
+- Dashboard Streamlit và báo cáo hoàn chỉnh (đã bắt đầu bản thảo LaTeX).
 
 Lệnh cài đặt, kiểm tra dữ liệu và mở notebook có ở phần Bắt đầu. Huấn luyện, đánh giá mô hình và dashboard chưa có entry point.
 
@@ -201,7 +207,7 @@ Cấu trúc public hiện tại và dự kiến:
 ├── requirements.txt         # Cài bằng pip: package và thư viện chạy chương trình
 ├── requirements-dev.txt     # Thư viện notebook và kiểm thử
 ├── uv.lock                  # Phiên bản dependencies đã khóa
-├── report/                  # Báo cáo LaTeX dự kiến
+├── report/                  # Bản thảo LaTeX/PDF, tiến độ và bằng chứng
 ├── app.py                   # Entry point Streamlit dự kiến
 ├── README.md                # Tài liệu tiếng Anh
 └── README.vi.md             # Tài liệu tiếng Việt
@@ -307,8 +313,12 @@ Pytest dọn thư mục `--basetemp` khi chạy lại; chỉ dành thư mục đ
 
 </details>
 
-ETL Silver/Gold, PySpark, rolling features, mô hình, dashboard và LaTeX chưa
-được triển khai.
+ETL Silver/Gold, PySpark, rolling features, mô hình và dashboard chưa được
+triển khai. [Bản thảo báo cáo](report/main.pdf) được cập nhật cùng công việc
+đã kiểm chứng: nhật ký ghi ngày, lý do, artifact, cách kiểm tra và phần còn lại.
+Xem [hướng dẫn báo cáo](report/README.md) để biết cấu trúc nguồn và lệnh build
+PDF. Bản hiện tại có kết quả validation và một số quan sát EDA ban đầu đã
+đối chiếu, chưa có kết quả đánh giá mô hình.
 
 ## Bối cảnh học thuật và khai báo AI
 

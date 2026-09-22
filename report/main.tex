@@ -1,0 +1,99 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage{fontspec}
+\setmainfont{Times New Roman}
+\setsansfont{Arial}
+\setmonofont{Consolas}[Scale=0.85]
+\usepackage[left=2.7cm,right=2.3cm,top=2.5cm,bottom=2.5cm]{geometry}
+\usepackage{amsmath,amssymb,booktabs,array,tabularx,longtable}
+\usepackage{graphicx,float,setspace,enumitem,xcolor,fancyhdr}
+\usepackage{caption}
+\usepackage{xurl}
+\usepackage[colorlinks=true,linkcolor=blue!45!black,citecolor=blue!45!black,urlcolor=blue!45!black]{hyperref}
+\hypersetup{pdftitle={Phân tích dữ liệu cảm biến và dự đoán RUL trên NASA C-MAPSS FD001},pdfauthor={}}
+\renewcommand{\contentsname}{Mục lục}
+\renewcommand{\listfigurename}{Danh mục hình}
+\renewcommand{\listtablename}{Danh mục bảng}
+\renewcommand{\figurename}{Hình}
+\renewcommand{\tablename}{Bảng}
+\renewcommand{\refname}{Tài liệu tham khảo}
+\newcommand{\reportdate}{22/09/2026}
+\newcommand{\filepath}[1]{\nolinkurl{#1}}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\onehalfspacing
+\setlength{\parindent}{0.7cm}
+\setlength{\emergencystretch}{2em}
+\setlength{\headheight}{16pt}
+\setlist{nosep,leftmargin=*}
+\captionsetup{font=small,labelfont=bf}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small NASA C-MAPSS FD001}
+\fancyhead[R]{\small Bản đang thực hiện -- \reportdate}
+\fancyfoot[C]{\thepage}
+
+\begin{document}
+\hypersetup{pageanchor=false}
+\begin{titlepage}
+\centering
+{\large TRƯỜNG ĐẠI HỌC CÔNG NGHIỆP TP. HỒ CHÍ MINH\par}
+\vspace{1.8cm}
+{\Large\bfseries BÁO CÁO CUỐI KỲ\par}
+\vspace{0.4cm}
+{\large Môn học: Phân tích dữ liệu lớn\par}
+\vspace{1.5cm}
+{\LARGE\bfseries Phân tích dữ liệu cảm biến và dự đoán tuổi thọ hữu ích còn lại của động cơ\par}
+\vspace{0.6cm}
+{\Large NASA C-MAPSS FD001\par}
+\vspace{0.8cm}
+{\large Đề tài 8: Phân tích dữ liệu IoT và bảo trì dự đoán\par}
+\vspace{1.5cm}
+\begin{tabular}{ll}
+Học viên thực hiện: & Phan Nguyễn Mai Phương\\
+Mã số học viên: & 25002711\\
+Ngành: & Khoa học máy tính
+\end{tabular}
+\vfill
+{\large Bản đang thực hiện -- cập nhật ngày \reportdate\par}
+\vspace{0.3cm}
+{\normalsize TP. Hồ Chí Minh, tháng 9 năm 2026\par}
+\end{titlepage}
+\hypersetup{pageanchor=true}
+\pagenumbering{roman}
+\section*{Tóm tắt trạng thái báo cáo}
+\addcontentsline{toc}{section}{Tóm tắt trạng thái báo cáo}
+Báo cáo nghiên cứu bài toán dự đoán Remaining Useful Life (RUL, tuổi thọ hữu ích còn lại) theo đơn vị cycle trên NASA C-MAPSS FD001. Đến ngày \reportdate, repository đã có dữ liệu nguồn, data contract (đặc tả dữ liệu và các điều kiện hợp lệ), package kiểm tra dữ liệu, nhãn RUL cho train và các artifact EDA (Exploratory Data Analysis, phân tích khám phá dữ liệu) ban đầu. Báo cáo validation ghi nhận 20.631 quan sát train và 13.096 quan sát test; mỗi tập có 100 động cơ.
+
+Bản hiện tại trình bày bài toán, cơ sở lý thuyết và nghiên cứu liên quan, cách kiểm tra chất lượng, thiết kế phương pháp và một số quan sát EDA có nguồn đối chiếu. Protocol thống kê đã xác định so sánh trung bình 30 cycles đầu với 30 cycles cuối của từng động cơ; kiểm định chưa được thực hiện. Pipeline Silver/Gold, mô hình RUL, ARIMA và dashboard chưa hoàn thành. Vì chưa có dự đoán và metric mô hình, báo cáo chưa đưa ra kết luận về độ chính xác hoặc hiệu quả bảo trì.
+
+Tiến độ được ghi theo công việc và bằng chứng, không quy đổi thành phần trăm hoàn thành khi chưa có cơ sở ước lượng. Các ngày ghi nhận là mốc có tài liệu hoặc artifact hỗ trợ, không phải lịch sử giờ công được tái dựng. Nội dung về phương pháp chưa triển khai được đánh dấu rõ để tiếp tục cập nhật sau mỗi mốc.
+\clearpage
+\begin{spacing}{1.1}
+\tableofcontents
+\end{spacing}
+\clearpage
+\listoffigures
+\listoftables
+\clearpage
+\pagenumbering{arabic}
+\input{sections/progress}
+\clearpage
+\input{sections/problem-data}
+\clearpage
+\input{sections/theory}
+\clearpage
+\input{sections/methodology}
+\clearpage
+\input{sections/statistical-protocol}
+\clearpage
+\input{sections/current-results}
+\clearpage
+\input{sections/discussion}
+\clearpage
+\phantomsection
+\addcontentsline{toc}{section}{Tài liệu tham khảo}
+\bibliographystyle{plainurl}
+\bibliography{../references/bibliography}
+\clearpage
+\appendix
+\input{sections/evidence}
+\end{document}

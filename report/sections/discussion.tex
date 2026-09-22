@@ -1,0 +1,13 @@
+\section{Khó khăn, bài học và giới hạn hiện tại}
+Khó khăn đầu tiên là phân biệt dữ liệu đủ để tính nhãn với dữ liệu đủ để dự đoán trong thực tế. Train cho phép biết $T_i$ sau khi chuỗi kết thúc, còn tại thời điểm dự đoán $t$ thì $T_i$ chưa biết. Bài học thiết kế là tách việc tạo nhãn khỏi feature và không dùng tuổi thọ đầy đủ để tạo biến đầu vào dự đoán.
+
+Khó khăn thứ hai là xác định đơn vị phân tích. Một engine sống lâu tạo nhiều dòng hơn và các quan sát liền nhau có dependence theo thời gian. Việc tăng số dòng không tương đương tăng số mẫu độc lập. EDA vì vậy ghi rõ mức observation hoặc engine; validation và bootstrap dự kiến giữ đơn vị engine.
+
+Khó khăn thứ ba là giới hạn bằng chứng của dữ liệu mô phỏng và quy mô nhỏ. Benchmark PySpark có thể chịu overhead lớn; chưa thể giả định phân tán sẽ nhanh hơn. Kết quả âm hoặc tốc độ thấp hơn Pandas vẫn cần được trình bày nếu phép đo hợp lệ. Báo cáo chỉ phân tích khả năng mở rộng sau khi có parity và thời gian đo thực tế.
+
+Môi trường kiểm thử trước đó ghi nhận lỗi quyền truy cập thư mục Temp trên Windows. Cách xử lý đã được tài liệu hóa là dùng thư mục tạm riêng cho pytest; đây là vấn đề môi trường, không phải lỗi chất lượng FD001. Trong lượt khởi tạo báo cáo, TeX chưa có trên PATH nên dùng Tectonic portable để biên dịch; hướng dẫn tái lập được lưu cùng nguồn báo cáo.
+
+Hiện chưa có kết quả huấn luyện, metric test, khoảng tin cậy, ARIMA diagnostics hoặc dashboard. Do đó, chưa thể kết luận mô hình nào phù hợp hơn, cảnh báo sớm chính xác đến đâu hoặc lịch bảo trì nào có lợi. Phần kết luận cuối sẽ được viết sau khi hoàn tất đánh giá theo protocol đã lưu.
+
+\section{Khai báo sử dụng AI/LLM}
+AI/LLM được sử dụng để hỗ trợ xây dựng cấu trúc bản báo cáo, diễn đạt nội dung, tổ chức nhật ký tiến độ, đối chiếu artifact trong repository và hỗ trợ kiểm tra biên dịch. Nội dung hỗ trợ này cần được kiểm tra với dữ liệu, mã nguồn và tài liệu gốc. Việc tạo văn bản bằng AI không được dùng làm bằng chứng về hiệu quả mô hình; các kết quả thực nghiệm chỉ được ghi nhận khi có artifact và quy trình kiểm chứng tương ứng.

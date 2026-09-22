@@ -125,3 +125,58 @@ Ví dụ về thứ tự áp dụng: sau R1–R3, viết một trang mô tả d�
 mô tả một window mẫu cùng nhãn; sau R5, phác thảo ba biểu đồ gồm sensor theo
 cycle, RUL thật–dự đoán và sai số theo động cơ. Chỉ đọc sâu R7–R8 khi phạm vi
 báo cáo có streaming hoặc Spark.
+
+## Bổ sung theo phạm vi đã chốt ngày 22/09/2026
+
+Danh sách và mức kiểm chứng của M1–M13 nằm trong [README](README.md).
+Các mục áp dụng đề xuất ở R1–R8 là hướng dẫn đọc ban đầu; phạm vi hiện hành
+là baseline, Ridge, HistGradientBoosting, batch ETL Pandas/PySpark và ARIMA
+phụ. Chưa mở thêm CNN, LSTM hoặc streaming.
+
+### Đọc trước mốc 2: M1–M6
+
+- Đọc M4 trước để phân biệt Wilcoxon với kiểm định trung bình, kiểm tra giả
+  định đối xứng và ảnh hưởng của ties/zeros. M1 là nguồn gốc phương pháp,
+  chưa được đọc toàn văn trong lượt bổ sung.
+- Đọc M5 về resampling, ghép cặp và loại khoảng tin cậy. Áp dụng theo engine,
+  không resample từng cycle như mẫu độc lập. M2 là bài nền tảng, metadata đã
+  đối chiếu nhưng chưa đọc toàn văn.
+- Đọc M3 abstract và M6 để phân biệt FDR với xác suất mỗi kết luận đúng.
+  BH có điều kiện về phụ thuộc; không suy từ correlation dương quan sát được
+  rằng mọi điều kiện bảo đảm đều đã thỏa.
+- Đầu ra cần viết: estimand (đại lượng cần ước lượng), giả thuyết, đơn vị mẫu,
+  họ kiểm định, cấu hình và xử lý trường hợp suy biến. Xem
+  [protocol](../report/sections/statistical-protocol.tex): ranh giới mean 30
+  cycles đầu/cuối đã được người dùng chốt; cấu hình chi tiết còn là đề xuất.
+
+Ví dụ: engine kết thúc ở cycle 200 dùng 1–30 và 171–200 để phân tích hồi cứu.
+Hai số trung bình tạo một cặp, không tạo 60 quan sát độc lập. Chênh lệch cuối
+trừ đầu được giữ cùng engine khi bootstrap.
+
+### Đọc trước mô hình: M7–M10
+
+M7 hỗ trợ hàm mục tiêu Ridge và lý do chuẩn hóa đặc trưng. M8 hỗ trợ cơ chế
+boosting/binning. M9 giải thích group split; không thay thế việc xác định
+các cycle đánh giá trong validation. M10 chỉ hỗ trợ PCA như một phép chiếu;
+chiều Health Index và ý nghĩa suy giảm cần kiểm tra trên training data.
+
+Đầu ra: giải thích lựa chọn mô hình, loss và ranh giới preprocessing; sau đó
+chốt search space và validation sampling trước huấn luyện. Không lấy cấu hình
+ví dụ trong docs làm hyperparameter đã chọn.
+
+Đối chiếu bổ sung ngày 22/09/2026: công thức asymmetric score lấy trực tiếp
+từ R4, Section 3.1.4, Equation (5), trang in 9 (trang PDF 10). Với sai số
+`predicted - true`, mẫu số nhánh âm là 13 và nhánh không âm là 10; cộng theo
+engine. Đã kiểm tra công thức trên bản render local. R1 Section VII có cách
+ghi hệ số không nhất quán với mô tả phạt muộn mạnh hơn; dùng rõ quy ước R4
+trong báo cáo, không tự chép hệ số từ R1 hoặc đổi dấu sai số âm thầm.
+
+### Đọc khi triển khai ARIMA và ETL: M11–M13
+
+Đọc M11 mục 9.1 về stationarity/differencing, 9.5 về ARIMA, 5.4 và 9.7 về
+residual diagnostics. M12 bổ sung cách hiểu ADF; không bác bỏ unit root chưa
+chứng minh chuỗi dừng. M13 bổ sung DataFrame/Spark SQL cho nền tảng R8.
+
+Đầu ra: protocol forecast theo thời gian và thiết kế benchmark có parity,
+cấu hình máy, chế độ cache và thời gian đo rõ ràng. Chưa có bằng chứng để
+tuyên bố Spark nhanh hơn hoặc PCA–ARIMA dự đoán được RUL.

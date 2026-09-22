@@ -45,7 +45,7 @@ Xem [hướng dẫn đọc](reading-guide.md) để biết phần cần đọc, 
 | M3 `benjamini1995fdr` | Benjamini & Hochberg (1995), [Controlling the False Discovery Rate](https://doi.org/10.1111/j.2517-6161.1995.tb02031.x) | Metadata và abstract nhà xuất bản; chưa đọc toàn bộ chứng minh |
 | M4 `scipyWilcoxon` | [SciPy 1.16.2 — Wilcoxon](https://docs.scipy.org/doc/scipy-1.16.2/reference/generated/scipy.stats.wilcoxon.html) | Đã đọc định nghĩa, giả định, ties/zeros và lựa chọn phương pháp p-value |
 | M5 `scipyBootstrap` | [SciPy 1.16.2 — bootstrap](https://docs.scipy.org/doc/scipy-1.16.2/reference/generated/scipy.stats.bootstrap.html) | Đã đọc resampling, paired, percentile/BCa và giới hạn suy biến |
-| M6 `statsmodelsFDR` | [statsmodels — FDR correction](https://www.statsmodels.org/stable/generated/statsmodels.stats.multitest.fdrcorrection.html) | Đã đối chiếu BH/BY và điều kiện phụ thuộc; chưa chọn phiên bản triển khai |
+| M6 `scipyFDR` | [SciPy 1.16.2 — FDR correction](https://docs.scipy.org/doc/scipy-1.16.2/reference/generated/scipy.stats.false_discovery_control.html) | Đã đối chiếu BH/BY và điều kiện phụ thuộc; dùng cho cấu hình M2.0 đã chốt |
 | M7 `sklearnRidge` | [scikit-learn — Ridge](https://scikit-learn.org/stable/modules/linear_model.html#ridge-regression-and-classification) | Hàm mục tiêu và L2 regularization |
 | M8 `sklearnHistBoost` | [scikit-learn — histogram gradient boosting](https://scikit-learn.org/stable/modules/ensemble.html#histogram-based-gradient-boosting) | Boosting và binning; chưa có hyperparameter được chọn |
 | M9 `sklearnGroupedCV` | [scikit-learn — grouped cross-validation](https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation-iterators-for-grouped-data) | Ranh giới group trong cross-validation |
@@ -56,7 +56,7 @@ Xem [hướng dẫn đọc](reading-guide.md) để biết phần cần đọc, 
 
 Không tải thêm PDF trong lượt này. Các URL `stable`/`latest` là tài liệu online
 được truy cập ngày 22/09/2026; không coi phiên bản trang web là phiên bản đã cài
-trong repository. Hai nguồn SciPy được cố định ở 1.16.2, khớp manifest lúc rà
+trong repository. Ba nguồn SciPy được cố định ở 1.16.2, khớp manifest lúc rà
 soát. Các bài gốc M1–M3 cung cấp attribution; phần thao tác và giả định được
 đối chiếu với tài liệu chính thức đã đọc, không tuyên bố đã đọc chứng minh gốc.
 

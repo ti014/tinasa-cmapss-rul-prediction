@@ -23,15 +23,17 @@ Available now:
   EDA milestone 1 passed independent validation; inferential analysis belongs to milestone 2.
 - A cited theoretical background and a [milestone 2 statistical protocol](report/sections/statistical-protocol.tex).
   The paired comparison uses the mean of the first and last 30 cycles per engine.
-  Detailed statistical settings remain proposals; inferential tests have not run.
+  The M2.0 statistical configuration is now fixed before inference; inferential tests have not run.
 - A train-only `build_engine_sensor_pairs` helper that creates and validates one
-  first/last 30-cycle pair for every engine and all 21 sensors. It has no
-  persisted statistical output and does not perform inference.
+  first/last 30-cycle pair for every engine and all 21 sensors.
+- In-memory M2.2 helpers for effect size, percentile bootstrap CI, Wilcoxon
+  permutation, and Benjamini-Hochberg FDR under the fixed M2.0 configuration.
+  They do not persist CSV/PNG outputs and the milestone 2 notebook has not run.
 
 Not implemented yet:
 
 - Silver/Gold ETL pipelines in Pandas and PySpark.
-- Bootstrap, Wilcoxon/FDR inference, the milestone 2 notebook, and feature engineering.
+- Persisted milestone 2 statistics outputs, the inference notebook, and feature engineering.
 - RUL models and ARIMA analysis.
 - Streamlit dashboard and completed final report (the LaTeX draft has started).
 
@@ -260,7 +262,7 @@ contracts.py     Column names, dtypes, and the validation exception
 readers.py       Read source files into DataFrames
 validation.py    Validate schemas, keys, and cycles
 targets.py       Create and validate train RUL
-statistics.py     Build and validate 30-cycle engine/sensor pairs
+statistics.py     Build pairs and summarize fixed-config sensor inference
 ```
 
 For example, a train engine ending at cycle 200 has `rul = 200 - cycle`.
@@ -279,7 +281,8 @@ Select the `.venv` Python kernel and **Restart Kernel and Run All Cells**.
 This analyzes only train and recreates 12 CSV tables and 11 PNG figures.
 The validated runs used fresh kernels and produced identical artifacts in the
 same environment; the EDA checkpoint suite passed **69 tests**. The current
-repository-wide suite, including the M2.1a pair contract, passed **86 tests**.
+repository-wide suite, including the M2.2 in-memory inference helpers, passed
+**93 tests**.
 
 ![FD001 train EDA workflow](assets/diagrams/fd001-eda.svg)
 
@@ -290,7 +293,8 @@ For example, the 100 train engines have a median lifetime of 199 cycles.
 Six sensors are globally constant; `sensor_6` varies globally but is constant
 within 38 engines. These are descriptive findings, not model feature selection
 or inferential significance claims. Milestone 2 will address paired analysis,
-effect sizes, bootstrap, and multiple testing.
+effect sizes, bootstrap, Wilcoxon testing, and multiple testing under the fixed
+M2.0 configuration.
 
 <details>
 <summary>Development and optional checks</summary>

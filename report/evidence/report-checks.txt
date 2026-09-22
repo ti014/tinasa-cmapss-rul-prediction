@@ -49,3 +49,15 @@ PASS: rendered latest progress and statistical-protocol pages were reviewed. The
 LIMIT: no CSV, PNG, run metadata, bootstrap confidence interval, Wilcoxon statistic, raw/adjusted p-value or FDR result exists yet. No statement about sensor significance or predictive utility is supported by this update.
 ENVIRONMENT LIMIT: Tectonic still reports missing default Fontconfig configuration and absolute Windows font paths; both PDFs build successfully and were visually inspected on this machine.
 PASS: git diff --check and whitespace checks including untracked report sources passed. Build logs retained in tmp/report-theory-review/; no .blg build artifact left in report/.
+
+M2.0/M2.2 fixed-configuration inference helper update: 2026-09-22
+SCOPE: fixed statistical configuration and in-memory helper/validator code only; no notebook execution, CSV/PNG export, run metadata, model training or sensor significance claim.
+AUTHORITY: user accepted the tightened M2.0 configuration before inference: mean paired difference, percentile bootstrap 10,000 resamples, Wilcoxon permutation 100,000 resamples, BH FDR q=0.05, seed/RNG policy and all-zero/NA handling.
+PASS: report protocol, README files, references and data contract now state M2.0 as fixed and distinguish helpers from persisted inference artifacts.
+PASS: FDR implementation reference switched from statsmodels to SciPy 1.16.2 `false_discovery_control`, matching installed dependencies.
+PASS: red phase for M2.2 stopped at missing `SensorInferenceConfig`; green focused suite passed 24 tests in 2.64 seconds.
+PASS: full suite passed 93 tests in 8.05 seconds with `.venv/Scripts/python -m pytest -q --basetemp=tmp/pytest-m22-full --tb=short`.
+PASS: `python -m compileall -q src tests` and `git diff --check` passed.
+PASS: Tectonic 0.17.0 rebuilt `statistical-protocol.pdf` and `main.pdf`; `pdfinfo` reports 30 pages. Final logs have no overfull/underfull boxes, missing glyphs, undefined citations/references or duplicate destinations.
+LIMIT: no persisted `outputs/statistics/` artifact exists yet; raw FD001 inference was checked in memory with a reduced resample configuration for test runtime.
+ENVIRONMENT LIMIT: Tectonic still reports missing default Fontconfig configuration and absolute Windows font paths; build returns exit 0 and prior render checks remain the visual baseline.

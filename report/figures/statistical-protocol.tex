@@ -18,8 +18,8 @@ edge/.style={->,thick,draw=gray!80}]
 \node[dataNode] (train) at (0,0) {FD001 train: 100 engines, 21 sensors\\Chỉ phân tích hồi cứu; không đọc test};
 \node[opNode] (pair) at (0,-1.8) {Đã chốt: mean 30 cycles đầu và 30 cycles cuối\\Ghép cặp trong từng engine; cuối trừ đầu};
 \node[opNode] (delta) at (0,-3.6) {Đã hiện thực hóa: một cặp / engine / sensor\\Kiểm tra contract; chưa xuất artifact hay tính suy luận};
-\node[planned] (infer) at (0,-5.4) {Dự kiến: effect size và bootstrap theo engine\\Wilcoxon khi phù hợp; hiệu chỉnh nhiều kiểm định};
-\node[planned] (out) at (0,-7.2) {Đầu ra dự kiến: bảng, hình và metadata\\Cấu hình chi tiết cần chốt trước chạy};
+\node[opNode] (infer) at (0,-5.4) {Đã chốt M2.0: mean effect, percentile bootstrap\\Wilcoxon permutation; BH FDR trên 21 sensors};
+\node[planned] (out) at (0,-7.2) {Đầu ra dự kiến: bảng, hình và metadata\\Chưa chạy suy luận hoặc xuất kết quả};
 \draw[edge] (train.south) -- (pair.north);
 \draw[edge] (pair.south) -- (delta.north);
 \draw[edge,dashed] (delta.south) -- (infer.north);

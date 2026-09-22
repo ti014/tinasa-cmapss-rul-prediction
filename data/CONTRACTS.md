@@ -3,10 +3,10 @@
 Contract hiện thực thi việc đọc quan sát, kiểm tra dữ liệu, tạo nhãn RUL train,
 tạo bảng cặp sensor đầu/cuối vòng đời, tóm tắt suy luận theo sensor và xuất
 tệp đầu ra M2.3a chỉ dùng train. Mốc này đã có notebook suy luận, hai bảng CSV,
-metadata lần chạy và biên bản validation tại `outputs/statistics/`; chưa có hình
-thống kê M2.3b hoặc kết quả mô hình RUL. Contract của rolling features và
-predictions mới mô tả phần đã chốt trong kế hoạch; chưa có code tạo hoặc kiểm
-tra hai artifact này.
+metadata lần chạy, hai hình M2.3b và biên bản validation M2.4 tại
+`outputs/statistics/`; chưa có kết quả mô hình RUL. Contract của rolling
+features và predictions mới mô tả phần đã chốt trong kế hoạch; chưa có code tạo
+hoặc kiểm tra hai artifact này.
 
 ## Nguồn quy tắc và phạm vi
 
@@ -184,7 +184,9 @@ Bảng cặp là API trong bộ nhớ do `src/cmapss/statistics/pairs.py` tạo 
 `outputs/statistics/tables/sensor_inference.csv`, `run_info.json` và
 `validation.json`; `src/cmapss/statistics_artifacts.py` vẫn giữ compatibility
 import cho caller cũ. Cả hai CSV được đọc lại và kiểm tra sau khi xuất. Hình phân
-phối, biểu đồ chênh lệch kèm khoảng tin cậy và diễn giải sâu thuộc M2.3b.
+phối, biểu đồ chênh lệch kèm khoảng tin cậy và diễn giải sâu thuộc M2.3b. M2.4
+dùng `src/cmapss/statistics/reproducibility.py` để chạy focused tests, full
+suite, notebook hai lần từ fresh kernel, so sánh hash artifact và runtime audit.
 
 ### INFERENCE_CONFIG
 
@@ -243,6 +245,12 @@ và không tính metric. Kiểm thử chạy mặc định trong thư mục khô
 `read_test_labels` là API riêng, không được bảo vệ bằng quyền truy cập hệ điều
 hành. Ranh giới không dùng test labels để chọn model còn cần được kiểm tra tại
 pipeline mô hình khi thành phần đó được triển khai.
+
+Validation M2.4 của thống kê tạo runtime guard cục bộ với rule
+`STATISTICS_TRAIN_ONLY`. Guard cho phép đọc `train_FD001.txt` và chặn probe mở
+`test_FD001.txt` hoặc `RUL_FD001.txt` trong tiến trình notebook. Đây là bằng
+chứng local của notebook thống kê, không phải filesystem sandbox, hook, CI
+enforcement hoặc branch protection cho toàn repository.
 
 ## Contract đã chốt cho giai đoạn sau
 

@@ -1,6 +1,6 @@
 {
   "status": "passed",
-  "scope": "M2.3a artifact validation for train-only sensor inference",
+  "scope": "M2.3a artifact validation plus M2.4 local repeated-run and train-only runtime audit for sensor inference",
   "test_data_used": false,
   "test_labels_used": false,
   "raw_sha256_unchanged": true,
@@ -34,6 +34,120 @@
     "validate_sensor_inference passed before and after CSV round-trip",
     "raw train SHA-256 unchanged",
     "bootstrap_resamples=10000",
-    "wilcoxon_permutation_resamples=100000"
-  ]
+    "wilcoxon_permutation_resamples=100000",
+    "focused statistics pytest passed",
+    "full pytest suite passed",
+    "notebook executed twice from fresh kernels under train-only runtime guard",
+    "stable CSV and PNG outputs were identical across repeated notebook runs",
+    "runtime guard blocked test_FD001.txt and RUL_FD001.txt in negative probes",
+    "raw train/test/label SHA-256 unchanged before and after validation"
+  ],
+  "test_reads_blocked_by_runtime_audit": true,
+  "audit_negative_proof": [
+    "test_FD001.txt",
+    "RUL_FD001.txt"
+  ],
+  "notebook_repeated_runs": 2,
+  "identical_csv_files": 2,
+  "identical_png_files": 2,
+  "m2_4_validation": {
+    "status": "passed",
+    "authority": "docs/plans/active/2026-09-21-cmapss-rul-final-report.md#m24-validation-va-tai-lap",
+    "local_validation_owner": "pytest plus python -m nbconvert",
+    "focused_pytest": {
+      "command": "D:\\IUH\\BigData\\Final_Project\\.venv\\Scripts\\python.exe -m pytest tests/test_statistics_pairs.py tests/test_statistics_inference.py tests/test_statistics_artifacts.py tests/test_statistics_reproducibility.py -q --basetemp=tmp/pytest-statistics-m24 --tb=short",
+      "exit_code": 0,
+      "seconds": 3.93,
+      "passed": 26,
+      "skipped": 0,
+      "failed": 0
+    },
+    "full_pytest": {
+      "command": "D:\\IUH\\BigData\\Final_Project\\.venv\\Scripts\\python.exe -m pytest -q --basetemp=tmp/pytest-m24-full --tb=short",
+      "exit_code": 0,
+      "seconds": 8.68,
+      "passed": 95,
+      "skipped": 0,
+      "failed": 0
+    },
+    "runtime_audit": {
+      "status": "passed",
+      "rule": "STATISTICS_TRAIN_ONLY",
+      "authority": "docs/plans/active/2026-09-21-cmapss-rul-final-report.md#m24-validation-va-tai-lap",
+      "positive_train_read": "train read allowed",
+      "blocked_files": [
+        "test_FD001.txt",
+        "RUL_FD001.txt"
+      ],
+      "negative_proof": [
+        {
+          "file": "test_FD001.txt",
+          "exit_code": 1,
+          "diagnostic_contains": [
+            "STATISTICS_TRAIN_ONLY",
+            "test_FD001.txt",
+            "docs/plans/active/2026-09-21-cmapss-rul-final-report.md#m24-validation-va-tai-lap"
+          ]
+        },
+        {
+          "file": "RUL_FD001.txt",
+          "exit_code": 1,
+          "diagnostic_contains": [
+            "STATISTICS_TRAIN_ONLY",
+            "RUL_FD001.txt",
+            "docs/plans/active/2026-09-21-cmapss-rul-final-report.md#m24-validation-va-tai-lap"
+          ]
+        }
+      ]
+    },
+    "notebook_runs": [
+      {
+        "command": "D:\\IUH\\BigData\\Final_Project\\.venv\\Scripts\\python.exe -m nbconvert --to notebook --execute --inplace D:\\IUH\\BigData\\Final_Project\\notebooks\\02_fd001_inference.ipynb --ExecutePreprocessor.timeout=1800 --ExecutePreprocessor.kernel_name=python3",
+        "exit_code": 0,
+        "seconds": 152.05,
+        "fresh_kernel": true
+      },
+      {
+        "command": "D:\\IUH\\BigData\\Final_Project\\.venv\\Scripts\\python.exe -m nbconvert --to notebook --execute --inplace D:\\IUH\\BigData\\Final_Project\\notebooks\\02_fd001_inference.ipynb --ExecutePreprocessor.timeout=1800 --ExecutePreprocessor.kernel_name=python3",
+        "exit_code": 0,
+        "seconds": 151.99,
+        "fresh_kernel": true
+      }
+    ],
+    "reproducibility": {
+      "status": "passed",
+      "fresh_kernel_runs": 2,
+      "identical_csv_files": 2,
+      "identical_png_files": 2,
+      "comparisons": {
+        "stable_output_hashes_identical": true,
+        "run_info_result_fields_identical": true,
+        "validation_result_fields_identical": true
+      },
+      "stable_output_sha256": {
+        "outputs/statistics/tables/engine_sensor_pairs.csv": "faf689975edad6c1b441101538bf9306c6b633bec1fe7729fffccae2db1cfb6e",
+        "outputs/statistics/tables/sensor_inference.csv": "bfacd7848bdec9c655da220840b4a17aec149890694290bc86b8f7e7591a5093",
+        "outputs/statistics/figures/difference_distributions.png": "5b40893c1a7f01150ef8c980f49240b51dbbc92d7cbf516a3ad0cc29c70dd2a2",
+        "outputs/statistics/figures/effect_size_ci.png": "14dd3140e255d87ab8dc266467555b534cd6ab9e685a79f63ec1a8e094b5db97"
+      }
+    },
+    "raw_sha256_before": {
+      "data/raw/train_FD001.txt": "963b5e22825b34d8b21c69e1aeb4af3e647050eb672ee8834ba4b5d91d2de0f8",
+      "data/raw/test_FD001.txt": "3cda7109ce17bafb5443f2ac926cfcf88154b941b8c4cf95eb55d1ddd6f52851",
+      "data/raw/RUL_FD001.txt": "a19c8ec94931949d0485bdc35118206e9c81c4547b422efb9cf86f4ceddbceca"
+    },
+    "raw_sha256_after": {
+      "data/raw/train_FD001.txt": "963b5e22825b34d8b21c69e1aeb4af3e647050eb672ee8834ba4b5d91d2de0f8",
+      "data/raw/test_FD001.txt": "3cda7109ce17bafb5443f2ac926cfcf88154b941b8c4cf95eb55d1ddd6f52851",
+      "data/raw/RUL_FD001.txt": "a19c8ec94931949d0485bdc35118206e9c81c4547b422efb9cf86f4ceddbceca"
+    },
+    "raw_sha256_unchanged": true,
+    "snapshot_dir": "tmp/statistics-reproducibility-m24-inline/snapshots",
+    "enforcement": {
+      "local_validation": "passed",
+      "optional_hook": "not found",
+      "ci_invocation": "not found in this repository",
+      "branch_protection": "unverified external setting"
+    }
+  }
 }

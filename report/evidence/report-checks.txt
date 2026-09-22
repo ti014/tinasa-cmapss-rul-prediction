@@ -251,3 +251,24 @@ boxes, missing glyphs, undefined citations/references, fatal errors or missing
 files.
 ENVIRONMENT LIMIT: the known Tectonic Fontconfig diagnostic and absolute
 Windows font warnings remain; local PDF build and render succeeded.
+
+M2.4 statistics reproducibility validation: 2026-09-22
+SCOPE: local validation for train-only statistics notebook reproducibility and file-read audit. No ETL, model training, ARIMA, dashboard, CI, hook, branch-protection, or filesystem-permission changes.
+AUTHORITY: active plan M2.4 and statistical protocol require train-only sensor inference; test observations and labels are reserved for final evaluation.
+PASS: added `src/cmapss/statistics/reproducibility.py` as the local validation owner for M2.4. It writes a `sitecustomize.py` runtime guard with rule `STATISTICS_TRAIN_ONLY`, runs focused statistics tests, runs the full pytest suite, executes notebook 02 twice from fresh kernels, compares stable artifact hashes, and records the result in `outputs/statistics/validation.json`.
+PASS: added `tests/test_statistics_reproducibility.py`. Positive proof allows reading `train_FD001.txt`; negative proof blocks `test_FD001.txt` and `RUL_FD001.txt` with diagnostics containing the rule, file name and active-plan authority pointer.
+PASS: focused statistics tests passed 26 tests in 4.26 seconds with `.venv/Scripts/python -m pytest tests/test_statistics_pairs.py tests/test_statistics_inference.py tests/test_statistics_artifacts.py tests/test_statistics_reproducibility.py -q --basetemp=tmp/pytest-statistics-m24 --tb=short`.
+PASS: full suite passed 95 tests in 9.18 seconds with `.venv/Scripts/python -m pytest -q --basetemp=tmp/pytest-m24-full --tb=short`.
+PASS: notebook 02 executed twice through `python -m nbconvert --to notebook --execute --inplace`; run times were 152.05 and 151.99 seconds, both exit code 0 and fresh kernel true. The guarded environment used the inline Matplotlib backend so the persisted notebook retained display outputs without `FigureCanvasAgg` stderr warnings.
+PASS: repeated-run comparison found identical SHA-256 for two CSV files and two PNG files: `engine_sensor_pairs.csv`, `sensor_inference.csv`, `difference_distributions.png` and `effect_size_ci.png`. Stable `run_info.json` result fields and `validation.json` result fields also matched.
+PASS: raw SHA-256 before/after validation matched for `train_FD001.txt`, `test_FD001.txt` and `RUL_FD001.txt`.
+PASS: `outputs/statistics/validation.json` now records M2.4 status, output hashes, repeated-run counts, train-only runtime audit proof, raw hashes and enforcement limits. The final validation snapshot is `tmp/statistics-reproducibility-m24-inline/snapshots`; this temporary directory is excluded from Git.
+ENFORCEMENT: local validation passed. Optional hook not found. CI invocation not found in this repository. Branch protection remains an unverified external setting.
+LIMIT: the runtime guard is a local validation mechanism loaded through `PYTHONPATH`; it is not a filesystem sandbox and does not protect arbitrary programs outside the guarded Python process. PNG byte identity is only claimed for this Windows/Python/font/rendering environment.
+
+Report synchronization after M2.4: 2026-09-22
+SCOPE: README, data contract, output README, report sections, active plan and report PDF synchronization after M2.4 validation. No raw data, model, ETL, ARIMA or dashboard implementation changes.
+PASS: `outputs/statistics/README.md`, `README.md`, `README.vi.md`, `report/README.md`, `data/CONTRACTS.md`, report progress/evidence/results sections and the active plan now state that M2.4 repeated-run validation and train-only runtime audit passed.
+PASS: Tectonic 0.17.0 rebuilt `report/figures/pipeline.pdf`, `report/figures/statistical-protocol.pdf` and `report/main.pdf` with exit code 0. `pdfinfo` reports 39 A4 pages and file size 983,182 bytes.
+PASS: log scan found no overfull/underfull boxes, undefined citations/references, missing files, fatal errors or unresolved bibliography warnings. Remaining messages are known environment diagnostics: missing default Fontconfig configuration, absolute Windows font paths and shell escape disabled in TikZ builds.
+PASS: Poppler rendered all 39 pages at 110 DPI. Pages 27, 29, 32, 35 and 36 were visually inspected for the acceptance text, EDA table, statistics figure, limitations and references; no clipping, overlap or unreadable content was observed.

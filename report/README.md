@@ -7,12 +7,14 @@ nộp cuối cùng. Nguồn chính là [main.tex](main.tex). Ngày cập nhật 
 Bản hiện tại có bài toán RUL, data dictionary, dữ liệu và contract, bảng thuật
 ngữ và chữ viết tắt, cơ sở lý thuyết có trích dẫn, protocol thống kê mốc 2,
 phương pháp kèm lý do lựa chọn, kết quả validation, một số quan sát EDA và bảng
-suy luận sensor đầu/cuối vòng đời trên train, hai hình thống kê M2.3b, khó khăn,
+suy luận sensor đầu/cuối vòng đời trên train, hai hình thống kê M2.3b, validation
+tái lập M2.4, khó khăn,
 giới hạn, khai báo AI/LLM, nhật ký tiến độ và bảng đối chiếu bằng chứng. Chưa
 có kết quả mô hình, ARIMA, ETL Silver/Gold hoặc dashboard.
 Mốc EDA mô tả đã hoàn thành theo [biên bản nghiệm thu](../outputs/eda/validation.json);
-bảng thống kê M2.3a có biên bản tại [outputs/statistics/validation.json](../outputs/statistics/validation.json)
-và hình M2.3b nằm trong [outputs/statistics/figures](../outputs/statistics/figures).
+bảng thống kê M2.3a, hình M2.3b và validation M2.4 có biên bản tại
+[outputs/statistics/validation.json](../outputs/statistics/validation.json)
+và hình nằm trong [outputs/statistics/figures](../outputs/statistics/figures).
 
 Ngày 22/09/2026 bổ sung lý thuyết window, Ridge, histogram gradient boosting,
 grouped validation, paired analysis, bootstrap, FDR, PCA–ARIMA và Spark.
@@ -21,6 +23,9 @@ helper tạo cặp và helper suy luận train theo engine--sensor đã có và 
 thử. Notebook M2.3a đã xuất 2.100 cặp, 21 dòng suy luận, `run_info.json` và
 `validation.json`; notebook M2.3b đã tạo `difference_distributions.png` và
 `effect_size_ci.png`, đồng thời bổ sung diễn giải giới hạn vào phần kết quả.
+M2.4 đã chạy notebook hai lần từ fresh kernel, so sánh hai CSV và hai PNG,
+chặn probe đọc `test_FD001.txt` và `RUL_FD001.txt`, đồng thời chạy full suite
+95 tests.
 Chênh lệch cặp trung bình, cấu hình bootstrap, Wilcoxon permutation, ties/zeros và mức FDR đã
 được chốt ở M2.0 trong
 [protocol](sections/statistical-protocol.tex). Ví dụ engine sống 200 cycles
@@ -124,7 +129,7 @@ dọn aux/log riêng của report; giữ PDF và nguồn. Không đưa thư mụ
 vào gói nộp.
 
 Bản hiện tại đã kiểm chứng PDF **39 trang**, gồm data dictionary, bảng thuật ngữ,
-hai sơ đồ TikZ, bảng/hình EDA và kết quả thống kê M2.3a--M2.3b. Log
+hai sơ đồ TikZ, bảng/hình EDA và kết quả thống kê M2.3a--M2.4. Log
 LaTeX/BibTeX không có overfull/underfull, glyph thiếu, citation/reference chưa
 giải quyết hoặc cảnh báo bibliography. Đã rà bản render của các trang data
 dictionary và sơ đồ pipeline; bằng chứng mới nhất nằm trong

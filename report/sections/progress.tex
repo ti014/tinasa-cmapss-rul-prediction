@@ -1,0 +1,39 @@
+\section{Tiến độ thực hiện và kế hoạch tiếp theo}
+\label{sec:progress}
+\subsection{Cách ghi nhận tiến độ}
+Mỗi mốc ghi rõ công việc, lý do thực hiện, đầu ra có thể kiểm tra, trạng thái và phần còn lại. Trạng thái ``đã có bằng chứng'' chỉ áp dụng cho phạm vi đã được kiểm tra; việc một file tồn tại chưa đủ để kết luận toàn bộ mốc đã hoàn thành. Báo cáo được cập nhật cùng kết quả phân tích, thay vì đợi hoàn tất mô hình mới tổng hợp.
+
+\begin{longtable}{L{2cm}L{3.2cm}L{5.8cm}L{3.3cm}}
+\caption{Nhật ký công việc đến ngày \reportdate.}\label{tab:progress}\\
+\toprule
+Mốc ghi nhận & Công việc & Lý do và bằng chứng & Trạng thái / còn lại\\
+\midrule
+\endfirsthead
+\toprule Mốc ghi nhận & Công việc & Lý do và bằng chứng & Trạng thái / còn lại\\\midrule
+\endhead
+20--21/09/2026 & Chuẩn bị FD001 và tài liệu nền tảng & Giữ một nguồn dữ liệu có lịch sử đến khi hỏng để xác định RUL. Đã có file raw, ghi chú provenance, danh mục tài liệu và phạm vi nghiên cứu. & Đã có; cần tiếp tục đọc và đối chiếu nguồn khi viết cơ sở lý thuyết.\\[0.5em]
+22/09/2026 & Kiểm tra dữ liệu và tạo train RUL & Kiểm tra trước phân tích để tránh tính toán trên schema hoặc khóa sai. JSON validation đạt; 20.631 train targets khớp 20.631 observations. & Đã có bằng chứng cho raw và train targets; chưa bao gồm rolling features.\\[0.5em]
+22/09/2026 & EDA mô tả chỉ dùng train & Tìm hiểu phân phối và tín hiệu trước khi xây dựng đặc trưng. Biên bản EDA ghi 69 tests đạt; notebook chạy từ kernel mới, 12 CSV và 11 PNG tái lập được. & Hoàn thành mốc EDA mô tả; chưa có thống kê suy luận hoặc feature selection.\\[0.5em]
+22/09/2026 & Khởi tạo báo cáo LaTeX và nhật ký tiến độ & Lưu lập luận cùng bằng chứng ngay khi thực hiện để tránh mất lý do lựa chọn. Có nguồn theo phần, sơ đồ, bảng tiến độ và bản PDF. & Bản đang thực hiện; các kết quả mô hình và đánh giá cuối chưa có.\\[0.5em]
+22/09/2026 & Bổ sung cơ sở lý thuyết và protocol thống kê & Gắn nguồn cho phương pháp đã chọn; định nghĩa mean 30 cycles đầu/cuối, chênh lệch theo engine và giả định suy luận. Có phần lý thuyết, protocol và sơ đồ riêng. & Hoàn thành nội dung thiết kế của đợt này; cấu hình chi tiết còn là đề xuất, kiểm định chưa chạy.\\
+\bottomrule
+\end{longtable}
+
+\clearpage
+\subsection{Các mốc tiếp theo và điều kiện hoàn thành}
+\begin{longtable}{L{3.4cm}L{5.1cm}L{6.2cm}}
+\caption{Công việc còn lại; thứ tự phụ thuộc, không phải lịch cam kết.}\label{tab:next}\\
+\toprule Công việc & Vì sao cần thực hiện & Bằng chứng cần bổ sung\\\midrule
+\endfirsthead
+\toprule Công việc & Vì sao cần thực hiện & Bằng chứng cần bổ sung\\\midrule
+\endhead
+Phân tích thống kê suy luận & Phân biệt quan sát mô tả với kết luận thống kê; tránh chọn tín hiệu chỉ từ vài hình thuận lợi. & Đã chốt mean 30 cycles đầu/cuối; cần chốt cấu hình còn mở ở Mục~\ref{sec:stat-protocol}, rồi xuất effect sizes, khoảng tin cậy và kiểm định đã hiệu chỉnh.\\[0.5em]
+ETL Pandas/PySpark & Thể hiện chuẩn hóa, tích hợp và lưu trữ; so sánh tính đúng giữa hai cách xử lý. & Parquet/SQLite; số dòng trước/sau; parity theo khóa và giá trị; benchmark có cấu hình máy và thời gian đo.\\[0.5em]
+Đặc trưng và validation & Chuyển chuỗi thành đầu vào mô hình trong khi giữ ranh giới động cơ và quá khứ. & Window đủ 30 cycles; fold không trùng engine; preprocessing chỉ fit training fold.\\[0.5em]
+Mô hình và đánh giá cuối & Xác định khả năng dự đoán trên cùng protocol thay vì suy ra từ correlation. & Kết quả cross-validation, cấu hình được chọn, đúng 100 dự đoán test trước khi join nhãn; metric và khoảng tin cậy.\\[0.5em]
+ARIMA và dashboard & Bổ sung phân tích chuỗi thời gian và cách đọc kết quả cảnh báo. & Forecast và diagnostics trên Health Index; dashboard kiểm tra được theo từng engine.\\[0.5em]
+Hoàn thiện báo cáo & Liên kết kết quả, khó khăn và giới hạn với yêu cầu môn học. & PDF đủ citation/hình, demo và slide; kiểm tra tái lập toàn bộ.\\
+\bottomrule
+\end{longtable}
+
+Ví dụ cập nhật một mốc: khi ETL đã xuất Parquet nhưng chưa đối chiếu Pandas/PySpark, trạng thái vẫn là ``đang thực hiện''. Chỉ khi có kết quả parity mới ghi hoàn thành phần tương đương dữ liệu; kết quả đó không đồng thời chứng minh PySpark nhanh hơn.

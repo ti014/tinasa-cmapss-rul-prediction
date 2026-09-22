@@ -1,0 +1,39 @@
+Report evidence checks
+Checked at UTC: 2026-09-21T19:44:19.436807+00:00
+PASS: train SHA-256 matches EDA and validation metadata: 963b5e22825b34d8b21c69e1aeb4af3e647050eb672ee8834ba4b5d91d2de0f8
+PASS: 20631 train observations, 26 raw columns, 100 engines.
+PASS: all eight lifetime summary values independently recalculated from raw train.
+PASS: seven constant measurements match raw train and EDA metadata.
+PASS: sensor 1, 6, 11, 12 defined counts and median Spearman correlations independently recalculated.
+PASS: all 12 table and 11 figure paths from EDA metadata exist.
+PASS: saved validation reports passed; observations checksums match current raw files.
+LIMIT: test label values were not read; 100 labels cited from saved integrity report.
+LIMIT: report checks do not certify complete EDA notebook, model performance or end-to-end pipeline.
+No training, notebook execution, or raw/EDA artifact modification performed.
+PASS: Tectonic 0.17.0 built pipeline.pdf and main.pdf with exit code 0.
+PASS: main.pdf has 18 A4 pages; final TeX log has no overfull/underfull, missing glyph or undefined citation/reference.
+PASS: rendered PDF reviewed; independent TikZ review found no collisions, clipping or incorrect test-label edges.
+PASS: report text uses impersonal wording; student ID only on cover, absent from PDF metadata.
+PASS: bibliography uses existing citation keys; DOI is present in extracted PDF text.
+PASS: git diff --check at report handoff.
+ENVIRONMENT LIMIT: Tectonic emitted a missing default Fontconfig configuration diagnostic and absolute Windows font warnings; build succeeded and Vietnamese glyphs were visually checked.
+
+Theory and statistical protocol update: 2026-09-22
+SCOPE: documentation and report only; no statistical tests, model training, ETL or dependency changes in this task.
+AUTHORITY: user accepted report/reference revision and explicitly selected mean of the first 30 and last 30 cycles per train engine.
+PASS: theory and protocol sources added, existing main.tex includes both; progress/evidence/readmes/references/internal plan synchronized.
+PASS: bibliography contains 22 unique entries, 19 cited sources, no missing citation keys. Three uncited entries remain optional/background reading (Lei, LSTM, Dataflow).
+PASS: 13 method references added. M1-M3 metadata verified through Crossref and official references; full-text limitations recorded. SciPy sources pinned to documentation 1.16.2, other online docs do not assert installed versions.
+PASS: NASA score signs and denominators checked against Li et al., Section 3.1.4 Equation (5), printed page 9/PDF page 10; source PDF rendered and inspected. Negative error uses 13, nonnegative uses 10 for predicted-minus-true error.
+PASS: Ramasso volume 6 and issue 1 retained; issue moved to note to satisfy plainurl bibliography formatting. No BibTeX warnings in final build.
+PASS: 15 unique labels, 10 internal references and 4 included figures resolve; local Markdown links in changed public documents resolve.
+PASS: Tectonic 0.17.0 built statistical-protocol.pdf and main.pdf with exit code 0. Final report has 28 A4 pages.
+PASS: final LaTeX/BibTeX logs contain no overfull/underfull boxes, missing glyphs, undefined citations/references or duplicate labels. pdftexcmds informational pdfdraftmode message is not a build error.
+PASS: rendered all report pages for layout overview, inspected new theory/protocol and bibliography pages; re-rendered changed theory/protocol pages after final citation spacing edits.
+PASS: independent TikZ review found 0 text/arrow collisions, 0 whitespace issues, 0 clipping; train-only and planned status labels are clear.
+PASS: PDF has no unresolved ?? markers; student ID appears only on cover, not body or metadata.
+PASS: raw train SHA-256 remains 963b5e22825b34d8b21c69e1aeb4af3e647050eb672ee8834ba4b5d91d2de0f8, matching prior report evidence. Git diff shows no changes in data/src/tests/notebooks/outputs or dependency manifests at final inspection.
+LIMIT: mean paired difference, percentile bootstrap settings, Wilcoxon ties/zeros/permutation settings and FDR details are proposals, not finalized execution configuration. Validation cycle sampling and model hyperparameters remain open.
+LIMIT: no claim of completed inference or model performance; previous 69-test result is historical evidence, not a new test run for this documentation change.
+ENVIRONMENT LIMIT: existing Fontconfig diagnostic and absolute Windows font warnings remain; successful PDF build/render was verified locally.
+PASS: git diff --check and whitespace checks including untracked report sources passed. Build logs retained in tmp/report-theory-review/; no .blg build artifact left in report/.

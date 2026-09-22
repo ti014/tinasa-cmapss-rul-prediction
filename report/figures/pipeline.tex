@@ -1,0 +1,34 @@
+\documentclass[tikz,border=15pt]{standalone}
+\usepackage{fontspec}
+\setsansfont{Arial}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning}
+\definecolor{greenFill}{HTML}{E8F5E9}
+\definecolor{greenStroke}{HTML}{43A047}
+\definecolor{coreFill}{HTML}{E1F5FE}
+\definecolor{coreStroke}{HTML}{0277BD}
+\begin{document}
+\begin{tikzpicture}[
+font=\sffamily\small,>=Stealth,
+base/.style={rectangle,rounded corners=3pt,align=center,text width=5.2cm,minimum height=1.1cm,inner sep=8pt},
+dataNode/.style={base,draw=greenStroke,fill=greenFill,thick},
+opNode/.style={base,draw=coreStroke,fill=coreFill,thick},
+planned/.style={base,draw=gray!70,fill=gray!5,dashed,thick},
+edge/.style={->,thick,draw=gray!80}]
+\node[dataNode] (raw) at (0,0) {FD001 raw / Bronze\\Train và test observations};
+\node[opNode] (validate) at (0,-2) {Reader và validator\\Observations; train targets};
+\node[dataNode] (eda) at (0,-4) {EDA chỉ dùng train\\Bảng CSV và hình PNG đã có};
+\node[planned] (silver) at (7,-2) {ETL Pandas / PySpark\\Silver Parquet -- dự kiến};
+\node[planned] (model) at (7,-4) {Gold features; mô hình\\Validation theo engine -- dự kiến};
+\node[planned] (eval) at (7,-6) {100 dự đoán test; đánh giá cuối\\Metric -- dự kiến};
+\node[dataNode] (labels) at (0,-6) {Test labels lưu riêng\\Chưa dùng đánh giá mô hình};
+\node[planned] (out) at (7,-8) {Dashboard và kết quả mô hình\\Bổ sung vào báo cáo -- dự kiến};
+\draw[edge] (raw.south) -- (validate.north);
+\draw[edge] (validate.south) -- (eda.north);
+\draw[edge,dashed] (validate.east) -- (silver.west);
+\draw[edge,dashed] (silver.south) -- (model.north);
+\draw[edge,dashed] (model.south) -- (eval.north);
+\draw[edge,dashed] (labels.east) -- (eval.west);
+\draw[edge,dashed] (eval.south) -- (out.north);
+\end{tikzpicture}
+\end{document}

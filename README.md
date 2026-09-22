@@ -18,13 +18,19 @@ Available now:
 - An [executed EDA notebook](notebooks/01_fd001_eda.ipynb), 12 CSV tables,
   11 figures, and [analysis notes and validation evidence](outputs/eda/README.md).
 - A curated bibliography and reading guide.
+- A [living LaTeX report](report/README.md) with a [PDF draft](report/main.pdf),
+  work progress, decision rationale, and traceable validation/initial EDA observations.
+  EDA milestone 1 passed independent validation; inferential analysis belongs to milestone 2.
+- A cited theoretical background and a [milestone 2 statistical protocol](report/sections/statistical-protocol.tex).
+  The paired comparison uses the mean of the first and last 30 cycles per engine.
+  Detailed statistical settings remain proposals; inferential tests have not run.
 
 Not implemented yet:
 
 - Silver/Gold ETL pipelines in Pandas and PySpark.
 - Inferential statistical analysis and feature engineering.
 - RUL models and ARIMA analysis.
-- Streamlit dashboard and final LaTeX report.
+- Streamlit dashboard and completed final report (the LaTeX draft has started).
 
 Installation, data validation, and notebook instructions are available below. Model training, evaluation, and dashboard entry points are not implemented yet.
 
@@ -201,7 +207,7 @@ Current and planned public project structure:
 ├── requirements.txt         # Pip installation: local package and runtime libraries
 ├── requirements-dev.txt     # Notebook and test dependencies
 ├── uv.lock                  # Locked dependency versions
-├── report/                  # Planned LaTeX report
+├── report/                  # Living LaTeX/PDF report, progress and evidence
 ├── app.py                   # Planned Streamlit dashboard entry point
 ├── README.md                # English documentation
 └── README.vi.md             # Vietnamese documentation
@@ -308,8 +314,12 @@ Pytest clears its `--basetemp` directory on subsequent runs; reserve it for test
 
 </details>
 
-Silver/Gold ETL, PySpark, rolling features, models, dashboard, and the LaTeX
-report are not implemented yet.
+Silver/Gold ETL, PySpark, rolling features, models, and dashboard are not
+implemented yet. The [report draft](report/main.pdf) is updated alongside
+verified work: its progress log records dates, rationale, artifacts, checks,
+and remaining work. See [report instructions](report/README.md) for source
+organization and PDF build commands. The current draft includes verified data
+validation and selected initial EDA observations, not model evaluation results.
 
 ## Academic Context and AI Disclosure
 

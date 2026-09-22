@@ -1,6 +1,6 @@
 % References verified on 2026-09-20.
 % Publisher/author sources and reading status: reading-guide.md.
-% Eight papers plus the NASA dataset landing page.
+% Foundational papers plus method references; additions verified 2026-09-22.
 
 @inproceedings{saxena2008damage,
   author    = {Saxena, Abhinav and Goebel, Kai and Simon, Don and Eklund, Neil},
@@ -30,7 +30,7 @@
   booktitle = {Annual Conference of the PHM Society},
   year      = {2014},
   volume    = {6},
-  number    = {1},
+  note      = {Issue 1},
   doi       = {10.36001/phmconf.2014.v6i1.2512},
   url       = {https://papers.phmsociety.org/index.php/phmconf/article/view/2512}
 }
@@ -99,4 +99,133 @@
   url          = {https://data.nasa.gov/dataset/cmapss-jet-engine-simulated-data},
   note         = {Accessed 2026-09-20; project uses FD001},
   urldate      = {2026-09-20}
+}
+
+@article{wilcoxon1945,
+  author = {Wilcoxon, Frank},
+  title = {Individual Comparisons by Ranking Methods},
+  journal = {Biometrics Bulletin},
+  year = {1945},
+  volume = {1},
+  number = {6},
+  pages = {80--83},
+  doi = {10.2307/3001968},
+  url = {https://doi.org/10.2307/3001968}
+}
+
+@article{efron1979bootstrap,
+  author = {Efron, B.},
+  title = {Bootstrap Methods: Another Look at the Jackknife},
+  journal = {The Annals of Statistics},
+  year = {1979},
+  volume = {7},
+  number = {1},
+  pages = {1--26},
+  doi = {10.1214/aos/1176344552},
+  url = {https://doi.org/10.1214/aos/1176344552}
+}
+
+@article{benjamini1995fdr,
+  author = {Benjamini, Yoav and Hochberg, Yosef},
+  title = {Controlling the False Discovery Rate: A Practical and Powerful Approach to Multiple Testing},
+  journal = {Journal of the Royal Statistical Society: Series B (Methodological)},
+  year = {1995},
+  volume = {57},
+  number = {1},
+  pages = {289--300},
+  doi = {10.1111/j.2517-6161.1995.tb02031.x},
+  url = {https://doi.org/10.1111/j.2517-6161.1995.tb02031.x}
+}
+
+@misc{scipyWilcoxon,
+  author = {{SciPy developers}},
+  title = {{scipy.stats.wilcoxon}},
+  howpublished = {SciPy 1.16.2 Manual},
+  url = {https://docs.scipy.org/doc/scipy-1.16.2/reference/generated/scipy.stats.wilcoxon.html},
+  note = {Accessed 2026-09-22},
+  urldate = {2026-09-22}
+}
+
+@misc{scipyBootstrap,
+  author = {{SciPy developers}},
+  title = {{scipy.stats.bootstrap}},
+  howpublished = {SciPy 1.16.2 Manual},
+  url = {https://docs.scipy.org/doc/scipy-1.16.2/reference/generated/scipy.stats.bootstrap.html},
+  note = {Accessed 2026-09-22},
+  urldate = {2026-09-22}
+}
+
+@misc{statsmodelsFDR,
+  author = {{statsmodels developers}},
+  title = {{statsmodels.stats.multitest.fdrcorrection}},
+  howpublished = {Online documentation},
+  url = {https://www.statsmodels.org/stable/generated/statsmodels.stats.multitest.fdrcorrection.html},
+  note = {Accessed 2026-09-22; implementation version not selected},
+  urldate = {2026-09-22}
+}
+
+@misc{sklearnRidge,
+  author = {{scikit-learn developers}},
+  title = {Linear Models: {Ridge} Regression and Classification},
+  howpublished = {User Guide},
+  url = {https://scikit-learn.org/stable/modules/linear_model.html#ridge-regression-and-classification},
+  note = {Accessed 2026-09-22; implementation version not selected},
+  urldate = {2026-09-22}
+}
+
+@misc{sklearnHistBoost,
+  author = {{scikit-learn developers}},
+  title = {{Histogram-Based Gradient Boosting}},
+  howpublished = {User Guide},
+  url = {https://scikit-learn.org/stable/modules/ensemble.html#histogram-based-gradient-boosting},
+  note = {Accessed 2026-09-22; implementation version not selected},
+  urldate = {2026-09-22}
+}
+
+@misc{sklearnGroupedCV,
+  author = {{scikit-learn developers}},
+  title = {Cross-Validation Iterators for Grouped Data},
+  howpublished = {User Guide},
+  url = {https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation-iterators-for-grouped-data},
+  note = {Accessed 2026-09-22; implementation version not selected},
+  urldate = {2026-09-22}
+}
+
+@misc{sklearnPCA,
+  author = {{scikit-learn developers}},
+  title = {Decomposing Signals in Components: {Principal Component Analysis}},
+  howpublished = {User Guide},
+  url = {https://scikit-learn.org/stable/modules/decomposition.html#pca},
+  note = {Accessed 2026-09-22; implementation version not selected},
+  urldate = {2026-09-22}
+}
+
+@book{hyndman2021fpp3,
+  author = {Hyndman, Rob J. and Athanasopoulos, George},
+  title = {Forecasting: Principles and Practice},
+  edition = {3},
+  year = {2021},
+  publisher = {OTexts},
+  address = {Melbourne, Australia},
+  url = {https://otexts.com/fpp3/},
+  note = {Online edition, sections 5.4, 9.1, 9.5 and 9.7; accessed 2026-09-22},
+  urldate = {2026-09-22}
+}
+
+@misc{statsmodelsADF,
+  author = {{statsmodels developers}},
+  title = {{statsmodels.tsa.stattools.adfuller}},
+  howpublished = {Online documentation},
+  url = {https://www.statsmodels.org/stable/generated/statsmodels.tsa.stattools.adfuller.html},
+  note = {Accessed 2026-09-22; implementation version not selected},
+  urldate = {2026-09-22}
+}
+
+@misc{sparkSQLGuide,
+  author = {{Apache Software Foundation}},
+  title = {{Spark SQL and DataFrames}},
+  howpublished = {Apache Spark documentation},
+  url = {https://spark.apache.org/docs/latest/sql-programming-guide.html},
+  note = {Accessed 2026-09-22; implementation version not selected},
+  urldate = {2026-09-22}
 }

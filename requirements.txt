@@ -14,7 +14,7 @@ packaging==26.3
 pandas==2.3.3
 patsy==1.0.3
 pillow==12.3.0
-pyarrow==22.0.0
+pyarrow==23.0.1
 pyparsing==3.3.3
 python-dateutil==2.9.0.post0
 pytz==2026.3.post1

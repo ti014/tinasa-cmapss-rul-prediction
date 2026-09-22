@@ -92,7 +92,7 @@ PASS: Tectonic 0.17.0 rebuilt `report/figures/pipeline.pdf`,
 boxes, missing glyphs, undefined citations/references or duplicate labels.
 PASS: both TikZ diagrams were rendered and independently reviewed: 0 text/arrow
 collisions, 0 whitespace collisions and 0 edge clipping; M2.3a actual and
-M2.3b/planned states match `run_info.json` and `validation.json`.
+M2.3b output states match the persisted artifacts and report paths.
 PASS: `git diff --check` passed. The existing raw train SHA-256 and persisted
 M2.3a validation artifacts were not modified.
 ENVIRONMENT LIMIT: Tectonic still emits the known missing default Fontconfig
@@ -101,6 +101,28 @@ completed successfully.
 PASS: after the final terminology adjustment in `statistical-protocol.tex`,
 `main.pdf` was rebuilt successfully; the 31-page A4 PDF was re-rendered and the
 changed protocol pages were visually checked again.
+
+Glossary update: 2026-09-22
+SCOPE: report front matter and synchronized report/public documentation only;
+no raw data, code, statistical artifact, model, ETL or dependency changes.
+PASS: `report/sections/glossary.tex` adds a Vietnamese terminology and
+abbreviation table covering the report's RUL, FD001, data contract, leakage,
+EDA/ETL, window, feature, metric, paired inference, FDR, PCA, ARIMA and
+Spark terminology; examples remain scoped to the report and do not introduce
+new experimental results.
+PASS: `report/main.tex` includes the glossary after the table of contents;
+`report/README.md`, `README.md`, `README.vi.md` and the active plan describe the
+new source and status consistently.
+PASS: Tectonic 0.17.0 rebuilt `report/main.pdf` with exit code 0. `pdfinfo`
+reports 37 A4 pages; the final log has no overfull/underfull boxes, missing
+glyphs, undefined citations/references or duplicate-destination warnings.
+PASS: Poppler rendered pages 1--8; pages 5--7 were visually inspected for
+column overflow, repeated longtable headers, page breaks and clipping. The
+glossary is present in the table of contents and is not incorrectly added to
+the list of tables.
+PASS: `git diff --check` passed for the changed files.
+ENVIRONMENT LIMIT: the known Tectonic Fontconfig diagnostic and absolute
+Windows font warnings remain; local PDF build and render succeeded.
 
 Statistics package refactor: 2026-09-22
 SCOPE: code organization and documentation paths only; no raw data, CSV/JSON
@@ -127,3 +149,36 @@ was visually inspected with no clipping or overlap observed.
 ENVIRONMENT LIMIT: Tectonic still emits the known Fontconfig diagnostic and
 absolute Windows font warnings; `pdftotext` is not on PATH, so PDF verification
 used Poppler rendering and visual inspection instead of text extraction.
+
+M2.3b statistical figures and interpretation update: 2026-09-22
+SCOPE: notebook 02 plotting cells, two statistics PNG artifacts, report
+interpretation, README synchronization and protocol diagram status. No raw data,
+CSV/JSON schema, M2.0 statistical configuration, model training, ARIMA, ETL or
+dashboard implementation changes.
+PASS: first nbconvert execution exposed a local plotting bug because the new
+cell used `np.linspace` without importing NumPy. The notebook was fixed and run
+again from a fresh kernel; nbconvert completed with exit code 0 and wrote
+`notebooks/02_fd001_inference.ipynb`.
+PASS: `outputs/statistics/figures/difference_distributions.png` and
+`outputs/statistics/figures/effect_size_ci.png` were created from the current
+`result.pairs` and `result.inference` tables. Visual inspection confirmed 21
+panels, zero-reference lines, all-zero sensor labels and readable CI panels.
+PASS: report sections, `outputs/statistics/README.md`, both root READMEs,
+`report/README.md`, active plan and `report/figures/statistical-protocol.tex`
+were updated so M2.3b is no longer described as planned.
+PASS: `report/figures/statistical-protocol.pdf` and `report/main.pdf` rebuilt
+with Tectonic 0.17.0. `pdfinfo` reports 34 A4 pages for `main.pdf`. The final
+report log has no overfull/underfull boxes, missing glyphs, undefined
+citations/references or duplicate-label warnings.
+PASS: `.venv/Scripts/python -m pytest -q --basetemp=tmp/pytest-m23b-full
+--tb=short` passed 94 tests. `.venv/Scripts/python -m compileall -q src tests`
+and `git diff --check` passed.
+PASS: Poppler rendered pages 24--32 of `report/main.pdf`; pages 27--29 were
+visually inspected for the two M2.3b figures and interpretation text. The
+updated `statistical-protocol.pdf` was rendered and checked; no clipping,
+overlap or unreadable labels were observed.
+LIMIT: this update does not complete M2.4 repeated-run reproducibility proof or
+the active train-only file-read blocking audit.
+ENVIRONMENT LIMIT: Tectonic still emits the known missing Fontconfig diagnostic
+and absolute Windows font path warnings; build exits 0 and the rendered PDF was
+checked locally.

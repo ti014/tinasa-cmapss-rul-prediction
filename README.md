@@ -8,7 +8,7 @@ A reproducible Big Data course project for analyzing multivariate turbofan senso
 
 ## Project Status
 
-This repository now provides **FD001 data validation, train RUL targets, a completed train-only EDA notebook (milestone 1), and persisted M2.3a train-only sensor inference artifacts for milestone 2**.
+This repository now provides **FD001 data validation, train RUL targets, a completed train-only EDA notebook (milestone 1), and persisted M2.3a--M2.3b train-only sensor inference artifacts for milestone 2**.
 
 Available now:
 
@@ -19,7 +19,8 @@ Available now:
   11 figures, and [analysis notes and validation evidence](outputs/eda/README.md).
 - A curated bibliography and reading guide.
 - A [living LaTeX report](report/README.md) with a [PDF draft](report/main.pdf),
-  work progress, decision rationale, and traceable validation/initial EDA observations.
+  a glossary of report terminology and abbreviations, work progress, decision
+  rationale, and traceable validation/initial EDA observations.
   EDA milestone 1 passed independent validation; inferential analysis belongs to milestone 2.
 - A cited theoretical background and a [milestone 2 statistical protocol](report/sections/statistical-protocol.tex).
   The paired comparison uses each sensor's mean over the first and last 30 cycles of every train engine.
@@ -31,11 +32,15 @@ Available now:
 - An [executed M2.3a inference notebook](notebooks/02_fd001_inference.ipynb),
   two validated CSV tables, run metadata, and [validation notes](outputs/statistics/README.md).
   The outputs keep all 21 sensors and do not read test observations or test labels.
+- M2.3b figures generated from those artifacts:
+  [difference distributions](outputs/statistics/figures/difference_distributions.png)
+  and [effect sizes with bootstrap CI](outputs/statistics/figures/effect_size_ci.png).
 
 Not implemented yet:
 
 - Silver/Gold ETL pipelines in Pandas and PySpark.
-- Milestone 2 statistical figures and deeper report interpretation beyond the M2.3a tables, plus feature engineering.
+- M2.4 repeated-run and train-only audit for the statistics notebook, plus
+  Silver/Gold ETL and rolling feature engineering.
 - RUL models and ARIMA analysis.
 - Streamlit dashboard and completed final report (the LaTeX draft has started).
 
@@ -310,11 +315,13 @@ After installing `requirements-dev.txt`, open the train-only inference notebook:
 
 Running all cells recreates `outputs/statistics/tables/engine_sensor_pairs.csv`,
 `outputs/statistics/tables/sensor_inference.csv`, `run_info.json`, and
-`validation.json`. For example, the current artifact has 2,100 engine-sensor
-pairs and 21 sensor-level inference rows. Six globally constant sensors remain
-in the output as `all_zero_difference`; 15 testable sensors reject the null after
-Benjamini-Hochberg FDR under the fixed protocol. These results are train-only
-and are not feature selection.
+`validation.json`, together with
+`outputs/statistics/figures/difference_distributions.png` and
+`outputs/statistics/figures/effect_size_ci.png`. For example, the current
+artifact has 2,100 engine-sensor pairs and 21 sensor-level inference rows. Six
+globally constant sensors remain in the output as `all_zero_difference`; 15
+testable sensors reject the null after Benjamini-Hochberg FDR under the fixed
+protocol. These results are train-only and are not feature selection.
 
 ![FD001 train statistics workflow](assets/diagrams/fd001-statistics.svg)
 
@@ -324,11 +331,11 @@ and are not feature selection.
 
 For example, the 100 train engines have a median lifetime of 199 cycles.
 Six sensors are globally constant; `sensor_6` varies globally but is constant
-within 38 engines. These are descriptive findings, not model feature selection
-or inferential significance claims. Milestone 2 now has M2.3a persisted tables for
-paired analysis and mean paired differences, bootstrap confidence intervals,
-Wilcoxon testing, and multiple testing under the fixed M2.0 configuration; figures
-and deeper interpretation remain the next step.
+within 38 engines. The M2.3b figures show each sensor in its own panel so that
+different sensor scales are not ranked directly. `sensor_6` illustrates that a
+small mean difference can coexist with a small p-value, while `sensor_9`
+illustrates why the per-engine distribution should be read together with the
+mean and CI. These are train-only findings, not model feature selection.
 
 <details>
 <summary>Development and optional checks</summary>
@@ -357,7 +364,7 @@ Pytest clears its `--basetemp` directory on subsequent runs; reserve it for test
 
 </details>
 
-Silver/Gold ETL, PySpark, rolling features, statistics figures beyond M2.3a,
+M2.4 repeated-run validation, Silver/Gold ETL, PySpark, rolling features,
 models, and dashboard are not implemented yet. The [report draft](report/main.pdf) is updated alongside
 verified work: its progress log records dates, rationale, artifacts, checks,
 and remaining work. See [report instructions](report/README.md) for source

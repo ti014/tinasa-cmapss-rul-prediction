@@ -1,10 +1,12 @@
 # Thống kê suy luận FD001 train
 
-Mốc M2.3a đã xuất các tệp đầu ra thống kê suy luận từ
+Mốc M2.3a--M2.3b đã xuất các tệp đầu ra thống kê suy luận từ
 `data/raw/train_FD001.txt`. Phân tích so sánh giá trị trung bình của 30 cycles
 đầu và 30 cycles cuối trong cùng một động cơ train, cho từng sensor. Đây là
 bằng chứng thống kê trên train, không phải lựa chọn đặc trưng (feature selection)
-và không đọc `test_FD001.txt` hoặc `RUL_FD001.txt`.
+và không đọc `test_FD001.txt` hoặc `RUL_FD001.txt`. M2.3b bổ sung hai hình:
+phân phối `difference` theo engine và mean paired difference kèm bootstrap CI
+95%.
 
 ![Quy trình thống kê FD001](../../assets/diagrams/fd001-statistics.svg)
 
@@ -26,6 +28,8 @@ Sau khi cài các dependency từ `requirements-dev.txt`, chạy notebook từ t
 Chọn kernel Python của `.venv`, sau đó chọn **Restart Kernel and Run All Cells**.
 Notebook gọi `write_sensor_statistics_artifacts`, ghi đè các artifact trong
 `outputs/statistics/` và chạy kiểm tra round-trip CSV trước khi ghi metadata.
+Sau đó notebook tạo lại hai hình PNG trong `outputs/statistics/figures/` từ
+hai bảng vừa xuất.
 Lần chạy hiện tại dùng Python 3.12.14, Pandas 2.3.3, NumPy 2.3.3 và SciPy
 1.16.2.
 
@@ -46,6 +50,9 @@ không làm hỏng notebook hoặc caller hiện tại.
 
 ```text
 outputs/statistics/
+├── figures/
+│   ├── difference_distributions.png # Phân phối difference theo engine
+│   └── effect_size_ci.png           # Mean difference và bootstrap CI 95%
 ├── tables/
 │   ├── engine_sensor_pairs.csv   # 2.100 dòng: 100 động cơ × 21 sensor
 │   └── sensor_inference.csv      # 21 dòng: một dòng cho mỗi sensor
@@ -59,6 +66,10 @@ late_mean - early_mean` cho từng `(engine_id, sensor)`. `sensor_inference.csv`
 chứa chênh lệch cặp trung bình, trung vị, khoảng tin cậy bootstrap percentile
 95%, thống kê Wilcoxon, p-value thô, p-value đã hiệu chỉnh theo
 Benjamini-Hochberg và trạng thái kiểm định.
+
+![Phân phối chênh lệch đầu/cuối theo engine](figures/difference_distributions.png)
+
+![Chênh lệch cặp trung bình và bootstrap CI 95%](figures/effect_size_ci.png)
 
 ## Cấu hình đã dùng
 
@@ -109,6 +120,11 @@ trên train FD001, các sensor này có chênh lệch có hệ thống giữa đ
 trung bình và CI mới cho biết độ lớn theo đơn vị gốc của từng sensor. Không so
 sánh trực tiếp độ lớn chênh lệch trung bình giữa hai sensor khác thang đo.
 
+Hai hình M2.3b làm rõ điểm này. `sensor_6` có 47 chênh lệch dương và 53 chênh
+lệch bằng 0, nhưng mean difference chỉ khoảng `0,00045`. `sensor_9` có 71 chênh
+lệch dương và 29 chênh lệch âm, cho thấy mean difference cần được đọc cùng phân
+phối theo engine thay vì chỉ đọc một số tổng hợp.
+
 ## Giới hạn
 
 Kết quả chỉ áp dụng cho tập train FD001 và định nghĩa hai đoạn 30 cycles tuyệt
@@ -117,6 +133,3 @@ suy giảm và không chứng minh hiệu quả dự đoán ngoài mẫu. Danh s
 bỏ giả thuyết không sau FDR không được dùng để chọn đặc trưng trên toàn train
 trước cross-validation; feature selection cho mô hình phải nằm trong training
 fold.
-
-Cụm M2.3b tiếp theo sẽ tạo hình phân phối `difference`, biểu đồ chênh lệch cặp
-trung bình kèm CI và đưa diễn giải đã kiểm tra vào báo cáo LaTeX.

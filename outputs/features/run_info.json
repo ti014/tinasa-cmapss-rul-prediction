@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "pipeline": "pandas_rolling_features",
+  "generated_at_utc": "2026-09-22T11:25:32.960047+00:00",
+  "source_path": "outputs\\etl\\silver\\observations.parquet",
+  "input_sha256": {
+    "observations.parquet": "9e031b0d6430512fbce9af344b3110aeeb17429d44f394f28e370130d13560f8"
+  },
+  "window_cycles": 30,
+  "row_counts": {
+    "rolling_features": 27927,
+    "rolling_features_train": 17731,
+    "rolling_features_test": 10196
+  },
+  "engine_counts": {
+    "train": 100,
+    "test": 100
+  },
+  "feature_contract": {
+    "key_columns": [
+      "split",
+      "engine_id",
+      "cycle"
+    ],
+    "sensors": [
+      "sensor_1",
+      "sensor_2",
+      "sensor_3",
+      "sensor_4",
+      "sensor_5",
+      "sensor_6",
+      "sensor_7",
+      "sensor_8",
+      "sensor_9",
+      "sensor_10",
+      "sensor_11",
+      "sensor_12",
+      "sensor_13",
+      "sensor_14",
+      "sensor_15",
+      "sensor_16",
+      "sensor_17",
+      "sensor_18",
+      "sensor_19",
+      "sensor_20",
+      "sensor_21"
+    ],
+    "statistics": [
+      "last",
+      "mean",
+      "std",
+      "min",
+      "max",
+      "slope"
+    ],
+    "feature_column_count": 126,
+    "feature_column_pattern": "<sensor>__<stat>",
+    "std_ddof": 1,
+    "slope_positions": "1..30 within each trailing window",
+    "requires_full_window": true,
+    "uses_future_observations": false,
+    "joins_test_labels": false
+  },
+  "outputs": {
+    "gold_rolling_features": "gold\\rolling_features.parquet"
+  },
+  "modeling": {
+    "status": "not_started",
+    "reason": "M3.2 chỉ tạo deterministic rolling features; scaler, feature selection và model fit thuộc mốc sau."
+  }
+}

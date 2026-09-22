@@ -75,7 +75,7 @@ def test_fd001_pandas_etl_writes_round_trip(raw_dir: Path, tmp_path: Path) -> No
     assert len(observations) == 33_727
     assert len(targets) == 20_631
     assert len(summary) == 200
-    assert payload["rolling_features"]["status"] == "not_implemented"
+    assert payload["rolling_features"]["status"] == "separate_artifact"
     with sqlite3.connect(output_dir / "gold" / "etl.sqlite") as connection:
         sqlite_rows = connection.execute("SELECT COUNT(*) FROM engine_summary").fetchone()[0]
     assert sqlite_rows == 200

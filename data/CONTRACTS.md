@@ -5,9 +5,10 @@ tạo bảng cặp sensor đầu/cuối vòng đời, tóm tắt suy luận theo
 tệp đầu ra M2.3a chỉ dùng train. Mốc M2 đã có notebook suy luận, hai bảng CSV,
 metadata lần chạy, hai hình M2.3b và biên bản validation M2.4 tại
 `outputs/statistics/`. Mốc M3.1 đã bổ sung ETL Pandas cho Silver observations,
-Silver train targets và Gold engine summary tại `outputs/etl/`; PySpark adapter
-đã chạy parity với Pandas reference trong môi trường local có JRE. Rolling
-features và predictions vẫn mới có đặc tả, chưa có code tạo hoặc kiểm tra.
+Silver train targets và Gold engine summary tại `outputs/etl/`; M3.2 đã bổ sung
+Gold rolling features tại `outputs/features/`. PySpark adapter
+đã chạy parity với Pandas reference trong môi trường local có JRE. Predictions
+vẫn mới có đặc tả; chưa có code tạo, validator hoặc metric.
 
 ## Nguồn quy tắc và phạm vi
 
@@ -262,6 +263,33 @@ Bản nhân bản không được ghi vào artifact khoa học, không được 
 EDA hoặc huấn luyện mô hình. Metadata phải ghi scale, số lần lặp, cold/warm
 run, runtime và row counts.
 
+
+### ROLLING_FEATURES
+
+Rolling features M3.2 đọc Silver observations đã đạt contract và ghi Gold
+`outputs/features/gold/rolling_features.parquet`. Khóa của mỗi dòng là
+`(split, engine_id, cycle)`, trong đó `cycle` là cycle cuối của trailing window.
+Mỗi window có đúng 30 observations liên tục, cùng split và cùng engine; không
+được dùng cycle tương lai, không nối qua engine khác và không đọc hoặc join
+`RUL_FD001.txt`.
+
+Artifact giữ đủ 21 sensors để chưa thực hiện feature selection trên toàn bộ
+train. Mỗi sensor tạo sáu cột theo mẫu `<sensor>__<stat>` với `stat` thuộc
+`last`, `mean`, `std`, `min`, `max`, `slope`. `std` là sample standard
+deviation (`ddof=1`) trên 30 giá trị trong window. `slope` là hệ số hồi quy
+tuyến tính least-squares theo vị trí 1--30 trong chính window. Ví dụ nếu
+`sensor_1` bằng cycle và window là cycles 1--30 thì `sensor_1__last=30`,
+`mean=15,5`, `std` là độ lệch chuẩn mẫu của 1--30, `min=1`, `max=30` và
+`slope=1`.
+
+Mỗi engine phải có ít nhất 30 cycles để tạo rolling features. Engine dưới 30
+cycles bị từ chối bằng rule `ROLLING_WINDOW`; pipeline không tự rút ngắn window,
+không padding và không impute. Với FD001 hiện tại, artifact có 17.731 train
+windows, 10.196 test windows, 126 feature columns và 27.927 dòng tổng cộng.
+Scaler, PCA, lựa chọn sensor và model fit vẫn thuộc mốc mô hình; nếu loại bỏ
+sensor hằng thì quyết định đó phải được học trong training fold, không lấy từ
+artifact toàn train.
+
 ## Test labels và phạm vi cô lập
 
 Lệnh validation mặc định chỉ đọc observations, không mở `RUL_FD001.txt`.
@@ -283,12 +311,13 @@ enforcement hoặc branch protection cho toàn repository.
 
 | Artifact | Quy tắc đã chốt | Phần chưa triển khai |
 | --- | --- | --- |
-| Rolling features | Khóa observation tại cycle cuối window; trailing window đủ 30 cycles, cùng engine/split, không dùng tương lai; `last`, `mean`, `std`, `min`, `max`, slope | Cách đặt tên cột artifact, quy ước `std`, tập sensor theo training fold, xử lý test engine không đủ 30 cycles; chưa có transformer hoặc validator |
+| Rolling features | Đã có artifact M3.2 tại `outputs/features/gold/rolling_features.parquet`: khóa observation tại cycle cuối window, trailing window đủ 30 cycles, cùng engine/split, không dùng tương lai; giữ 21 sensors; cột `<sensor>__<stat>` với `last`, `mean`, sample `std` (`ddof=1`), `min`, `max`, slope | Chưa có fold assignment, scaler, PCA, feature selection trong fold hoặc model-ready dataset; chưa tạo metric/prediction |
 | Final predictions | Khóa `(split, engine_id, cycle)` tại cycle cuối test; một giá trị RUL dự đoán mỗi engine, đúng 100 dòng; tạo trước khi join test labels | Tên cột prediction, metadata model và validator; chưa quy định clip prediction âm |
 
-Ví dụ window tại cycle 170 là cycle 141–170 của cùng engine. Các chi tiết còn
-mở ở bảng trên cần được chốt trước bước xây dựng đặc trưng và mô hình; không
-được coi là đã có implementation hoặc bằng chứng runtime.
+Ví dụ window tại cycle 170 là cycle 141–170 của cùng engine. M3.2 đã hiện
+thực hóa feature transformer và validator cho artifact rolling features. Các
+phần còn mở ở bảng trên thuộc validation/modeling, không được coi là đã có
+metric hoặc prediction.
 
 ## Chạy kiểm tra
 

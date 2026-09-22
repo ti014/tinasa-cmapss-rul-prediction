@@ -11,7 +11,8 @@ suy luận sensor đầu/cuối vòng đời trên train, hai hình thống kê 
 tái lập M2.4, khó khăn,
 giới hạn, khai báo AI/LLM, nhật ký tiến độ và bảng đối chiếu bằng chứng. Chưa
 có kết quả mô hình, ARIMA hoặc dashboard. M3.1 đã có ETL Silver/Gold,
-Parquet/SQLite, metadata, benchmark và parity Pandas/PySpark.
+Parquet/SQLite, metadata, benchmark và parity Pandas/PySpark; M3.2 đã có
+rolling features 30 cycles tại `outputs/features/`.
 Mốc EDA mô tả đã hoàn thành theo [biên bản nghiệm thu](../outputs/eda/validation.json);
 bảng thống kê M2.3a, hình M2.3b và validation M2.4 có biên bản tại
 [outputs/statistics/validation.json](../outputs/statistics/validation.json)
@@ -30,6 +31,9 @@ chặn probe đọc `test_FD001.txt` và `RUL_FD001.txt`, đồng thời chạy 
 M3.1 đã tạo `outputs/etl/` với 33.727 observations, 20.631 train targets và
 200 engine summaries; benchmark Pandas 1x/10x/100x có hai lần cold/warm.
 `parity.json` ghi Pandas/PySpark khớp ba bảng với `max_abs_diff=0.0`.
+M3.2 đã tạo `outputs/features/gold/rolling_features.parquet` với 27.927 rows,
+126 feature columns, window 30 cycles, sample `std` với `ddof=1` và không ghép
+nhãn test.
 Chênh lệch cặp trung bình, cấu hình bootstrap, Wilcoxon permutation, ties/zeros và mức FDR đã
 được chốt ở M2.0 trong
 [protocol](sections/statistical-protocol.tex). Ví dụ engine sống 200 cycles
@@ -133,7 +137,7 @@ dọn aux/log riêng của report; giữ PDF và nguồn. Không đưa thư mụ
 vào gói nộp.
 
 Bản hiện tại đã kiểm chứng PDF **40 trang**, gồm data dictionary, bảng thuật ngữ,
-hai sơ đồ TikZ, bảng/hình EDA và kết quả thống kê M2.3a--M2.4. Log
+hai sơ đồ TikZ, bảng/hình EDA, kết quả thống kê M2.3a--M2.4 và kết quả M3.2 rolling features. Log
 LaTeX/BibTeX không có overfull/underfull, glyph thiếu, citation/reference chưa
 giải quyết hoặc cảnh báo bibliography. Đã rà bản render của các trang data
 dictionary và sơ đồ pipeline; bằng chứng mới nhất nằm trong

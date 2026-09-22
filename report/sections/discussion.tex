@@ -15,9 +15,9 @@ thể chịu overhead trên FD001 nhỏ; parity xác nhận tính tương đươ
 cho phép suy ra công cụ phân tán luôn nhanh hơn Pandas.
 
 Các kết quả trong báo cáo đã có validation dữ liệu, EDA, ETL, rolling features,
-suy luận thay đổi sensor đầu/cuối và đánh giá mô hình RUL đầu tiên. Tuy nhiên,
-đây vẫn là kết quả trên FD001 mô phỏng với một điều kiện vận hành và một dạng
-lỗi. Chưa có forecast ARIMA hoặc dashboard trong tập bằng chứng này; vì vậy
-không kết luận lịch bảo trì nào có lợi hoặc mô hình sẽ hoạt động tương tự trên
-dữ liệu thực tế. Đây là giới hạn phạm vi kết quả, không phải kết luận rằng các
-phương pháp đó thất bại.
+suy luận thay đổi sensor đầu/cuối, forecast Health Index bằng ARIMA và đánh giá
+mô hình RUL. Forecast phụ cho thấy coverage prediction interval không đồng đều
+và ADF không bác bỏ tính không dừng trên các fit segment; vì vậy Health Index
+forecast không được dùng để thay thế mô hình RUL hoặc suy ra lịch bảo trì.
+Đây vẫn là kết quả trên FD001 mô phỏng với một điều kiện vận hành và một dạng
+lỗi; chưa có dashboard hoặc bằng chứng khái quát hóa sang dữ liệu thực tế.

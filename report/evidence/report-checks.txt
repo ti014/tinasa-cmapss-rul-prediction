@@ -380,3 +380,88 @@ visual inspection found no clipping, overlap or unreadable text.
 LIMIT: sensor physical units are not provided by the FD001 source, so the report
 keeps `sensor_1`--`sensor_21` as anonymous channels and interprets differences
 only in each sensor's original unit.
+
+Pipeline diagram consistency update: 2026-09-23
+SCOPE: `report/figures/pipeline.tex`, exported pipeline PDF, report methodology
+caption/prose and report PDF; no raw data, model code or analysis artifacts were
+changed.
+PASS: The overall diagram now uses three explicit roles: validated train-only
+analysis branches (EDA, paired statistics and PCA--ARIMA), the independent
+Silver/Gold-to-model data path, and a late dashed join from `RUL_FD001.txt`
+only at final evaluation. EDA/statistics artifacts no longer appear to feed ETL.
+PASS: The diagram labels the train-target join in grouped modeling and the
+ordering that writes 100 final test predictions before reading test labels.
+PASS: Tectonic rebuilt `report/figures/pipeline.pdf` and `report/main.pdf` with
+exit code 0. `pdfinfo` reports 34 A4 pages for `main.pdf`; targeted log scan
+found no overfull/underfull boxes, missing glyphs, undefined references or
+fatal errors.
+PASS: Poppler rendered the pipeline PDF at 160 dpi; visual inspection found no
+clipping, overlapping nodes, unreadable labels or disconnected test-label edge.
+LIMIT: The local Tectonic environment still emits the known Fontconfig and
+absolute Windows font warnings; the build and rendered visual check succeeded.
+
+PCA--ARIMA Health Index update: 2026-09-23
+SCOPE: train-only Health Index PCA, representative-engine selection, ARIMA
+forecast, diagnostics, dependency manifests, report synchronization and
+pipeline diagram. No test labels, RUL model selection or dashboard changes.
+PASS: `python -m cmapss.timeseries` completed with 10 selected engines, 10
+successful fits, 20,631 Health Index rows and 704 holdout forecast rows.
+`outputs/timeseries/run_info.json` records train-only isolation, input hashes,
+70/30 split, AIC order selection on fit segments and output paths.
+PASS: focused `tests/test_timeseries.py` passed 5 tests; full suite passed 116
+tests; compileall, `uv lock --check` and `git diff --check` passed.
+PASS: `statsmodels==0.14.5` and `patsy==1.0.3` were added through `uv add` and
+exported consistently to `requirements.txt`, `requirements-dev.txt` and
+`requirements-etl.txt`.
+PASS: Tectonic rebuilt `report/figures/pipeline.pdf` and `report/main.pdf` with
+exit code 0. `pdfinfo` reports 34 A4 pages. Log scan found no overfull/underfull
+boxes, undefined citations/references, missing files, duplicate labels,
+emergency stop or fatal errors.
+PASS: Poppler rendered the pipeline figure and report pages 18--30. Visual
+inspection found readable Health Index forecast plots, table layout, node labels,
+edge routing and no clipping. Independent TikZ review identified the original
+node-gap problem; after reducing node width and routing the branch, the local
+render showed zero visible curve-label collisions and zero edge clipping.
+PASS: A second CLI run in `tmp/timeseries-repeat` reproduced byte-identical
+selected-engine table, Health Index table, metric/diagnostic CSV, forecast
+Parquet and both PNG figures; metadata timestamps were intentionally excluded
+from the comparison.
+ENVIRONMENT LIMIT: Tectonic still emits the known Fontconfig diagnostic and
+absolute Windows font warnings; these do not prevent the local PDF build.
+
+Pipeline spacing correction: 2026-09-23
+SCOPE: pipeline TikZ layout and regenerated PDF/PNG only.
+PASS: Node width was reduced and the three analytical columns were separated so
+that EDA, ETL, paired-analysis, artifact and time-series nodes no longer touch
+or overlap. The final rendered page was inspected at 160 dpi.
+PASS: Tectonic rebuilt `pipeline.pdf` and `main.pdf` with exit code 0; the
+report remains 34 A4 pages and the targeted log scan reports no layout or
+reference errors.
+
+Pipeline layout simplification: 2026-09-23
+SCOPE: overall pipeline figure layout and regenerated report assets.
+PASS: The figure now has one unambiguous vertical RUL data path. EDA,
+paired analysis and PCA--ARIMA are summarized in a separate train-only panel,
+so no side branch crosses or overlaps the main path.
+PASS: Rendered PNG/PDF inspection confirms separated nodes, readable labels and
+one late dashed edge from test labels to final evaluation.
+
+Pipeline lane redesign: 2026-09-23
+SCOPE: `report/figures/pipeline.tex`, generated pipeline PDF/PNG, methodology
+description and main report PDF.
+PASS: The diagram now uses a centered raw/validator boundary, a left vertical
+RUL lane, and a right train-only analysis lane. A vertical bus fans out to EDA,
+paired analysis and PCA--ARIMA without implying sequential dependency. The test
+label remains a late side input to final evaluation.
+PASS: Rendered at 160 dpi; no node overlap, lane collision, edge clipping or
+ambiguous return path was observed. Tectonic rebuilt both figure and report with
+exit code 0; `main.pdf` remains 34 A4 pages.
+LIMIT: Fontconfig and absolute Windows font warnings remain environment-level
+warnings from Tectonic and do not affect the rendered layout.
+
+Pipeline typography and bus correction: 2026-09-23
+PASS: Manual line breaks remove accidental TeX hyphenation in `Pandas--PySpark`,
+`train targets` and `correlation`; the analysis bus now has an explicit
+arrowhead at its entry from the validation split.
+PASS: Independent render review found no node overlap, clipping or edge through
+nodes; the late test-label join remains legible.

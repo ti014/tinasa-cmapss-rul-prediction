@@ -35,6 +35,11 @@ Wilcoxon signed-rank test & Kiểm định phi tham số cho dữ liệu ghép c
 Benjamini--Hochberg FDR & Hiệu chỉnh nhiều p-value trong họ 21 sensor để kiểm soát False Discovery Rate.\\
 Parquet / SQLite & Parquet lưu bảng phân tích; SQLite cung cấp lớp truy vấn local cho engine summary.\\
 Spark / PySpark & Framework xử lý dữ liệu phân tán và API Python dùng để đối chiếu ETL với Pandas.\\
+Health Index & Điểm tổng hợp PC1 sau chuẩn hóa 21 sensor; dùng để mô tả diễn biến sensor và không phải RUL.\\
+Principal Component Analysis (PCA) & Phương pháp giảm chiều tuyến tính; báo cáo dùng PC1 để tạo Health Index từ train sensor.\\
+ARIMA & Mô hình chuỗi thời gian tự hồi quy tích hợp trung bình trượt, dùng như phân tích phụ trên Health Index.\\
+Augmented Dickey--Fuller (ADF) & Kiểm định chẩn đoán tính dừng của fit segment Health Index.\\
+Ljung--Box & Kiểm định chẩn đoán tự tương quan của residual sau khi fit ARIMA.\\
 
 \end{longtable}
 \end{small}

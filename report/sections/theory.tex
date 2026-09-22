@@ -94,3 +94,26 @@ Bronze giữ dữ liệu nguồn; Silver lưu observations và train targets đ�
 Gold lưu engine summary và rolling features. Parquet phục vụ lưu bảng phân tích,
 SQLite phục vụ truy vấn local. Dữ liệu nhân bản chỉ dùng cho benchmark xử lý và
 không tăng số mẫu khoa học độc lập.
+
+\subsection{Health Index và ARIMA}
+Health Index trong báo cáo là điểm PC1 sau khi chuẩn hóa 21 sensor bằng
+StandardScaler và fit Principal Component Analysis (PCA, phân tích thành phần
+chính) trên train~\cite{sklearnPCA}. PCA tìm hướng tuyến tính giải thích nhiều phương sai nhất;
+điểm PC1 được đổi hướng theo tương quan với cycle để có quy ước giảm theo thời
+gian. Đây là biểu diễn tổng hợp của sensor, không phải nhãn RUL và không mang
+đơn vị cycle.
+
+Với chuỗi Health Index $h_t$, ARIMA$(p,d,q)$ mô hình hóa sai phân bậc $d$ và
+phần tự hồi quy, trung bình trượt:
+\begin{equation}
+\phi(B)(1-B)^d h_t = c + \theta(B)\varepsilon_t,
+\label{eq:arima}
+\end{equation}
+\noindent trong đó $B$ là toán tử trễ, $p$ và $q$ là bậc tự hồi quy và trung
+bình trượt, $d$ là bậc sai phân, còn $\varepsilon_t$ là phần dư~\cite{hyndman2021fpp3}. Pipeline chọn
+order bằng AIC trên 70\% đầu chuỗi của từng engine, rồi đánh giá 30\% còn lại;
+không dùng kết quả holdout để chọn order hoặc engine. ADF được ghi để chẩn đoán
+tính dừng~\cite{statsmodelsADF} và Ljung--Box để kiểm tra tự tương quan phần dư. Các chẩn đoán này
+chỉ mô tả độ phù hợp của forecast Health Index trong FD001; chúng không chứng
+minh quan hệ nhân quả, không thay thế GroupKFold RUL model và không xác định
+lịch bảo trì.

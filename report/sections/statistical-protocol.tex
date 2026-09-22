@@ -3,7 +3,7 @@
 \subsection{Mục tiêu, phạm vi và trạng thái quyết định}
 Mục tiêu là đánh giá mức thay đổi của sensor giữa đầu và cuối vòng đời trong cùng engine trên tập train FD001. Ngày 22/09/2026 đã chốt dùng trung bình \textbf{30 cycles đầu và 30 cycles cuối}. Phân tích chỉ đọc train và dùng engine làm đơn vị ghép cặp. Đây là protocol trước khi chạy kiểm định, được viết sau EDA; các giả thuyết phát sinh từ EDA mang tính khám phá, không được mô tả là đã đăng ký trước khi xem dữ liệu.
 
-Phân tích ghép cặp (paired analysis), chênh lệch cặp trung bình, bootstrap 95\%, Wilcoxon khi phù hợp, Benjamini--Hochberg và seed 42 thuộc cấu hình hiện có. Cấu hình M2.0 đã được chốt trước khi chạy suy luận: dùng mean paired difference, percentile bootstrap, Wilcoxon permutation và BH trên họ 21 sensors. Notebook M2.3a đã chạy theo cấu hình này, đồng thời xuất bảng và metadata. Hình phân phối cùng diễn giải sâu hơn vẫn thuộc bước tiếp theo.
+Phân tích ghép cặp (paired analysis), chênh lệch cặp trung bình, bootstrap 95\%, Wilcoxon khi phù hợp, Benjamini--Hochberg và seed 42 thuộc cấu hình hiện có. Cấu hình M2.0 đã được chốt trước khi chạy suy luận: dùng mean paired difference, percentile bootstrap, Wilcoxon permutation và BH trên họ 21 sensors. Notebook M2.3a--M2.3b đã chạy theo cấu hình này, đồng thời xuất bảng, metadata và hai hình panel train-only.
 
 \subsection{Định nghĩa cặp đầu/cuối và ví dụ}
 Với $x_{i,t,s}$ là giá trị sensor $s$ của engine $i$ ở cycle $t$, và $T_i$ là cycle cuối của train engine đó, đặt
@@ -22,7 +22,7 @@ Giữ độ dài bằng nhau giúp so sánh hai mức tín hiệu trên cùng s�
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.91\linewidth]{figures/statistical-protocol.pdf}
-\caption[Protocol thống kê đầu/cuối vòng đời]{Thiết kế phân tích mốc 2; bước tạo cặp, suy luận và xuất bảng M2.3a đã có helper, notebook và validation. Hình phân phối cùng diễn giải sâu sẽ bổ sung ở bước sau.}
+\caption[Protocol thống kê đầu/cuối vòng đời]{Thiết kế phân tích mốc 2; bước tạo cặp, suy luận và xuất bảng, metadata, validation và hình M2.3a--M2.3b đã có helper, notebook và validation.}
 \label{fig:stat-protocol}
 \end{figure}
 
@@ -49,7 +49,7 @@ Các giá trị sau là cấu hình đã chốt ngày 22/09/2026 trước khi t�
 Cấu hình này khóa cách tính trước khi xem p-value hoặc khoảng tin cậy thật. Nếu dùng phương án khác ở lượt sau, phải cập nhật protocol, lý do và thời điểm thay đổi trước khi tạo lại bảng kết quả; không trình bày lựa chọn mới như đã xác định từ đầu.
 
 \subsection{Đầu ra và điều kiện nghiệm thu}
-M2.3a đã xuất bảng cặp theo engine/sensor tại \texttt{engine\_sensor\_pairs.csv}, bảng suy luận theo sensor tại \texttt{sensor\_inference.csv}, cùng \texttt{run\_info.json} và \texttt{validation.json}. Validation xác nhận hai bảng round-trip, raw train không đổi và lần chạy không dùng quan sát test hoặc nhãn test. M2.3b cần bổ sung hình phân phối chênh lệch, biểu đồ chênh lệch kèm khoảng tin cậy và diễn giải trong báo cáo. Artifact hiện có không thay thế kết quả mô hình RUL chưa chạy.
+M2.3a đã xuất bảng cặp theo engine/sensor tại \texttt{engine\_sensor\_pairs.csv}, bảng suy luận theo sensor tại \texttt{sensor\_inference.csv}, cùng \texttt{run\_info.json} và \texttt{validation.json}. M2.3b đã bổ sung \texttt{difference\_distributions.png}, \texttt{effect\_size\_ci.png} và diễn giải theo engine; validation xác nhận hai bảng round-trip, raw train không đổi và lần chạy không dùng quan sát test hoặc nhãn test. Artifact hiện có không thay thế kết quả mô hình RUL chưa chạy.
 
 Kiểm tra phải bao gồm chỉ số 30 cycles đúng trong từng engine, không chồng đoạn, ghép cặp một--một, ví dụ tính tay và trường hợp hằng/ties/zeros. Bootstrap phải lấy mẫu theo engine và giữ cặp; FDR cần được kiểm tra trên một vector p-value nhỏ có đáp án biết trước. Chạy lại với cùng input và seed phải tái lập kết quả; raw và EDA gốc giữ nguyên. Khi có hình và diễn giải mới, tiếp tục cập nhật phần kết quả, nhật ký và bằng chứng kiểm tra.
 

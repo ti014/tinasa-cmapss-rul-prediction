@@ -4,20 +4,23 @@
 nộp cuối cùng. Nguồn chính là [main.tex](main.tex). Ngày cập nhật hiện tại:
 22/09/2026.
 
-Bản hiện tại có bài toán RUL, dữ liệu và contract, cơ sở lý thuyết có trích
-dẫn, protocol thống kê mốc 2, phương pháp kèm lý do lựa chọn, kết quả
-validation, một số quan sát EDA và bảng suy luận sensor đầu/cuối vòng đời trên
-train, khó khăn, giới hạn, khai báo AI/LLM, nhật ký tiến độ và bảng đối chiếu
-bằng chứng. Chưa có kết quả mô hình, ARIMA, ETL Silver/Gold hoặc dashboard.
+Bản hiện tại có bài toán RUL, dữ liệu và contract, bảng thuật ngữ và chữ viết
+tắt, cơ sở lý thuyết có trích dẫn, protocol thống kê mốc 2, phương pháp kèm lý
+do lựa chọn, kết quả validation, một số quan sát EDA và bảng suy luận sensor
+đầu/cuối vòng đời trên train, hai hình thống kê M2.3b, khó khăn, giới hạn, khai
+báo AI/LLM, nhật ký tiến độ và bảng đối chiếu bằng chứng. Chưa có kết quả mô
+hình, ARIMA, ETL Silver/Gold hoặc dashboard.
 Mốc EDA mô tả đã hoàn thành theo [biên bản nghiệm thu](../outputs/eda/validation.json);
-bảng thống kê M2.3a có biên bản tại [outputs/statistics/validation.json](../outputs/statistics/validation.json).
+bảng thống kê M2.3a có biên bản tại [outputs/statistics/validation.json](../outputs/statistics/validation.json)
+và hình M2.3b nằm trong [outputs/statistics/figures](../outputs/statistics/figures).
 
 Ngày 22/09/2026 bổ sung lý thuyết window, Ridge, histogram gradient boosting,
 grouped validation, paired analysis, bootstrap, FDR, PCA–ARIMA và Spark.
 Đã chốt so sánh mean 30 cycles đầu với 30 cycles cuối của từng engine;
 helper tạo cặp và helper suy luận train theo engine--sensor đã có và được kiểm
 thử. Notebook M2.3a đã xuất 2.100 cặp, 21 dòng suy luận, `run_info.json` và
-`validation.json`; hình phân phối và biểu đồ chênh lệch kèm khoảng tin cậy vẫn là bước tiếp theo.
+`validation.json`; notebook M2.3b đã tạo `difference_distributions.png` và
+`effect_size_ci.png`, đồng thời bổ sung diễn giải giới hạn vào phần kết quả.
 Chênh lệch cặp trung bình, cấu hình bootstrap, Wilcoxon permutation, ties/zeros và mức FDR đã
 được chốt ở M2.0 trong
 [protocol](sections/statistical-protocol.tex). Ví dụ engine sống 200 cycles
@@ -31,6 +34,7 @@ report/
 ├── main.tex                     # Bìa, định dạng, mục lục và ghép các phần
 ├── main.pdf                     # Bản đọc đã biên dịch
 ├── sections/
+│   ├── glossary.tex             # Bảng thuật ngữ và chữ viết tắt
 │   ├── progress.tex             # Nhật ký công việc và điều kiện hoàn thành
 │   ├── problem-data.tex         # Bài toán, dữ liệu và chất lượng
 │   ├── theory.tex               # Cơ sở lý thuyết và nghiên cứu liên quan
@@ -51,7 +55,8 @@ report/
 Bibliography dùng chung tại `../references/bibliography.bib`. Hai hình EDA
 được tham chiếu trực tiếp từ `../outputs/eda/figures/`, không tạo bản sao
 dễ lệch nguồn. Hai sơ đồ phân biệt luồng dữ liệu hiện có/dự kiến và protocol
-mốc 2; bảng suy luận M2.3a đã chạy nhưng chưa có hình thống kê trong báo cáo. Mức đọc/kiểm chứng tài liệu nằm ở
+mốc 2; bảng suy luận M2.3a và hai hình M2.3b được tham chiếu từ
+`../outputs/statistics/`. Mức đọc/kiểm chứng tài liệu nằm ở
 [danh mục nguồn](../references/README.md); không đồng nhất tài liệu đã có DOI
 với tài liệu đã đọc toàn văn.
 

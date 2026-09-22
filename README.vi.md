@@ -8,7 +8,7 @@ Repository này phục vụ báo cáo cuối kỳ môn Phân tích dữ liệu l
 
 ## Trạng thái
 
-Repository đã có **gói kiểm tra dữ liệu FD001, nhãn RUL train, notebook EDA chỉ dùng train đã hoàn thành ở mốc 1 và các tệp đầu ra suy luận sensor M2.3a chỉ dùng train cho mốc 2**.
+Repository đã có **gói kiểm tra dữ liệu FD001, nhãn RUL train, notebook EDA chỉ dùng train đã hoàn thành ở mốc 1 và các tệp đầu ra suy luận sensor M2.3a--M2.3b chỉ dùng train cho mốc 2**.
 
 Đã có:
 
@@ -19,8 +19,10 @@ Repository đã có **gói kiểm tra dữ liệu FD001, nhãn RUL train, notebo
   11 hình và [diễn giải kết quả, bằng chứng kiểm tra](outputs/eda/README.md).
 - Danh mục tài liệu tham khảo và hướng dẫn đọc.
 - [Báo cáo LaTeX cập nhật theo tiến độ](report/README.md) và [bản PDF](report/main.pdf),
-  có nhật ký công việc, lý do lựa chọn và nguồn đối chiếu kết quả validation/EDA/M2.3a.
-  Mốc 1 EDA và bảng suy luận M2.3a đã được kiểm tra độc lập; hình thống kê và mô hình vẫn là bước tiếp theo.
+  có bảng thuật ngữ và chữ viết tắt, nhật ký công việc, lý do lựa chọn và nguồn
+  đối chiếu kết quả validation/EDA/M2.3a.
+  Mốc 1 EDA và bảng suy luận M2.3a đã được kiểm tra độc lập; hình M2.3b đã có,
+  còn validation tái lập và mô hình là bước tiếp theo.
 - Cơ sở lý thuyết có trích dẫn và [protocol thống kê mốc 2](report/sections/statistical-protocol.tex).
   Đã chốt so sánh giá trị trung bình của 30 cycles đầu và 30 cycles cuối theo từng động cơ.
   Cấu hình thống kê M2.0 đã được chốt trước suy luận; notebook M2.3a đã chạy bảng suy luận train-only.
@@ -31,11 +33,14 @@ Repository đã có **gói kiểm tra dữ liệu FD001, nhãn RUL train, notebo
 - [Notebook suy luận M2.3a đã chạy](notebooks/02_fd001_inference.ipynb), hai
   bảng CSV, metadata (siêu dữ liệu lần chạy) và [ghi chú validation](outputs/statistics/README.md).
   Đầu ra giữ đủ 21 sensor và không đọc quan sát test hoặc nhãn test.
+- Hình M2.3b được tạo từ các artifact trên: [phân phối chênh lệch](outputs/statistics/figures/difference_distributions.png)
+  và [effect size kèm bootstrap CI](outputs/statistics/figures/effect_size_ci.png).
 
 Chưa triển khai:
 
 - Pipeline ETL Silver/Gold bằng Pandas và PySpark.
-- Hình thống kê và diễn giải sâu hơn ngoài bảng M2.3a, cùng xây dựng đặc trưng (feature engineering).
+- Validation tái lập hai lần và audit train-only chủ động cho notebook thống kê,
+  cùng pipeline ETL Silver/Gold và xây dựng đặc trưng (feature engineering).
 - Các mô hình RUL và phân tích ARIMA.
 - Dashboard Streamlit và báo cáo hoàn chỉnh (đã bắt đầu bản thảo LaTeX).
 
@@ -309,8 +314,9 @@ Sau khi cài `requirements-dev.txt`, mở notebook suy luận chỉ dùng train:
 
 Chạy toàn bộ cell sẽ tạo lại `outputs/statistics/tables/engine_sensor_pairs.csv`,
 `outputs/statistics/tables/sensor_inference.csv`, `run_info.json` và
-`validation.json`. Ví dụ, tệp đầu ra hiện tại có 2.100 cặp động cơ--sensor và
-21 dòng suy luận theo sensor. Sáu sensor hằng toàn tập được giữ với trạng thái
+`validation.json`, cùng hai hình trong `outputs/statistics/figures/`. Ví dụ,
+tệp đầu ra hiện tại có 2.100 cặp động cơ--sensor và 21 dòng suy luận theo
+sensor. Sáu sensor hằng toàn tập được giữ với trạng thái
 `all_zero_difference`; 15 sensor kiểm định được đều bác bỏ giả thuyết không sau
 Benjamini-Hochberg FDR theo protocol đã chốt. Đây là kết quả chỉ dùng train,
 không phải lựa chọn đặc trưng (feature selection).
@@ -323,10 +329,10 @@ không phải lựa chọn đặc trưng (feature selection).
 
 Ví dụ: trung vị tuổi thọ của 100 động cơ train là 199 cycles. Sáu sensor hằng
 trên toàn train; `sensor_6` biến thiên trên toàn tập nhưng hằng trong 38 động cơ.
-Đây là kết quả mô tả, chưa phải lựa chọn đặc trưng hoặc kết luận có ý nghĩa
-thống kê. Mốc 2 hiện có bảng M2.3a cho phân tích ghép cặp, chênh lệch cặp trung
-bình, bootstrap, Wilcoxon và hiệu chỉnh nhiều kiểm định theo cấu hình M2.0 đã
-chốt; hình và diễn giải sâu là bước tiếp theo.
+Hai hình M2.3b dùng panel riêng cho từng sensor vì các sensor khác thang đo.
+`sensor_6` cho thấy p-value nhỏ không đồng nghĩa với thay đổi lớn theo đơn vị
+đo; `sensor_9` cho thấy cần đọc phân phối theo engine cùng mean và CI. Đây là
+kết quả train-only, chưa phải lựa chọn đặc trưng cho mô hình.
 
 <details>
 <summary>Dành cho phát triển và kiểm tra riêng</summary>
@@ -355,7 +361,7 @@ Pytest dọn thư mục `--basetemp` khi chạy lại; chỉ dành thư mục đ
 
 </details>
 
-ETL Silver/Gold, rolling features, hình thống kê sau M2.3a, PySpark, mô hình
+Validation tái lập M2.4, ETL Silver/Gold, rolling features, PySpark, mô hình
 và dashboard chưa được triển khai. [Bản thảo báo cáo](report/main.pdf) được cập nhật cùng công việc
 đã kiểm chứng: nhật ký ghi ngày, lý do, tệp đầu ra, cách kiểm tra và phần còn lại.
 Xem [hướng dẫn báo cáo](report/README.md) để biết cấu trúc nguồn và lệnh build

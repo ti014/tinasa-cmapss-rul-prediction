@@ -96,16 +96,18 @@ cơ nhằm giữ nguyên đơn vị chuỗi, thay vì giả định các window 
 lập.
 
 \subsection{Thống kê hiện có và ARIMA dự kiến}
-M2.3a so sánh trung bình 30 cycles đầu và 30 cycles cuối trong cùng động cơ,
+M2.3a--M2.3b so sánh trung bình 30 cycles đầu và 30 cycles cuối trong cùng động cơ,
 theo quyết định ngày 22/09/2026. Helper tạo cặp và các hàm suy luận theo sensor
 đã được hiện thực hóa, kiểm tra bằng fixture và chỉ xử lý train. Notebook 02 đã
-xuất bảng cặp, bảng suy luận, metadata và validation tại
+xuất bảng cặp, bảng suy luận, metadata, validation và hai hình panel tại
 \filepath{outputs/statistics/}; bảng cặp có 2.100 dòng và bảng suy luận có 21
 dòng. Mục~\ref{sec:stat-protocol} định nghĩa cặp, chiều chênh lệch, đầu ra,
 giả định và cấu hình M2.0 đã chốt. Mục~\ref{sec:theory} trình bày cơ sở của
 chênh lệch cặp trung bình, khoảng tin cậy bootstrap 95\%, Wilcoxon và
-Benjamini--Hochberg FDR. Hình thống kê và diễn giải sâu hơn thuộc M2.3b. Kết quả
-M2.3a không phải feature selection và không kết luận về hiệu quả dự đoán RUL.
+Benjamini--Hochberg FDR. Hình phân phối và effect size được tạo theo panel
+riêng cho từng sensor, kèm diễn giải về sensor hằng, dấu chênh lệch và
+heterogeneity giữa các engine. Kết quả M2.3a--M2.3b không phải feature
+selection và không kết luận về hiệu quả dự đoán RUL.
 
 ARIMA là phân tích phụ trên Health Index từ PCA được fit trong training fold.
 ARIMA không áp dụng trực tiếp lên nhãn RUL train vì Công thức~\ref{eq:rul} tạo

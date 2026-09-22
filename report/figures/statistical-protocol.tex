@@ -20,11 +20,11 @@ edge/.style={->,thick,draw=gray!80}]
 \node[opNode] (delta) at (0,-3.6) {Đã chạy suy luận theo cấu hình M2.0\\Chênh lệch cặp trung bình; bootstrap percentile 10.000 lần};
 \node[opNode] (infer) at (0,-5.4) {Đã chạy Wilcoxon permutation và BH FDR\\100.000 resamples; họ kiểm định gồm 21 sensors};
 \node[dataNode] (out) at (0,-7.2) {M2.3a đã xuất\\2 CSV, run\_info.json và validation.json};
-\node[planned] (next) at (0,-9.0) {M2.3b -- dự kiến\\Hình phân phối, biểu đồ chênh lệch kèm CI và diễn giải sâu};
+\node[dataNode] (next) at (0,-9.0) {M2.3b đã xuất\\2 PNG panel: phân phối difference và mean difference kèm CI};
 \draw[edge] (train.south) -- (pair.north);
 \draw[edge] (pair.south) -- (delta.north);
 \draw[edge] (delta.south) -- (infer.north);
 \draw[edge] (infer.south) -- (out.north);
-\draw[edge,dashed] (out.south) -- (next.north);
+\draw[edge] (out.south) -- (next.north);
 \end{tikzpicture}
 \end{document}

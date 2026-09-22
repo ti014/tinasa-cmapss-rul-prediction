@@ -105,10 +105,47 @@ gốc của từng sensor; không so sánh trực tiếp độ lớn giữa các
 \end{tabular}
 \end{table}
 
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.86\linewidth,height=0.78\textheight,keepaspectratio]{../outputs/statistics/figures/difference_distributions.png}
+\caption[Phân phối chênh lệch sensor đầu/cuối theo engine]{Phân phối
+\texttt{difference = late\_mean - early\_mean} của 100 engine cho từng sensor.
+Mỗi panel có thang x riêng vì các sensor dùng đơn vị và khoảng giá trị khác nhau;
+đường đứt là mốc không thay đổi, đường cam là mean paired difference.}
+\label{fig:statistics-distributions}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.86\linewidth,height=0.78\textheight,keepaspectratio]{../outputs/statistics/figures/effect_size_ci.png}
+\caption[Chênh lệch cặp trung bình và khoảng tin cậy bootstrap]{Mean paired
+difference và bootstrap CI 95\% theo từng sensor. Các panel giữ trục riêng để
+không tạo so sánh effect size giữa các sensor khác thang đo; điểm xám là sensor
+toàn bộ chênh lệch bằng 0.}
+\label{fig:statistics-effect-ci}
+\end{figure}
+
 Kết quả này cho thấy nhiều sensor có thay đổi có hệ thống giữa hai đoạn 30
 cycles trên train FD001 theo protocol đã chốt. Tuy nhiên, đây không phải bằng
 chứng chọn đặc trưng cho mô hình trên toàn train. Việc chọn feature, scaler hoặc
 model vẫn phải nằm trong training folds để tránh data leakage.
+
+\paragraph{Diễn giải hình.}
+Sáu sensor all-zero nêu ở trên không có biến thiên quan sát được trong hai đoạn
+ghép cặp. Mười lăm sensor còn lại đủ điều kiện kiểm định; theo cấu hình
+Wilcoxon permutation và BH FDR đã chốt trước khi chạy, các sensor này đều bác
+bỏ giả thuyết không. Đây là bằng chứng thống kê trong protocol đầu/cuối 30
+cycles, không phải bằng chứng rằng các sensor này có utility dự đoán RUL ngoài
+mẫu.
+
+Độ lớn thay đổi cần được đọc cùng \texttt{mean\_difference} và khoảng tin cậy
+theo đơn vị gốc của từng sensor. \texttt{sensor\_4} có chênh lệch trung bình
+khoảng 20,13, trong khi \texttt{sensor\_7} giảm khoảng 1,91; hai giá trị này
+không được xếp hạng trực tiếp vì thang đo khác nhau. \texttt{sensor\_6} có 47
+chênh lệch dương và 53 chênh lệch bằng 0 nhưng mean difference chỉ khoảng
+0,00045, cho thấy p-value nhỏ không đồng nghĩa với thay đổi lớn về đơn vị đo.
+\texttt{sensor\_9} có 71 chênh lệch dương và 29 chênh lệch âm, nên phân phối
+theo engine cần được xem cùng effect size và CI thay vì chỉ đọc mean.
 
 \subsection{Phạm vi bằng chứng EDA}
 Các số liệu trên được đối chiếu với bảng CSV và metadata hiện có. Các phép tổng
@@ -122,6 +159,6 @@ PNG của hai lần chạy giống nhau theo byte trong cùng môi trường.
 
 Đây là bằng chứng đã lưu của mốc EDA, không phải kết quả chạy lại notebook trong
 lượt viết báo cáo. Mốc EDA mô tả không bao gồm feature selection hoặc kết quả mô
-hình. Bảng và metadata suy luận M2.3a nằm ở mục trước; M2.3b mới bổ sung hình
-thống kê và diễn giải sâu hơn. Tính đồng nhất từng byte của PNG không được bảo
-đảm trên môi trường có font hoặc rendering khác.
+hình. Bảng, metadata và hai hình suy luận M2.3a--M2.3b được tạo từ notebook
+train-only; tính đồng nhất từng byte của PNG không được bảo đảm trên môi trường
+có font hoặc rendering khác.

@@ -30,8 +30,11 @@ quyền truy cập; thư mục riêng trong `tmp/` đã chạy thành công. Xem
 Timestamp trong JSON dùng UTC, tương ứng ngày 2026-09-22 theo Asia/Saigon.
 
 Validation cục bộ đã chạy; chưa có optional hook hoặc CI invocation cho các
-kiểm tra này. Branch protection chưa được xác minh. Rolling features,
-predictions và data leakage tại pipeline mô hình chưa có bằng chứng runtime.
+kiểm tra này. Branch protection chưa được xác minh. Các bằng chứng runtime cho
+rolling features và grouped RUL modeling được ghi riêng tại
+[outputs/features](../features/README.md) và
+[outputs/modeling](../modeling/README.md); file này chỉ giữ bằng chứng data
+contract FD001.
 
 Sau refactor reader, exception và hướng dẫn sử dụng trong cùng ngày, toàn bộ
 63 tests tiếp tục đạt (`5.20s`, thư mục test `tmp/pytest-readability-1`). Lệnh

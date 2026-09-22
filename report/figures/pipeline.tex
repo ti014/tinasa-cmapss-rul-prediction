@@ -20,11 +20,17 @@ edge/.style={->,thick,draw=gray!80}]
 \node[dataNode] (stats) at (5,-4) {Paired analysis train-only\\30 cycles đầu/cuối, \mbox{bootstrap}, Wilcoxon và FDR};
 \node[dataNode] (etl) at (0,-6.4) {ETL Silver/Gold\\Pandas--PySpark \mbox{parity}, Parquet và SQLite};
 \node[dataNode] (features) at (0,-8.3) {Rolling features\\Window 30 cycles, 21 sensors, 27.927 rows};
+\node[opNode] (model) at (0,-10.2) {Grouped RUL modeling\\5-fold GroupKFold, 3 candidates};
+\node[dataNode] (eval) at (0,-12.1) {Final evaluation\\100 test predictions, MAE/RMSE/NASA score};
+\node[dataNode] (labels) at (5,-10.2) {Test labels\\Chỉ ghép sau khi ghi final predictions};
 \draw[edge] (raw.south) -- (validate.north);
 \draw[edge] (validate.south) -- (eda.north);
 \draw[edge] (validate.south) -- (stats.north);
 \draw[edge] (eda.south) |- (etl.west);
 \draw[edge] (stats.south) |- (etl.east);
 \draw[edge] (etl.south) -- (features.north);
+\draw[edge] (features.south) -- (model.north);
+\draw[edge] (model.south) -- (eval.north);
+\draw[edge,dashed] (labels.south) |- (eval.east);
 \end{tikzpicture}
 \end{document}

@@ -8,7 +8,7 @@ Repository này phục vụ báo cáo cuối kỳ môn Phân tích dữ liệu l
 
 ## Trạng thái
 
-Repository đã có **package kiểm tra FD001, train RUL và notebook EDA chỉ dùng train đã hoàn thành ở mốc 1**.
+Repository đã có **package kiểm tra FD001, train RUL, notebook EDA chỉ dùng train hoàn thành ở mốc 1 và contract dữ liệu cặp của mốc 2**.
 
 Đã có:
 
@@ -24,11 +24,14 @@ Repository đã có **package kiểm tra FD001, train RUL và notebook EDA chỉ
 - Cơ sở lý thuyết có trích dẫn và [protocol thống kê mốc 2](report/sections/statistical-protocol.tex).
   Đã chốt so sánh mean 30 cycles đầu và 30 cycles cuối theo từng engine.
   Cấu hình thống kê chi tiết còn là đề xuất; chưa chạy kiểm định suy luận.
+- Helper `build_engine_sensor_pairs` chỉ nhận train, tạo và kiểm tra một cặp
+  30 cycles đầu/cuối cho từng engine và đủ 21 sensors. Chưa có output thống kê
+  được lưu, bootstrap hoặc kiểm định suy luận.
 
 Chưa triển khai:
 
 - Pipeline ETL Silver/Gold bằng Pandas và PySpark.
-- Thống kê suy luận và xây dựng đặc trưng (feature engineering).
+- Bootstrap, Wilcoxon/FDR, notebook suy luận mốc 2 và xây dựng đặc trưng (feature engineering).
 - Các mô hình RUL và phân tích ARIMA.
 - Dashboard Streamlit và báo cáo hoàn chỉnh (đã bắt đầu bản thảo LaTeX).
 
@@ -198,8 +201,8 @@ Cấu trúc public hiện tại và dự kiến:
 │   └── archive/             # Dữ liệu lưu để đối chiếu, không dùng cho mô hình chính
 ├── references/              # Bibliography, hướng dẫn đọc và các bài báo hiện có
 ├── notebooks/               # Notebook EDA train FD001 đã chạy
-├── src/cmapss/              # data/: contract; eda.py: phân tích; validate.py: CLI
-├── tests/                   # Kiểm thử data contract, CLI và EDA
+├── src/cmapss/              # data/: contract; eda.py; statistics.py; validate.py
+├── tests/                   # Kiểm thử data contract, CLI, EDA và paired-data
 ├── outputs/validation/      # Báo cáo kiểm tra dữ liệu hiện có
 ├── outputs/eda/             # Bảng, hình, phương pháp và kiểm tra EDA
 ├── assets/diagrams/         # Nguồn draw.io và bản xuất SVG
@@ -249,13 +252,14 @@ Test labels không được đọc trong luồng này.
 trình và cài package hiện tại qua `-e .`. Nếu cần notebook, phát triển hoặc chạy test,
 thay bằng [`requirements-dev.txt`](requirements-dev.txt) ở bước cài đặt.
 
-Luồng code nằm trong `src/cmapss/data/`:
+Data contract và luồng paired-data chỉ dùng train nằm trong `src/cmapss/`:
 
 ```text
 contracts.py     Tên cột, kiểu dữ liệu và exception
 readers.py       Đọc file thành DataFrame
 validation.py    Kiểm tra schema, khóa và cycle
 targets.py       Tạo và kiểm tra train RUL
+statistics.py     Tạo và kiểm tra cặp engine/sensor 30 cycles
 ```
 
 Ví dụ: engine train kết thúc tại cycle 200 thì `rul = 200 - cycle`.
@@ -273,7 +277,8 @@ Sau khi cài `requirements-dev.txt`, mở notebook từ thư mục gốc:
 Chọn kernel Python của `.venv` và **Restart Kernel and Run All Cells**.
 Notebook chỉ phân tích train và tạo lại 12 bảng CSV, 11 hình PNG.
 Các lần kiểm tra dùng kernel mới cho artifact giống nhau trong cùng môi
-trường; toàn bộ suite đạt **69 tests**.
+trường; suite tại mốc nghiệm thu EDA đạt **69 tests**. Toàn bộ suite hiện tại,
+có cả contract cặp M2.1a, đạt **86 tests**.
 
 ![Quy trình EDA train FD001](assets/diagrams/fd001-eda.svg)
 
@@ -313,8 +318,8 @@ Pytest dọn thư mục `--basetemp` khi chạy lại; chỉ dành thư mục đ
 
 </details>
 
-ETL Silver/Gold, PySpark, rolling features, mô hình và dashboard chưa được
-triển khai. [Bản thảo báo cáo](report/main.pdf) được cập nhật cùng công việc
+ETL Silver/Gold, PySpark, rolling features, thống kê suy luận, mô hình và
+dashboard chưa được triển khai. [Bản thảo báo cáo](report/main.pdf) được cập nhật cùng công việc
 đã kiểm chứng: nhật ký ghi ngày, lý do, artifact, cách kiểm tra và phần còn lại.
 Xem [hướng dẫn báo cáo](report/README.md) để biết cấu trúc nguồn và lệnh build
 PDF. Bản hiện tại có kết quả validation và một số quan sát EDA ban đầu đã

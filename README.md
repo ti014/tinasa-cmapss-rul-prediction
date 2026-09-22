@@ -8,7 +8,7 @@ A reproducible Big Data course project for analyzing multivariate turbofan senso
 
 ## Project Status
 
-This repository now provides **FD001 data validation, train RUL targets, and a completed train-only EDA notebook (milestone 1)**.
+This repository now provides **FD001 data validation, train RUL targets, a completed train-only EDA notebook (milestone 1), and the paired-data contract for milestone 2**.
 
 Available now:
 
@@ -24,11 +24,14 @@ Available now:
 - A cited theoretical background and a [milestone 2 statistical protocol](report/sections/statistical-protocol.tex).
   The paired comparison uses the mean of the first and last 30 cycles per engine.
   Detailed statistical settings remain proposals; inferential tests have not run.
+- A train-only `build_engine_sensor_pairs` helper that creates and validates one
+  first/last 30-cycle pair for every engine and all 21 sensors. It has no
+  persisted statistical output and does not perform inference.
 
 Not implemented yet:
 
 - Silver/Gold ETL pipelines in Pandas and PySpark.
-- Inferential statistical analysis and feature engineering.
+- Bootstrap, Wilcoxon/FDR inference, the milestone 2 notebook, and feature engineering.
 - RUL models and ARIMA analysis.
 - Streamlit dashboard and completed final report (the LaTeX draft has started).
 
@@ -198,8 +201,8 @@ Current and planned public project structure:
 │   └── archive/             # Data retained for comparison, not active modeling
 ├── references/              # Bibliography, reading guide, and available papers
 ├── notebooks/               # Executed FD001 train EDA
-├── src/cmapss/              # data/: contracts; eda.py: analysis; validate.py: CLI
-├── tests/                   # Data contract, CLI, and EDA tests
+├── src/cmapss/              # data/: contracts; eda.py; statistics.py; validate.py
+├── tests/                   # Data contract, CLI, EDA, and paired-data tests
 ├── outputs/validation/      # Data-validation reports
 ├── outputs/eda/             # EDA tables, figures, methods, and validation
 ├── assets/diagrams/         # Editable draw.io sources and SVG exports
@@ -250,13 +253,14 @@ It does not read test labels.
 the local package through `-e .`. For notebooks, development, or tests, install
 [`requirements-dev.txt`](requirements-dev.txt) instead.
 
-The data flow lives in `src/cmapss/data/`:
+The data contract and train-only paired-data flow live in `src/cmapss/`:
 
 ```text
 contracts.py     Column names, dtypes, and the validation exception
 readers.py       Read source files into DataFrames
 validation.py    Validate schemas, keys, and cycles
 targets.py       Create and validate train RUL
+statistics.py     Build and validate 30-cycle engine/sensor pairs
 ```
 
 For example, a train engine ending at cycle 200 has `rul = 200 - cycle`.
@@ -274,7 +278,8 @@ After installing `requirements-dev.txt`, open the notebook from the repository r
 Select the `.venv` Python kernel and **Restart Kernel and Run All Cells**.
 This analyzes only train and recreates 12 CSV tables and 11 PNG figures.
 The validated runs used fresh kernels and produced identical artifacts in the
-same environment; the full test suite passed **69 tests**.
+same environment; the EDA checkpoint suite passed **69 tests**. The current
+repository-wide suite, including the M2.1a pair contract, passed **86 tests**.
 
 ![FD001 train EDA workflow](assets/diagrams/fd001-eda.svg)
 
@@ -314,8 +319,8 @@ Pytest clears its `--basetemp` directory on subsequent runs; reserve it for test
 
 </details>
 
-Silver/Gold ETL, PySpark, rolling features, models, and dashboard are not
-implemented yet. The [report draft](report/main.pdf) is updated alongside
+Silver/Gold ETL, PySpark, rolling features, inference, models, and dashboard
+are not implemented yet. The [report draft](report/main.pdf) is updated alongside
 verified work: its progress log records dates, rationale, artifacts, checks,
 and remaining work. See [report instructions](report/README.md) for source
 organization and PDF build commands. The current draft includes verified data

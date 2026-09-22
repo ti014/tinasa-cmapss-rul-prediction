@@ -16,10 +16,10 @@ Mốc ghi nhận & Công việc & Lý do và bằng chứng & Trạng thái / c�
 22/09/2026 & EDA mô tả chỉ dùng train & Tìm hiểu phân phối và tín hiệu trước khi xây dựng đặc trưng. Biên bản EDA ghi 69 tests đạt; notebook chạy từ kernel mới, 12 CSV và 11 PNG tái lập được. & Hoàn thành mốc EDA mô tả; chưa có thống kê suy luận hoặc feature selection.\\[0.5em]
 22/09/2026 & Khởi tạo báo cáo LaTeX và nhật ký tiến độ & Lưu lập luận cùng bằng chứng ngay khi thực hiện để tránh mất lý do lựa chọn. Có nguồn theo phần, sơ đồ, bảng tiến độ và bản PDF. & Bản đang thực hiện; các kết quả mô hình và đánh giá cuối chưa có.\\[0.5em]
 22/09/2026 & Bổ sung cơ sở lý thuyết và protocol thống kê & Gắn nguồn cho phương pháp đã chọn; định nghĩa mean 30 cycles đầu/cuối, chênh lệch theo engine và giả định suy luận. Có phần lý thuyết, protocol và sơ đồ riêng. & Hoàn thành nội dung thiết kế của đợt này; cấu hình chi tiết còn là đề xuất, kiểm định chưa chạy.\\
+22/09/2026 & Tạo contract dữ liệu cặp mốc 2 & Hiện thực hóa helper chỉ nhận train, tạo một cặp 30 cycles đầu/cuối cho từng engine--sensor và kiểm tra khóa, ranh giới, thứ tự, số liệu. 17 tests tập trung và toàn bộ 86 tests đạt; test trên raw FD001 xác nhận 2.100 cặp trong bộ nhớ. & Đã có bằng chứng tạo cặp; chưa có artifact, bootstrap, Wilcoxon hoặc FDR.\\
 \bottomrule
 \end{longtable}
 
-\clearpage
 \subsection{Các mốc tiếp theo và điều kiện hoàn thành}
 \begin{longtable}{L{3.4cm}L{5.1cm}L{6.2cm}}
 \caption{Công việc còn lại; thứ tự phụ thuộc, không phải lịch cam kết.}\label{tab:next}\\
@@ -27,7 +27,7 @@ Mốc ghi nhận & Công việc & Lý do và bằng chứng & Trạng thái / c�
 \endfirsthead
 \toprule Công việc & Vì sao cần thực hiện & Bằng chứng cần bổ sung\\\midrule
 \endhead
-Phân tích thống kê suy luận & Phân biệt quan sát mô tả với kết luận thống kê; tránh chọn tín hiệu chỉ từ vài hình thuận lợi. & Đã chốt mean 30 cycles đầu/cuối; cần chốt cấu hình còn mở ở Mục~\ref{sec:stat-protocol}, rồi xuất effect sizes, khoảng tin cậy và kiểm định đã hiệu chỉnh.\\[0.5em]
+Phân tích thống kê suy luận & Phân biệt quan sát mô tả với kết luận thống kê; tránh chọn tín hiệu chỉ từ vài hình thuận lợi. & Đã có helper tạo cặp 30 cycles đầu/cuối; cần chốt cấu hình còn mở ở Mục~\ref{sec:stat-protocol}, rồi xuất artifact, effect sizes, khoảng tin cậy và kiểm định đã hiệu chỉnh.\\[0.5em]
 ETL Pandas/PySpark & Thể hiện chuẩn hóa, tích hợp và lưu trữ; so sánh tính đúng giữa hai cách xử lý. & Parquet/SQLite; số dòng trước/sau; parity theo khóa và giá trị; benchmark có cấu hình máy và thời gian đo.\\[0.5em]
 Đặc trưng và validation & Chuyển chuỗi thành đầu vào mô hình trong khi giữ ranh giới động cơ và quá khứ. & Window đủ 30 cycles; fold không trùng engine; preprocessing chỉ fit training fold.\\[0.5em]
 Mô hình và đánh giá cuối & Xác định khả năng dự đoán trên cùng protocol thay vì suy ra từ correlation. & Kết quả cross-validation, cấu hình được chọn, đúng 100 dự đoán test trước khi join nhãn; metric và khoảng tin cậy.\\[0.5em]

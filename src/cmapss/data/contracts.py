@@ -12,6 +12,21 @@ KEY = ("split", "engine_id", "cycle")
 OBSERVATION_COLUMNS = ("split",) + RAW_COLUMNS
 TEST_LABEL_COLUMNS = ("split", "engine_id", "rul")
 TRAIN_TARGET_COLUMNS = KEY + ("rul",)
+PAIRED_SENSOR_WINDOW_CYCLES = 30
+ENGINE_SENSOR_PAIR_KEY = ("split", "engine_id", "sensor")
+ENGINE_SENSOR_PAIR_COLUMNS = ENGINE_SENSOR_PAIR_KEY + (
+    "n_cycles",
+    "early_start",
+    "early_end",
+    "late_start",
+    "late_end",
+    "n_early",
+    "n_late",
+    "early_mean",
+    "late_mean",
+    "difference",
+    "pair_status",
+)
 FD001_ROWS = {"train": 20_631, "test": 13_096}
 FD001_ENGINE_COUNT = 100
 RAW_DTYPES = {

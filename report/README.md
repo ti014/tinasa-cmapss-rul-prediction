@@ -1,16 +1,16 @@
 # Báo cáo cuối kỳ
 
 [Bản PDF](main.pdf) được biên dịch từ [main.tex](main.tex), cập nhật ngày
-22/09/2026. Báo cáo trình bày các kết quả đã có trên NASA C-MAPSS FD001:
+23/09/2026. Báo cáo trình bày các kết quả đã có trên NASA C-MAPSS FD001:
 kiểm tra dữ liệu, EDA train-only, ETL Silver/Gold, đối chiếu Pandas--PySpark,
-rolling features 30 cycles, suy luận chênh lệch sensor đầu/cuối vòng đời và
-đánh giá mô hình RUL hiện tại.
+rolling features 30 cycles, suy luận chênh lệch sensor đầu/cuối vòng đời,
+phân tích PCA--ARIMA train-only và đánh giá mô hình RUL hiện tại.
 
 Báo cáo không đưa vào timeline, kế hoạch tiếp theo, đường dẫn artifact nội bộ
 hoặc khai báo AI/LLM. Phần dữ liệu giải thích rõ nhãn kết cục, ý nghĩa cột,
 phân bố và cách xử lý; phần phương pháp giải thích lý do, đơn vị và nguồn của
-các công thức. ARIMA và dashboard chưa thuộc tập kết quả hiện có nên không
-được trình bày như kết quả đã triển khai.
+các công thức. Dashboard chưa thuộc tập kết quả hiện có; PCA--ARIMA đã được
+trình bày như phân tích phụ trên Health Index, không phải RUL model.
 
 ## Cấu trúc
 
@@ -27,7 +27,7 @@ report/
 │   ├── current-results.tex      # Bảng, hình và diễn giải kết quả
 │   └── discussion.tex           # Bài học và giới hạn
 └── figures/
-    ├── pipeline.tex             # Nguồn TikZ của luồng đã thực hiện
+    ├── pipeline.tex             # Nguồn TikZ của luồng dữ liệu đã thực hiện
     ├── pipeline.pdf             # Hình pipeline dùng trong báo cáo
     ├── statistical-protocol.tex # Nguồn TikZ của protocol thống kê
     └── statistical-protocol.pdf # Bản xuất của protocol
@@ -60,6 +60,6 @@ Push-Location report
 Pop-Location
 ```
 
-Lần build ngày 22/09/2026 tạo PDF 31 trang, không có lỗi biên dịch, citation
+Lần build ngày 23/09/2026 tạo PDF 34 trang, không có lỗi biên dịch, citation
 undefined, reference undefined hoặc overfull/underfull box. Tectonic vẫn ghi
 cảnh báo môi trường về Fontconfig và font Windows; đây không phải lỗi nội dung.

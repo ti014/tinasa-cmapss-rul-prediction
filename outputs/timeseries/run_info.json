@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "pipeline": "train_only_pca_arima_health_index",
+  "generated_at_utc": "2026-09-22T16:59:17.220543+00:00",
+  "input_sha256": {
+    "observations.parquet": "9e031b0d6430512fbce9af344b3110aeeb17429d44f394f28e370130d13560f8",
+    "fold_assignments.csv": "54f52861f20cbd73ddf857f443d59ce23dd6a5eae3ca34e2789dc53efb56dd87"
+  },
+  "config": {
+    "n_engines": 10,
+    "train_fraction": 0.7,
+    "minimum_train_size": 30,
+    "prediction_interval": 0.95,
+    "seed": 42,
+    "order_selection": "AIC grid p,q=0..2 and d in {0,1} on fit segment only",
+    "health_index": "standardized sensor columns -> PCA PC1; orientation chosen by train cycle correlation"
+  },
+  "selection": {
+    "rule": "quota cân bằng theo GroupKFold fold; lifetime quantile positions trong từng fold",
+    "forecast_independent": true,
+    "n_selected": 10
+  },
+  "row_counts": {
+    "health_index": 20631,
+    "selected_engines": 10,
+    "forecasts": 704,
+    "forecast_metrics": 10,
+    "diagnostics": 10,
+    "successful_engines": 10
+  },
+  "outputs": {
+    "selected_engines": "tables\\selected_engines.csv",
+    "health_index": "tables\\health_index.csv",
+    "forecast_metrics": "tables\\forecast_metrics.csv",
+    "diagnostics": "tables\\diagnostics.csv",
+    "arima_forecasts": "predictions\\arima_forecasts.parquet",
+    "health_index_figure": "figures\\health_index_selected_engines.png",
+    "forecast_figure": "figures\\arima_forecasts.png",
+    "scaler": "models\\health_index_scaler.joblib",
+    "pca": "models\\health_index_pca.joblib"
+  },
+  "isolation": {
+    "uses_test_observations": false,
+    "uses_test_labels": false,
+    "forecast_is_rul": false,
+    "health_index_fit_split": "train"
+  }
+}

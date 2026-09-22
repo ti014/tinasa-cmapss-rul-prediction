@@ -3,16 +3,18 @@
 
 \subsection{Luồng xử lý}
 Hình~\ref{fig:pipeline} tóm tắt các bước đã thực hiện: đọc và kiểm tra dữ liệu
-FD001, phân tích khám phá (EDA), suy luận thống kê theo engine, ETL qua các lớp
-Silver/Gold, xây dựng rolling features và đánh giá mô hình RUL. Các bước được
-giữ tách biệt để phân biệt dữ liệu nguồn, dữ liệu đã kiểm tra và dữ liệu suy ra.
+FD001, sau đó tách thành hai lane. Lane chính đi qua ETL, rolling features,
+modeling và đánh giá RUL; lane phụ gồm ba phân tích train-only độc lập là EDA,
+suy luận thống kê và PCA--ARIMA trên Health Index. Cách bố trí này phân biệt
+dependency dữ liệu với các artifact phân tích không đi vào modeling.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.98\linewidth]{figures/pipeline.pdf}
 \caption[Luồng xử lý dữ liệu đã thực hiện]{Luồng xử lý từ dữ liệu FD001 đến
-EDA, suy luận thống kê, ETL, rolling features và đánh giá RUL. Nhãn test chỉ
-được ghép sau khi final predictions đã được ghi.}
+EDA, suy luận thống kê, ETL, rolling features, PCA--ARIMA train-only và đánh giá
+RUL. Lane train-only không đi vào RUL modeling; nhãn test chỉ được ghép sau
+khi final predictions đã được ghi.}
 \label{fig:pipeline}
 \end{figure}
 
@@ -24,6 +26,15 @@ Gold Parquet và SQLite. Rolling features được tạo từ Silver observation
 final predictions cho test trước, rồi mới đọc nhãn test để đánh giá cuối. Cách
 tách lớp giúp xác định ranh giới của từng phép biến đổi và kiểm tra việc mất
 hoặc nhân bản dòng.
+
+Phân tích PCA--ARIMA đọc cùng Silver observations nhưng chỉ giữ train. Pipeline
+fit StandardScaler và PCA một thành phần trên 21 sensor của train, định hướng
+PC1 theo tương quan với cycle để tạo Health Index, rồi chọn 10 engine theo fold
+và vị trí lifetime cách đều trước khi xem forecast. Mỗi chuỗi được chia theo
+thứ tự cycle với 70\% đầu cho fit và 30\% cuối cho evaluation. ARIMA order được
+chọn bằng grid AIC trên fit segment của từng engine; kết quả ghi MAE, RMSE,
+coverage prediction interval 95\%, ADF và Ljung--Box. Health Index forecast là
+phân tích diễn biến sensor, không được diễn giải như RUL và không đọc test labels.
 
 Pandas là reference implementation; PySpark tái hiện ba boundary và parity
 checker xác nhận schema, khóa, số dòng và giá trị số khớp nhau với sai khác lớn

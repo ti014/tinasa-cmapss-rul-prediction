@@ -8,7 +8,7 @@ A reproducible Big Data course project for analyzing multivariate turbofan senso
 
 ## Project Status
 
-This repository now provides **FD001 data validation, train RUL targets, a completed train-only EDA notebook (milestone 1), persisted M2.3a--M2.4 train-only sensor inference artifacts (milestone 2), Pandas/PySpark Silver/Gold ETL with benchmark and parity artifacts (M3.1), deterministic 30-cycle rolling features (M3.2), and leakage-safe RUL model evaluation**.
+This repository now provides **FD001 data validation, train RUL targets, a completed train-only EDA notebook (milestone 1), persisted M2.3a--M2.4 train-only sensor inference artifacts (milestone 2), Pandas/PySpark Silver/Gold ETL with benchmark and parity artifacts (M3.1), deterministic 30-cycle rolling features (M3.2), leakage-safe RUL model evaluation (M3.3), and train-only PCA--ARIMA Health Index analysis (M3.4)**.
 
 Available now:
 
@@ -22,9 +22,9 @@ Available now:
   the current validated results, a data dictionary, glossary of report
   terminology and abbreviations, decision rationale, and validation/EDA/M2.3a--M2.4
   interpretations.
-  EDA milestone 1, milestone 2 train-only statistics, M3.1 ETL parity, and
-  M3.2 rolling features and the current grouped RUL model evaluation have passed
-  independent validation; ARIMA and the dashboard remain next.
+  EDA milestone 1, milestone 2 train-only statistics, M3.1 ETL parity, M3.2
+  rolling features, grouped RUL model evaluation, and the train-only PCA--ARIMA
+  analysis have passed independent validation; the dashboard remains next.
 - A cited theoretical background and a [milestone 2 statistical protocol](report/sections/statistical-protocol.tex).
   The paired comparison uses each sensor's mean over the first and last 30 cycles of every train engine.
   The M2.0 statistical configuration was fixed before inference.
@@ -53,13 +53,17 @@ Available now:
   GroupKFold by engine, writes out-of-fold predictions, writes exactly 100 final
   test predictions before reading labels, and evaluates the selected model on
   NASA test labels.
+- A train-only [PCA--ARIMA Health Index analysis](outputs/timeseries/README.md)
+  on 10 representative validation engines. It writes 20,631 Health Index rows,
+  704 holdout forecasts, MAE/RMSE, 95% prediction-interval coverage, ADF and
+  Ljung--Box diagnostics without reading test labels.
 
 Not implemented yet:
 
-- ARIMA analysis and the Streamlit dashboard.
+- The Streamlit dashboard.
 
-Installation, data validation, notebook, ETL, feature-generation, and modeling
-instructions are available below. ARIMA and dashboard entry points are not
+Installation, data validation, notebook, ETL, feature-generation, modeling and
+time-series instructions are available below. The dashboard entry point is not
 implemented yet.
 
 ## Objectives
@@ -132,7 +136,7 @@ scalability benchmark. The original dataset is only a few megabytes, so the
 repository will not claim that FD001 itself demonstrates large-scale data
 processing.
 
-## Planned Methodology
+## Methodology
 
 ### Data Quality
 
@@ -177,14 +181,20 @@ bootstrap confidence intervals recorded in `outputs/modeling/tables/final_metric
 
 ### ARIMA Analysis
 
-ARIMA is a secondary time-series analysis, not the primary RUL model. It will forecast a train-fitted Health Index on representative validation engines and report:
+ARIMA is a secondary time-series analysis, not the primary RUL model. The
+implemented pipeline fits a standardized PCA Health Index on train observations
+and forecasts the final 30% of 10 representative validation engines. It reports:
 
 - Forecast MAE and RMSE.
 - 95% prediction-interval coverage.
 - Augmented Dickey-Fuller stationarity diagnostics.
 - Ljung-Box residual autocorrelation diagnostics.
 
-ARIMA will not be applied directly to the deterministic training RUL countdown.
+The current run selects ARIMA order by an AIC grid on each 70% fit segment only.
+All 10 engines fit successfully; forecast MAE is 0.1518--1.0396 and 95%
+prediction-interval coverage is 21.43%--97.03%. ADF does not reject
+non-stationarity on the fit segments. ARIMA is not applied directly to the
+deterministic training RUL countdown; Health Index forecast is not RUL.
 
 ## Big Data Scope
 
@@ -234,14 +244,15 @@ Current and planned public project structure:
 │   └── archive/             # Data retained for comparison, not active modeling
 ├── references/              # Bibliography, reading guide, and available papers
 ├── notebooks/               # Executed FD001 train EDA and statistics notebooks
-├── src/cmapss/              # data/, statistics/, etl/, features/, modeling/, eda.py, validate.py
-├── tests/                   # Data contract, CLI, EDA, statistics, ETL, features, modeling, and reproducibility tests
+├── src/cmapss/              # data/, statistics/, etl/, features/, modeling/, timeseries/, eda.py, validate.py
+├── tests/                   # Data contract, CLI, EDA, statistics, ETL, features, modeling, timeseries, and reproducibility tests
 ├── outputs/validation/      # Data-validation reports
 ├── outputs/eda/             # EDA tables, figures, methods, and validation
 ├── outputs/statistics/      # M2.3a--M2.4 inference artifacts and validation
 ├── outputs/etl/             # Silver/Gold Parquet, SQLite, metadata, benchmark
 ├── outputs/features/        # Gold rolling feature Parquet and metadata
 ├── outputs/modeling/        # Grouped CV, predictions, model artifact, final metrics
+├── outputs/timeseries/      # Train-only PCA--ARIMA Health Index artifacts
 ├── assets/diagrams/         # Editable draw.io sources, SVG previews, URL handles
 ├── pyproject.toml           # Package and direct dependencies
 ├── requirements.txt         # Pip installation: local package and runtime libraries
@@ -249,7 +260,7 @@ Current and planned public project structure:
 ├── requirements-etl.txt     # Optional PySpark ETL dependencies
 ├── uv.lock                  # Locked dependency versions
 ├── report/                  # Living LaTeX/PDF report, progress and evidence
-├── app.py                   # Planned Streamlit dashboard entry point
+├── app.py                   # Streamlit dashboard entry point (planned)
 ├── README.md                # English documentation
 └── README.vi.md             # Vietnamese documentation
 ```
@@ -316,6 +327,18 @@ For example, a train engine ending at cycle 200 has `rul = 200 - cycle`.
 The target function rejects test observations. See the [data contract](data/CONTRACTS.md)
 for conditions and validation limits.
 
+### Overall data pipeline
+
+The canonical overall diagram is rendered from the TikZ source used by the
+report. It keeps EDA, paired statistics, and PCA--ARIMA as independent
+train-only branches; the Silver/Gold path feeds rolling features and RUL
+modeling; `RUL_FD001.txt` is joined only during final evaluation.
+
+![FD001 overall data pipeline](assets/diagrams/fd001-pipeline.png)
+
+[Report PDF figure](report/figures/pipeline.pdf) ·
+[TikZ source](report/figures/pipeline.tex)
+
 ### Run the EDA notebook
 
 After installing `requirements-dev.txt`, open the notebook from the repository root:
@@ -329,7 +352,8 @@ This analyzes only train and recreates 12 CSV tables and 11 PNG figures.
 The validated runs used fresh kernels and produced identical artifacts in the
 same environment; the EDA checkpoint suite passed **69 tests**. The current
 repository-wide suite, including M2.3a artifact export tests, the M2.4 runtime
-audit, M3.1 ETL checks, and M3.2 feature checks, passed **105 tests**.
+audit, M3.1 ETL checks, M3.2 feature checks, grouped modeling checks and
+PCA--ARIMA checks, passed **116 tests**.
 
 ![FD001 train EDA workflow](assets/diagrams/fd001-eda.svg)
 
@@ -444,6 +468,22 @@ MAE 15.3490, RMSE 20.5413, and NASA score 1513.2577 on 100 test engines.
 See [modeling artifacts and validation](outputs/modeling/README.md) for fold
 metrics, final predictions, final evaluation, figures, and limitations.
 
+### Run the PCA--ARIMA analysis
+
+After ETL and grouped modeling have written their artifacts, run the secondary
+Health Index forecast:
+
+```powershell
+.venv\Scripts\python -m cmapss.timeseries `
+  --observations outputs/etl/silver/observations.parquet `
+  --fold-assignments outputs/modeling/tables/fold_assignments.csv `
+  --output-dir outputs/timeseries
+```
+
+The current artifact contains 20,631 train Health Index rows and 704 holdout
+forecasts from 10 engines. See [PCA--ARIMA artifacts and diagnostics](outputs/timeseries/README.md)
+for the selection rule, metrics, figures, and limitations.
+
 <details>
 <summary>Development and optional checks</summary>
 
@@ -472,14 +512,15 @@ Pytest clears its `--basetemp` directory on subsequent runs; reserve it for test
 </details>
 
 Pandas/PySpark Silver/Gold parity, benchmark artifacts, M3.2 rolling features,
-and grouped RUL model evaluation are available; ARIMA and dashboard remain.
+grouped RUL model evaluation, and train-only PCA--ARIMA artifacts are available;
+the dashboard remains.
 M2.4 repeated-run validation has passed.
 The [report draft](report/main.pdf) is updated alongside
 verified work: its progress log records dates, rationale, artifacts, checks,
 and remaining work. See [report instructions](report/README.md) for source
 organization and PDF build commands. The current draft includes verified data
 validation, selected initial EDA observations, M3.1 ETL measurements, M3.2
-rolling-feature evidence, and current RUL model metrics.
+rolling-feature evidence, PCA--ARIMA diagnostics, and current RUL model metrics.
 
 ## Academic Context
 

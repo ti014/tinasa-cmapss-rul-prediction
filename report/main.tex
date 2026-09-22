@@ -16,7 +16,7 @@
 \renewcommand{\figurename}{Hình}
 \renewcommand{\tablename}{Bảng}
 \renewcommand{\refname}{Tài liệu tham khảo}
-\newcommand{\reportdate}{22/09/2026}
+\newcommand{\reportdate}{23/09/2026}
 \newcommand{\filepath}[1]{\nolinkurl{#1}}
 \newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
 \onehalfspacing
@@ -60,17 +60,18 @@ Ngành: & Khoa học máy tính
 \section*{Tóm tắt}
 \addcontentsline{toc}{section}{Tóm tắt}
 Báo cáo trình bày quy trình phân tích dữ liệu cảm biến trên NASA C-MAPSS FD001,
-từ kiểm tra chất lượng dữ liệu đến xây dựng đặc trưng rolling window và suy luận
-thống kê theo động cơ, sau đó huấn luyện mô hình RUL bằng đánh giá grouped
-cross-validation. Kết quả hiện có gồm hồ sơ dữ liệu train/test, pipeline ETL
-Silver/Gold với đối chiếu Pandas--PySpark, 27.927 rolling windows dài 30 cycles,
-phân tích chênh lệch giữa 30 cycles đầu/cuối của 100 động cơ train và đánh giá
-mô hình trên 100 động cơ test.
+từ kiểm tra chất lượng dữ liệu đến xây dựng đặc trưng rolling window, suy luận
+thống kê theo động cơ và phân tích PCA--ARIMA trên Health Index train-only, sau
+đó huấn luyện mô hình RUL bằng đánh giá grouped cross-validation. Kết quả hiện
+có gồm hồ sơ dữ liệu train/test, pipeline ETL Silver/Gold với đối chiếu
+Pandas--PySpark, 27.927 rolling windows dài 30 cycles, phân tích chênh lệch giữa
+30 cycles đầu/cuối của 100 động cơ train, 704 Health Index forecasts trên 10
+engine validation và đánh giá mô hình trên 100 động cơ test.
 
-Các kết quả được diễn giải trong phạm vi dữ liệu mô phỏng FD001. Báo cáo không
-đưa ra kết quả ARIMA hoặc dashboard vì những kết quả đó chưa thuộc tập bằng
-chứng hiện có; do đó không suy ra lịch bảo trì tối ưu từ các phân tích mô tả,
-suy luận sensor hoặc metric mô hình.
+Các kết quả được diễn giải trong phạm vi dữ liệu mô phỏng FD001. PCA--ARIMA là
+phân tích phụ trên Health Index và không được đánh đồng với RUL; báo cáo cũng
+không suy ra lịch bảo trì tối ưu từ các phân tích mô tả, forecast sensor hoặc
+metric mô hình.
 \clearpage
 \begin{spacing}{1.1}
 \tableofcontents

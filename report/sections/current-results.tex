@@ -113,6 +113,50 @@ những trường hợp dự đoán quá lạc quan. Kết quả này là đánh
 phỏng, không phải bảo đảm khái quát hóa sang fault mode hoặc điều kiện vận hành
 khác.
 
+\subsection{Phân tích PCA--ARIMA trên Health Index}
+Phân tích phụ chỉ dùng 20.631 train observations. Sau khi chuẩn hóa 21 sensor,
+PCA tạo một Health Index từ PC1 và định hướng điểm theo cycle. Danh sách 10
+engine được chốt trước forecast, gồm hai engine ở mỗi fold GroupKFold theo các
+vị trí lifetime cách đều. Mỗi chuỗi dùng 70\% đầu để fit và 30\% cuối để đánh
+giá; không có test observation hoặc test label trong bước này.
+
+\begin{table}[H]
+\centering
+\caption[Kết quả forecast Health Index theo engine]{Metric forecast 30\% cuối
+chuỗi Health Index trên 10 engine validation được chọn trước.}
+\label{tab:arima-results}
+\begin{tabular}{rrrrrr}
+\toprule
+Engine & Fold & Order & MAE & RMSE & Coverage 95\%\\\midrule
+39 & 1 & (1,0,1) & 0,6822 & 0,8526 & 35,90\%\\
+69 & 1 & (1,0,1) & 0,4609 & 0,5674 & 49,54\%\\
+24 & 2 & (2,0,2) & 0,1788 & 0,2188 & 93,33\%\\
+92 & 2 & (1,0,1) & 0,1636 & 0,2071 & 89,32\%\\
+91 & 3 & (1,0,1) & 0,4915 & 0,6443 & 48,78\%\\
+96 & 3 & (1,0,1) & 0,1518 & 0,1837 & 97,03\%\\
+70 & 4 & (2,1,2) & 1,0396 & 1,2232 & 21,43\%\\
+67 & 4 & (2,0,1) & 0,1631 & 0,2044 & 93,62\%\\
+57 & 5 & (1,0,2) & 0,4372 & 0,5259 & 50,00\%\\
+83 & 5 & (1,0,1) & 0,1704 & 0,2166 & 87,50\%\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Các engine đều fit thành công. MAE nằm trong khoảng 0,1518--1,0396 và coverage
+95\% nằm trong khoảng 21,43\%--97,03\%. ADF trên fit segment không bác bỏ
+tính dừng ở cả 10 engine, với p-value từ 0,8609 đến 0,9990. Ljung--Box không
+cho thấy bằng chứng mạnh về tự tương quan residual ở mức 5\% trong các chuỗi đã
+chọn. Coverage thấp ở một số engine cho thấy prediction interval không đồng
+đều; kết quả này được giữ nguyên và không dùng để thay đổi danh sách engine.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\linewidth]{../outputs/timeseries/figures/arima_forecasts.png}
+\caption[Forecast Health Index trên 10 engine]{Actual Health Index, forecast
+ARIMA và prediction interval 95\% trên 30\% cuối mỗi chuỗi được chọn.}
+\label{fig:arima-forecast}
+\end{figure}
+
 \subsection{Tuổi thọ động cơ trên train}
 \begin{table}[H]
 \centering

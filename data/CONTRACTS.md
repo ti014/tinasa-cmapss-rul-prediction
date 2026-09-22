@@ -8,6 +8,8 @@ metadata lần chạy, hai hình M2.3b và biên bản validation M2.4 tại
 Silver train targets và Gold engine summary tại `outputs/etl/`; M3.2 đã bổ sung
 Gold rolling features tại `outputs/features/`; mốc modeling đã bổ sung
 cross-validation, final predictions và final metrics tại `outputs/modeling/`.
+M3.4 đã bổ sung Health Index PCA và forecast ARIMA train-only tại
+`outputs/timeseries/`.
 PySpark adapter đã chạy parity với Pandas reference trong môi trường local có
 JRE.
 
@@ -336,6 +338,28 @@ asymmetric score và bootstrap percentile CI 95% theo 100 test engines. File
 `outputs/modeling/run_info.json` lưu checksum của rolling features, train
 targets và test labels.
 
+### TIMESERIES_HEALTH_INDEX
+
+Phân tích PCA--ARIMA là artifact phụ train-only tại `outputs/timeseries/`.
+Pipeline đọc Silver observations, lọc `split=train`, chuẩn hóa 21 sensor bằng
+`StandardScaler` và fit PCA một thành phần trên toàn bộ train observations.
+PC1 được định hướng bằng tương quan với cycle để Health Index có hướng giảm;
+đây là biểu diễn sensor, không phải nhãn RUL.
+
+Mười engine được chọn trước khi xem forecast bằng quota cân bằng theo fold trong
+`outputs/modeling/tables/fold_assignments.csv`; trong từng fold, vị trí lifetime
+cách đều được lấy theo thứ tự `n_cycles`, rồi mới fit forecast. Mỗi chuỗi giữ
+đúng thứ tự cycle, dùng 70% đầu để fit và 30% cuối để đánh giá. ARIMA order
+được chọn bằng grid AIC `p,q=0..2`, `d in {0,1}` trên fit segment của chính
+engine đó. Pipeline ghi cả fit failure và diagnostic failure nếu xảy ra.
+
+`tables/health_index.csv` có khóa `(split, engine_id, cycle)` và đúng 20.631
+dòng train. `predictions/arima_forecasts.parquet` chỉ chứa holdout rows, gồm
+Health Index thật, forecast và prediction interval 95%. `forecast_metrics.csv`
+ghi MAE, RMSE và coverage; `diagnostics.csv` ghi ADF trên fit segment và
+Ljung--Box trên residual. Pipeline không đọc test observations hoặc
+`RUL_FD001.txt`, và không dùng forecast để thay đổi danh sách engine.
+
 ## Test labels và phạm vi cô lập
 
 Lệnh validation mặc định chỉ đọc observations, không mở `RUL_FD001.txt`.
@@ -360,11 +384,12 @@ enforcement hoặc branch protection cho toàn repository.
 | --- | --- | --- |
 | Rolling features | Đã có artifact M3.2 tại `outputs/features/gold/rolling_features.parquet`: khóa observation tại cycle cuối window, trailing window đủ 30 cycles, cùng engine/split, không dùng tương lai; giữ 21 sensors; cột `<sensor>__<stat>` với `last`, `mean`, sample `std` (`ddof=1`), `min`, `max`, slope | Chưa có PCA hoặc feature selection; nếu thêm, phải fit trong training fold |
 | Final predictions | Đã có artifact tại `outputs/modeling/predictions/final_predictions.parquet`: khóa `(split, engine_id, cycle)` tại cycle cuối test; một giá trị RUL dự đoán mỗi engine, đúng 100 dòng; tạo trước khi join test labels | Chưa có dashboard hoặc serving API; chưa clip prediction vì lần chạy hiện tại không sinh giá trị âm |
+| PCA--ARIMA Health Index | Đã có artifact tại `outputs/timeseries/`: PCA fit trên train, 10 engine chọn trước forecast, split 70/30, AIC order selection trên fit segment, MAE/RMSE/coverage/ADF/Ljung--Box | Chưa có dashboard hoặc serving API; Health Index forecast không phải RUL |
 
 Ví dụ window tại cycle 170 là cycle 141–170 của cùng engine. M3.2 đã hiện
 thực hóa feature transformer và validator cho artifact rolling features. Mốc
-modeling đã tạo metrics và prediction cho FD001; ARIMA, dashboard và kiểm tra
-tái lập toàn bộ vẫn chưa hoàn thành.
+modeling đã tạo metrics và prediction cho FD001; PCA--ARIMA đã có artifact và
+diagnostics, dashboard và kiểm tra tái lập toàn bộ vẫn chưa hoàn thành.
 
 ## Chạy kiểm tra
 

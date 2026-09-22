@@ -8,7 +8,7 @@ Repository này phục vụ báo cáo cuối kỳ môn Phân tích dữ liệu l
 
 ## Trạng thái
 
-Repository đã có **gói kiểm tra dữ liệu FD001, nhãn RUL train, notebook EDA chỉ dùng train đã hoàn thành ở mốc 1, các tệp suy luận sensor M2.3a--M2.4 chỉ dùng train ở mốc 2, ETL Silver/Gold bằng Pandas/PySpark kèm benchmark, parity ở mốc M3.1, rolling features 30 cycles ở mốc M3.2 và đánh giá mô hình RUL tránh data leakage**.
+Repository đã có **gói kiểm tra dữ liệu FD001, nhãn RUL train, notebook EDA chỉ dùng train đã hoàn thành ở mốc 1, các tệp suy luận sensor M2.3a--M2.4 chỉ dùng train ở mốc 2, ETL Silver/Gold bằng Pandas/PySpark kèm benchmark, parity ở mốc M3.1, rolling features 30 cycles ở mốc M3.2, đánh giá mô hình RUL tránh data leakage ở mốc M3.3 và phân tích PCA--ARIMA Health Index train-only ở mốc M3.4**.
 
 Đã có:
 
@@ -21,9 +21,9 @@ Repository đã có **gói kiểm tra dữ liệu FD001, nhãn RUL train, notebo
 - [Báo cáo LaTeX tổng hợp kết quả hiện có](report/README.md) và [bản PDF](report/main.pdf),
   có data dictionary (từ điển dữ liệu), bảng thuật ngữ và chữ viết tắt, lý do
   lựa chọn và diễn giải kết quả validation/EDA/M2.3a--M2.4.
-  Mốc 1 EDA, mốc 2 thống kê train-only, parity ETL M3.1 và rolling features
-  M3.2 và đánh giá mô hình RUL theo group hiện tại đã được kiểm tra độc lập;
-  ARIMA và dashboard là các bước tiếp theo.
+  Mốc 1 EDA, mốc 2 thống kê train-only, parity ETL M3.1, rolling features
+  M3.2, đánh giá mô hình RUL theo group và phân tích PCA--ARIMA train-only
+  hiện tại đã được kiểm tra độc lập; dashboard là bước tiếp theo.
 - Cơ sở lý thuyết có trích dẫn và [protocol thống kê mốc 2](report/sections/statistical-protocol.tex).
   Đã chốt so sánh giá trị trung bình của 30 cycles đầu và 30 cycles cuối theo từng động cơ.
   Cấu hình thống kê M2.0 đã được chốt trước suy luận; notebook M2.3a đã chạy bảng suy luận train-only.
@@ -49,13 +49,16 @@ Repository đã có **gói kiểm tra dữ liệu FD001, nhãn RUL train, notebo
   Pipeline so sánh median baseline, Ridge và HistGradientBoosting bằng 5-fold
   GroupKFold theo engine, ghi out-of-fold predictions, ghi đúng 100 test
   predictions trước khi đọc nhãn và đánh giá model được chọn bằng nhãn NASA.
+- Phân tích [PCA--ARIMA trên Health Index](outputs/timeseries/README.md) chỉ
+  dùng train: 10 engine validation đại diện, chia 70/30, 704 forecast, khoảng
+  dự đoán 95%, ADF và Ljung--Box; không đọc nhãn test.
 
 Chưa triển khai:
 
-- Phân tích ARIMA và dashboard Streamlit.
+- Dashboard Streamlit.
 
-Lệnh cài đặt, kiểm tra dữ liệu, mở notebook, chạy ETL và tạo rolling features có ở phần Bắt đầu.
-Lệnh huấn luyện và đánh giá mô hình đã có; ARIMA và dashboard chưa có điểm khởi chạy.
+Lệnh cài đặt, kiểm tra dữ liệu, mở notebook, chạy ETL, tạo rolling features,
+modeling và PCA--ARIMA có ở phần Bắt đầu. Dashboard chưa có điểm khởi chạy.
 
 ## Mục tiêu
 
@@ -127,7 +130,7 @@ nghiệm khả năng mở rộng (scalability benchmark). Bộ dữ liệu gốc
 lượng vài MB, vì vậy repository không tuyên bố FD001 tự thân chứng minh khả
 năng xử lý dữ liệu quy mô lớn.
 
-## Phương pháp dự kiến
+## Phương pháp
 
 ### Chất lượng dữ liệu
 
@@ -172,14 +175,20 @@ cậy bootstrap được lưu trong `outputs/modeling/tables/final_metrics.json`
 
 ### Phân tích ARIMA
 
-ARIMA là phân tích chuỗi thời gian phụ, không phải mô hình RUL chính. Mô hình dự kiến được huấn luyện (`fit`) trên phần đầu chuỗi Health Index của một số động cơ validation đại diện, sau đó dự báo phần còn lại và báo cáo:
+ARIMA là phân tích chuỗi thời gian phụ, không phải mô hình RUL chính. Pipeline
+đã triển khai fit Health Index bằng StandardScaler và PCA trên train, chọn 10
+engine validation đại diện trước forecast, sau đó dùng 70% đầu chuỗi để fit và
+30% cuối để đánh giá:
 
 - MAE và RMSE của dự báo.
 - Tỷ lệ bao phủ của khoảng dự đoán 95%.
 - Chẩn đoán tính dừng Augmented Dickey-Fuller.
 - Chẩn đoán tự tương quan phần dư Ljung-Box.
 
-ARIMA không được áp dụng trực tiếp lên nhãn RUL train vốn giảm theo cycle một cách xác định.
+Lần chạy hiện tại fit thành công cả 10 engine; MAE nằm trong khoảng 0,1518--1,0396
+và coverage khoảng dự đoán 95% nằm trong khoảng 21,43%--97,03%. ADF không bác
+bỏ tính không dừng trên các fit segment. ARIMA không được áp dụng trực tiếp lên
+nhãn RUL train; Health Index forecast không phải RUL.
 
 ## Phạm vi Big Data
 
@@ -229,14 +238,15 @@ Cấu trúc hiện có và dự kiến của repository:
 │   └── archive/             # Dữ liệu lưu để đối chiếu, không dùng cho mô hình chính
 ├── references/              # Danh mục tài liệu, hướng dẫn đọc và các bài báo hiện có
 ├── notebooks/               # Notebook EDA và thống kê train FD001 đã chạy
-├── src/cmapss/              # data/, statistics/, etl/, features/, modeling/, eda.py, validate.py
-├── tests/                   # Kiểm thử data contract, CLI, EDA, thống kê, ETL, features, modeling và tái lập
+├── src/cmapss/              # data/, statistics/, etl/, features/, modeling/, timeseries/, eda.py, validate.py
+├── tests/                   # Kiểm thử data contract, CLI, EDA, thống kê, ETL, features, modeling, timeseries và tái lập
 ├── outputs/validation/      # Báo cáo kiểm tra dữ liệu hiện có
 ├── outputs/eda/             # Bảng, hình, phương pháp và kiểm tra EDA
 ├── outputs/statistics/      # Artifact suy luận M2.3a--M2.4 và validation
 ├── outputs/etl/             # Parquet/SQLite Silver/Gold, metadata và benchmark
 ├── outputs/features/        # Parquet Gold rolling features và metadata
 ├── outputs/modeling/        # Grouped CV, prediction, model artifact và final metrics
+├── outputs/timeseries/      # Artifact Health Index và PCA--ARIMA train-only
 ├── assets/diagrams/         # Nguồn draw.io, bản xem trước SVG và file URL
 ├── pyproject.toml           # Thông tin package và dependency trực tiếp
 ├── requirements.txt         # Cài bằng pip: package và thư viện chạy chương trình
@@ -310,6 +320,18 @@ Ví dụ: engine train kết thúc tại cycle 200 thì `rul = 200 - cycle`.
 Hàm tạo nhãn từ chối quan sát test. Xem [data contract](data/CONTRACTS.md)
 để biết các điều kiện và giới hạn kiểm tra.
 
+### Pipeline dữ liệu tổng thể
+
+Sơ đồ tổng thể dùng cùng nguồn TikZ với báo cáo. EDA, paired analysis và
+PCA--ARIMA được thể hiện là các nhánh train-only độc lập; nhánh Silver/Gold
+đi vào rolling features và modeling RUL; `RUL_FD001.txt` chỉ được ghép ở bước
+đánh giá cuối.
+
+![Pipeline dữ liệu tổng thể FD001](assets/diagrams/fd001-pipeline.png)
+
+[Hình trong báo cáo (PDF)](report/figures/pipeline.pdf) ·
+[Nguồn TikZ](report/figures/pipeline.tex)
+
 ### Chạy notebook EDA
 
 Sau khi cài `requirements-dev.txt`, mở notebook từ thư mục gốc:
@@ -323,7 +345,8 @@ Notebook chỉ phân tích train và tạo lại 12 bảng CSV, 11 hình PNG.
 Các lần kiểm tra dùng kernel mới đã tạo tệp đầu ra giống nhau trong cùng môi
 trường; bộ kiểm thử tại mốc nghiệm thu EDA đạt **69 tests**. Toàn bộ bộ kiểm
 thử hiện tại, gồm kiểm thử xuất tệp đầu ra M2.3a, runtime audit M2.4 và kiểm
-tra ETL M3.1 và kiểm tra features M3.2, đạt **105 tests**.
+tra ETL M3.1, kiểm tra features M3.2, modeling theo group và PCA--ARIMA, đạt
+**116 tests**.
 
 ![Quy trình EDA train FD001](assets/diagrams/fd001-eda.svg)
 
@@ -434,6 +457,21 @@ Lần chạy hiện tại chọn `hist_gradient_boosting`, đạt mean engine-le
 Xem [artifact và validation modeling](outputs/modeling/README.md) để biết fold
 metrics, final predictions, final evaluation, hình và giới hạn.
 
+### Chạy phân tích PCA--ARIMA
+
+Sau khi ETL và modeling đã ghi artifact, chạy phân tích Health Index phụ:
+
+```powershell
+.venv\Scripts\python -m cmapss.timeseries `
+  --observations outputs/etl/silver/observations.parquet `
+  --fold-assignments outputs/modeling/tables/fold_assignments.csv `
+  --output-dir outputs/timeseries
+```
+
+Artifact hiện có 20.631 dòng Health Index train và 704 forecast holdout trên
+10 engine. Xem [artifact và validation PCA--ARIMA](outputs/timeseries/README.md)
+để biết quy tắc chọn engine, metric, hình và giới hạn.
+
 <details>
 <summary>Dành cho phát triển và kiểm tra riêng</summary>
 
@@ -461,14 +499,14 @@ Pytest dọn thư mục `--basetemp` khi chạy lại; chỉ dành thư mục đ
 
 </details>
 
-ETL Silver/Gold bằng Pandas/PySpark parity, benchmark, rolling features M3.2 và
-đánh giá mô hình RUL theo group đã có; ARIMA và dashboard vẫn còn. Validation
-tái lập M2.4 đã đạt.
+ETL Silver/Gold bằng Pandas/PySpark parity, benchmark, rolling features M3.2,
+đánh giá mô hình RUL theo group và phân tích PCA--ARIMA train-only đã có;
+dashboard vẫn còn. Validation tái lập M2.4 đã đạt.
 [Báo cáo kết quả hiện có](report/main.pdf) được cập nhật cùng các kết quả đã
 kiểm chứng và diễn giải trong phạm vi FD001.
 Xem [hướng dẫn báo cáo](report/README.md) để biết cấu trúc nguồn và lệnh build
 PDF. Bản hiện tại có kết quả validation, EDA, ETL M3.1, rolling features M3.2
-và metric đánh giá mô hình RUL hiện tại.
+metric đánh giá mô hình RUL hiện tại và chẩn đoán PCA--ARIMA.
 
 ## Bối cảnh học thuật
 

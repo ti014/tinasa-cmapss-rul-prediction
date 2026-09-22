@@ -7,7 +7,7 @@ Khó khăn thứ ba là giới hạn bằng chứng của dữ liệu mô phỏn
 
 Môi trường kiểm thử trước đó ghi nhận lỗi quyền truy cập thư mục Temp trên Windows. Cách xử lý đã được tài liệu hóa là dùng thư mục tạm riêng cho pytest; đây là vấn đề môi trường, không phải lỗi chất lượng FD001. Trong lượt khởi tạo báo cáo, TeX chưa có trên PATH nên dùng Tectonic portable để biên dịch; hướng dẫn tái lập được lưu cùng nguồn báo cáo.
 
-Hiện chưa có kết quả huấn luyện, metric test, khoảng tin cậy, ARIMA diagnostics hoặc dashboard. Do đó, chưa thể kết luận mô hình nào phù hợp hơn, cảnh báo sớm chính xác đến đâu hoặc lịch bảo trì nào có lợi. Phần kết luận cuối sẽ được viết sau khi hoàn tất đánh giá theo protocol đã lưu.
+Hiện đã có khoảng tin cậy bootstrap cho thay đổi sensor đầu/cuối trên train, nhưng chưa có kết quả huấn luyện, metric test, khoảng tin cậy cho metric mô hình, ARIMA diagnostics hoặc dashboard. Do đó, chưa thể kết luận mô hình nào phù hợp hơn, cảnh báo sớm chính xác đến đâu hoặc lịch bảo trì nào có lợi. Phần kết luận cuối sẽ được viết sau khi hoàn tất đánh giá theo protocol đã lưu.
 
 \section{Khai báo sử dụng AI/LLM}
 AI/LLM được sử dụng để hỗ trợ xây dựng cấu trúc bản báo cáo, diễn đạt nội dung, tổ chức nhật ký tiến độ, đối chiếu artifact trong repository và hỗ trợ kiểm tra biên dịch. Nội dung hỗ trợ này cần được kiểm tra với dữ liệu, mã nguồn và tài liệu gốc. Việc tạo văn bản bằng AI không được dùng làm bằng chứng về hiệu quả mô hình; các kết quả thực nghiệm chỉ được ghi nhận khi có artifact và quy trình kiểm chứng tương ứng.

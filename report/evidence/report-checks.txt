@@ -61,3 +61,69 @@ PASS: `python -m compileall -q src tests` and `git diff --check` passed.
 PASS: Tectonic 0.17.0 rebuilt `statistical-protocol.pdf` and `main.pdf`; `pdfinfo` reports 30 pages. Final logs have no overfull/underfull boxes, missing glyphs, undefined citations/references or duplicate destinations.
 LIMIT: no persisted `outputs/statistics/` artifact exists yet; raw FD001 inference was checked in memory with a reduced resample configuration for test runtime.
 ENVIRONMENT LIMIT: Tectonic still reports missing default Fontconfig configuration and absolute Windows font paths; build returns exit 0 and prior render checks remain the visual baseline.
+
+
+M2.3a persisted inference artifact update: 2026-09-22
+SCOPE: train-only paired sensor inference tables, run metadata, validation notes, notebook 02, public README/report synchronization and report rebuild. No feature engineering, model training, ARIMA, dashboard, or final test-label evaluation.
+AUTHORITY: fixed M2.0 configuration already accepted before inference; this run used `SensorInferenceConfig()` with bootstrap 10,000 resamples, Wilcoxon permutation 100,000 resamples, BH FDR q=0.05 and seed 42.
+PASS: `notebooks/02_fd001_inference.ipynb` executed with nbconvert exit code 0 and no error outputs; libzmq emitted a connection-reset assertion during kernel shutdown after writing the notebook, but the process returned 0 and artifacts were written.
+PASS: `outputs/statistics/tables/engine_sensor_pairs.csv` contains 2,100 rows, 100 pairs per sensor and 21 sensors per engine. CSV round-trip validation passed with `float_precision="round_trip"` to preserve exact `difference = late_mean - early_mean` checks.
+PASS: `outputs/statistics/tables/sensor_inference.csv` contains 21 rows. Six sensors have `all_zero_difference`; 15 sensors are testable and reject after BH FDR in this run. Test observations and test labels were not read.
+PASS: `outputs/statistics/run_info.json` records train SHA-256, versions, git commit, dirty-state flag, full M2.0 config, row counts and table paths. `outputs/statistics/validation.json` records status `passed`, raw SHA-256 unchanged and round-trip checks passed.
+PASS: focused statistics tests passed 25 tests; full suite passed 94 tests in 8.47 seconds using `.venv/Scripts/python -m pytest -q --basetemp=tmp/pytest-m23a-full --tb=short`.
+PASS: `.venv/Scripts/python -m compileall -q src tests` and `git diff --check` passed.
+PASS: `report/main.pdf` rebuilt with Tectonic 0.17.0; `pdfinfo` reports 31 A4 pages. Final log has no overfull/underfull boxes, missing glyphs, undefined citations/references or reference warnings.
+PASS: rendered pages 25--26 with Poppler and visually inspected the M2.3a section/table after the final wording fix; no clipping, overflow or unreadable table layout was observed.
+PASS: `assets/diagrams/fd001-statistics.drawio`, static SVG preview, `.drawio-url.txt` and `.drawio.url` were created. The `.drawio` and SVG parse as valid XML, the draw.io browser URL decompresses byte-for-byte to the source XML, and the URL loaded successfully in app.diagrams.net with the four workflow nodes visible. LIMIT: the `drawio:drawio` skill/plugin is installed, but no direct draw.io MCP tool was exposed to this session and draw.io Desktop CLI was not found on PATH or default Windows install paths. The diagram therefore uses the XML fallback allowed by the drawio skill; native Desktop export was not performed.
+LIMIT: this update does not create distribution/effect-size figures, repeated-run notebook reproducibility proof, or runtime audit that actively blocks test-file reads; those remain for M2.3b/M2.4.
+ENVIRONMENT LIMIT: Tectonic still reports missing default Fontconfig configuration and absolute Windows font paths; build returns exit 0 and rendered pages were checked locally.
+
+Editorial synchronization and report rebuild: 2026-09-22
+SCOPE: Vietnamese wording, M2.3a status synchronization, report diagrams and
+documentation only; no raw data, CSV/JSON artifact, statistical configuration,
+model training or pipeline implementation changes.
+PASS: stale M2.3a claims were replaced with the persisted artifact paths;
+`README.md`, `README.vi.md`, `report/README.md`, output READMEs, data contract,
+methodology, evidence, protocol, progress, theory and maintenance guidance were
+cross-checked for consistent status and terminology.
+PASS: Tectonic 0.17.0 rebuilt `report/figures/pipeline.pdf`,
+`report/figures/statistical-protocol.pdf` and `report/main.pdf` with exit code 0.
+`pdfinfo` reports 31 A4 pages. The final report log has no overfull/underfull
+boxes, missing glyphs, undefined citations/references or duplicate labels.
+PASS: both TikZ diagrams were rendered and independently reviewed: 0 text/arrow
+collisions, 0 whitespace collisions and 0 edge clipping; M2.3a actual and
+M2.3b/planned states match `run_info.json` and `validation.json`.
+PASS: `git diff --check` passed. The existing raw train SHA-256 and persisted
+M2.3a validation artifacts were not modified.
+ENVIRONMENT LIMIT: Tectonic still emits the known missing default Fontconfig
+diagnostic and absolute Windows font warnings; local PDF build and visual review
+completed successfully.
+PASS: after the final terminology adjustment in `statistical-protocol.tex`,
+`main.pdf` was rebuilt successfully; the 31-page A4 PDF was re-rendered and the
+changed protocol pages were visually checked again.
+
+Statistics package refactor: 2026-09-22
+SCOPE: code organization and documentation paths only; no raw data, CSV/JSON
+artifact, M2.0 statistical configuration, notebook execution, or model
+implementation changes.
+PASS: `src/cmapss/statistics.py` was replaced by a package split into
+`config.py`, `pairs.py`, `inference.py`, `validation.py`, `artifact_io.py`,
+`metadata.py` and `artifacts.py`; the compatibility public API remains
+available through `cmapss.statistics` and `cmapss.statistics_artifacts`.
+PASS: tests were split into `tests/test_statistics_pairs.py`,
+`tests/test_statistics_inference.py` and `tests/test_statistics_artifacts.py`.
+Focused checks passed 17, 7 and 1 tests respectively; full suite passed 94
+tests in 8.39 seconds with `.venv/Scripts/python -m pytest -q
+--basetemp=tmp/pytest-refactor-full --tb=short`.
+PASS: `.venv/Scripts/python -m compileall -q src tests` and `git diff --check`
+passed. Longest statistics source files are now `pairs.py` at 221 lines and
+`inference.py` at 219 lines; the writer path is split into 120-line
+`artifacts.py`, 112-line `artifact_io.py` and 145-line `metadata.py`.
+PASS: `report/main.pdf` rebuilt with Tectonic 0.17.0, `pdfinfo` reports 31 A4
+pages, and the final log has no overfull/underfull boxes, missing glyphs,
+undefined citations/references or duplicate-label warnings. Poppler rendered
+31 PNG pages; the appendix evidence page with updated statistics package paths
+was visually inspected with no clipping or overlap observed.
+ENVIRONMENT LIMIT: Tectonic still emits the known Fontconfig diagnostic and
+absolute Windows font warnings; `pdftotext` is not on PATH, so PDF verification
+used Poppler rendering and visual inspection instead of text extraction.

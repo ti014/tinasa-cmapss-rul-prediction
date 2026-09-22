@@ -1,41 +1,55 @@
 \section{Kết quả hiện có và diễn giải}
 \subsection{Kết quả validation}
-File \filepath{outputs/validation/fd001.json} ghi trạng thái \texttt{passed} cho train observations, train targets và test observations. Số dòng trước/sau tạo train targets đều là 20.631. Luồng mặc định ghi \texttt{test\_labels\_requested=false} và \texttt{test\_labels\_joined=false}. Báo cáo integrity riêng ghi nhận 100 nhãn hợp lệ về cấu trúc, không tính metric dự đoán.
+File \filepath{outputs/validation/fd001.json} ghi trạng thái \texttt{passed}
+cho quan sát train, nhãn RUL train và quan sát test. Số dòng trước/sau khi tạo
+nhãn RUL train đều là 20.631. Luồng mặc định ghi
+\texttt{test\_labels\_requested=false} và \texttt{test\_labels\_joined=false}.
+Báo cáo integrity riêng ghi nhận 100 nhãn hợp lệ về cấu trúc, không tính metric
+dự đoán.
 
 Các kết quả này cho phép tiếp tục phân tích trên dữ liệu đạt contract đã định nghĩa. Chúng không chứng minh dữ liệu không có nhiễu, không có sai lệch mô phỏng hoặc mô hình sẽ dự đoán chính xác.
 
 \subsection{Tuổi thọ động cơ trên train}
 \begin{table}[H]
 \centering
-\caption[Thống kê tuổi thọ của 100 train engines]{Thống kê tuổi thọ của 100 train engines, đơn vị cycle. Nguồn: \texttt{lifetime\_summary.csv}.}
+\caption[Thống kê tuổi thọ của 100 động cơ train]{Thống kê tuổi thọ của 100
+động cơ train, đơn vị cycle. Nguồn: \texttt{lifetime\_summary.csv}.}
 \label{tab:lifetime}
 \begin{tabular}{lr@{\qquad}lr}
 \toprule Thống kê & Giá trị & Thống kê & Giá trị\\\midrule
-Mean & 206,31 & Sample standard deviation & 46,34\\
-Min & 128 & Max & 362\\
-Quartile 25\% & 177 & Median & 199\\
-Quartile 75\% & 229,25 & Số động cơ & 100\\\bottomrule
+Trung bình & 206,31 & Độ lệch chuẩn mẫu & 46,34\\
+Nhỏ nhất & 128 & Lớn nhất & 362\\
+Tứ phân vị 25\% & 177 & Trung vị & 199\\
+Tứ phân vị 75\% & 229,25 & Số động cơ & 100\\\bottomrule
 \end{tabular}
 \end{table}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.9\linewidth]{../outputs/eda/figures/engine_lifetimes.png}
-\caption[Phân phối tuổi thọ động cơ trên train]{Phân phối tuổi thọ train; mỗi engine đóng góp một giá trị. Hình lấy từ artifact EDA hiện có.}
+\caption[Phân phối tuổi thọ động cơ trên train]{Phân phối tuổi thọ train; mỗi
+động cơ đóng góp một giá trị. Hình lấy từ artifact EDA hiện có.}
 \label{fig:life}
 \end{figure}
 
-Tuổi thọ quan sát dao động từ 128 đến 362 cycles; mean lớn hơn median. Sự khác biệt độ dài chuỗi cho thấy cách lấy trung bình theo observations và theo engine có thể tạo trọng số khác nhau. Đây là cơ sở để ghi rõ đơn vị tổng hợp và dùng engine làm đơn vị đánh giá dự kiến. Các con số không được diễn giải thành tuổi thọ theo giờ hoặc ngày.
+Tuổi thọ quan sát dao động từ 128 đến 362 cycles; trung bình lớn hơn trung vị.
+Sự khác biệt về độ dài chuỗi cho thấy cách lấy trung bình theo quan sát và theo
+động cơ có thể tạo trọng số khác nhau. Đây là cơ sở để ghi rõ đơn vị tổng hợp và
+dùng động cơ làm đơn vị đánh giá dự kiến. Các con số không được diễn giải thành
+tuổi thọ theo giờ hoặc ngày.
 
 \subsection{Sensor hằng và correlation theo engine}
-Metadata EDA ghi nhận \texttt{setting\_3} và các sensor 1, 5, 10, 16, 18, 19 hằng trên train. Riêng sensor 6 hằng trong 38/100 engines; correlation sensor--RUL chỉ xác định trong 62 engines còn lại. Vì vậy, cần công bố cả số engine hợp lệ khi tóm tắt correlation.
+Metadata EDA ghi nhận \texttt{setting\_3} và các sensor 1, 5, 10, 16, 18, 19
+hằng trên train. Riêng sensor 6 hằng trong 38/100 động cơ; correlation
+sensor--RUL chỉ xác định trong 62 động cơ còn lại. Vì vậy, cần công bố số động
+cơ hợp lệ khi tóm tắt correlation.
 
 \begin{table}[H]
 \centering
 \caption[Correlation Spearman theo engine: các dòng minh họa]{Một số dòng minh họa từ bảng correlation Spearman theo engine. Không dùng bảng này để xếp hạng hoặc chọn sensor cho mô hình.}
 \label{tab:correlation}
 \begin{tabular}{lrrr}
-\toprule Sensor & Engines xác định & Median correlation & Engines không xác định\\\midrule
+\toprule Sensor & Động cơ xác định & Tương quan trung vị & Động cơ không xác định\\\midrule
 1 & 0 & Không xác định & 100\\
 6 & 62 & $-0{,}1264$ & 38\\
 11 & 100 & $-0{,}8190$ & 0\\
@@ -43,16 +57,71 @@ Metadata EDA ghi nhận \texttt{setting\_3} và các sensor 1, 5, 10, 16, 18, 19
 \end{tabular}
 \end{table}
 
-Sensor 11 có median correlation âm trong khi sensor 12 có median correlation dương với RUL. RUL giảm theo cycle, nên dấu âm gợi ý sensor có xu hướng tăng khi tiến gần cuối đời trong cách tổng hợp này. Đây là liên hệ mô tả trên train; chưa có kiểm định, chưa điều chỉnh multiple testing và chưa đo hiệu quả dự đoán ngoài mẫu.
+Sensor 11 có tương quan trung vị âm, trong khi sensor 12 có tương quan trung vị
+dương với RUL. RUL giảm theo cycle, nên dấu âm gợi ý sensor có xu hướng tăng khi
+tiến gần cuối vòng đời trong cách tổng hợp này. Đây là liên hệ mô tả trên train;
+chưa có kiểm định, chưa điều chỉnh multiple testing và chưa đo hiệu quả dự đoán
+ngoài mẫu.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\linewidth]{../outputs/eda/figures/sensor_rul_by_engine.png}
-\caption[Phân phối correlation Spearman sensor--RUL theo engine]{Phân phối correlation Spearman sensor--RUL giữa các train engines. Sensor hằng được giữ là không xác định; mỗi hệ số hợp lệ tương ứng một engine.}
+\caption[Phân phối correlation Spearman sensor--RUL theo động cơ]{Phân phối
+correlation Spearman sensor--RUL giữa các động cơ train. Sensor hằng được giữ là
+không xác định; mỗi hệ số hợp lệ tương ứng một động cơ.}
 \label{fig:corr}
 \end{figure}
 
-\subsection{Phạm vi bằng chứng EDA}
-Các số liệu trên được đối chiếu với bảng CSV và metadata hiện có, đồng thời kiểm tra lại các phép tổng hợp được trích từ train trong lượt tạo báo cáo. Bản PDF tham chiếu trực tiếp hai hình EDA; không vẽ lại giá trị hoặc thay số để minh họa.
+\subsection{Suy luận đầu/cuối vòng đời trên train}
+Notebook \filepath{notebooks/02\_fd001\_inference.ipynb} đã tạo artifact M2.3a
+tại \filepath{outputs/statistics/}. Bảng cặp có 2.100 dòng, tương ứng 100 động
+cơ train nhân 21 sensor. Mỗi dòng dùng trung bình 30 cycles đầu, trung bình 30
+cycles cuối và chênh lệch \texttt{late\_mean - early\_mean}. Bảng suy luận giữ
+đủ 21 sensor. Validation ghi \texttt{passed}, không đọc quan sát test hoặc nhãn
+test, đồng thời xác nhận SHA-256 của raw train không đổi.
 
-Biên bản \filepath{outputs/eda/validation.json} ghi nhận 69 tests đạt, notebook chạy từ kernel mới và chạy kiểm tra độc lập trong thư mục chỉ có train input. Runtime audit chặn đọc hai file test trong lần kiểm tra; 12 CSV và 11 PNG của hai lần chạy giống nhau theo byte trong cùng môi trường. Đây là bằng chứng đã lưu của mốc EDA, không phải kết quả chạy lại notebook trong lượt viết báo cáo. Mốc EDA mô tả đã hoàn thành; thống kê suy luận và feature selection chưa thực hiện. Tính đồng nhất từng byte của PNG không được bảo đảm trên môi trường có font hoặc rendering khác.
+Trong 21 sensor, sáu sensor có toàn bộ chênh lệch bằng 0. Các sensor này là
+\texttt{sensor\_1}, \texttt{sensor\_5}, \texttt{sensor\_10},
+\texttt{sensor\_16}, \texttt{sensor\_18} và \texttt{sensor\_19}. Chúng được
+giữ trong output với trạng thái \texttt{all\_zero\_difference}, khoảng tin cậy
+suy biến tại 0 và p-value không áp dụng. Mười lăm sensor còn lại kiểm định được;
+với cấu hình Wilcoxon permutation 100.000 resamples và Benjamini--Hochberg trên
+họ 21 sensor, các p-value đã hiệu chỉnh đều xấp xỉ 0,000028.
+
+\begin{table}[H]
+\centering
+\caption[Ví dụ kết quả suy luận sensor đầu/cuối]{Một số dòng từ
+\texttt{sensor\_inference.csv}. Giá trị là chênh lệch cuối trừ đầu theo đơn vị
+gốc của từng sensor; không so sánh trực tiếp độ lớn giữa các sensor khác thang
+đo.}
+\label{tab:sensor-inference}
+\begin{tabular}{lrrl}
+\toprule Sensor & Chênh lệch trung bình & Khoảng tin cậy bootstrap 95\% & Dấu chính\\\midrule
+\texttt{sensor\_4} & 20,128097 & [19,402735; 20,865606] & Tăng\\
+\texttt{sensor\_7} & -1,913527 & [-1,999307; -1,829684] & Giảm\\
+\texttt{sensor\_11} & 0,613257 & [0,589017; 0,637944] & Tăng\\
+\texttt{sensor\_12} & -1,627190 & [-1,704288; -1,552119] & Giảm\\
+\texttt{sensor\_20} & -0,377007 & [-0,391534; -0,363173] & Giảm\\\bottomrule
+\end{tabular}
+\end{table}
+
+Kết quả này cho thấy nhiều sensor có thay đổi có hệ thống giữa hai đoạn 30
+cycles trên train FD001 theo protocol đã chốt. Tuy nhiên, đây không phải bằng
+chứng chọn đặc trưng cho mô hình trên toàn train. Việc chọn feature, scaler hoặc
+model vẫn phải nằm trong training folds để tránh data leakage.
+
+\subsection{Phạm vi bằng chứng EDA}
+Các số liệu trên được đối chiếu với bảng CSV và metadata hiện có. Các phép tổng
+hợp được trích từ train cũng đã được kiểm tra lại trong lượt tạo báo cáo. Bản PDF
+tham chiếu trực tiếp hai hình EDA; không vẽ lại giá trị hoặc thay số để minh họa.
+
+Biên bản \filepath{outputs/eda/validation.json} ghi nhận 69 tests đạt; notebook
+chạy từ kernel mới và được kiểm tra độc lập trong thư mục chỉ có train input.
+Runtime audit chặn việc đọc hai file test trong lần kiểm tra. Mười hai CSV và 11
+PNG của hai lần chạy giống nhau theo byte trong cùng môi trường.
+
+Đây là bằng chứng đã lưu của mốc EDA, không phải kết quả chạy lại notebook trong
+lượt viết báo cáo. Mốc EDA mô tả không bao gồm feature selection hoặc kết quả mô
+hình. Bảng và metadata suy luận M2.3a nằm ở mục trước; M2.3b mới bổ sung hình
+thống kê và diễn giải sâu hơn. Tính đồng nhất từng byte của PNG không được bảo
+đảm trên môi trường có font hoặc rendering khác.

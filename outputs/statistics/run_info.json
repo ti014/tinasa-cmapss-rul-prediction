@@ -8,7 +8,7 @@
     "numpy": "2.3.3",
     "scipy": "1.16.2"
   },
-  "git_commit": "804e428f6a028bcce4a1ded61b4039e24b5d3cec",
+  "git_commit": "5e969d0ab9cdd2cb131019f69b89f1e962847bbd",
   "git_has_uncommitted_changes": true,
   "test_data_used": false,
   "test_labels_used": false,

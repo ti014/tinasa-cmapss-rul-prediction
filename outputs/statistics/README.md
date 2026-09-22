@@ -6,7 +6,8 @@ Mốc M2.3a--M2.3b đã xuất các tệp đầu ra thống kê suy luận từ
 bằng chứng thống kê trên train, không phải lựa chọn đặc trưng (feature selection)
 và không đọc `test_FD001.txt` hoặc `RUL_FD001.txt`. M2.3b bổ sung hai hình:
 phân phối `difference` theo engine và mean paired difference kèm bootstrap CI
-95%.
+95%. M2.4 đã kiểm tra lại toàn bộ notebook từ hai fresh kernels và chạy
+train-only runtime audit có negative proof cho cả hai file test.
 
 ![Quy trình thống kê FD001](../../assets/diagrams/fd001-statistics.svg)
 
@@ -42,6 +43,23 @@ Có thể chạy cùng logic không qua giao diện notebook:
 Lệnh này mất vài phút vì cấu hình chính thức dùng Wilcoxon permutation 100.000
 resamples cho mỗi sensor kiểm định được.
 
+Để chạy toàn bộ validation M2.4 (focused tests, full suite, hai lần notebook,
+so sánh hash của CSV/PNG và audit chặn mở file test), dùng từ thư mục gốc:
+
+```powershell
+.venv\Scripts\python -m cmapss.statistics.reproducibility `
+  --project-root . `
+  --notebook notebooks/02_fd001_inference.ipynb `
+  --output-dir outputs/statistics `
+  --work-dir tmp/statistics-reproducibility-m24 `
+  --timeout 1800
+```
+
+Runtime audit này là kiểm tra cục bộ được nạp qua `PYTHONPATH`; nó không phải
+filesystem sandbox, CI enforcement hoặc branch protection. Probe hợp lệ cho phép
+đọc `train_FD001.txt`, còn probe âm phải bị từ chối với rule
+`STATISTICS_TRAIN_ONLY` khi mở `test_FD001.txt` hoặc `RUL_FD001.txt`.
+
 Import cũ `from cmapss.statistics_artifacts import
 write_sensor_statistics_artifacts` vẫn được giữ như compatibility wrapper để
 không làm hỏng notebook hoặc caller hiện tại.
@@ -57,7 +75,7 @@ outputs/statistics/
 │   ├── engine_sensor_pairs.csv   # 2.100 dòng: 100 động cơ × 21 sensor
 │   └── sensor_inference.csv      # 21 dòng: một dòng cho mỗi sensor
 ├── run_info.json                 # Input hash, phiên bản, seed và cấu hình M2.0
-├── validation.json               # Kiểm tra schema, round-trip và raw hash
+├── validation.json               # M2.3a + M2.4 validation, hash và reproducibility
 └── README.md                     # File này
 ```
 
@@ -93,8 +111,16 @@ Cấu hình được cố định trong `SensorInferenceConfig` trước khi ch�
   sensor cho mỗi động cơ.
 - `sensor_inference.csv`: 21 dòng, giữ đủ 21 sensor.
 - Round-trip CSV đạt cho cả hai bảng bằng parser `float_precision="round_trip"`.
-- SHA-256 của raw train không đổi.
+- SHA-256 của cả ba raw file (train, test observations và test labels) không đổi
+  trước/sau lần validation.
 - `test_data_used=false` và `test_labels_used=false`.
+- Focused statistics tests đạt 26 tests; full suite đạt 95 tests.
+- Notebook chạy hai lần từ fresh kernels; hai CSV và hai PNG ổn định theo SHA-256.
+- Runtime audit chặn mở `test_FD001.txt` và `RUL_FD001.txt` trong negative proof.
+
+Các con số trên là bằng chứng local của lần chạy ngày 22/09/2026 và được lưu
+trong `validation.json`. Thay đổi Python, dependency, font hoặc backend
+rendering có thể làm thời gian chạy hoặc hash PNG khác dù số liệu CSV vẫn đúng.
 
 ## Kết quả thống kê hiện tại
 

@@ -20,8 +20,9 @@ Available now:
 - A curated bibliography and reading guide.
 - A [living LaTeX report](report/README.md) with a [PDF draft](report/main.pdf),
   a data dictionary, glossary of report terminology and abbreviations, work
-  progress, decision rationale, and traceable validation/initial EDA observations.
-  EDA milestone 1 passed independent validation; inferential analysis belongs to milestone 2.
+  progress, decision rationale, and traceable validation/EDA/M2.3a--M2.4 evidence.
+  EDA milestone 1 and milestone 2 train-only statistics have passed independent
+  validation; ETL, rolling features, models, and the dashboard remain next.
 - A cited theoretical background and a [milestone 2 statistical protocol](report/sections/statistical-protocol.tex).
   The paired comparison uses each sensor's mean over the first and last 30 cycles of every train engine.
   The M2.0 statistical configuration was fixed before inference.
@@ -39,8 +40,7 @@ Available now:
 Not implemented yet:
 
 - Silver/Gold ETL pipelines in Pandas and PySpark.
-- M2.4 repeated-run and train-only audit for the statistics notebook, plus
-  Silver/Gold ETL and rolling feature engineering.
+- Silver/Gold ETL and rolling feature engineering.
 - RUL models and ARIMA analysis.
 - Streamlit dashboard and completed final report (the LaTeX draft has started).
 
@@ -210,11 +210,11 @@ Current and planned public project structure:
 │   └── archive/             # Data retained for comparison, not active modeling
 ├── references/              # Bibliography, reading guide, and available papers
 ├── notebooks/               # Executed FD001 train EDA and statistics notebooks
-├── src/cmapss/              # data/: contracts; statistics/: pairs/inference/artifacts; eda.py; validate.py
-├── tests/                   # Data contract, CLI, EDA, and statistics tests
+├── src/cmapss/              # data/: contracts; statistics/: pairs/inference/artifacts/reproducibility; eda.py; validate.py
+├── tests/                   # Data contract, CLI, EDA, statistics, and reproducibility tests
 ├── outputs/validation/      # Data-validation reports
 ├── outputs/eda/             # EDA tables, figures, methods, and validation
-├── outputs/statistics/      # M2.3a paired sensor inference tables and metadata
+├── outputs/statistics/      # M2.3a--M2.4 inference artifacts and validation
 ├── assets/diagrams/         # Editable draw.io sources, SVG previews, URL handles
 ├── pyproject.toml           # Package and direct dependencies
 ├── requirements.txt         # Pip installation: local package and runtime libraries
@@ -278,6 +278,8 @@ statistics/
   artifact_io.py  CSV/JSON, hash, and round-trip readers
   metadata.py     Run metadata and validation payloads
   artifacts.py    Write CSV/JSON artifacts and round-trip validation
+  reproducibility.py
+                  M2.4 validation, runtime audit, and artifact comparison
 statistics_artifacts.py
                   Compatibility import for the artifact writer
 ```
@@ -298,7 +300,8 @@ Select the `.venv` Python kernel and **Restart Kernel and Run All Cells**.
 This analyzes only train and recreates 12 CSV tables and 11 PNG figures.
 The validated runs used fresh kernels and produced identical artifacts in the
 same environment; the EDA checkpoint suite passed **69 tests**. The current
-repository-wide suite, including M2.3a artifact export tests, passed **94 tests**.
+repository-wide suite, including M2.3a artifact export tests and the M2.4
+runtime audit, passed **95 tests**.
 
 ![FD001 train EDA workflow](assets/diagrams/fd001-eda.svg)
 
@@ -335,7 +338,24 @@ within 38 engines. The M2.3b figures show each sensor in its own panel so that
 different sensor scales are not ranked directly. `sensor_6` illustrates that a
 small mean difference can coexist with a small p-value, while `sensor_9`
 illustrates why the per-engine distribution should be read together with the
-mean and CI. These are train-only findings, not model feature selection.
+mean and CI. These are train-only findings, not model feature selection. M2.4
+ran the notebook twice from fresh kernels; the two CSV files and two PNG files
+matched, and the runtime audit blocked probes that tried to open `test_FD001.txt`
+and `RUL_FD001.txt`.
+
+Run the complete M2.4 validation with:
+
+```powershell
+.venv\Scripts\python -m cmapss.statistics.reproducibility `
+  --project-root . `
+  --notebook notebooks/02_fd001_inference.ipynb `
+  --output-dir outputs/statistics `
+  --work-dir tmp/statistics-reproducibility-m24 `
+  --timeout 1800
+```
+
+This is a local `PYTHONPATH` runtime audit, not a filesystem sandbox, CI
+enforcement, or verified branch protection.
 
 <details>
 <summary>Development and optional checks</summary>
@@ -364,8 +384,8 @@ Pytest clears its `--basetemp` directory on subsequent runs; reserve it for test
 
 </details>
 
-M2.4 repeated-run validation, Silver/Gold ETL, PySpark, rolling features,
-models, and dashboard are not implemented yet. The [report draft](report/main.pdf) is updated alongside
+Silver/Gold ETL, PySpark, rolling features, models, and dashboard are not
+implemented yet; M2.4 repeated-run validation has passed. The [report draft](report/main.pdf) is updated alongside
 verified work: its progress log records dates, rationale, artifacts, checks,
 and remaining work. See [report instructions](report/README.md) for source
 organization and PDF build commands. The current draft includes verified data

@@ -147,7 +147,7 @@ chênh lệch dương và 53 chênh lệch bằng 0 nhưng mean difference chỉ
 \texttt{sensor\_9} có 71 chênh lệch dương và 29 chênh lệch âm, nên phân phối
 theo engine cần được xem cùng effect size và CI thay vì chỉ đọc mean.
 
-\subsection{Phạm vi bằng chứng EDA}
+\subsection{Phạm vi bằng chứng EDA và thống kê}
 Các số liệu trên được đối chiếu với bảng CSV và metadata hiện có. Các phép tổng
 hợp được trích từ train cũng đã được kiểm tra lại trong lượt tạo báo cáo. Bản PDF
 tham chiếu trực tiếp hai hình EDA; không vẽ lại giá trị hoặc thay số để minh họa.
@@ -159,6 +159,11 @@ PNG của hai lần chạy giống nhau theo byte trong cùng môi trường.
 
 Đây là bằng chứng đã lưu của mốc EDA, không phải kết quả chạy lại notebook trong
 lượt viết báo cáo. Mốc EDA mô tả không bao gồm feature selection hoặc kết quả mô
-hình. Bảng, metadata và hai hình suy luận M2.3a--M2.3b được tạo từ notebook
-train-only; tính đồng nhất từng byte của PNG không được bảo đảm trên môi trường
-có font hoặc rendering khác.
+hình. Với mốc thống kê, \filepath{outputs/statistics/validation.json} ghi nhận
+focused statistics tests đạt 26 tests, full suite đạt 95 tests, notebook 02
+chạy hai lần từ fresh kernel, hai CSV và hai PNG giống nhau theo SHA-256 trong
+cùng môi trường. Runtime audit \texttt{STATISTICS\_TRAIN\_ONLY} cho phép đọc
+\texttt{train\_FD001.txt} và chặn probe đọc \texttt{test\_FD001.txt} cùng
+\texttt{RUL\_FD001.txt}. Đây là bằng chứng validation cục bộ, không phải
+filesystem sandbox, CI enforcement hoặc branch protection. Tính đồng nhất từng
+byte của PNG không được bảo đảm trên môi trường có font hoặc rendering khác.

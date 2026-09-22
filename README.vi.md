@@ -18,9 +18,9 @@ Repository đã có **gói kiểm tra dữ liệu FD001, nhãn RUL train, notebo
 - [Notebook EDA đã chạy](notebooks/01_fd001_eda.ipynb), 12 bảng CSV,
   11 hình và [diễn giải kết quả, bằng chứng kiểm tra](outputs/eda/README.md).
 - Danh mục tài liệu tham khảo và hướng dẫn đọc.
-- [Báo cáo LaTeX cập nhật theo tiến độ](report/README.md) và [bản PDF](report/main.pdf),
-  có data dictionary (từ điển dữ liệu), bảng thuật ngữ và chữ viết tắt, nhật ký
-  công việc, lý do lựa chọn và nguồn đối chiếu kết quả validation/EDA/M2.3a--M2.4.
+- [Báo cáo LaTeX tổng hợp kết quả hiện có](report/README.md) và [bản PDF](report/main.pdf),
+  có data dictionary (từ điển dữ liệu), bảng thuật ngữ và chữ viết tắt, lý do
+  lựa chọn và diễn giải kết quả validation/EDA/M2.3a--M2.4.
   Mốc 1 EDA, mốc 2 thống kê train-only, parity ETL M3.1 và rolling features
   M3.2 đã được kiểm tra độc lập; mô hình và dashboard là các bước tiếp theo.
 - Cơ sở lý thuyết có trích dẫn và [protocol thống kê mốc 2](report/sections/statistical-protocol.tex).
@@ -48,7 +48,7 @@ Repository đã có **gói kiểm tra dữ liệu FD001, nhãn RUL train, notebo
 Chưa triển khai:
 
 - Các mô hình RUL và phân tích ARIMA.
-- Dashboard Streamlit và báo cáo hoàn chỉnh (đã bắt đầu bản thảo LaTeX).
+- Các mô hình RUL, phân tích ARIMA và dashboard Streamlit.
 
 Lệnh cài đặt, kiểm tra dữ liệu, mở notebook, chạy ETL và tạo rolling features có ở phần Bắt đầu.
 Huấn luyện, đánh giá mô hình và dashboard chưa có điểm khởi chạy.
@@ -234,7 +234,7 @@ Cấu trúc hiện có và dự kiến của repository:
 ├── requirements-dev.txt     # Thư viện notebook và kiểm thử
 ├── requirements-etl.txt     # Dependency PySpark tùy chọn cho ETL
 ├── uv.lock                  # Phiên bản dependencies đã khóa
-├── report/                  # Bản thảo LaTeX/PDF, tiến độ và bằng chứng
+├── report/                  # Nguồn LaTeX/PDF và hình của báo cáo
 ├── app.py                   # Entry point Streamlit dự kiến
 ├── README.md                # Tài liệu tiếng Anh
 └── README.vi.md             # Tài liệu tiếng Việt
@@ -436,15 +436,17 @@ Pytest dọn thư mục `--basetemp` khi chạy lại; chỉ dành thư mục đ
 
 ETL Silver/Gold bằng Pandas/PySpark parity, benchmark và rolling features M3.2 đã có;
 mô hình và dashboard vẫn còn. Validation tái lập M2.4 đã đạt.
-[Bản thảo báo cáo](report/main.pdf) được cập nhật cùng công việc
-đã kiểm chứng: nhật ký ghi ngày, lý do, tệp đầu ra, cách kiểm tra và phần còn lại.
+[Báo cáo kết quả hiện có](report/main.pdf) được cập nhật cùng các kết quả đã
+kiểm chứng và diễn giải trong phạm vi FD001.
 Xem [hướng dẫn báo cáo](report/README.md) để biết cấu trúc nguồn và lệnh build
-PDF. Bản hiện tại có kết quả validation, một số quan sát EDA ban đầu và số đo
-ETL M3.1 và rolling features M3.2 đã đối chiếu, chưa có kết quả đánh giá mô hình.
+PDF. Bản hiện tại có kết quả validation, EDA, ETL M3.1 và rolling features M3.2
+đã đối chiếu, chưa có metric đánh giá mô hình.
 
-## Bối cảnh học thuật và khai báo AI
+## Bối cảnh học thuật
 
-Repository hỗ trợ báo cáo cuối kỳ môn **Phân tích dữ liệu lớn**. Báo cáo phân biệt rõ kết quả quan sát được với phần giải thích đề xuất, đồng thời khai báo việc sử dụng AI/LLM theo yêu cầu môn học. Mọi phân tích, mã nguồn, trích dẫn và kết luận có hỗ trợ của AI vẫn phải qua rà soát của con người và kiểm tra khả năng tái lập.
+Repository hỗ trợ báo cáo cuối kỳ môn **Phân tích dữ liệu lớn**. Báo cáo phân
+biệt kết quả quan sát được, diễn giải và giới hạn; mọi số liệu đều được đối chiếu
+với dữ liệu và quy trình tái lập tương ứng.
 
 ## Tài liệu tham khảo
 

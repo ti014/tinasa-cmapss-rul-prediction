@@ -28,7 +28,7 @@
 \pagestyle{fancy}
 \fancyhf{}
 \fancyhead[L]{\small NASA C-MAPSS FD001}
-\fancyhead[R]{\small Bản đang thực hiện -- \reportdate}
+\fancyhead[R]{\small Kết quả phân tích -- \reportdate}
 \fancyfoot[C]{\thepage}
 
 \begin{document}
@@ -53,33 +53,22 @@ Mã số học viên: & 25002711\\
 Ngành: & Khoa học máy tính
 \end{tabular}
 \vfill
-{\large Bản đang thực hiện -- cập nhật ngày \reportdate\par}
-\vspace{0.3cm}
 {\normalsize TP. Hồ Chí Minh, tháng 9 năm 2026\par}
 \end{titlepage}
 \hypersetup{pageanchor=true}
 \pagenumbering{roman}
-\section*{Tóm tắt trạng thái báo cáo}
-\addcontentsline{toc}{section}{Tóm tắt trạng thái báo cáo}
-Báo cáo nghiên cứu bài toán dự đoán Remaining Useful Life (RUL, tuổi thọ hữu ích
-còn lại) theo đơn vị cycle trên NASA C-MAPSS FD001. Đến ngày \reportdate,
-repository đã có dữ liệu nguồn, data contract (đặc tả dữ liệu và các điều kiện
-hợp lệ), gói kiểm tra dữ liệu, nhãn RUL train và các artifact EDA (Exploratory
-Data Analysis, phân tích khám phá dữ liệu). Báo cáo validation ghi nhận 20.631
-quan sát train và 13.096 quan sát test; mỗi tập có 100 động cơ.
+\section*{Tóm tắt}
+\addcontentsline{toc}{section}{Tóm tắt}
+Báo cáo trình bày quy trình phân tích dữ liệu cảm biến trên NASA C-MAPSS FD001,
+từ kiểm tra chất lượng dữ liệu đến xây dựng đặc trưng rolling window và suy luận
+thống kê theo động cơ. Kết quả hiện có gồm hồ sơ dữ liệu train/test, pipeline ETL
+Silver/Gold với đối chiếu Pandas--PySpark, 27.927 rolling windows dài 30 cycles
+và phân tích chênh lệch giữa 30 cycles đầu/cuối của 100 động cơ train.
 
-Bản hiện tại trình bày bài toán, cơ sở lý thuyết và nghiên cứu liên quan, cách
-kiểm tra chất lượng, thiết kế phương pháp và các quan sát EDA có nguồn đối
-chiếu. M2.3a so sánh trung bình 30 cycles đầu với 30 cycles cuối của từng động
-cơ train; notebook đã xuất bảng cặp, bảng suy luận, metadata và biên bản
-validation. Pipeline Silver/Gold, mô hình RUL, ARIMA và dashboard chưa hoàn
-thành. Vì chưa có dự đoán và metric mô hình, báo cáo chưa đưa ra kết luận về độ
-chính xác hoặc hiệu quả bảo trì.
-
-Tiến độ được ghi theo công việc và bằng chứng, không quy đổi thành phần trăm
-hoàn thành khi chưa có cơ sở ước lượng. Các ngày ghi nhận là mốc có tài liệu
-hoặc artifact hỗ trợ, không phải lịch sử giờ công được tái dựng. Nội dung về
-phương pháp chưa triển khai được đánh dấu rõ để tiếp tục cập nhật sau mỗi mốc.
+Các kết quả được diễn giải trong phạm vi dữ liệu mô phỏng FD001. Báo cáo không
+đưa ra metric của mô hình dự đoán RUL, ARIMA hoặc dashboard vì những kết quả đó
+chưa thuộc tập bằng chứng hiện có; do đó không suy ra độ chính xác mô hình hay
+lịch bảo trì từ các phân tích mô tả và suy luận sensor.
 \clearpage
 \begin{spacing}{1.1}
 \tableofcontents
@@ -90,8 +79,6 @@ phương pháp chưa triển khai được đánh dấu rõ để tiếp tục c
 \listoftables
 \clearpage
 \pagenumbering{arabic}
-\input{sections/progress}
-\clearpage
 \input{sections/problem-data}
 \clearpage
 \input{sections/theory}
@@ -108,7 +95,4 @@ phương pháp chưa triển khai được đánh dấu rõ để tiếp tục c
 \addcontentsline{toc}{section}{Tài liệu tham khảo}
 \bibliographystyle{plainurl}
 \bibliography{../references/bibliography}
-\clearpage
-\appendix
-\input{sections/evidence}
 \end{document}

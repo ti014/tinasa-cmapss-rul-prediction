@@ -1,18 +1,14 @@
 \section*{Bảng thuật ngữ và chữ viết tắt}
 \addcontentsline{toc}{section}{Bảng thuật ngữ và chữ viết tắt}
 
-Bảng dưới đây giải thích các thuật ngữ và chữ viết tắt được dùng thường xuyên
-trong báo cáo. Ví dụ chỉ minh họa cách hiểu trong phạm vi NASA C-MAPSS FD001;
-chúng không phải là kết quả thực nghiệm mới.
-
 \begin{small}
-\begin{longtable}{L{3.3cm}L{10.5cm}}
+\begin{longtable}{L{3.4cm}L{10.4cm}}
 \toprule
-Thuật ngữ & Ý nghĩa và ví dụ trong báo cáo\\
+Thuật ngữ & Ý nghĩa trong báo cáo\\
 \midrule
 \endfirsthead
 \toprule
-Thuật ngữ & Ý nghĩa và ví dụ trong báo cáo\\
+Thuật ngữ & Ý nghĩa trong báo cáo\\
 \midrule
 \endhead
 \midrule
@@ -21,152 +17,24 @@ Thuật ngữ & Ý nghĩa và ví dụ trong báo cáo\\
 \bottomrule
 \endlastfoot
 
-Remaining Useful Life (RUL) &
-Tuổi thọ hữu ích còn lại, tính bằng số \textit{cycle} trước khi động cơ hỏng.
-Với train, nhãn được tính bằng \texttt{max\_cycle - cycle}; với test, báo cáo
-dự kiến tạo một dự đoán tại cycle cuối quan sát.\\
-
-NASA C-MAPSS &
-Bộ dữ liệu mô phỏng các chuỗi vận hành đến khi hỏng của động cơ turbofan,
-được dùng làm nguồn dữ liệu chính cho báo cáo.\\
-
-FD001 &
-Tập con C-MAPSS được xét trong báo cáo, có một điều kiện vận hành và một dạng
-suy giảm High-Pressure Compressor (HPC).\\
-
-Engine / \texttt{engine\_id} &
-Một đơn vị động cơ trong dữ liệu. Engine là ranh giới của các phép ghép cặp,
-window và fold validation; hai split có thể dùng cùng giá trị ID nhưng không
-đại diện cho cùng một engine.\\
-
-Cycle &
-Bước vận hành rời rạc trong lịch sử của một engine. Cycle không được quy đổi
-thành giờ hoặc thời gian lịch vì FD001 không cung cấp thông tin quy đổi.\\
-
-Sensor &
-Kênh đo tín hiệu của động cơ. Mỗi quan sát FD001 có 21 sensor; các sensor được
-phân tích theo engine và không được xem là các biến độc lập hoàn toàn.\\
-
-Operational settings &
-Ba trường mô tả điều kiện vận hành trong mỗi quan sát, được phân biệt với 21
-sensor khi xây dựng contract và protocol thống kê.\\
-
-Train / test &
-Train chứa lịch sử đầy đủ đến khi hỏng để tạo nhãn RUL; test chứa lịch sử bị
-cắt trước khi hỏng và có nhãn đánh giá tách riêng. Test không được dùng để
-chọn feature hoặc mô hình.\\
-
-Data contract &
-Tập điều kiện hợp lệ cho dữ liệu, gồm schema, kiểu số, khóa duy nhất, split,
-cycle liên tục và các ràng buộc về nhãn. Input vi phạm contract bị từ chối,
-không tự động sửa raw.\\
-
-Schema &
-Cấu trúc dữ liệu gồm tên cột, số cột, kiểu dữ liệu và quy ước khóa. Raw FD001
-có 26 trường; reader bổ sung cột \texttt{split} cho bảng observations.\\
-
-Data leakage &
-Rò rỉ dữ liệu xảy ra khi thông tin tương lai, test hoặc nhãn đánh giá đi vào
-feature, preprocessing, feature selection hoặc model selection. Ví dụ, window
-tại cycle 170 chỉ được dùng cycles 141--170.\\
-
-Exploratory Data Analysis (EDA) &
-Phân tích khám phá dữ liệu để kiểm tra phân phối, biến thiên và tín hiệu trước
-khi xây dựng feature. EDA hiện có trong repository chỉ đọc train.\\
-
-Extract, Transform, Load (ETL) &
-Quy trình trích xuất, biến đổi và tải dữ liệu qua các lớp lưu trữ. Báo cáo dự
-kiến đối chiếu ETL bằng Pandas và PySpark, nhưng phần Silver/Gold chưa hoàn
-thành.\\
-
-Bronze / Silver / Gold &
-Ba lớp dữ liệu dự kiến: Bronze giữ raw bất biến; Silver lưu observations đã
-kiểu hóa và validation; Gold lưu feature, prediction, metric và bảng phục vụ
-phân tích hoặc dashboard.\\
-
-Window / trailing window &
-Đoạn quan sát liên tiếp gần nhất của một engine tại cycle đang xét. Cấu hình
-hiện tại dùng 30 cycles; window không đi qua ranh giới engine và không dùng
-quan sát tương lai.\\
-
-Feature / feature engineering &
-Feature là biến đầu vào mô hình; feature engineering là quá trình tạo biến từ
-observations. Các feature dự kiến gồm last, mean, standard deviation, min, max
-và linear slope trong trailing window.\\
-
-Baseline &
-Phương pháp tham chiếu tối giản để đánh giá ứng viên phức tạp hơn. Baseline
-hiện được đề xuất là dự đoán median RUL của nhãn training hợp lệ.\\
-
-Metric &
-Đại lượng định lượng dùng để đánh giá mô hình hoặc dự báo. Báo cáo dự kiến
-dùng MAE, RMSE và NASA asymmetric scoring function; metric chưa có kết quả
-mô hình trong bản hiện tại.\\
-
-Mean Absolute Error (MAE) &
-Trung bình của trị tuyệt đối sai số theo engine. MAE có đơn vị cycle và nhỏ
-hơn là tốt hơn.\\
-
-Root Mean Squared Error (RMSE) &
-Căn bậc hai của trung bình bình phương sai số. RMSE cũng có đơn vị cycle và
-nhạy hơn MAE với sai số lớn.\\
-
-NASA asymmetric scoring function &
-Hàm điểm phạt dự đoán sớm và muộn với mức khác nhau theo dấu của
-\texttt{prediction - truth}. Score nhỏ hơn là tốt hơn; đây không phải là
-ngưỡng bảo trì.\\
-
-Paired analysis &
-Phân tích ghép hai phép đo của cùng một engine. Protocol M2 dùng mean của 30
-cycles đầu và 30 cycles cuối, sau đó tính chênh lệch cuối trừ đầu.\\
-
-Bootstrap &
-Lấy mẫu lại có hoàn lại để ước lượng độ bất định của một thống kê. Trong
-protocol M2, engine là đơn vị lấy mẫu và cặp đầu/cuối luôn được giữ cùng nhau.\\
-
-Wilcoxon signed-rank test &
-Kiểm định phi tham số cho dữ liệu ghép cặp, sử dụng thứ hạng và dấu của chênh
-lệch. Kiểm định này không phải là kiểm định trực tiếp cho mean paired
-difference.\\
-
-\textit{p-value} và adjusted \textit{p-value} &
-\textit{p-value} đo mức tương thích của dữ liệu với giả thuyết không theo
-protocol đã chọn. Adjusted \textit{p-value} là giá trị sau hiệu chỉnh nhiều
-kiểm định; cả hai không được diễn giải thành độ lớn tác động.\\
-
-Benjamini--Hochberg FDR &
-Benjamini--Hochberg False Discovery Rate kiểm soát tỷ lệ phát hiện sai kỳ vọng
-trong một họ kiểm định. Protocol M2 áp dụng cho đúng 21 sensor với
-$q=0{,}05$; kết quả này không phải feature selection.\\
-
-GroupKFold &
-Cách chia validation giữ toàn bộ mẫu của cùng một group trong một fold. Báo
-cáo dùng \texttt{engine\_id} làm group để không đưa các window của cùng engine
-vào cả training và validation.\\
-
-Principal Component Analysis (PCA) &
-Phương pháp tìm các hướng chiếu trực giao theo phương sai. PCA có thể tạo một
-ứng viên Health Index nhưng phải được fit trong training fold.\\
-
-Health Index &
-Chỉ số vô hướng được suy ra từ các tín hiệu sensor để biểu diễn trạng thái
-sức khỏe tiềm năng. Trong báo cáo, Health Index là đầu vào cho ARIMA phụ, không
-phải nhãn RUL.\\
-
-ARIMA &
-Mô hình chuỗi thời gian kết hợp autoregression, differencing và moving average.
-ARIMA được đề xuất cho forecast Health Index, không áp dụng trực tiếp lên
-countdown RUL xác định.\\
-
-Parquet / SQLite &
-Parquet là định dạng bảng phục vụ lưu trữ phân tích; SQLite là lớp truy vấn và
-báo cáo cục bộ dự kiến trong Gold. Hai định dạng này chưa tạo thành pipeline
-Silver/Gold hoàn chỉnh trong bản hiện tại.\\
-
-Spark / PySpark &
-Spark là framework xử lý dữ liệu phân tán; PySpark là API Python tương ứng.
-Báo cáo dự kiến dùng PySpark để tái hiện ETL và benchmark khả năng mở rộng,
-không mặc định rằng PySpark nhanh hơn Pandas trên FD001.\\
+Remaining Useful Life (RUL) & Tuổi thọ hữu ích còn lại, tính bằng số cycle trước khi động cơ hỏng.\\
+NASA C-MAPSS / FD001 & Bộ dữ liệu mô phỏng chuỗi vận hành turbofan; FD001 có một điều kiện vận hành và một dạng suy giảm HPC.\\
+Engine / \texttt{engine\_id} & Đơn vị động cơ và ranh giới của các phép ghép cặp, window và tổng hợp.\\
+Cycle & Bước vận hành rời rạc trong lịch sử một engine; không quy đổi thành giờ hoặc ngày.\\
+Sensor & Kênh đo tín hiệu; FD001 có 21 sensor trong mỗi observation.\\
+Train / test & Train có lịch sử đến khi hỏng để tạo nhãn RUL; test bị cắt trước khi hỏng và có nhãn đánh giá tách riêng.\\
+Data contract & Tập điều kiện hợp lệ của schema, kiểu số, khóa duy nhất, split và cycle continuity.\\
+Exploratory Data Analysis (EDA) & Phân tích khám phá phân phối, biến thiên và tín hiệu trước khi xây dựng feature.\\
+Extract, Transform, Load (ETL) & Quy trình đọc, biến đổi và ghi dữ liệu qua các lớp lưu trữ.\\
+Bronze / Silver / Gold & Bronze giữ raw; Silver lưu observations và train targets đã kiểm tra; Gold lưu engine summary và rolling features.\\
+Trailing window & Đoạn quan sát liên tiếp gần nhất của một engine tại cycle đang xét; báo cáo dùng 30 cycles.\\
+Feature & Biến được tạo từ observations; mỗi sensor có last, mean, sample standard deviation, min, max và slope.\\
+Paired analysis & Ghép hai phép đo của cùng một engine; protocol dùng 30 cycles đầu và 30 cycles cuối.\\
+Bootstrap & Lấy mẫu lại có hoàn lại để ước lượng độ bất định; engine là đơn vị lấy mẫu.\\
+Wilcoxon signed-rank test & Kiểm định phi tham số cho dữ liệu ghép cặp dựa trên thứ hạng và dấu chênh lệch.\\
+Benjamini--Hochberg FDR & Hiệu chỉnh nhiều p-value trong họ 21 sensor để kiểm soát False Discovery Rate.\\
+Parquet / SQLite & Parquet lưu bảng phân tích; SQLite cung cấp lớp truy vấn local cho engine summary.\\
+Spark / PySpark & Framework xử lý dữ liệu phân tán và API Python dùng để đối chiếu ETL với Pandas.\\
 
 \end{longtable}
 \end{small}

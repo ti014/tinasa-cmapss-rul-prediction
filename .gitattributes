@@ -6,3 +6,4 @@ data/raw/*.txt -text
 *.png binary
 *.parquet binary
 *.sqlite binary
+*.joblib binary

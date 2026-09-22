@@ -54,6 +54,65 @@ Validator kiểm tra schema, khóa duy nhất, thứ tự canonical, số hữu 
 trailing window trong từng engine. Tests tính tay xác nhận sample standard
 deviation, slope, không dùng tương lai và không nối hai engine.
 
+\subsection{Mô hình RUL và đánh giá cuối}
+Pipeline modeling so sánh ba ứng viên trên 5 folds theo engine. Bảng
+\ref{tab:model-cv} trình bày metric trung bình qua folds; mô hình được chọn là
+HistGradientBoostingRegressor vì có mean engine-level MAE thấp nhất.
+
+\begin{table}[H]
+\centering
+\caption[Cross-validation mô hình RUL]{Kết quả grouped cross-validation trên
+17.731 train windows. NASA score ở bảng này là tổng theo validation windows,
+chỉ dùng để so sánh trong cùng protocol.}
+\label{tab:model-cv}
+\begin{tabular}{lrrl}
+\toprule Model & Mean engine MAE & RMSE trung bình & Chọn\\\midrule
+\texttt{median\_baseline} & 46,9543 & 62,9006 & Không\\
+\texttt{ridge\_alpha\_1} & 23,9922 & 35,9467 & Không\\
+\texttt{hist\_gradient\_boosting} & 20,2143 & 33,5479 & Có\\\bottomrule
+\end{tabular}
+\end{table}
+
+Sau khi refit trên toàn bộ train windows, pipeline ghi 100 final predictions ở
+cycle cuối của 100 test engines rồi mới ghép nhãn NASA. Kết quả cuối được tóm
+tắt trong Bảng~\ref{tab:final-model-metrics}.
+
+\begin{table}[H]
+\centering
+\caption[Metric cuối trên NASA test FD001]{Đánh giá model được chọn trên 100
+test engines; khoảng tin cậy bootstrap lấy mẫu lại engine 10.000 lần, seed 42.}
+\label{tab:final-model-metrics}
+\begin{tabular}{lrl}
+\toprule Metric & Giá trị & Bootstrap CI 95\%\\\midrule
+Mean engine MAE & 15,3490 & [13,2594; 17,3941]\\
+RMSE & 20,5413 & [17,3442; 23,5850]\\
+NASA score & 1.513,2577 & [743,4999; 2.476,2743]\\\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\linewidth]{../outputs/modeling/figures/final_true_vs_predicted.png}
+\caption[RUL thật và RUL dự đoán trên test]{RUL thật và RUL dự đoán của 100 test
+engines. Đường chéo biểu diễn dự đoán hoàn hảo.}
+\label{fig:final-true-pred}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\linewidth]{../outputs/modeling/figures/final_residuals_by_rul.png}
+\caption[Sai số dự đoán theo RUL thật]{Sai số \texttt{prediction - true} theo RUL
+thật của 100 test engines.}
+\label{fig:final-residuals}
+\end{figure}
+
+Sai số tuyệt đối trung bình trên nhóm RUL thật 0--30 cycles là 4,3830, thấp hơn
+các nhóm 31--60, 61--90 và trên 90 cycles. Mười sai số lớn nhất đều là dự đoán
+cao hơn nhãn thật từ khoảng 37,6 đến 57,5 cycles, nên NASA score bị chi phối bởi
+những trường hợp dự đoán quá lạc quan. Kết quả này là đánh giá trên FD001 mô
+phỏng, không phải bảo đảm khái quát hóa sang fault mode hoặc điều kiện vận hành
+khác.
+
 \subsection{Tuổi thọ động cơ trên train}
 \begin{table}[H]
 \centering

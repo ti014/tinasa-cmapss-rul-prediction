@@ -4,15 +4,15 @@
 \subsection{Luồng xử lý}
 Hình~\ref{fig:pipeline} tóm tắt các bước đã thực hiện: đọc và kiểm tra dữ liệu
 FD001, phân tích khám phá (EDA), suy luận thống kê theo engine, ETL qua các lớp
-Silver/Gold và xây dựng rolling features. Các bước được giữ tách biệt để phân
-biệt dữ liệu nguồn, dữ liệu đã kiểm tra và dữ liệu suy ra.
+Silver/Gold, xây dựng rolling features và đánh giá mô hình RUL. Các bước được
+giữ tách biệt để phân biệt dữ liệu nguồn, dữ liệu đã kiểm tra và dữ liệu suy ra.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.98\linewidth]{figures/pipeline.pdf}
 \caption[Luồng xử lý dữ liệu đã thực hiện]{Luồng xử lý từ dữ liệu FD001 đến
-EDA, suy luận thống kê, ETL và rolling features. Nhãn test được kiểm tra riêng
-và không tham gia phân tích train.}
+EDA, suy luận thống kê, ETL, rolling features và đánh giá RUL. Nhãn test chỉ
+được ghép sau khi final predictions đã được ghi.}
 \label{fig:pipeline}
 \end{figure}
 
@@ -20,8 +20,10 @@ Dữ liệu raw được giữ bất biến. Reader và validator tạo observat
 RUL train trong bộ nhớ. EDA và suy luận thống kê chỉ đọc train. ETL ghi
 observations và train targets vào Silver Parquet, đồng thời tạo engine summary ở
 Gold Parquet và SQLite. Rolling features được tạo từ Silver observations và ghi
-ở Gold. Cách tách lớp giúp xác định ranh giới của từng phép biến đổi và kiểm tra
-việc mất hoặc nhân bản dòng.
+ở Gold. Pipeline modeling join rolling features train với train targets, ghi
+final predictions cho test trước, rồi mới đọc nhãn test để đánh giá cuối. Cách
+tách lớp giúp xác định ranh giới của từng phép biến đổi và kiểm tra việc mất
+hoặc nhân bản dòng.
 
 Pandas là reference implementation; PySpark tái hiện ba boundary và parity
 checker xác nhận schema, khóa, số dòng và giá trị số khớp nhau với sai khác lớn
@@ -53,9 +55,24 @@ Mỗi dòng được định danh bởi \texttt{(split, engine\_id, cycle)}; eng
 Với mỗi 21 sensor, pipeline tạo sáu đặc trưng: giá trị cuối, mean, sample
 standard deviation (\texttt{ddof=1}), min, max và linear slope theo vị trí
 1--30. Vì vậy, mỗi dòng có 126 feature columns và ba cột khóa. Artifact gồm
-17.731 train windows và 10.196 test windows. Bước này chưa ghép test labels và
-chưa huấn luyện mô hình; các lựa chọn phụ thuộc dữ liệu được giữ ở bước phân
-tích riêng để tránh data leakage.
+17.731 train windows và 10.196 test windows. Bước này chưa ghép test labels;
+các lựa chọn phụ thuộc dữ liệu được giữ ở bước modeling riêng để tránh data
+leakage.
+
+\subsection{Mô hình dự đoán RUL}
+Modeling dùng 17.731 train windows và 126 feature columns từ artifact M3.2. Tập
+validation được chia bằng GroupKFold 5-fold theo \texttt{engine\_id}; mọi window
+của cùng một engine nằm trong cùng một fold validation. Trong training fold,
+tổng sample weight của mỗi engine bằng 1 để engine dài không chi phối loss chỉ
+vì có nhiều window hơn.
+
+Ba ứng viên được so sánh là median baseline, Ridge regression và
+HistGradientBoostingRegressor. Ridge đặt StandardScaler trong pipeline để scaler
+chỉ fit trên training fold. Metric chọn mô hình là mean engine-level MAE; RMSE
+và NASA asymmetric score được ghi kèm. Sau khi chọn mô hình, pipeline refit trên
+toàn bộ train windows và ghi đúng một dự đoán tại cycle cuối của mỗi test
+engine. File nhãn \texttt{RUL\_FD001.txt} chỉ được đọc trong bước final
+evaluation sau khi \texttt{final\_predictions.parquet} đã tồn tại.
 
 \subsection{Suy luận thống kê}
 Phân tích suy luận so sánh mean của 30 cycles đầu và 30 cycles cuối trong cùng

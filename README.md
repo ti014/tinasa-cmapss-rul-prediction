@@ -8,7 +8,7 @@ A reproducible Big Data course project for analyzing multivariate turbofan senso
 
 ## Project Status
 
-This repository now provides **FD001 data validation, train RUL targets, a completed train-only EDA notebook (milestone 1), persisted M2.3a--M2.4 train-only sensor inference artifacts (milestone 2), Pandas/PySpark Silver/Gold ETL with benchmark and parity artifacts (M3.1), and deterministic 30-cycle rolling features (M3.2)**.
+This repository now provides **FD001 data validation, train RUL targets, a completed train-only EDA notebook (milestone 1), persisted M2.3a--M2.4 train-only sensor inference artifacts (milestone 2), Pandas/PySpark Silver/Gold ETL with benchmark and parity artifacts (M3.1), deterministic 30-cycle rolling features (M3.2), and leakage-safe RUL model evaluation**.
 
 Available now:
 
@@ -23,8 +23,8 @@ Available now:
   terminology and abbreviations, decision rationale, and validation/EDA/M2.3a--M2.4
   interpretations.
   EDA milestone 1, milestone 2 train-only statistics, M3.1 ETL parity, and
-  M3.2 rolling features have passed independent validation; models and the
-  dashboard remain next.
+  M3.2 rolling features and the current grouped RUL model evaluation have passed
+  independent validation; ARIMA and the dashboard remain next.
 - A cited theoretical background and a [milestone 2 statistical protocol](report/sections/statistical-protocol.tex).
   The paired comparison uses each sensor's mean over the first and last 30 cycles of every train engine.
   The M2.0 statistical configuration was fixed before inference.
@@ -48,13 +48,19 @@ Available now:
 - A deterministic rolling feature pipeline in [outputs/features](outputs/features/README.md).
   It writes 27,927 Gold rows from 30-cycle trailing windows, keeps all 21 sensors,
   creates 126 feature columns, and does not join test labels.
+- A grouped modeling pipeline in [outputs/modeling](outputs/modeling/README.md).
+  It compares a median baseline, Ridge, and HistGradientBoosting with five-fold
+  GroupKFold by engine, writes out-of-fold predictions, writes exactly 100 final
+  test predictions before reading labels, and evaluates the selected model on
+  NASA test labels.
 
 Not implemented yet:
 
-- RUL models and ARIMA analysis.
-- RUL models, ARIMA analysis, and the Streamlit dashboard.
+- ARIMA analysis and the Streamlit dashboard.
 
-Installation, data validation, notebook, ETL, and feature-generation instructions are available below. Model training, evaluation, and dashboard entry points are not implemented yet.
+Installation, data validation, notebook, ETL, feature-generation, and modeling
+instructions are available below. ARIMA and dashboard entry points are not
+implemented yet.
 
 ## Objectives
 
@@ -157,13 +163,17 @@ Windows never cross engine boundaries and never use future observations. Engines
 
 ### RUL Prediction
 
-The planned comparison includes:
+The implemented first modeling pass compares:
 
 1. A naive median-RUL baseline.
 2. Ridge regression as a regularized linear baseline.
 3. HistGradientBoostingRegressor as the nonlinear candidate model.
 
-Model selection uses five-fold grouped cross-validation, with `engine_id` as the group. The official NASA test labels remain isolated until the final evaluation. Primary and secondary metrics include engine-level MAE, RMSE, and the NASA asymmetric scoring function.
+Model selection uses five-fold grouped cross-validation, with `engine_id` as the group.
+The official NASA test labels remain isolated until final predictions have been
+written. HistGradientBoostingRegressor is currently selected. Final test metrics
+are mean engine-level MAE 15.3490, RMSE 20.5413, and NASA score 1513.2577, with
+bootstrap confidence intervals recorded in `outputs/modeling/tables/final_metrics.json`.
 
 ### ARIMA Analysis
 
@@ -224,13 +234,14 @@ Current and planned public project structure:
 │   └── archive/             # Data retained for comparison, not active modeling
 ├── references/              # Bibliography, reading guide, and available papers
 ├── notebooks/               # Executed FD001 train EDA and statistics notebooks
-├── src/cmapss/              # data/, statistics/, etl/, features/, eda.py, validate.py
-├── tests/                   # Data contract, CLI, EDA, statistics, ETL, features, and reproducibility tests
+├── src/cmapss/              # data/, statistics/, etl/, features/, modeling/, eda.py, validate.py
+├── tests/                   # Data contract, CLI, EDA, statistics, ETL, features, modeling, and reproducibility tests
 ├── outputs/validation/      # Data-validation reports
 ├── outputs/eda/             # EDA tables, figures, methods, and validation
 ├── outputs/statistics/      # M2.3a--M2.4 inference artifacts and validation
 ├── outputs/etl/             # Silver/Gold Parquet, SQLite, metadata, benchmark
 ├── outputs/features/        # Gold rolling feature Parquet and metadata
+├── outputs/modeling/        # Grouped CV, predictions, model artifact, final metrics
 ├── assets/diagrams/         # Editable draw.io sources, SVG previews, URL handles
 ├── pyproject.toml           # Package and direct dependencies
 ├── requirements.txt         # Pip installation: local package and runtime libraries
@@ -415,6 +426,24 @@ The current artifact has 27,927 rows: 17,731 train windows and 10,196 test
 windows. See [rolling feature artifacts and validation](outputs/features/README.md)
 for the column contract, row counts, leakage checks, and limitations.
 
+### Run RUL modeling
+
+After ETL and rolling features exist, run grouped model training and final
+evaluation:
+
+```powershell
+.venv\Scripts\python -m cmapss.modeling `
+  --rolling-features outputs/features/gold/rolling_features.parquet `
+  --train-targets outputs/etl/silver/train_targets.parquet `
+  --test-labels data/raw/RUL_FD001.txt `
+  --output-dir outputs/modeling
+```
+
+The current run selects `hist_gradient_boosting` with final mean engine-level
+MAE 15.3490, RMSE 20.5413, and NASA score 1513.2577 on 100 test engines.
+See [modeling artifacts and validation](outputs/modeling/README.md) for fold
+metrics, final predictions, final evaluation, figures, and limitations.
+
 <details>
 <summary>Development and optional checks</summary>
 
@@ -442,18 +471,22 @@ Pytest clears its `--basetemp` directory on subsequent runs; reserve it for test
 
 </details>
 
-Pandas/PySpark Silver/Gold parity, benchmark artifacts, and M3.2 rolling
-features are available; models and dashboard remain. M2.4 repeated-run validation has passed.
+Pandas/PySpark Silver/Gold parity, benchmark artifacts, M3.2 rolling features,
+and grouped RUL model evaluation are available; ARIMA and dashboard remain.
+M2.4 repeated-run validation has passed.
 The [report draft](report/main.pdf) is updated alongside
 verified work: its progress log records dates, rationale, artifacts, checks,
 and remaining work. See [report instructions](report/README.md) for source
 organization and PDF build commands. The current draft includes verified data
-validation, selected initial EDA observations, M3.1 ETL measurements, and M3.2 rolling-feature evidence, not
-model evaluation results.
+validation, selected initial EDA observations, M3.1 ETL measurements, M3.2
+rolling-feature evidence, and current RUL model metrics.
 
-## Academic Context and AI Disclosure
+## Academic Context
 
-This repository supports a final report for the **Big Data Analysis** course. The report will distinguish observed results from proposed explanations and will disclose the use of AI/LLM assistance in accordance with course requirements. All generated analysis, code, citations, and conclusions remain subject to human review and reproducibility checks.
+This repository supports a final report for the **Big Data Analysis** course.
+The report distinguishes observed results from proposed explanations. All
+generated analysis, code, citations, and conclusions remain subject to human
+review and reproducibility checks.
 
 ## References
 

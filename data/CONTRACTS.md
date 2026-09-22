@@ -6,9 +6,10 @@ tệp đầu ra M2.3a chỉ dùng train. Mốc M2 đã có notebook suy luận, 
 metadata lần chạy, hai hình M2.3b và biên bản validation M2.4 tại
 `outputs/statistics/`. Mốc M3.1 đã bổ sung ETL Pandas cho Silver observations,
 Silver train targets và Gold engine summary tại `outputs/etl/`; M3.2 đã bổ sung
-Gold rolling features tại `outputs/features/`. PySpark adapter
-đã chạy parity với Pandas reference trong môi trường local có JRE. Predictions
-vẫn mới có đặc tả; chưa có code tạo, validator hoặc metric.
+Gold rolling features tại `outputs/features/`; mốc modeling đã bổ sung
+cross-validation, final predictions và final metrics tại `outputs/modeling/`.
+PySpark adapter đã chạy parity với Pandas reference trong môi trường local có
+JRE.
 
 ## Nguồn quy tắc và phạm vi
 
@@ -36,6 +37,10 @@ không dùng cho fold, window hoặc dữ liệu benchmark.
 | Test labels | `split`, `engine_id`, `rul` | `split=test`; ID và RUL `int64`; khóa `(split, engine_id)` |
 | Engine-sensor pairs | `split`, `engine_id`, `sensor`, `n_cycles`, ranh giới/số phần tử hai đoạn, `early_mean`, `late_mean`, `difference`, `pair_status` | Chỉ `train`; khóa `(split, engine_id, sensor)`; 21 dòng theo sensor cho mỗi engine; output canonical theo engine rồi `sensor_1`–`sensor_21` |
 | Sensor inference | `sensor`, số cặp/dấu/zero, chênh lệch cặp trung bình và trung vị, CI, bootstrap status, Wilcoxon statistic/raw p, adjusted p, FDR và `test_status` | Một dòng mỗi sensor theo đúng thứ tự `sensor_1`–`sensor_21`; giữ all-zero là trạng thái riêng; không dùng để chọn feature trước cross-validation |
+| Fold assignments | `split`, `engine_id`, `fold` | Chỉ `train`; mỗi engine thuộc đúng một validation fold |
+| OOF predictions | Khóa train window, `fold`, `model_name`, `y_true`, `y_pred` và các cột lỗi | Một dòng cho mỗi window validation và mỗi candidate model |
+| Final predictions | `split`, `engine_id`, `cycle`, `model_name`, `rul_pred` | Chỉ `test`; đúng 100 dòng, một prediction ở cycle cuối mỗi test engine; ghi trước khi join `RUL_FD001.txt` |
+| Final evaluation | Final predictions đã join test labels, thêm `y_true`, `y_pred` và các cột lỗi | Chỉ tạo sau khi final predictions đã được ghi; dùng để tính metric cuối |
 
 Reader observations nhận `split` do bên gọi xác định; CLI gán train/test từ tên
 file cố định. Không thể suy ra split chỉ từ 26 giá trị của một dòng. Validator
@@ -290,6 +295,47 @@ Scaler, PCA, lựa chọn sensor và model fit vẫn thuộc mốc mô hình; n�
 sensor hằng thì quyết định đó phải được học trong training fold, không lấy từ
 artifact toàn train.
 
+### MODELING_GROUP_SPLIT
+
+Modeling dùng 5-fold GroupKFold theo `engine_id` trên 17.731 train windows. Mỗi
+engine train thuộc đúng một validation fold; các window của cùng engine không bị
+chia giữa train và validation trong cùng fold. `fold_assignments.csv` có 100
+dòng, mỗi dòng là một engine train và fold validation tương ứng.
+
+### MODELING_TARGET_KEYS
+
+Train rolling features phải join được đúng một RUL target theo khóa
+`(split, engine_id, cycle)`. Mọi train feature thiếu target làm pipeline dừng.
+Test features không được join `RUL_FD001.txt` trong bước chuẩn bị dataset.
+
+### MODELING_SAMPLE_WEIGHT
+
+Training fold dùng weighting theo engine: tổng sample weight của mỗi engine bằng
+1. Quy tắc này giảm việc engine sống lâu có nhiều window lấn át engine ngắn.
+Nó không thay đổi metric báo cáo; metric chính vẫn là mean engine-level MAE.
+
+### MODELING_MODEL_SELECTION
+
+Các ứng viên hiện tại là `median_baseline`, `ridge_alpha_1` và
+`hist_gradient_boosting`. Model được chọn bằng `mean_engine_mae` trung bình qua
+5 folds. Scaler của Ridge nằm trong pipeline và được fit trong training fold.
+Test labels không được đọc hoặc dùng để chọn model.
+
+### MODELING_FINAL_PREDICTIONS
+
+Sau khi chọn model, pipeline refit model trên toàn bộ train windows và tạo đúng
+một prediction tại cycle cuối của mỗi test engine. `final_predictions.parquet`
+phải có 100 dòng, cột `rul_pred` hữu hạn và được ghi trước khi đọc
+`RUL_FD001.txt`.
+
+### MODELING_FINAL_EVALUATION
+
+Chỉ bước final evaluation mới đọc `RUL_FD001.txt` và join theo
+`(split, engine_id)`. Metric cuối hiện gồm mean engine-level MAE, RMSE, NASA
+asymmetric score và bootstrap percentile CI 95% theo 100 test engines. File
+`outputs/modeling/run_info.json` lưu checksum của rolling features, train
+targets và test labels.
+
 ## Test labels và phạm vi cô lập
 
 Lệnh validation mặc định chỉ đọc observations, không mở `RUL_FD001.txt`.
@@ -298,8 +344,9 @@ nhãn, checksum và trạng thái, không lưu giá trị nhãn, không join obs
 và không tính metric. Kiểm thử chạy mặc định trong thư mục không có file nhãn.
 
 `read_test_labels` là API riêng, không được bảo vệ bằng quyền truy cập hệ điều
-hành. Ranh giới không dùng test labels để chọn model còn cần được kiểm tra tại
-pipeline mô hình khi thành phần đó được triển khai.
+hành. Pipeline modeling kiểm tra ranh giới bằng cách ghi `final_predictions`
+trước khi đọc test labels và lưu trạng thái join nhãn sau cùng trong
+`outputs/modeling/run_info.json`.
 
 Validation M2.4 của thống kê tạo runtime guard cục bộ với rule
 `STATISTICS_TRAIN_ONLY`. Guard cho phép đọc `train_FD001.txt` và chặn probe mở
@@ -311,13 +358,13 @@ enforcement hoặc branch protection cho toàn repository.
 
 | Artifact | Quy tắc đã chốt | Phần chưa triển khai |
 | --- | --- | --- |
-| Rolling features | Đã có artifact M3.2 tại `outputs/features/gold/rolling_features.parquet`: khóa observation tại cycle cuối window, trailing window đủ 30 cycles, cùng engine/split, không dùng tương lai; giữ 21 sensors; cột `<sensor>__<stat>` với `last`, `mean`, sample `std` (`ddof=1`), `min`, `max`, slope | Chưa có fold assignment, scaler, PCA, feature selection trong fold hoặc model-ready dataset; chưa tạo metric/prediction |
-| Final predictions | Khóa `(split, engine_id, cycle)` tại cycle cuối test; một giá trị RUL dự đoán mỗi engine, đúng 100 dòng; tạo trước khi join test labels | Tên cột prediction, metadata model và validator; chưa quy định clip prediction âm |
+| Rolling features | Đã có artifact M3.2 tại `outputs/features/gold/rolling_features.parquet`: khóa observation tại cycle cuối window, trailing window đủ 30 cycles, cùng engine/split, không dùng tương lai; giữ 21 sensors; cột `<sensor>__<stat>` với `last`, `mean`, sample `std` (`ddof=1`), `min`, `max`, slope | Chưa có PCA hoặc feature selection; nếu thêm, phải fit trong training fold |
+| Final predictions | Đã có artifact tại `outputs/modeling/predictions/final_predictions.parquet`: khóa `(split, engine_id, cycle)` tại cycle cuối test; một giá trị RUL dự đoán mỗi engine, đúng 100 dòng; tạo trước khi join test labels | Chưa có dashboard hoặc serving API; chưa clip prediction vì lần chạy hiện tại không sinh giá trị âm |
 
 Ví dụ window tại cycle 170 là cycle 141–170 của cùng engine. M3.2 đã hiện
-thực hóa feature transformer và validator cho artifact rolling features. Các
-phần còn mở ở bảng trên thuộc validation/modeling, không được coi là đã có
-metric hoặc prediction.
+thực hóa feature transformer và validator cho artifact rolling features. Mốc
+modeling đã tạo metrics và prediction cho FD001; ARIMA, dashboard và kiểm tra
+tái lập toàn bộ vẫn chưa hoàn thành.
 
 ## Chạy kiểm tra
 

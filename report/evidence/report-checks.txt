@@ -319,3 +319,64 @@ PASS: CLI rerun `.venv/Scripts/python.exe -m cmapss.features --silver-observatio
 PASS: Tectonic rebuilt `report/figures/pipeline.pdf` and `report/main.pdf`; `pdfinfo` reports 43 A4 pages. Log scan found no targeted overfull/underfull boxes, missing glyphs, undefined citations/references or duplicate labels.
 PASS: rendered pipeline figure and report pages around M3.2 progress/results; no visible clipping or overlap. Independent TikZ review found M3.2 marked completed, model/evaluation/dashboard still planned, and test labels connected only to final evaluation.
 ENVIRONMENT LIMIT: existing Fontconfig default config diagnostic and absolute Windows font path warnings remain; build returned exit code 0 and rendered pages were inspected locally.
+
+M3.3 grouped RUL modeling update: 2026-09-22
+SCOPE: leakage-safe sklearn modeling pipeline, persisted modeling artifacts,
+README/data-contract/report synchronization and report PDF rebuild. No ARIMA,
+dashboard, serving API, hook, CI or branch-protection changes.
+AUTHORITY: active plan and data contract require GroupKFold by engine, model
+selection without test labels, final predictions written before reading
+`RUL_FD001.txt`, and final evaluation only after prediction persistence.
+PASS: added `src/cmapss/modeling/` with contracts, metrics, grouped training,
+model selection, final prediction, final evaluation and CLI entry points.
+PASS: added `tests/test_modeling.py` covering NASA score, feature/target join,
+missing targets, engine-equal sample weights, GroupKFold separation and a
+synthetic end-to-end artifact run.
+PASS: generated `outputs/modeling/` with fold assignments, fold/model metrics,
+OOF predictions, selected model artifact, 100 final test predictions, final
+evaluation, final metrics and two diagnostic figures.
+PASS: selected `hist_gradient_boosting`; cross-validation mean engine MAE was
+46.9543 for median baseline, 23.9922 for Ridge and 20.2143 for
+HistGradientBoosting. Final test metrics on 100 engines were mean engine MAE
+15.3490 [13.2594, 17.3941], RMSE 20.5413 [17.3442, 23.5850] and NASA score
+1513.2577 [743.4999, 2476.2743], with 10,000 bootstrap resamples and seed 42.
+PASS: focused modeling tests passed 6 tests with `uv run --frozen pytest
+tests/test_modeling.py -q --basetemp=tmp/pytest-modeling-third --tb=short`.
+PASS: full suite passed 111 tests in 37.61 seconds with `uv run --frozen pytest
+-q --basetemp=tmp/pytest-modeling-full --tb=short`.
+PASS: `uv run --frozen python -m compileall -q src tests`, `uv lock --check`
+and `git diff --check` passed.
+PASS: Tectonic rebuilt `report/figures/pipeline.pdf` and `report/main.pdf`;
+`pdfinfo` reported 30 A4 pages. Log scan found no targeted overfull/underfull
+boxes, undefined citations/references, missing files, emergency stop or fatal
+errors.
+PASS: Poppler rendered the updated pipeline and pages around the modeling
+tables/figures; visual inspection found no clipping, overlap or unreadable
+model result layout.
+LIMIT: Windows Application Control initially blocked downloaded sklearn `.pyd`
+files; local remediation used `Unblock-File` inside `.venv\Lib\site-packages\sklearn`
+and `import sklearn` then reported version 1.9.1. NASA score in
+cross-validation is window-level and only for protocol-internal comparison;
+the final reported NASA score is engine-level on the 100 test predictions.
+
+Report feedback revision: 2026-09-22
+SCOPE: report explanations of formulas, outcome labels, data dictionary,
+distribution profile and data-handling decisions. No raw data, model code,
+metrics or artifact values were changed.
+PASS: `report/sections/problem-data.tex` now identifies the outcome label RUL,
+distinguishes train-derived labels from the separate test-label file, and adds
+a table linking observed data characteristics to handling decisions.
+PASS: `report/sections/theory.tex` and
+`report/sections/statistical-protocol.tex` now state for each displayed formula
+the symbol meaning, unit, reason for use, source boundary and reliability
+limitation. Report-owned definitions are explicitly distinguished from
+standard OLS, dataset RUL definition and cited statistical procedures.
+PASS: Tectonic rebuilt `report/main.pdf` with exit code 0. `pdfinfo` reports
+31 A4 pages. Log scan found no targeted overfull/underfull boxes, undefined
+citations/references, missing files, emergency stop or fatal errors.
+PASS: Poppler rendered the data dictionary/quality table and all pages
+containing the revised RUL, rolling-window, slope and paired-analysis formulas;
+visual inspection found no clipping, overlap or unreadable text.
+LIMIT: sensor physical units are not provided by the FD001 source, so the report
+keeps `sensor_1`--`sensor_21` as anonymous channels and interprets differences
+only in each sensor's original unit.

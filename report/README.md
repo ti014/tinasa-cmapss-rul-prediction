@@ -3,11 +3,14 @@
 [Bản PDF](main.pdf) được biên dịch từ [main.tex](main.tex), cập nhật ngày
 22/09/2026. Báo cáo trình bày các kết quả đã có trên NASA C-MAPSS FD001:
 kiểm tra dữ liệu, EDA train-only, ETL Silver/Gold, đối chiếu Pandas--PySpark,
-rolling features 30 cycles và suy luận chênh lệch sensor đầu/cuối vòng đời.
+rolling features 30 cycles, suy luận chênh lệch sensor đầu/cuối vòng đời và
+đánh giá mô hình RUL hiện tại.
 
 Báo cáo không đưa vào timeline, kế hoạch tiếp theo, đường dẫn artifact nội bộ
-hoặc khai báo AI/LLM. Metric của mô hình RUL, ARIMA và dashboard chưa thuộc tập
-kết quả hiện có nên không được trình bày như kết quả đã triển khai.
+hoặc khai báo AI/LLM. Phần dữ liệu giải thích rõ nhãn kết cục, ý nghĩa cột,
+phân bố và cách xử lý; phần phương pháp giải thích lý do, đơn vị và nguồn của
+các công thức. ARIMA và dashboard chưa thuộc tập kết quả hiện có nên không
+được trình bày như kết quả đã triển khai.
 
 ## Cấu trúc
 
@@ -57,6 +60,6 @@ Push-Location report
 Pop-Location
 ```
 
-Lần build ngày 22/09/2026 tạo PDF 27 trang, không có lỗi biên dịch, citation
+Lần build ngày 22/09/2026 tạo PDF 31 trang, không có lỗi biên dịch, citation
 undefined, reference undefined hoặc overfull/underfull box. Tectonic vẫn ghi
 cảnh báo môi trường về Fontconfig và font Windows; đây không phải lỗi nội dung.

@@ -61,14 +61,16 @@ Ngành: & Khoa học máy tính
 \addcontentsline{toc}{section}{Tóm tắt}
 Báo cáo trình bày quy trình phân tích dữ liệu cảm biến trên NASA C-MAPSS FD001,
 từ kiểm tra chất lượng dữ liệu đến xây dựng đặc trưng rolling window và suy luận
-thống kê theo động cơ. Kết quả hiện có gồm hồ sơ dữ liệu train/test, pipeline ETL
-Silver/Gold với đối chiếu Pandas--PySpark, 27.927 rolling windows dài 30 cycles
-và phân tích chênh lệch giữa 30 cycles đầu/cuối của 100 động cơ train.
+thống kê theo động cơ, sau đó huấn luyện mô hình RUL bằng đánh giá grouped
+cross-validation. Kết quả hiện có gồm hồ sơ dữ liệu train/test, pipeline ETL
+Silver/Gold với đối chiếu Pandas--PySpark, 27.927 rolling windows dài 30 cycles,
+phân tích chênh lệch giữa 30 cycles đầu/cuối của 100 động cơ train và đánh giá
+mô hình trên 100 động cơ test.
 
 Các kết quả được diễn giải trong phạm vi dữ liệu mô phỏng FD001. Báo cáo không
-đưa ra metric của mô hình dự đoán RUL, ARIMA hoặc dashboard vì những kết quả đó
-chưa thuộc tập bằng chứng hiện có; do đó không suy ra độ chính xác mô hình hay
-lịch bảo trì từ các phân tích mô tả và suy luận sensor.
+đưa ra kết quả ARIMA hoặc dashboard vì những kết quả đó chưa thuộc tập bằng
+chứng hiện có; do đó không suy ra lịch bảo trì tối ưu từ các phân tích mô tả,
+suy luận sensor hoặc metric mô hình.
 \clearpage
 \begin{spacing}{1.1}
 \tableofcontents

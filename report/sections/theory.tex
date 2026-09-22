@@ -24,13 +24,23 @@ Tại cycle $t$, một mẫu chỉ chứa các quan sát hiện có của cùng 
 \noindent Trong đó:
 \begin{itemize}[label={+},leftmargin=1.6em,itemsep=0.15em,topsep=0.25em]
 \item $i$: engine đang được xét.
-\item $t$: cycle cuối của window.
+\item $t$: cycle cuối của window, tính bằng cycle vận hành.
 \item $w$: số cycle trong window, với cấu hình hiện tại $w=30$.
 \item $p$: số sensor, với cấu hình hiện tại $p=21$.
-\item $\mathbf{x}_{i,t}$: vector sensor của engine $i$ tại cycle $t$.
-\item $W_{i,t}$: ma trận đầu vào có $w$ hàng và $p$ cột.
+\item $\mathbf{x}_{i,t}$: vector sensor của engine $i$ tại cycle $t$; mỗi phần
+tử giữ đơn vị gốc ẩn danh của sensor tương ứng.
+\item $W_{i,t}$: ma trận đầu vào có $w$ hàng và $p$ cột, tức $30\times21$
+trong cấu hình hiện tại.
 \end{itemize}
-Ví dụ, mẫu tại cycle 170 dùng cycles 141--170 và không dùng cycle 171.
+Công thức~\ref{eq:window} là định nghĩa biểu diễn do báo cáo triển khai, không
+phải một công thức dự đoán RUL do một tác giả bên ngoài đề xuất. Việc dùng
+window 30 cycles có đối chiếu với một cấu hình window RUL đã được sử dụng trong
+nghiên cứu trước, nhưng độ dài 30 không được coi là mặc định phổ quát
+\cite{li2018rul}. Cách viết này được dùng để bảo đảm tại cycle $t$ chỉ có dữ
+liệu quá khứ và hiện tại đi vào feature, nhờ đó tránh data leakage từ cycle
+tương lai. Độ tin cậy của biểu diễn được kiểm tra bằng validator rolling-window:
+mỗi window phải đủ 30 cycles, cùng engine và không nối sang engine khác. Ví dụ,
+mẫu tại cycle 170 dùng cycles 141--170 và không dùng cycle 171.
 
 Mỗi sensor trong window được tóm tắt bằng giá trị cuối, mean, sample standard
 deviation, min, max và linear slope. Với dãy $z_1,\ldots,z_w$ của một sensor,
@@ -42,14 +52,21 @@ slope được tính bởi
 \end{equation}
 \noindent Trong đó:
 \begin{itemize}[label={+},leftmargin=1.6em,itemsep=0.15em,topsep=0.25em]
-\item $k$: vị trí cycle trong window.
-\item $w$: độ dài window.
-\item $z_k$: giá trị sensor tại vị trí $k$.
+\item $k$: vị trí cycle trong window, chạy từ 1 đến $w$.
+\item $w$: độ dài window, hiện bằng 30 cycles.
+\item $z_k$: giá trị sensor tại vị trí $k$, giữ đơn vị gốc của sensor đó.
 \item $\bar{k}$: mean của các vị trí cycle trong window.
 \item $\bar{z}$: mean của các giá trị sensor trong window.
-\item $b$: mức thay đổi tuyến tính ước lượng trên mỗi cycle.
+\item $b$: mức thay đổi tuyến tính ước lượng trên mỗi cycle, có đơn vị
+``đơn vị sensor trên một cycle''.
 \end{itemize}
-Slope mô tả xu hướng cục bộ, không tự chứng minh utility dự đoán.
+Slope trong Công thức~\ref{eq:slope} là hệ số hồi quy tuyến tính một biến theo
+ordinary least squares (OLS, bình phương tối thiểu thông thường) của giá trị
+sensor theo vị trí trong window~\cite{hyndman2021fpp3}. Báo cáo dùng slope vì
+giá trị cuối và mean chưa mô tả hướng tăng/giảm bên trong 30 cycles gần nhất.
+Công thức này đáng tin như một tóm tắt xu hướng cục bộ có thể tái lập, nhưng
+không tự chứng minh utility dự đoán; utility chỉ được kiểm tra gián tiếp qua
+cross-validation của mô hình.
 
 \subsection{Paired analysis, bootstrap và nhiều kiểm định}
 Paired analysis ghép hai phép đo của cùng một engine để phân tích thay đổi trong

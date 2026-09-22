@@ -5,19 +5,30 @@ khi hỏng. Đầu vào tại cycle $t$ là các quan sát đã có đến $t$ c
 đầu ra mục tiêu là RUL tại cycle đó. Phạm vi kết quả trong báo cáo gồm kiểm tra
 dữ liệu, EDA, ETL, rolling features và suy luận thống kê đầu/cuối vòng đời.
 
-Đối với train, đặt $T_i$ là cycle cuối của động cơ $i$ trong lịch sử đầy đủ đến khi hỏng. Nhãn được xác định bởi
+Đối với train, đặt $T_i$ là cycle cuối của động cơ $i$ trong lịch sử đầy đủ đến
+khi hỏng. Nhãn RUL được xác định bởi:
 \begin{equation}
  y_{i,t}=T_i-t,\qquad 1\leq t\leq T_i.
  \label{eq:rul}
 \end{equation}
 \noindent Trong đó:
 \begin{itemize}[label={+},leftmargin=1.6em,itemsep=0.15em,topsep=0.25em]
-\item $i$: engine đang được xét.
-\item $t$: cycle đang xét của engine $i$.
-\item $T_i$: cycle cuối của engine $i$ trong tập train.
+\item $i$: engine đang được xét; đây là đơn vị độc lập trong split train.
+\item $t$: cycle đang xét của engine $i$, tính theo số cycle vận hành rời rạc.
+\item $T_i$: cycle cuối của engine $i$ trong tập train, cũng tính bằng cycle.
 \item $y_{i,t}$: RUL của engine $i$ tại cycle $t$, tính bằng cycle.
 \end{itemize}
-Ví dụ minh họa: một động cơ kết thúc ở cycle 200 có RUL bằng 30 cycles tại cycle 170 và bằng 0 tại cycle 200. Đây là ví dụ tính nhãn, không phải kết quả dự đoán.
+Công thức~\ref{eq:rul} được dùng vì train FD001 là run-to-failure history:
+chuỗi train kết thúc tại thời điểm hỏng, còn mục tiêu của bộ dữ liệu là dự đoán
+số operational cycles còn lại trước khi hỏng~\cite{nasaCmapssDataset,saxena2008damage}.
+Đây là định nghĩa nhãn từ dữ liệu, không phải công thức dự đoán do mô hình học
+ra. Độ tin cậy của nhãn train phụ thuộc vào giả định của nguồn FD001 rằng train
+đã đi đến failure; vì vậy validator chỉ áp dụng công thức này cho train và
+không áp dụng cho test.
+
+Ví dụ minh họa: một động cơ kết thúc ở cycle 200 có RUL bằng 30 cycles tại
+cycle 170 và bằng 0 tại cycle 200. Đây là ví dụ tính nhãn, không phải kết quả
+dự đoán.
 
 Lịch sử test bị cắt trước khi hỏng nên không được lấy cycle cuối quan sát của test làm $T_i$. Mục tiêu đánh giá cuối là một dự đoán tại cycle cuối quan sát cho mỗi test engine. Bộ nhãn chính thức được tách khỏi quá trình lựa chọn mô hình.
 
@@ -99,6 +110,13 @@ hoặc model selection.\\
 \end{longtable}
 \end{small}
 
+Nhãn kết cục của bài toán là RUL, tức số cycle còn lại trước khi engine hỏng.
+Trong train, nhãn được suy ra từ cycle cuối của từng chuỗi; trong test, nhãn
+chỉ có tại cycle cuối quan sát và nằm trong file riêng \texttt{RUL\_FD001.txt}.
+Do đó, mỗi dòng train có thể có một nhãn RUL, còn mỗi engine test chỉ có một
+nhãn đánh giá cuối. Báo cáo không chuyển RUL thành nhãn phân loại hỏng/không
+hỏng vì nguồn dữ liệu và protocol hiện tại đánh giá sai số theo số cycle.
+
 Ví dụ đọc một dòng raw: dòng đầu tiên của \texttt{train\_FD001.txt} có
 \texttt{engine\_id=1}, \texttt{cycle=1}, ba settings lần lượt là
 $-0{,}0007$, $-0{,}0004$, $100{,}0$, sau đó là 21 giá trị sensor. Engine 1
@@ -163,6 +181,40 @@ Sensor & Số giá trị khác nhau & Min--max & Ghi chú\\
 Các cột hằng toàn train không có correlation Spearman xác định với RUL và không
 thể tạo chênh lệch đầu/cuối khác 0 trong paired analysis. Báo cáo vẫn giữ chúng
 trong bảng thống kê để thể hiện đầy đủ phạm vi 21 sensor.
+
+\subsection{Đánh giá phân bố và cách xử lý dữ liệu}
+Dữ liệu FD001 tương đối sạch về mặt schema: không có missing trong các cột đã
+đọc, khóa \texttt{(split, engine\_id, cycle)} không trùng và cycle liên tục
+trong từng engine. Tuy nhiên, dữ liệu không hoàn toàn thuận lợi cho mọi phân
+tích: độ dài chuỗi giữa các engine khác nhau, sáu sensor hằng trên toàn train,
+một số sensor có rất ít mức giá trị, và tài liệu gốc không cung cấp đơn vị vật
+lý cho từng sensor. Bảng~\ref{tab:data-quality-actions} tóm tắt các điểm này
+và cách xử lý trong báo cáo.
+
+\begin{table}[H]
+\centering
+\caption{Đặc điểm phân bố dữ liệu và cách xử lý.}
+\label{tab:data-quality-actions}
+\begin{tabularx}{\linewidth}{L{3.4cm}L{4.4cm}X}
+\toprule Đặc điểm & Ý nghĩa & Cách xử lý trong báo cáo\\\midrule
+Không có missing và khóa hợp lệ & Dữ liệu đủ sạch để tạo EDA, ETL và feature
+artifact mà không cần impute. & Không tự điền dữ liệu; validator dừng khi schema,
+khóa hoặc cycle continuity sai.\\
+Độ dài chuỗi khác nhau giữa engine & Engine sống lâu tạo nhiều observations và
+nhiều rolling windows hơn. & Báo cáo tách thống kê theo observation và theo
+engine; cross-validation và metric chính dùng engine làm đơn vị.\\
+Sensor hằng hoặc ít biến thiên & Một số correlation hoặc kiểm định không xác
+định; sensor hằng không tạo chênh lệch đầu/cuối. & Giữ đủ 21 sensor trong bảng,
+gắn trạng thái không xác định hoặc all-zero; không xóa sensor chỉ để làm kết quả
+đẹp hơn.\\
+Không có đơn vị vật lý cho sensor & Không thể diễn giải \texttt{sensor\_k} là
+nhiệt độ, áp suất hoặc tốc độ cụ thể. & Dùng tên ẩn danh \texttt{sensor\_1}--
+\texttt{sensor\_21}; mọi chênh lệch được hiểu theo đơn vị gốc của sensor đó.\\
+Test labels tách riêng & Nếu đọc nhãn test trước khi chọn mô hình sẽ gây data
+leakage. & Chỉ ghép \texttt{RUL\_FD001.txt} sau khi đã ghi final predictions.\\
+\bottomrule
+\end{tabularx}
+\end{table}
 
 \subsection{Các kiểm tra đã triển khai và lý do}
 Reader và validator thực hiện kiểm tra số trường, schema, kiểu số hữu hạn, bảng không rỗng, split hợp lệ, khóa duy nhất và cycle liên tục trong từng động cơ. Profile FD001 đối chiếu thêm số dòng, ID động cơ và cycle bắt đầu. Với train targets, validator kiểm tra đủ khóa và đối chiếu Công thức~\ref{eq:rul}.

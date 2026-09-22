@@ -4,12 +4,12 @@
 nộp cuối cùng. Nguồn chính là [main.tex](main.tex). Ngày cập nhật hiện tại:
 22/09/2026.
 
-Bản hiện tại có bài toán RUL, dữ liệu và contract, bảng thuật ngữ và chữ viết
-tắt, cơ sở lý thuyết có trích dẫn, protocol thống kê mốc 2, phương pháp kèm lý
-do lựa chọn, kết quả validation, một số quan sát EDA và bảng suy luận sensor
-đầu/cuối vòng đời trên train, hai hình thống kê M2.3b, khó khăn, giới hạn, khai
-báo AI/LLM, nhật ký tiến độ và bảng đối chiếu bằng chứng. Chưa có kết quả mô
-hình, ARIMA, ETL Silver/Gold hoặc dashboard.
+Bản hiện tại có bài toán RUL, data dictionary, dữ liệu và contract, bảng thuật
+ngữ và chữ viết tắt, cơ sở lý thuyết có trích dẫn, protocol thống kê mốc 2,
+phương pháp kèm lý do lựa chọn, kết quả validation, một số quan sát EDA và bảng
+suy luận sensor đầu/cuối vòng đời trên train, hai hình thống kê M2.3b, khó khăn,
+giới hạn, khai báo AI/LLM, nhật ký tiến độ và bảng đối chiếu bằng chứng. Chưa
+có kết quả mô hình, ARIMA, ETL Silver/Gold hoặc dashboard.
 Mốc EDA mô tả đã hoàn thành theo [biên bản nghiệm thu](../outputs/eda/validation.json);
 bảng thống kê M2.3a có biên bản tại [outputs/statistics/validation.json](../outputs/statistics/validation.json)
 và hình M2.3b nằm trong [outputs/statistics/figures](../outputs/statistics/figures).
@@ -36,7 +36,7 @@ report/
 ├── sections/
 │   ├── glossary.tex             # Bảng thuật ngữ và chữ viết tắt
 │   ├── progress.tex             # Nhật ký công việc và điều kiện hoàn thành
-│   ├── problem-data.tex         # Bài toán, dữ liệu và chất lượng
+│   ├── problem-data.tex         # Bài toán, data dictionary và chất lượng
 │   ├── theory.tex               # Cơ sở lý thuyết và nghiên cứu liên quan
 │   ├── methodology.tex          # Thiết kế, lý do, giả định và phần còn mở
 │   ├── statistical-protocol.tex # Mốc 2: cặp và cấu hình M2.0 đã chốt
@@ -123,11 +123,12 @@ overfull/underfull box và duplicate destination. Sau khi kiểm tra, có thể
 dọn aux/log riêng của report; giữ PDF và nguồn. Không đưa thư mục `tmp/`
 vào gói nộp.
 
-Bản M2.3a hiện tại đã kiểm chứng PDF **31 trang**, **19 nguồn được trích** trong
-nội dung từ danh mục 22 nguồn. Log LaTeX/BibTeX không có overfull/underfull,
-glyph thiếu, citation/reference chưa giải quyết hoặc cảnh báo bibliography.
-Đã rà bản render và hai sơ đồ TikZ có kiểm tra độc lập; bằng chứng mới nhất nằm
-trong `evidence/report-checks.txt`. Tectonic có diagnostic
+Bản hiện tại đã kiểm chứng PDF **39 trang**, gồm data dictionary, bảng thuật ngữ,
+hai sơ đồ TikZ, bảng/hình EDA và kết quả thống kê M2.3a--M2.3b. Log
+LaTeX/BibTeX không có overfull/underfull, glyph thiếu, citation/reference chưa
+giải quyết hoặc cảnh báo bibliography. Đã rà bản render của các trang data
+dictionary và sơ đồ pipeline; bằng chứng mới nhất nằm trong
+`evidence/report-checks.txt`. Tectonic có diagnostic
 Fontconfig thiếu cấu hình mặc định và cảnh báo dùng font ở đường dẫn Windows;
 build vẫn trả mã 0, chữ tiếng Việt và font được kiểm tra trên bản render.
 Đây là giới hạn môi trường đã ghi nhận, không bảo đảm bố cục giống từng byte

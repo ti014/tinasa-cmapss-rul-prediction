@@ -14,15 +14,16 @@ base/.style={rectangle,rounded corners=3pt,align=center,text width=4.4cm,minimum
 dataNode/.style={base,draw=greenStroke,fill=greenFill,thick},
 opNode/.style={base,draw=coreStroke,fill=coreFill,thick},
 planned/.style={base,draw=gray!70,fill=gray!5,dashed,thick},
-edge/.style={->,thick,draw=gray!80}]
+edge/.style={->,thick,draw=gray!80},
+testEdge/.style={->,very thick,dashed,draw=greenStroke!90!black}]
 \node[dataNode] (raw) at (0,0) {FD001 raw / Bronze\\Train và test observations};
 \node[opNode] (validate) at (0,-2) {Reader và validator\\Observations; train targets};
 \node[dataNode] (eda) at (0,-4) {EDA chỉ dùng train\\12 CSV và 11 PNG đã có};
 \node[dataNode] (stats) at (6,-4) {M2.3a chỉ dùng train\\2 CSV, run metadata và validation đã có};
 \node[planned] (silver) at (12,-2) {ETL Pandas / PySpark\\Silver Parquet -- dự kiến};
 \node[planned] (model) at (12,-4) {Gold features; mô hình\\Validation theo\\engine -- dự kiến};
-\node[planned] (eval) at (12,-6) {100 dự đoán test; đánh giá cuối\\Metric -- dự kiến};
-\node[dataNode] (labels) at (6,-6) {Test labels lưu riêng\\Chưa dùng đánh giá mô hình};
+\node[planned] (eval) at (12,-6) {100 dự đoán test\\Ghép nhãn; tính metric -- dự kiến};
+\node[dataNode] (labels) at (6,-6) {Test labels\\\texttt{RUL\_FD001.txt}\\Giữ riêng đến đánh giá cuối};
 \node[planned] (out) at (12,-8) {Dashboard và kết quả mô hình\\Bổ sung vào báo cáo -- dự kiến};
 \draw[edge] (raw.south) -- (validate.north);
 \draw[edge] (validate.south) -- (eda.north);
@@ -30,7 +31,7 @@ edge/.style={->,thick,draw=gray!80}]
 \draw[edge,dashed] (validate.east) -- (silver.west);
 \draw[edge,dashed] (silver.south) -- (model.north);
 \draw[edge,dashed] (model.south) -- (eval.north);
-\draw[edge,dashed] (labels.east) -- (eval.west);
+\draw[testEdge] (labels.east) -- node[pos=0.52,above=3pt,font=\scriptsize,text=greenStroke!50!black,fill=white,inner sep=1pt] {chỉ ghép tại đây} (eval.west);
 \draw[edge,dashed] (eval.south) -- (out.north);
 \end{tikzpicture}
 \end{document}

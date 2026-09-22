@@ -124,6 +124,35 @@ PASS: `git diff --check` passed for the changed files.
 ENVIRONMENT LIMIT: the known Tectonic Fontconfig diagnostic and absolute
 Windows font warnings remain; local PDF build and render succeeded.
 
+Data dictionary and column profile update: 2026-09-22
+SCOPE: report data-analysis text, report/readme synchronization, evidence table
+and rebuilt report PDF only; no raw data, code, notebook, model, ETL,
+statistical artifact or dependency changes.
+PASS: `report/sections/problem-data.tex` now includes a data dictionary for
+`split`, `engine_id`, `cycle`, operational settings, 21 sensors, train `rul`
+and `RUL_FD001.txt`, plus an example raw row interpretation for train engine 1
+cycle 1.
+PASS: the report now includes train column profiling from existing artifacts:
+`outputs/eda/tables/schema.csv`, `input_summary.csv`, `rul_summary.csv` and
+`measurement_summary.csv`. It reports no missing values, 20,631 train
+observations, the setting profile, six globally constant sensors, `sensor_6`
+with two values and all 21 sensor min--max summaries.
+PASS: sensor meanings remain correctly scoped: the report states that the raw
+FD001 source names the columns only as sensor measurements and does not provide
+physical names or units for individual sensors. No invented sensor semantics
+were added.
+PASS: `README.md`, `README.vi.md`, `report/README.md`, the active plan and
+`report/sections/evidence.tex` were synchronized with the added data dictionary.
+PASS: Tectonic 0.17.0 rebuilt `report/main.pdf` with exit code 0. `pdfinfo`
+reports 39 A4 pages. The final log has no overfull/underfull boxes, missing
+glyphs, undefined citations/references, fatal errors or missing files.
+PASS: Poppler rendered pages 8--18; pages 13--16 containing the data dictionary,
+column profile, sensor table and validation transition were visually inspected.
+No clipping, unreadable columns or broken table continuation was observed.
+PASS: `git diff --check` passed for the changed files.
+ENVIRONMENT LIMIT: the known Tectonic Fontconfig diagnostic and absolute
+Windows font warnings remain; local PDF build and render succeeded.
+
 Statistics package refactor: 2026-09-22
 SCOPE: code organization and documentation paths only; no raw data, CSV/JSON
 artifact, M2.0 statistical configuration, notebook execution, or model
@@ -182,3 +211,43 @@ the active train-only file-read blocking audit.
 ENVIRONMENT LIMIT: Tectonic still emits the known missing Fontconfig diagnostic
 and absolute Windows font path warnings; build exits 0 and the rendered PDF was
 checked locally.
+
+Pipeline diagram clarity update: 2026-09-22
+SCOPE: report pipeline diagram source, exported figure PDF, main report PDF and
+caption wording only; no raw data, CSV/JSON artifact, code, model, ETL, ARIMA
+or dashboard implementation changes.
+PASS: `report/figures/pipeline.tex` now labels test labels as a separated side
+input that is opened only for final evaluation. The test-label edge is dashed,
+green and orthogonal into the planned final evaluation node, making the
+connection visible without implying use in train, EDA or model selection.
+PASS: `report/sections/methodology.tex` caption now states that test labels are
+a separated side input and are joined only at final evaluation.
+PASS: Tectonic 0.17.0 rebuilt `report/figures/pipeline.pdf` and
+`report/main.pdf` with exit code 0. `pdfinfo` reports 37 A4 pages for
+`main.pdf`; final logs have no overfull/underfull boxes, missing glyphs,
+undefined citations/references or duplicate-label warnings.
+PASS: Poppler rendered `pipeline.pdf` and page 11 of `report/main.pdf`; the
+test-label node and final-evaluation edge were visually inspected with no
+clipping, overlap or ambiguous disconnected label observed.
+ENVIRONMENT LIMIT: the known Tectonic Fontconfig diagnostic and absolute
+Windows font warnings remain; local PDF build and render succeeded.
+
+Pipeline diagram label-flow clarification: 2026-09-22
+SCOPE: report pipeline TikZ figure, rendered figure PDF, main report PDF and
+the figure caption only; no data, code, statistical artifact, model, ETL or
+dependency changes.
+PASS: `report/figures/pipeline.tex` now shows test labels as a separate side
+input named `RUL_FD001.txt`, with a thick green dashed arrow directly into the
+final evaluation node. The evaluation node now states that labels are joined
+there to compute metrics, matching the caption.
+PASS: Tectonic 0.17.0 rebuilt `report/figures/pipeline.pdf` and
+`report/main.pdf` with exit code 0. `pdfinfo` reports 37 A4 pages for the main
+report and one page for the pipeline figure.
+PASS: Poppler rendered the updated pipeline figure; visual inspection confirmed
+the test-label side input connects directly to the final evaluation step, with
+no clipping, unreadable label, or ambiguous disconnected node.
+PASS: final logs for `pipeline.tex` and `main.tex` have no overfull/underfull
+boxes, missing glyphs, undefined citations/references, fatal errors or missing
+files.
+ENVIRONMENT LIMIT: the known Tectonic Fontconfig diagnostic and absolute
+Windows font warnings remain; local PDF build and render succeeded.

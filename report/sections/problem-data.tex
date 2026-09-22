@@ -10,8 +10,13 @@ dữ liệu, EDA, ETL, rolling features và suy luận thống kê đầu/cuối
  y_{i,t}=T_i-t,\qquad 1\leq t\leq T_i.
  \label{eq:rul}
 \end{equation}
-Trong Công thức~\ref{eq:rul}, $i$ là engine, $t$ là cycle đang xét, $T_i$ là
-cycle cuối của engine $i$ trong train và $y_{i,t}$ là RUL tính bằng cycle.
+\noindent Trong đó:
+\begin{itemize}[label={+},leftmargin=1.6em,itemsep=0.15em,topsep=0.25em]
+\item $i$: engine đang được xét.
+\item $t$: cycle đang xét của engine $i$.
+\item $T_i$: cycle cuối của engine $i$ trong tập train.
+\item $y_{i,t}$: RUL của engine $i$ tại cycle $t$, tính bằng cycle.
+\end{itemize}
 Ví dụ minh họa: một động cơ kết thúc ở cycle 200 có RUL bằng 30 cycles tại cycle 170 và bằng 0 tại cycle 200. Đây là ví dụ tính nhãn, không phải kết quả dự đoán.
 
 Lịch sử test bị cắt trước khi hỏng nên không được lấy cycle cuối quan sát của test làm $T_i$. Mục tiêu đánh giá cuối là một dự đoán tại cycle cuối quan sát cho mỗi test engine. Bộ nhãn chính thức được tách khỏi quá trình lựa chọn mô hình.

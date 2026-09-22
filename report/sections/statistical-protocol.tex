@@ -6,19 +6,33 @@ Mục tiêu là đánh giá mức thay đổi của sensor giữa đầu và cu�
 Phân tích ghép cặp (paired analysis), chênh lệch cặp trung bình, bootstrap 95\%, Wilcoxon khi phù hợp, Benjamini--Hochberg và seed 42 thuộc cấu hình hiện có. Kết quả được tính bằng mean paired difference, percentile bootstrap, Wilcoxon permutation và BH trên họ 21 sensors; bảng và hình chỉ sử dụng train.
 
 \subsection{Định nghĩa cặp đầu/cuối và ví dụ}
-Với $x_{i,t,s}$ là giá trị sensor $s$ của engine $i$ ở cycle $t$, và $T_i$ là cycle cuối của train engine đó, đặt
-\begin{align}
- E_{i,s}&=\frac1{30}\sum_{t=1}^{30}x_{i,t,s},&
- L_{i,s}&=\frac1{30}\sum_{t=T_i-29}^{T_i}x_{i,t,s},\\
- D_{i,s}&=L_{i,s}-E_{i,s}.&&
+Với $x_{i,t,s}$ là giá trị sensor $s$ của engine $i$ ở cycle $t$, và $T_i$ là cycle cuối của train engine đó, đặt:
+\begin{equation}
+ E_{i,s}=\frac{1}{30}\sum_{t=1}^{30}x_{i,t,s}.
+ \label{eq:early-mean}
+\end{equation}
+\begin{equation}
+ L_{i,s}=\frac{1}{30}\sum_{t=T_i-29}^{T_i}x_{i,t,s}.
+ \label{eq:late-mean}
+\end{equation}
+\begin{equation}
+ D_{i,s}=L_{i,s}-E_{i,s}.
  \label{eq:paired-difference}
-\end{align}
-Trong Công thức~\ref{eq:paired-difference}, $E_{i,s}$ là mean của 30 cycles đầu,
-$L_{i,s}$ là mean của 30 cycles cuối và $D_{i,s}$ là chênh lệch cuối trừ đầu.
-$D_{i,s}>0$ biểu thị mức trung bình cuối đời lớn hơn đầu đời. Mỗi engine đóng
-góp một cặp cho mỗi sensor, bất kể tuổi thọ. Hai đoạn phải đủ dữ liệu, liên tục
-và không chồng lấn. Tuổi thọ train nhỏ nhất là 128 cycles, nên hai đoạn 30
-cycles không chồng lấn.
+\end{equation}
+
+\noindent Trong đó:
+\begin{itemize}[label={+},leftmargin=1.6em,itemsep=0.15em,topsep=0.25em]
+\item $x_{i,t,s}$: giá trị của sensor $s$ trên engine $i$ tại cycle $t$.
+\item $T_i$: cycle cuối của engine $i$ trong tập train.
+\item $E_{i,s}$: mean của sensor $s$ trên 30 cycles đầu của engine $i$.
+\item $L_{i,s}$: mean của sensor $s$ trên 30 cycles cuối của engine $i$.
+\item $D_{i,s}$: chênh lệch giữa mean cuối và mean đầu của sensor $s$ trên engine $i$.
+\end{itemize}
+
+Nếu $D_{i,s}>0$, mức trung bình cuối đời lớn hơn đầu đời. Mỗi engine đóng góp
+một cặp cho mỗi sensor, bất kể tuổi thọ. Hai đoạn phải đủ dữ liệu, liên tục và
+không chồng lấn. Tuổi thọ train nhỏ nhất là 128 cycles, nên hai đoạn 30 cycles
+không chồng lấn.
 
 Ví dụ tính chỉ số: với engine có $T_i=200$, đoạn đầu là cycles 1--30 và đoạn cuối là cycles 171--200. Không nhầm đoạn cuối đời này với window 141--170 dùng dự đoán tại cycle 170. $T_i$ được biết khi phân tích hồi cứu train; không được dùng để xác định đặc trưng ở thời điểm dự đoán trên test.
 
@@ -35,7 +49,23 @@ theo engine trên tập train FD001.}
 \subsection{Đại lượng cần báo cáo và điều kiện diễn giải}
 Bảng kết quả M2.3a giữ đủ 21 sensors, không chọn danh sách theo thứ hạng correlation của EDA. Ba operational settings không được gộp vào cùng họ giả thuyết sensor. Bảng ghi số cặp hợp lệ, số chênh lệch bằng 0, chênh lệch cặp trung bình, khoảng tin cậy, thống kê kiểm định, p-value gốc, p-value hiệu chỉnh và trạng thái có thể kiểm định.
 
-Dùng chênh lệch cặp trung bình $\widehat\Delta_s=m^{-1}\sum_i D_{i,s}$ làm đại lượng chính theo đơn vị gốc, kèm trung vị và phân phối $D_{i,s}$. Trong biểu thức này, $s$ là sensor, $m$ là số engine hợp lệ và $D_{i,s}$ là chênh lệch của sensor $s$ trên engine $i$. Đại lượng này mô tả mức thay đổi, không phải đại lượng thay đổi chuẩn hóa. Vì các sensor có thang đo khác nhau, không so sánh trực tiếp độ lớn của chúng. Bootstrap lấy mẫu lại các engine cùng cặp $E,L$ để tạo khoảng tin cậy 95\% cho $\widehat\Delta_s$~\cite{scipyBootstrap}. Cấu hình dùng 10.000 resamples và percentile interval.
+Dùng chênh lệch cặp trung bình làm đại lượng chính theo đơn vị gốc:
+\begin{equation}
+ \widehat{\Delta}_s=\frac{1}{m}\sum_{i=1}^{m}D_{i,s}.
+ \label{eq:mean-paired-difference}
+\end{equation}
+\noindent Trong đó:
+\begin{itemize}[label={+},leftmargin=1.6em,itemsep=0.15em,topsep=0.25em]
+\item $s$: sensor đang được phân tích.
+\item $m$: số engine có cặp đầu/cuối hợp lệ.
+\item $D_{i,s}$: chênh lệch của sensor $s$ trên engine $i$.
+\item $\widehat{\Delta}_s$: mean paired difference của sensor $s$.
+\end{itemize}
+Đại lượng này mô tả mức thay đổi, không phải đại lượng thay đổi chuẩn hóa. Vì
+các sensor có thang đo khác nhau, không so sánh trực tiếp độ lớn của chúng.
+Bootstrap lấy mẫu lại các engine cùng cặp $E,L$ để tạo khoảng tin cậy 95\% cho
+$\widehat{\Delta}_s$~\cite{scipyBootstrap}. Cấu hình dùng 10.000 resamples và
+percentile interval.
 
 Wilcoxon hai phía kiểm định giả thuyết trung vị của chênh lệch bằng 0. Việc diễn giải dựa vào giả định phân phối chênh lệch đối xứng quanh trung vị và các cặp độc lập giữa engine~\cite{scipyWilcoxon}. Cần xem phân phối chênh lệch và ghi rõ giới hạn của giả định đối xứng; bootstrap của trung bình không thay thế giả định này. Sensor hằng hoặc có toàn bộ $D_{i,s}=0$ vẫn phải xuất hiện trong bảng dưới trạng thái không có biến thiên quan sát được. Không biến p-value không xác định thành 0 hoặc tự kết luận sensor có giá trị dự đoán bằng 0.
 

@@ -23,6 +23,7 @@ Mốc ghi nhận & Công việc & Lý do và bằng chứng & Trạng thái / c�
 22/09/2026 & Hoàn thiện hình và diễn giải M2.3b & Notebook 02 tạo \texttt{difference\_distributions.png} và \texttt{effect\_size\_ci.png} từ bảng M2.3a. Báo cáo bổ sung hình, giải thích sensor all-zero, \texttt{sensor\_6}, \texttt{sensor\_9} và giới hạn về feature selection. & Hoàn thành hình/diễn giải của mốc 2; bước còn lại tại thời điểm đó là M2.4 validation.\\
 22/09/2026 & Validation tái lập M2.4 & Thêm runtime audit \texttt{STATISTICS\_TRAIN\_ONLY}, chạy focused statistics tests 26 tests, full suite 95 tests, notebook 02 hai lần từ fresh kernel và so sánh hai CSV cùng hai PNG theo SHA-256. Probe đọc \texttt{test\_FD001.txt} và \texttt{RUL\_FD001.txt} bị chặn; SHA-256 ba raw file không đổi. & Hoàn thành mốc thống kê train-only; chưa có ETL, rolling features, mô hình, ARIMA hoặc dashboard.\\
 22/09/2026 & M3.1 ETL Silver/Gold và parity & Pipeline đọc raw qua contract, ghi 33.727 observations và 20.631 train targets vào Silver Parquet, 200 engine summaries vào Gold Parquet/SQLite; round-trip đạt. Benchmark Pandas 1$\times$/10$\times$/100$\times$ với hai lần cold/warm ghi trong \texttt{outputs/etl/}. PySpark parity đạt cho ba bảng với \texttt{max\_abs\_diff=0}. & Hoàn thành ETL boundary và benchmark; rolling features chưa triển khai.\\
+22/09/2026 & M3.2 rolling features & Pipeline đọc Silver observations, tạo 27.927 rolling windows từ trailing window 30 cycles, gồm 17.731 train và 10.196 test rows. Mỗi row có 126 feature columns cho 21 sensors; tests tính tay kiểm tra sample std, slope, không dùng tương lai, không nối engine và round-trip Parquet. & Hoàn thành feature artifact; chưa có fold assignment, scaler, model fit, prediction hoặc metric.\\
 \bottomrule
 \end{longtable}
 
@@ -33,7 +34,7 @@ Mốc ghi nhận & Công việc & Lý do và bằng chứng & Trạng thái / c�
 \endfirsthead
 \toprule Công việc & Vì sao cần thực hiện & Bằng chứng cần bổ sung\\\midrule
 \endhead
-Đặc trưng và validation & Chuyển chuỗi thành đầu vào mô hình trong khi giữ ranh giới động cơ và quá khứ. & Window đủ 30 cycles; fold không trùng engine; preprocessing chỉ fit training fold.\\[0.5em]
+Validation mô hình & Dùng feature artifact để tạo fold và đánh giá không rò rỉ dữ liệu. & Fold không trùng engine; scaler, feature selection, PCA và model chỉ fit training fold.\\[0.5em]
 Mô hình và đánh giá cuối & Xác định khả năng dự đoán trên cùng protocol thay vì suy ra từ correlation. & Kết quả cross-validation, cấu hình được chọn, đúng 100 dự đoán test trước khi join nhãn; metric và khoảng tin cậy.\\[0.5em]
 ARIMA và dashboard & Bổ sung phân tích chuỗi thời gian và cách đọc kết quả cảnh báo. & Forecast và diagnostics trên Health Index; dashboard kiểm tra được theo từng engine.\\[0.5em]
 Hoàn thiện báo cáo & Liên kết kết quả, khó khăn và giới hạn với yêu cầu môn học. & PDF đủ citation/hình, demo và slide; kiểm tra tái lập toàn bộ.\\

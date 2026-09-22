@@ -303,3 +303,19 @@ inspection found no clipping, overlap or unreadable table layout.
 ENVIRONMENT LIMIT: Tectonic still emits the known Fontconfig diagnostic and
 absolute Windows font warnings. Spark on Windows emits `winutils.exe` and native
 Hadoop warnings; local parity still completed successfully.
+
+M3.2 rolling features update: 2026-09-22
+SCOPE: deterministic rolling features from M3.1 Silver observations; no scaler, feature selection, model fit, predictions, metric computation or test-label join.
+AUTHORITY: active plan and data contract require trailing 30-cycle windows, no future observations, no cross-engine windows and test labels isolated until final evaluation.
+PASS: added `src/cmapss/features/` with contracts, rolling transformer, validator and CLI `python -m cmapss.features`.
+PASS: `outputs/features/run_info.json` records 27,927 rows, 17,731 train windows, 10,196 test windows, 126 feature columns, sample `std` with `ddof=1`, `joins_test_labels=false` and `modeling.status=not_started`.
+PASS: `outputs/features/gold/rolling_features.parquet` was generated from `outputs/etl/silver/observations.parquet`.
+PASS: focused feature tests passed 5 tests with `.venv/Scripts/python.exe -m pytest tests/test_features.py -q --basetemp=tmp/pytest-features-focused --tb=short`.
+LIMIT: artifact has no fold assignment, scaler, PCA, feature selection, model predictions or metrics; those remain for the modeling milestone.
+PASS: focused ETL/features tests passed 10 tests with `.venv/Scripts/python.exe -m pytest tests/test_features.py tests/test_etl.py -q --basetemp=tmp/pytest-m32-focused --tb=short`.
+PASS: full suite passed 105 tests in 20.66 seconds with `.venv/Scripts/python.exe -m pytest -q --basetemp=tmp/pytest-m32-full --tb=short`.
+PASS: `uv lock --check` completed without lockfile changes.
+PASS: CLI rerun `.venv/Scripts/python.exe -m cmapss.features --silver-observations outputs/etl/silver/observations.parquet --output-dir outputs/features` completed and metadata assertions passed for row counts, feature count, no test-label join and no modeling.
+PASS: Tectonic rebuilt `report/figures/pipeline.pdf` and `report/main.pdf`; `pdfinfo` reports 43 A4 pages. Log scan found no targeted overfull/underfull boxes, missing glyphs, undefined citations/references or duplicate labels.
+PASS: rendered pipeline figure and report pages around M3.2 progress/results; no visible clipping or overlap. Independent TikZ review found M3.2 marked completed, model/evaluation/dashboard still planned, and test labels connected only to final evaluation.
+ENVIRONMENT LIMIT: existing Fontconfig default config diagnostic and absolute Windows font path warnings remain; build returned exit code 0 and rendered pages were inspected locally.

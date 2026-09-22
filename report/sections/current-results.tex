@@ -40,6 +40,37 @@ khớp schema, khóa, số dòng và giá trị số cho ba bảng Silver/Gold; 
 \texttt{max\_abs\_diff} bằng 0,0. Lần chạy Spark dùng JRE portable trong
 \texttt{tmp/} và không cấu hình HDFS hoặc cluster.
 
+\subsection{Rolling features M3.2}
+M3.2 đọc \filepath{outputs/etl/silver/observations.parquet} và tạo
+\filepath{outputs/features/gold/rolling\_features.parquet}. Artifact có 27.927
+rows: 17.731 train windows và 10.196 test windows. Mỗi row có khóa
+\texttt{(split, engine\_id, cycle)} và 126 feature columns cho 21 sensors nhân
+sáu thống kê: \texttt{last}, \texttt{mean}, sample \texttt{std} với
+\texttt{ddof=1}, \texttt{min}, \texttt{max} và \texttt{slope}. Tổng số cột là
+129 khi tính cả ba khóa.
+
+\begin{table}[H]
+\centering
+\caption[Rolling features M3.2]{Số dòng rolling features M3.2 theo split. Mỗi
+window dài 30 cycles và kết thúc tại khóa observation của row.}
+\label{tab:rolling-features}
+\begin{tabular}{lrr}
+\toprule Split & Engines & Rolling windows\\\midrule
+Train & 100 & 17.731\\
+Test & 100 & 10.196\\
+Tổng & 200 & 27.927\\\bottomrule
+\end{tabular}
+\end{table}
+
+Validator kiểm tra schema, khóa duy nhất, thứ tự canonical, số hữu hạn và các
+cycle có đủ trailing window trong cùng engine/split. Tests tính tay xác nhận
+sensor bằng cycle có \texttt{last}, mean, sample standard deviation, min, max
+và slope đúng; thay đổi cycle 31 không làm đổi feature tại cycle 30; hai engine
+không bị nối window. Metadata ghi \texttt{joins\_test\_labels=false} và
+\texttt{modeling.status=not\_started}; vì vậy artifact này chưa phải kết quả
+mô hình hoặc metric.
+
+
 \subsection{Tuổi thọ động cơ trên train}
 \begin{table}[H]
 \centering

@@ -19,6 +19,7 @@ dependencies = [
 [project.scripts]
 cmapss-validate = "cmapss.validate:main"
 cmapss-etl = "cmapss.etl.cli:main"
+cmapss-features = "cmapss.features.cli:main"
 
 [project.optional-dependencies]
 etl = [

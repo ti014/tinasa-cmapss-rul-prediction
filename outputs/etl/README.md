@@ -6,7 +6,7 @@ reader/validator hiện có, giữ checksum input, ghi observations typed vào S
 Parquet, tạo train RUL trong Silver và tổng hợp một dòng cho mỗi
 `(split, engine_id)` vào Gold Parquet và SQLite.
 
-Rolling features window 30, predictions và metrics chưa thuộc artifact này.
+Rolling features window 30 được ghi riêng trong [`outputs/features`](../features/README.md); predictions và metrics chưa thuộc artifact ETL này.
 Contract rolling vẫn được giữ riêng trong [`data/CONTRACTS.md`](../../data/CONTRACTS.md)
 để không biến engine summary thành kết quả mô hình.
 

@@ -8,7 +8,7 @@ A reproducible Big Data course project for analyzing multivariate turbofan senso
 
 ## Project Status
 
-This repository now provides **FD001 data validation, train RUL targets, a completed train-only EDA notebook (milestone 1), persisted M2.3a--M2.4 train-only sensor inference artifacts (milestone 2), and Pandas/PySpark Silver/Gold ETL with benchmark and parity artifacts (M3.1)**.
+This repository now provides **FD001 data validation, train RUL targets, a completed train-only EDA notebook (milestone 1), persisted M2.3a--M2.4 train-only sensor inference artifacts (milestone 2), Pandas/PySpark Silver/Gold ETL with benchmark and parity artifacts (M3.1), and deterministic 30-cycle rolling features (M3.2)**.
 
 Available now:
 
@@ -21,9 +21,9 @@ Available now:
 - A [living LaTeX report](report/README.md) with a [PDF draft](report/main.pdf),
   a data dictionary, glossary of report terminology and abbreviations, work
   progress, decision rationale, and traceable validation/EDA/M2.3a--M2.4 evidence.
-  EDA milestone 1, milestone 2 train-only statistics, and M3.1 ETL parity have
-  passed independent validation; rolling features, models, and the dashboard
-  remain next.
+  EDA milestone 1, milestone 2 train-only statistics, M3.1 ETL parity, and
+  M3.2 rolling features have passed independent validation; models and the
+  dashboard remain next.
 - A cited theoretical background and a [milestone 2 statistical protocol](report/sections/statistical-protocol.tex).
   The paired comparison uses each sensor's mean over the first and last 30 cycles of every train engine.
   The M2.0 statistical configuration was fixed before inference.
@@ -44,14 +44,16 @@ Available now:
 - A lazy PySpark adapter and parity checker for the same Silver/Gold boundaries.
   The current local run used a portable JRE and wrote `outputs/etl/parity.json`;
   all three Pandas/PySpark boundaries matched with `max_abs_diff=0.0`.
+- A deterministic rolling feature pipeline in [outputs/features](outputs/features/README.md).
+  It writes 27,927 Gold rows from 30-cycle trailing windows, keeps all 21 sensors,
+  creates 126 feature columns, and does not join test labels.
 
 Not implemented yet:
 
-- Rolling feature engineering from the 30-cycle window.
 - RUL models and ARIMA analysis.
 - Streamlit dashboard and completed final report (the LaTeX draft has started).
 
-Installation, data validation, notebook, and ETL instructions are available below. Model training, evaluation, and dashboard entry points are not implemented yet.
+Installation, data validation, notebook, ETL, and feature-generation instructions are available below. Model training, evaluation, and dashboard entry points are not implemented yet.
 
 ## Objectives
 
@@ -104,7 +106,7 @@ Bronze: immutable source files
 Silver: typed and validated observations in Parquet
         |
         v
-Gold: rolling features, predictions, metrics, and SQLite tables
+Gold: engine summary, rolling features, predictions, metrics, and SQLite tables
         |
         +-------------------+
         |                   |
@@ -143,14 +145,14 @@ processing.
 
 ### Feature Engineering
 
-The primary representation uses a trailing window of 30 cycles. For each non-constant sensor, the planned features are:
+The implemented M3.2 representation uses a trailing window of 30 cycles. It keeps all 21 sensors in the feature artifact so that sensor selection is not performed on the full train set. For each sensor, the generated features are:
 
 - Latest value.
-- Mean and standard deviation.
+- Mean and sample standard deviation (`ddof=1`).
 - Minimum and maximum.
-- Linear trend slope.
+- Linear trend slope over positions 1--30 within the window.
 
-Windows never cross engine boundaries and never use future observations.
+Windows never cross engine boundaries and never use future observations. Engines with fewer than 30 cycles are rejected rather than padded or shortened.
 
 ### RUL Prediction
 
@@ -221,12 +223,13 @@ Current and planned public project structure:
 │   └── archive/             # Data retained for comparison, not active modeling
 ├── references/              # Bibliography, reading guide, and available papers
 ├── notebooks/               # Executed FD001 train EDA and statistics notebooks
-├── src/cmapss/              # data/, statistics/, etl/, eda.py, validate.py
-├── tests/                   # Data contract, CLI, EDA, statistics, ETL, and reproducibility tests
+├── src/cmapss/              # data/, statistics/, etl/, features/, eda.py, validate.py
+├── tests/                   # Data contract, CLI, EDA, statistics, ETL, features, and reproducibility tests
 ├── outputs/validation/      # Data-validation reports
 ├── outputs/eda/             # EDA tables, figures, methods, and validation
 ├── outputs/statistics/      # M2.3a--M2.4 inference artifacts and validation
 ├── outputs/etl/             # Silver/Gold Parquet, SQLite, metadata, benchmark
+├── outputs/features/        # Gold rolling feature Parquet and metadata
 ├── assets/diagrams/         # Editable draw.io sources, SVG previews, URL handles
 ├── pyproject.toml           # Package and direct dependencies
 ├── requirements.txt         # Pip installation: local package and runtime libraries
@@ -314,7 +317,7 @@ This analyzes only train and recreates 12 CSV tables and 11 PNG figures.
 The validated runs used fresh kernels and produced identical artifacts in the
 same environment; the EDA checkpoint suite passed **69 tests**. The current
 repository-wide suite, including M2.3a artifact export tests, the M2.4 runtime
-audit, and M3.1 ETL checks, passed **100 tests**.
+audit, M3.1 ETL checks, and M3.2 feature checks, passed **105 tests**.
 
 ![FD001 train EDA workflow](assets/diagrams/fd001-eda.svg)
 
@@ -397,6 +400,20 @@ uv sync --frozen --extra etl
 See [ETL artifacts and validation](outputs/etl/README.md) for schemas, row
 counts, benchmark measurements, and the Pandas/PySpark parity result.
 
+### Generate rolling features
+
+After ETL has written Silver observations, create the M3.2 Gold rolling features:
+
+```powershell
+.venv\Scripts\python -m cmapss.features `
+  --silver-observations outputs/etl/silver/observations.parquet `
+  --output-dir outputs/features
+```
+
+The current artifact has 27,927 rows: 17,731 train windows and 10,196 test
+windows. See [rolling feature artifacts and validation](outputs/features/README.md)
+for the column contract, row counts, leakage checks, and limitations.
+
 <details>
 <summary>Development and optional checks</summary>
 
@@ -424,13 +441,13 @@ Pytest clears its `--basetemp` directory on subsequent runs; reserve it for test
 
 </details>
 
-Pandas/PySpark Silver/Gold parity and benchmark artifacts are available; rolling
-features, models, and dashboard remain. M2.4 repeated-run validation has passed.
+Pandas/PySpark Silver/Gold parity, benchmark artifacts, and M3.2 rolling
+features are available; models and dashboard remain. M2.4 repeated-run validation has passed.
 The [report draft](report/main.pdf) is updated alongside
 verified work: its progress log records dates, rationale, artifacts, checks,
 and remaining work. See [report instructions](report/README.md) for source
 organization and PDF build commands. The current draft includes verified data
-validation, selected initial EDA observations, and M3.1 ETL measurements, not
+validation, selected initial EDA observations, M3.1 ETL measurements, and M3.2 rolling-feature evidence, not
 model evaluation results.
 
 ## Academic Context and AI Disclosure

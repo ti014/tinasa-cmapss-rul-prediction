@@ -8,7 +8,7 @@ Repository này phục vụ báo cáo cuối kỳ môn Phân tích dữ liệu l
 
 ## Trạng thái
 
-Repository đã có **gói kiểm tra dữ liệu FD001, nhãn RUL train, notebook EDA chỉ dùng train đã hoàn thành ở mốc 1, các tệp suy luận sensor M2.3a--M2.4 chỉ dùng train ở mốc 2 và ETL Silver/Gold bằng Pandas/PySpark kèm benchmark, parity ở mốc M3.1**.
+Repository đã có **gói kiểm tra dữ liệu FD001, nhãn RUL train, notebook EDA chỉ dùng train đã hoàn thành ở mốc 1, các tệp suy luận sensor M2.3a--M2.4 chỉ dùng train ở mốc 2, ETL Silver/Gold bằng Pandas/PySpark kèm benchmark, parity ở mốc M3.1 và rolling features 30 cycles ở mốc M3.2**.
 
 Đã có:
 
@@ -21,8 +21,8 @@ Repository đã có **gói kiểm tra dữ liệu FD001, nhãn RUL train, notebo
 - [Báo cáo LaTeX cập nhật theo tiến độ](report/README.md) và [bản PDF](report/main.pdf),
   có data dictionary (từ điển dữ liệu), bảng thuật ngữ và chữ viết tắt, nhật ký
   công việc, lý do lựa chọn và nguồn đối chiếu kết quả validation/EDA/M2.3a--M2.4.
-  Mốc 1 EDA, mốc 2 thống kê train-only và parity ETL M3.1 đã được kiểm tra
-  độc lập; rolling features, mô hình và dashboard là các bước tiếp theo.
+  Mốc 1 EDA, mốc 2 thống kê train-only, parity ETL M3.1 và rolling features
+  M3.2 đã được kiểm tra độc lập; mô hình và dashboard là các bước tiếp theo.
 - Cơ sở lý thuyết có trích dẫn và [protocol thống kê mốc 2](report/sections/statistical-protocol.tex).
   Đã chốt so sánh giá trị trung bình của 30 cycles đầu và 30 cycles cuối theo từng động cơ.
   Cấu hình thống kê M2.0 đã được chốt trước suy luận; notebook M2.3a đã chạy bảng suy luận train-only.
@@ -41,14 +41,16 @@ Repository đã có **gói kiểm tra dữ liệu FD001, nhãn RUL train, notebo
 - Adapter PySpark lazy import và parity checker cho cùng các boundary Silver/Gold
   đã có. Lần chạy local hiện tại dùng JRE portable và ghi `outputs/etl/parity.json`;
   cả ba boundary Pandas/PySpark khớp với `max_abs_diff=0.0`.
+- Pipeline rolling features deterministic trong [outputs/features](outputs/features/README.md).
+  Artifact hiện có 27.927 dòng Gold từ trailing window 30 cycles, giữ đủ 21
+  sensors, tạo 126 cột đặc trưng và không ghép nhãn test.
 
 Chưa triển khai:
 
-- Rolling feature engineering từ window 30 cycles.
 - Các mô hình RUL và phân tích ARIMA.
 - Dashboard Streamlit và báo cáo hoàn chỉnh (đã bắt đầu bản thảo LaTeX).
 
-Lệnh cài đặt, kiểm tra dữ liệu, mở notebook và chạy ETL có ở phần Bắt đầu.
+Lệnh cài đặt, kiểm tra dữ liệu, mở notebook, chạy ETL và tạo rolling features có ở phần Bắt đầu.
 Huấn luyện, đánh giá mô hình và dashboard chưa có điểm khởi chạy.
 
 ## Mục tiêu
@@ -102,7 +104,7 @@ Bronze: dữ liệu nguồn bất biến
 Silver: observations có kiểu dữ liệu, đã kiểm tra và lưu Parquet
         |
         v
-Gold: rolling features, predictions, metrics và bảng SQLite
+Gold: engine summary, rolling features, predictions, metrics và bảng SQLite
         |
         +-------------------+
         |                   |
@@ -141,14 +143,14 @@ năng xử lý dữ liệu quy mô lớn.
 
 ### Xây dựng đặc trưng
 
-Biểu diễn chính sử dụng trailing window dài 30 cycles. Với mỗi cảm biến không hằng, các đặc trưng dự kiến gồm:
+Biểu diễn M3.2 đã triển khai sử dụng trailing window dài 30 cycles. Artifact giữ đủ 21 sensors để chưa thực hiện feature selection trên toàn bộ train. Với mỗi sensor, các đặc trưng đã tạo gồm:
 
 - Giá trị gần nhất.
-- Trung bình và độ lệch chuẩn.
+- Trung bình và sample standard deviation (`ddof=1`).
 - Giá trị nhỏ nhất và lớn nhất.
-- Độ dốc xu hướng tuyến tính.
+- Độ dốc xu hướng tuyến tính theo vị trí 1--30 trong window.
 
-Mỗi window chỉ chứa dữ liệu của một động cơ và không sử dụng quan sát tương lai.
+Mỗi window chỉ chứa dữ liệu của một động cơ và không sử dụng quan sát tương lai. Engine dưới 30 cycles bị từ chối thay vì padding, impute hoặc rút ngắn window.
 
 ### Dự đoán RUL
 
@@ -219,12 +221,13 @@ Cấu trúc hiện có và dự kiến của repository:
 │   └── archive/             # Dữ liệu lưu để đối chiếu, không dùng cho mô hình chính
 ├── references/              # Danh mục tài liệu, hướng dẫn đọc và các bài báo hiện có
 ├── notebooks/               # Notebook EDA và thống kê train FD001 đã chạy
-├── src/cmapss/              # data/, statistics/, etl/, eda.py, validate.py
-├── tests/                   # Kiểm thử data contract, CLI, EDA, thống kê, ETL và tái lập
+├── src/cmapss/              # data/, statistics/, etl/, features/, eda.py, validate.py
+├── tests/                   # Kiểm thử data contract, CLI, EDA, thống kê, ETL, features và tái lập
 ├── outputs/validation/      # Báo cáo kiểm tra dữ liệu hiện có
 ├── outputs/eda/             # Bảng, hình, phương pháp và kiểm tra EDA
 ├── outputs/statistics/      # Artifact suy luận M2.3a--M2.4 và validation
 ├── outputs/etl/             # Parquet/SQLite Silver/Gold, metadata và benchmark
+├── outputs/features/        # Parquet Gold rolling features và metadata
 ├── assets/diagrams/         # Nguồn draw.io, bản xem trước SVG và file URL
 ├── pyproject.toml           # Thông tin package và dependency trực tiếp
 ├── requirements.txt         # Cài bằng pip: package và thư viện chạy chương trình
@@ -311,7 +314,7 @@ Notebook chỉ phân tích train và tạo lại 12 bảng CSV, 11 hình PNG.
 Các lần kiểm tra dùng kernel mới đã tạo tệp đầu ra giống nhau trong cùng môi
 trường; bộ kiểm thử tại mốc nghiệm thu EDA đạt **69 tests**. Toàn bộ bộ kiểm
 thử hiện tại, gồm kiểm thử xuất tệp đầu ra M2.3a, runtime audit M2.4 và kiểm
-tra ETL M3.1, đạt **100 tests**.
+tra ETL M3.1 và kiểm tra features M3.2, đạt **105 tests**.
 
 ![Quy trình EDA train FD001](assets/diagrams/fd001-eda.svg)
 
@@ -390,6 +393,20 @@ uv sync --frozen --extra etl
 Xem [artifact và validation ETL](outputs/etl/README.md) để biết schema, số
 dòng, thời gian benchmark và kết quả parity Pandas/PySpark.
 
+### Tạo rolling features
+
+Sau khi ETL đã ghi Silver observations, tạo Gold rolling features M3.2:
+
+```powershell
+.venv\Scripts\python -m cmapss.features `
+  --silver-observations outputs/etl/silver/observations.parquet `
+  --output-dir outputs/features
+```
+
+Artifact hiện tại có 27.927 dòng: 17.731 train windows và 10.196 test windows.
+Xem [artifact và validation rolling features](outputs/features/README.md) để
+biết contract cột, số dòng, kiểm tra leakage và giới hạn.
+
 <details>
 <summary>Dành cho phát triển và kiểm tra riêng</summary>
 
@@ -417,13 +434,13 @@ Pytest dọn thư mục `--basetemp` khi chạy lại; chỉ dành thư mục đ
 
 </details>
 
-ETL Silver/Gold bằng Pandas/PySpark parity và benchmark đã có; rolling features,
+ETL Silver/Gold bằng Pandas/PySpark parity, benchmark và rolling features M3.2 đã có;
 mô hình và dashboard vẫn còn. Validation tái lập M2.4 đã đạt.
 [Bản thảo báo cáo](report/main.pdf) được cập nhật cùng công việc
 đã kiểm chứng: nhật ký ghi ngày, lý do, tệp đầu ra, cách kiểm tra và phần còn lại.
 Xem [hướng dẫn báo cáo](report/README.md) để biết cấu trúc nguồn và lệnh build
 PDF. Bản hiện tại có kết quả validation, một số quan sát EDA ban đầu và số đo
-ETL M3.1 đã đối chiếu, chưa có kết quả đánh giá mô hình.
+ETL M3.1 và rolling features M3.2 đã đối chiếu, chưa có kết quả đánh giá mô hình.
 
 ## Bối cảnh học thuật và khai báo AI
 

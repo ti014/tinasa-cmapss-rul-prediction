@@ -6,6 +6,7 @@ Dữ liệu raw là đầu vào bất biến. Reader và validator tạo quan s�
 train trong bộ nhớ; EDA và suy luận M2.3a chỉ dùng train, đồng thời đã xuất
 bảng, hình hoặc metadata tương ứng. M3.1 đã ghi observations và train targets
 vào Silver Parquet, đồng thời tạo Gold engine summary ở Parquet và SQLite.
+M3.2 đã tạo Gold rolling features từ Silver observations.
 
 \begin{figure}[H]
 \centering
@@ -19,8 +20,10 @@ phần dự kiến. Nhãn test được vẽ như side input tách riêng và ch
 
 Bronze giữ dữ liệu nguồn để truy vết. Silver lưu observations đã gán kiểu dữ
 liệu và train targets trong Parquet; Gold M3.1 lưu engine summary trong
-Parquet/SQLite để kiểm tra boundary và truy vấn cục bộ. Cách tách lớp giúp phân
-biệt dữ liệu gốc với dữ liệu suy ra và xác định bước gây mất hoặc nhân bản dòng.
+Parquet/SQLite để kiểm tra boundary và truy vấn cục bộ. Gold M3.2 lưu rolling
+features trong Parquet, tách khỏi bước fit scaler hoặc mô hình. Cách tách lớp
+giúp phân biệt dữ liệu gốc với dữ liệu suy ra và xác định bước gây mất hoặc
+nhân bản dòng.
 Pandas là reference implementation; PySpark tái hiện ba boundary và parity
 checker đã xác nhận ba bảng khớp với sai khác lớn nhất bằng 0 trong lần chạy
 local có JRE. Chưa có bằng chứng để kết luận công cụ nào nhanh hơn.
@@ -51,20 +54,29 @@ cycle, không smooth; mỗi ô dùng thang đo riêng. Ba động cơ này khôn
 thống kê. Tuổi thọ đầy đủ chỉ dùng cho phân tích hồi cứu sau khi đã quan sát cả
 chuỗi, không được dùng làm feature dự đoán tại cycle hiện tại.
 
-\subsection{Đặc trưng từ window: phần dự kiến}
-Biểu diễn chính đã chọn là trailing window (cửa sổ chỉ chứa hiện tại và quá khứ)
-dài 30 cycles. Ví dụ, dự đoán tại cycle 170 dùng các cycle 141--170 của cùng
-động cơ. Đặc trưng dự kiến gồm giá trị cuối, trung bình, độ lệch chuẩn, nhỏ nhất,
-lớn nhất và độ dốc tuyến tính của sensor không hằng được xác định trong training
-fold.
 
-Window tổng hợp biến thiên gần thời điểm dự đoán và giảm phụ thuộc vào một quan
-sát nhiễu đơn lẻ. Độ dài 30 là cấu hình ban đầu trong phạm vi nghiên cứu, chưa
-được chứng minh tối ưu. Độ dốc biểu diễn chiều và tốc độ thay đổi tuyến tính
-trong window; thống kê phân tán bổ sung thông tin về biến động. Quy ước rolling
-standard deviation và cách xử lý động cơ test có ít hơn 30 cycles còn phải chốt
-trước triển khai. Quy ước sample standard deviation của EDA không tự động trở
-thành quy ước của feature transformer.
+\subsection{Đặc trưng từ window M3.2}
+Biểu diễn chính đã triển khai là trailing window (cửa sổ chỉ chứa hiện tại và
+quá khứ) dài 30 cycles. Ví dụ, dự đoán tại cycle 170 dùng các cycle 141--170
+của cùng động cơ. Mỗi output row khóa bởi \texttt{(split, engine\_id, cycle)},
+trong đó \texttt{cycle} là cycle cuối của window. Transformer từ chối engine có
+ít hơn 30 cycles; không padding, không impute và không rút ngắn window.
+
+M3.2 giữ đủ 21 sensors trong artifact để chưa thực hiện feature selection trên
+toàn bộ train. Với mỗi sensor, pipeline tạo sáu đặc trưng theo mẫu
+\texttt{<sensor>\_\_<stat>}: giá trị cuối, mean, sample standard deviation
+(\texttt{ddof=1}), min, max và linear slope theo vị trí 1--30 trong window. Nếu
+một sensor bằng đúng số cycle trong window 1--30 thì các feature tương ứng là
+\texttt{last=30}, \texttt{mean=15,5}, \texttt{min=1}, \texttt{max=30} và
+\texttt{slope=1}. Sample standard deviation dùng quy ước thống kê mẫu để nhất
+quán với cách mô tả biến thiên trong EDA, nhưng quyết định này được ghi riêng
+trong \filepath{outputs/features/run\_info.json} thay vì suy ngầm từ default.
+
+Artifact hiện có 27.927 rows, gồm 17.731 train windows và 10.196 test windows.
+Bước này không đọc \filepath{data/raw/RUL\_FD001.txt}, không join nhãn test,
+không fit scaler, không chọn sensor và không huấn luyện mô hình. Các lựa chọn
+phụ thuộc dữ liệu như loại sensor hằng, PCA hoặc scaler vẫn phải học trong
+training fold ở mốc mô hình.
 
 \subsection{Mô hình và đánh giá: phần dự kiến}
 Naive baseline theo trung vị RUL cung cấp mốc so sánh khi không dùng tín hiệu

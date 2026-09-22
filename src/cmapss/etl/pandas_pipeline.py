@@ -254,8 +254,8 @@ def write_pandas_artifacts(result: PandasETLResult, output_dir: str | Path) -> d
             if name != "run_info"
         },
         "rolling_features": {
-            "status": "not_implemented",
-            "reason": "M3 ETL chỉ tạo engine summary; window 30 sẽ thuộc mốc kế tiếp.",
+            "status": "separate_artifact",
+            "reason": "M3.1 ETL chỉ tạo engine summary; M3.2 ghi rolling features riêng tại outputs/features.",
         },
     }
     outputs["run_info"].write_text(

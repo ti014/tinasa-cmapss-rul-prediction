@@ -20,7 +20,7 @@ testEdge/.style={->,very thick,dashed,draw=greenStroke!90!black}]
 \node[opNode] (validate) at (0,-2) {Reader và validator\\Observations; train targets};
 \node[dataNode] (eda) at (0,-4) {EDA chỉ dùng train\\12 CSV và 11 PNG đã có};
 \node[dataNode] (stats) at (6,-4) {M2.3a chỉ dùng train\\2 CSV, run metadata và validation đã có};
-\node[planned] (silver) at (12,-2) {ETL Pandas / PySpark\\Silver Parquet -- dự kiến};
+\node[dataNode] (silver) at (12,-2) {ETL Pandas / PySpark\\Silver Parquet + Gold engine summary\\SQLite và parity đã có};
 \node[planned] (model) at (12,-4) {Gold features; mô hình\\Validation theo\\engine -- dự kiến};
 \node[planned] (eval) at (12,-6) {100 dự đoán test\\Ghép nhãn; tính metric -- dự kiến};
 \node[dataNode] (labels) at (6,-6) {Test labels\\\texttt{RUL\_FD001.txt}\\Giữ riêng đến đánh giá cuối};

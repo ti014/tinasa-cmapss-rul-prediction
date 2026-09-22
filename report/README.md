@@ -10,7 +10,8 @@ phương pháp kèm lý do lựa chọn, kết quả validation, một số quan
 suy luận sensor đầu/cuối vòng đời trên train, hai hình thống kê M2.3b, validation
 tái lập M2.4, khó khăn,
 giới hạn, khai báo AI/LLM, nhật ký tiến độ và bảng đối chiếu bằng chứng. Chưa
-có kết quả mô hình, ARIMA, ETL Silver/Gold hoặc dashboard.
+có kết quả mô hình, ARIMA hoặc dashboard. M3.1 đã có ETL Silver/Gold,
+Parquet/SQLite, metadata, benchmark và parity Pandas/PySpark.
 Mốc EDA mô tả đã hoàn thành theo [biên bản nghiệm thu](../outputs/eda/validation.json);
 bảng thống kê M2.3a, hình M2.3b và validation M2.4 có biên bản tại
 [outputs/statistics/validation.json](../outputs/statistics/validation.json)
@@ -26,6 +27,9 @@ thử. Notebook M2.3a đã xuất 2.100 cặp, 21 dòng suy luận, `run_info.js
 M2.4 đã chạy notebook hai lần từ fresh kernel, so sánh hai CSV và hai PNG,
 chặn probe đọc `test_FD001.txt` và `RUL_FD001.txt`, đồng thời chạy full suite
 95 tests.
+M3.1 đã tạo `outputs/etl/` với 33.727 observations, 20.631 train targets và
+200 engine summaries; benchmark Pandas 1x/10x/100x có hai lần cold/warm.
+`parity.json` ghi Pandas/PySpark khớp ba bảng với `max_abs_diff=0.0`.
 Chênh lệch cặp trung bình, cấu hình bootstrap, Wilcoxon permutation, ties/zeros và mức FDR đã
 được chốt ở M2.0 trong
 [protocol](sections/statistical-protocol.tex). Ví dụ engine sống 200 cycles
@@ -128,7 +132,7 @@ overfull/underfull box và duplicate destination. Sau khi kiểm tra, có thể
 dọn aux/log riêng của report; giữ PDF và nguồn. Không đưa thư mục `tmp/`
 vào gói nộp.
 
-Bản hiện tại đã kiểm chứng PDF **39 trang**, gồm data dictionary, bảng thuật ngữ,
+Bản hiện tại đã kiểm chứng PDF **40 trang**, gồm data dictionary, bảng thuật ngữ,
 hai sơ đồ TikZ, bảng/hình EDA và kết quả thống kê M2.3a--M2.4. Log
 LaTeX/BibTeX không có overfull/underfull, glyph thiếu, citation/reference chưa
 giải quyết hoặc cảnh báo bibliography. Đã rà bản render của các trang data

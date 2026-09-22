@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-09-22T10:46:17.133388+00:00",
+  "scientific_artifacts_isolated": true,
+  "source": {
+    "rows": 33727,
+    "engines": 200
+  },
+  "config": {
+    "scales": [
+      1,
+      10,
+      100
+    ],
+    "repetitions": 2,
+    "transformation": "build_engine_summary"
+  },
+  "runtime": {
+    "python": "3.12.14",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "processor": "Intel64 Family 6 Model 170 Stepping 4, GenuineIntel",
+    "pandas": "2.3.3"
+  },
+  "results": [
+    {
+      "engine": "pandas",
+      "scale": 1,
+      "repetition": 1,
+      "run_kind": "cold",
+      "input_rows": 33727,
+      "input_engines": 200,
+      "output_rows": 200,
+      "duration_seconds": 0.019501900009345263
+    },
+    {
+      "engine": "pandas",
+      "scale": 1,
+      "repetition": 2,
+      "run_kind": "warm",
+      "input_rows": 33727,
+      "input_engines": 200,
+      "output_rows": 200,
+      "duration_seconds": 0.0196264999685809
+    },
+    {
+      "engine": "pandas",
+      "scale": 10,
+      "repetition": 1,
+      "run_kind": "cold",
+      "input_rows": 337270,
+      "input_engines": 2000,
+      "output_rows": 2000,
+      "duration_seconds": 0.15887749998364598
+    },
+    {
+      "engine": "pandas",
+      "scale": 10,
+      "repetition": 2,
+      "run_kind": "warm",
+      "input_rows": 337270,
+      "input_engines": 2000,
+      "output_rows": 2000,
+      "duration_seconds": 0.14741649996722117
+    },
+    {
+      "engine": "pandas",
+      "scale": 100,
+      "repetition": 1,
+      "run_kind": "cold",
+      "input_rows": 3372700,
+      "input_engines": 20000,
+      "output_rows": 20000,
+      "duration_seconds": 1.675210600020364
+    },
+    {
+      "engine": "pandas",
+      "scale": 100,
+      "repetition": 2,
+      "run_kind": "warm",
+      "input_rows": 3372700,
+      "input_engines": 20000,
+      "output_rows": 20000,
+      "duration_seconds": 1.6731961999903433
+    }
+  ]
+}

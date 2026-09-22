@@ -2,10 +2,10 @@
 \label{sec:method}
 \subsection{Luồng xử lý và trạng thái triển khai}
 Hình~\ref{fig:pipeline} phân biệt các nhánh đã hiện thực hóa với nhánh dự kiến.
-Dữ liệu raw là đầu vào bất biến. Hiện tại, reader và validator tạo quan sát cùng
-nhãn RUL train trong bộ nhớ. EDA và suy luận M2.3a chỉ dùng train, đồng thời đã
-xuất bảng, hình hoặc metadata tương ứng. Silver và Gold vẫn là thiết kế cho giai
-đoạn tiếp theo, chưa có tệp đầu ra.
+Dữ liệu raw là đầu vào bất biến. Reader và validator tạo quan sát cùng nhãn RUL
+train trong bộ nhớ; EDA và suy luận M2.3a chỉ dùng train, đồng thời đã xuất
+bảng, hình hoặc metadata tương ứng. M3.1 đã ghi observations và train targets
+vào Silver Parquet, đồng thời tạo Gold engine summary ở Parquet và SQLite.
 
 \begin{figure}[H]
 \centering
@@ -17,15 +17,16 @@ phần dự kiến. Nhãn test được vẽ như side input tách riêng và ch
 \label{fig:pipeline}
 \end{figure}
 
-Bronze giữ dữ liệu nguồn để truy vết. Silver dự kiến lưu quan sát đã gán kiểu dữ
-liệu trong Parquet; Gold dự kiến lưu đặc trưng, dự đoán và metric trong
-Parquet/SQLite. Cách tách lớp giúp phân biệt dữ liệu gốc với dữ liệu suy ra và
-xác định bước gây mất hoặc nhân bản dòng. Pandas phục vụ xử lý cục bộ và EDA;
-PySpark dự kiến tái hiện ETL để so sánh tính đúng và khảo sát khả năng mở rộng.
-Chưa có phép đo để kết luận công cụ nào nhanh hơn.
+Bronze giữ dữ liệu nguồn để truy vết. Silver lưu observations đã gán kiểu dữ
+liệu và train targets trong Parquet; Gold M3.1 lưu engine summary trong
+Parquet/SQLite để kiểm tra boundary và truy vấn cục bộ. Cách tách lớp giúp phân
+biệt dữ liệu gốc với dữ liệu suy ra và xác định bước gây mất hoặc nhân bản dòng.
+Pandas là reference implementation; PySpark tái hiện ba boundary và parity
+checker đã xác nhận ba bảng khớp với sai khác lớn nhất bằng 0 trong lần chạy
+local có JRE. Chưa có bằng chứng để kết luận công cụ nào nhanh hơn.
 
-FD001 có dung lượng nhỏ. Benchmark dự kiến ở mức $1\times$, $10\times$ và
-$100\times$ chỉ đánh giá chi phí xử lý dữ liệu; bản nhân dữ liệu sẽ đổi engine
+FD001 có dung lượng nhỏ. Benchmark M3.1 ở mức $1\times$, $10\times$ và
+$100\times$ chỉ đánh giá chi phí tạo engine summary; bản nhân dữ liệu đổi engine
 ID và tách khỏi phân tích khoa học. Việc nhân bản quan sát không tạo thêm động
 cơ độc lập để huấn luyện hoặc thu hẹp khoảng tin cậy.
 

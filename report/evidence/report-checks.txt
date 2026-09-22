@@ -272,3 +272,34 @@ PASS: `outputs/statistics/README.md`, `README.md`, `README.vi.md`, `report/READM
 PASS: Tectonic 0.17.0 rebuilt `report/figures/pipeline.pdf`, `report/figures/statistical-protocol.pdf` and `report/main.pdf` with exit code 0. `pdfinfo` reports 39 A4 pages and file size 983,182 bytes.
 PASS: log scan found no overfull/underfull boxes, undefined citations/references, missing files, fatal errors or unresolved bibliography warnings. Remaining messages are known environment diagnostics: missing default Fontconfig configuration, absolute Windows font paths and shell escape disabled in TikZ builds.
 PASS: Poppler rendered all 39 pages at 110 DPI. Pages 27, 29, 32, 35 and 36 were visually inspected for the acceptance text, EDA table, statistics figure, limitations and references; no clipping, overlap or unreadable content was observed.
+
+M3.1 ETL Silver/Gold and parity update: 2026-09-22
+SCOPE: ETL boundary code, persisted Silver/Gold artifacts, Pandas benchmark,
+PySpark parity, report/readme synchronization and report rebuild. No rolling
+features, model training, ARIMA, dashboard or final test-label evaluation.
+PASS: `src/cmapss/etl/` adds Pandas reference ETL, PySpark adapter, parity
+checks, benchmark helpers and CLI. Gold M3.1 is engine_summary only; rolling
+features remain unimplemented.
+PASS: `outputs/etl/run_info.json` records 33,727 Silver observations, 20,631
+Silver train targets, 200 Gold engine summary rows and raw SHA-256 checksums.
+Parquet and SQLite artifacts were written outside `data/raw`.
+PASS: `outputs/etl/benchmark.json` records Pandas `build_engine_summary`
+benchmark at 1x, 10x and 100x with two cold/warm repetitions; replicated
+observations were kept in memory and remapped engine IDs.
+PASS: `outputs/etl/parity.json` records Pandas/PySpark parity passed for
+Silver observations, Silver train targets and Gold engine summary, all with
+`max_abs_diff=0.0`. Spark used a portable OpenJDK 17 JRE under `tmp/` and did
+not configure HDFS or a cluster.
+PASS: `.venv\Scripts\python.exe -m compileall -q src tests` passed.
+PASS: `.venv\Scripts\python.exe -m pytest -q --basetemp=tmp/pytest-m31-final
+--tb=short` passed 100 tests in 8.87 seconds.
+PASS: Tectonic 0.17.0 rebuilt `report/figures/pipeline.pdf` and
+`report/main.pdf` with exit code 0. `pdfinfo` reports 40 A4 pages. Log scan
+found no overfull/underfull boxes, missing glyphs, undefined citations or
+references, duplicate destinations, missing files, emergency stop or fatal
+errors.
+PASS: Poppler rendered the updated pipeline figure and ETL result page; visual
+inspection found no clipping, overlap or unreadable table layout.
+ENVIRONMENT LIMIT: Tectonic still emits the known Fontconfig diagnostic and
+absolute Windows font warnings. Spark on Windows emits `winutils.exe` and native
+Hadoop warnings; local parity still completed successfully.

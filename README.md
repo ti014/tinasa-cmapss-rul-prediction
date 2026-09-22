@@ -19,8 +19,8 @@ Available now:
   11 figures, and [analysis notes and validation evidence](outputs/eda/README.md).
 - A curated bibliography and reading guide.
 - A [living LaTeX report](report/README.md) with a [PDF draft](report/main.pdf),
-  a glossary of report terminology and abbreviations, work progress, decision
-  rationale, and traceable validation/initial EDA observations.
+  a data dictionary, glossary of report terminology and abbreviations, work
+  progress, decision rationale, and traceable validation/initial EDA observations.
   EDA milestone 1 passed independent validation; inferential analysis belongs to milestone 2.
 - A cited theoretical background and a [milestone 2 statistical protocol](report/sections/statistical-protocol.tex).
   The paired comparison uses each sensor's mean over the first and last 30 cycles of every train engine.

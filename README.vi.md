@@ -19,8 +19,8 @@ Repository đã có **gói kiểm tra dữ liệu FD001, nhãn RUL train, notebo
   11 hình và [diễn giải kết quả, bằng chứng kiểm tra](outputs/eda/README.md).
 - Danh mục tài liệu tham khảo và hướng dẫn đọc.
 - [Báo cáo LaTeX cập nhật theo tiến độ](report/README.md) và [bản PDF](report/main.pdf),
-  có bảng thuật ngữ và chữ viết tắt, nhật ký công việc, lý do lựa chọn và nguồn
-  đối chiếu kết quả validation/EDA/M2.3a.
+  có data dictionary (từ điển dữ liệu), bảng thuật ngữ và chữ viết tắt, nhật ký
+  công việc, lý do lựa chọn và nguồn đối chiếu kết quả validation/EDA/M2.3a.
   Mốc 1 EDA và bảng suy luận M2.3a đã được kiểm tra độc lập; hình M2.3b đã có,
   còn validation tái lập và mô hình là bước tiếp theo.
 - Cơ sở lý thuyết có trích dẫn và [protocol thống kê mốc 2](report/sections/statistical-protocol.tex).

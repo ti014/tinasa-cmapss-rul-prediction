@@ -41,6 +41,124 @@ Test labels & 100 & 100 & RUL tại cycle cuối quan sát\\\bottomrule
 
 Mỗi dòng raw có 26 trường: engine ID, cycle, 3 operational settings và 21 sensors. Reader bổ sung cột \texttt{split}, tạo bảng observations có 27 cột. Khóa là bộ ba \texttt{(split, engine\_id, cycle)}: train engine 1 và test engine 1 không phải cùng một thực thể. Nhãn test chỉ được kiểm tra cấu trúc riêng trong báo cáo integrity; việc này không phải đánh giá mô hình.
 
+\subsection{Từ điển dữ liệu và ý nghĩa cột}
+Dữ liệu train/test gốc không có header; tên cột trong báo cáo được đặt theo
+contract của repository. Bảng~\ref{tab:data-dictionary} mô tả vai trò từng nhóm
+cột và cách sử dụng trong phân tích. Nguồn NASA chỉ mô tả các trường sensor là
+``sensor measurement'', không cung cấp tên vật lý, đơn vị đo hoặc mapping chi
+tiết cho từng sensor. Vì vậy, báo cáo giữ tên \texttt{sensor\_1} đến
+\texttt{sensor\_21}; không tự diễn giải một sensor cụ thể là nhiệt độ, áp suất
+hoặc tốc độ nếu chưa có nguồn xác nhận.
+
+\begin{small}
+\setlength{\tabcolsep}{3pt}
+\begin{longtable}{@{}L{2.6cm}L{3.8cm}L{2.8cm}L{4.4cm}@{}}
+\caption{Data dictionary của FD001 trong repository.}\label{tab:data-dictionary}\\
+\toprule
+Cột hoặc nhóm cột & Ý nghĩa & Kiểu/miền đã kiểm tra & Vai trò trong báo cáo\\
+\midrule
+\endfirsthead
+\toprule
+Cột hoặc nhóm cột & Ý nghĩa & Kiểu/miền đã kiểm tra & Vai trò trong báo cáo\\
+\midrule
+\endhead
+\bottomrule
+\endlastfoot
+\texttt{split} & Cột do reader bổ sung để phân biệt nguồn dữ liệu. & Chuỗi
+\texttt{train} hoặc \texttt{test}. & Giữ ranh giới train/test trong khóa dữ liệu
+và validation; không có trong raw text gốc.\\[0.35em]
+\texttt{engine\_id} & Mã chuỗi động cơ trong từng split. & Số nguyên dương;
+FD001 có engine ID 1--100 ở cả train và test. & Đơn vị độc lập cho tuổi thọ,
+ghép cặp đầu/cuối, GroupKFold và đánh giá theo engine.\\[0.35em]
+\texttt{cycle} & Thứ tự vận hành rời rạc của một engine. & Số nguyên dương,
+bắt đầu từ 1 và liên tục trong từng engine. & Trục thời gian rời rạc; dùng để
+tạo RUL train, window 30 cycles và phân tích đầu/cuối vòng đời.\\[0.35em]
+\texttt{setting\_1}--\texttt{setting\_3} & Ba operational settings ảnh hưởng
+đến điều kiện vận hành. & \texttt{float64}; trên train, \texttt{setting\_3}
+hằng ở 100. & Biến bối cảnh vận hành; không thuộc họ 21 sensor trong kiểm định
+M2.\\[0.35em]
+\texttt{sensor\_1}--\texttt{sensor\_21} & Hai mươi mốt phép đo sensor trong
+mỗi cycle. & \texttt{float64} hữu hạn; không có missing trong train. & Nguồn
+tín hiệu chính cho EDA, paired analysis và feature engineering dự kiến.\\[0.35em]
+\texttt{rul} trong train targets & Nhãn RUL được suy ra từ lịch sử train đầy
+đủ đến khi hỏng. & Số nguyên không âm; trên train hiện có miền 0--361 cycles. &
+Biến mục tiêu cho supervised regression; không phải cột raw.\\[0.35em]
+\texttt{RUL\_FD001.txt} & Nhãn RUL chính thức tại cycle cuối quan sát của mỗi
+engine test. & 100 số nguyên không âm, ánh xạ dòng $i$ sang test engine $i$. &
+Chỉ được ghép sau khi đã tạo 100 dự đoán test cuối cùng; không dùng trong EDA
+hoặc model selection.\\
+\end{longtable}
+\end{small}
+
+Ví dụ đọc một dòng raw: dòng đầu tiên của \texttt{train\_FD001.txt} có
+\texttt{engine\_id=1}, \texttt{cycle=1}, ba settings lần lượt là
+$-0{,}0007$, $-0{,}0004$, $100{,}0$, sau đó là 21 giá trị sensor. Engine 1
+trong train kết thúc ở cycle 192, nên sau khi tạo nhãn, dòng này có
+\texttt{rul=191}. Đây là nhãn hồi cứu của train, không phải dự đoán của mô hình.
+
+\subsection{Hồ sơ cột trên tập train}
+Bảng~\ref{tab:column-profile} tóm tắt các nhóm cột sau khi ghép RUL train.
+Các thống kê này lấy từ \filepath{outputs/eda/tables/input\_summary.csv},
+\filepath{outputs/eda/tables/rul\_summary.csv} và
+\filepath{outputs/eda/tables/measurement\_summary.csv}. Chúng dùng để hiểu cấu
+trúc dữ liệu trước khi xây feature; không phải bằng chứng lựa chọn mô hình.
+
+\begin{table}[H]
+\centering
+\caption{Hồ sơ nhóm cột trên train FD001.}
+\label{tab:column-profile}
+\begin{tabularx}{\linewidth}{L{3.2cm}r r X}
+\toprule Nhóm cột & Số cột & Missing & Nhận xét chính\\\midrule
+Khóa \texttt{engine\_id}, \texttt{cycle} & 2 & 0 & 20.631 quan sát, 100 engine; không có khóa trùng, cycle liên tục trong từng engine.\\
+Operational settings & 3 & 0 & \texttt{setting\_1} có 158 giá trị khác nhau, \texttt{setting\_2} có 13 giá trị, \texttt{setting\_3} hằng bằng 100.\\
+Sensors & 21 & 0 & Sáu sensor hằng toàn train; \texttt{sensor\_6} chỉ có hai giá trị và hằng trong 38 engine.\\
+Nhãn \texttt{rul} train & 1 & 0 & Miền 0--361 cycles; trung vị theo observation là 103 cycles.\\\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{small}
+\begin{longtable}{l r l L{6.5cm}}
+\caption{Profile 21 sensor trên train FD001.}\label{tab:sensor-profile}\\
+\toprule
+Sensor & Số giá trị khác nhau & Min--max & Ghi chú\\
+\midrule
+\endfirsthead
+\toprule
+Sensor & Số giá trị khác nhau & Min--max & Ghi chú\\
+\midrule
+\endhead
+\bottomrule
+\endlastfoot
+\texttt{sensor\_1} & 1 & 518,67--518,67 & Hằng toàn train.\\
+\texttt{sensor\_2} & 310 & 641,21--644,53 & Biến thiên trên train.\\
+\texttt{sensor\_3} & 3.012 & 1.571,04--1.616,91 & Biến thiên trên train.\\
+\texttt{sensor\_4} & 4.051 & 1.382,25--1.441,49 & Biến thiên trên train; có chênh lệch đầu/cuối lớn trong M2.3a.\\
+\texttt{sensor\_5} & 1 & 14,62--14,62 & Hằng toàn train.\\
+\texttt{sensor\_6} & 2 & 21,60--21,61 & Biến thiên toàn train nhưng hằng trong 38/100 engine.\\
+\texttt{sensor\_7} & 513 & 549,85--556,06 & Biến thiên trên train.\\
+\texttt{sensor\_8} & 53 & 2.387,90--2.388,56 & Biến thiên thấp, nhưng không hằng.\\
+\texttt{sensor\_9} & 6.403 & 9.021,73--9.244,59 & Biến thiên mạnh; phân phối theo engine không đồng nhất hoàn toàn.\\
+\texttt{sensor\_10} & 1 & 1,30--1,30 & Hằng toàn train.\\
+\texttt{sensor\_11} & 159 & 46,85--48,53 & Biến thiên; Spearman median với RUL âm trong EDA.\\
+\texttt{sensor\_12} & 427 & 518,69--523,38 & Biến thiên; Spearman median với RUL dương trong EDA.\\
+\texttt{sensor\_13} & 56 & 2.387,88--2.388,56 & Biến thiên thấp, nhưng không hằng.\\
+\texttt{sensor\_14} & 6.078 & 8.099,94--8.293,72 & Biến thiên mạnh theo giá trị gốc.\\
+\texttt{sensor\_15} & 1.918 & 8,3249--8,5848 & Biến thiên trên train.\\
+\texttt{sensor\_16} & 1 & 0,03--0,03 & Hằng toàn train.\\
+\texttt{sensor\_17} & 13 & 388--400 & Biến thiên rời rạc trên train.\\
+\texttt{sensor\_18} & 1 & 2.388--2.388 & Hằng toàn train.\\
+\texttt{sensor\_19} & 1 & 100--100 & Hằng toàn train.\\
+\texttt{sensor\_20} & 120 & 38,14--39,43 & Biến thiên trên train.\\
+\texttt{sensor\_21} & 4.745 & 22,8942--23,6184 & Biến thiên trên train.\\
+\end{longtable}
+\end{small}
+
+Các cột hằng toàn train không có correlation Spearman xác định với RUL và không
+thể tạo chênh lệch đầu/cuối khác 0 trong paired analysis. Tuy nhiên, báo cáo
+vẫn giữ chúng trong output thống kê để người đọc thấy rõ phạm vi kiểm định đủ
+21 sensor. Với mô hình dự đoán, việc giữ hay loại sensor phải được quyết định
+trong từng training fold; không được dùng toàn bộ train để chọn sẵn feature.
+
 \subsection{Các kiểm tra đã triển khai và lý do}
 Reader và validator thực hiện kiểm tra số trường, schema, kiểu số hữu hạn, bảng không rỗng, split hợp lệ, khóa duy nhất và cycle liên tục trong từng động cơ. Profile FD001 đối chiếu thêm số dòng, ID động cơ và cycle bắt đầu. Với train targets, validator kiểm tra đủ khóa và đối chiếu Công thức~\ref{eq:rul}.
 

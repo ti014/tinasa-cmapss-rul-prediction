@@ -1,6 +1,6 @@
 \section{Cơ sở lý thuyết và nghiên cứu liên quan}
 \label{sec:theory}
-Phần này giải thích các phương pháp thuộc phạm vi đã chọn. Công thức và kết quả từ tài liệu được phân biệt với cấu hình của báo cáo; việc một phương pháp có cơ sở lý thuyết không đồng nghĩa đã có kết quả trên FD001 trong repository.
+Phần này giải thích các phương pháp thuộc phạm vi đã chọn. Công thức và kết quả từ tài liệu được phân biệt với cấu hình của báo cáo. Việc một phương pháp có cơ sở lý thuyết không đồng nghĩa phương pháp đó đã có kết quả trên FD001 trong repository.
 
 \subsection{Prognostics, RUL và phạm vi so sánh}
 Prognostics nghiên cứu diễn biến suy giảm và thời gian còn lại đến trạng thái hỏng. Với FD001, lịch sử train chạy đến khi hỏng cho phép tạo nhãn theo Công thức~\ref{eq:rul}; test chỉ cung cấp một phần lịch sử. Nghiên cứu của Saxena và cộng sự mô tả mô phỏng suy giảm và bài toán đánh giá prognostics~\cite{saxena2008damage}. Tổng quan C-MAPSS của Ramasso và Saxena giúp phân biệt các tập con, điều kiện vận hành và protocol~\cite{ramasso2014review}. Vì vậy, cùng dùng tên C-MAPSS chưa đủ để so sánh trực tiếp metric giữa hai nghiên cứu.
@@ -15,7 +15,7 @@ Gọi $\mathbf{x}_{i,t}\in\mathbb{R}^{p}$ là vector gồm $p$ sensor được g
  W_{i,t}=[\mathbf{x}_{i,t-w+1},\ldots,\mathbf{x}_{i,t}]^{\mathsf T}
  \in\mathbb{R}^{w\times p},\qquad t\geq w.
 \end{equation}
-Khác cách đưa toàn bộ ma trận vào CNN~\cite{li2018rul}, thiết kế hiện tại tổng hợp mỗi sensor thành sáu đặc trưng: last, mean, standard deviation, min, max và linear slope. Nếu giữ $p$ sensor thì biểu diễn có $6p$ đặc trưng; $p$ phải được xác định trong training fold, không lấy từ việc nhìn toàn bộ train để chọn biến trước cross-validation.
+Khác với cách đưa toàn bộ ma trận vào CNN~\cite{li2018rul}, thiết kế hiện tại tổng hợp mỗi sensor thành sáu đặc trưng: last, mean, standard deviation, min, max và linear slope. Nếu giữ $p$ sensor thì biểu diễn có $6p$ đặc trưng. Giá trị $p$ phải được xác định trong training fold; không được nhìn toàn bộ train để chọn biến trước cross-validation.
 
 Với các giá trị $z_1,\ldots,z_w$ của một sensor trong window, slope của hồi quy tuyến tính theo vị trí $k$ là
 \begin{equation}
@@ -61,23 +61,23 @@ Hai metric đều có đơn vị cycle và càng nhỏ càng tốt; RMSE nhạy 
 Score càng nhỏ càng tốt; dự đoán RUL quá lớn ($e>0$) bị phạt mạnh hơn dự đoán quá nhỏ với cùng độ lớn sai số. Công thức cộng score theo engine, không lấy trung bình; vì vậy số engine phải giống nhau khi đối chiếu. Khi triển khai cần kiểm thử cả hai dấu sai số theo quy ước này. Với nhiều dự đoán trên một validation engine, cách tổng hợp MAE được quy định tại Mục~\ref{sec:method}.
 
 \subsection{Paired analysis, bootstrap và nhiều kiểm định}
-Paired analysis ghép hai phép đo của cùng engine để phân tích thay đổi trong engine. Đại lượng cần ước lượng phải được nêu trước, chẳng hạn trung bình chênh lệch cuối trừ đầu vòng đời. Effect size theo đơn vị gốc biểu diễn mức thay đổi; p-value trả lời một câu hỏi khác về mức tương thích với giả thuyết không.
+Paired analysis ghép hai phép đo của cùng một engine để phân tích thay đổi trong vòng đời. Đại lượng cần ước lượng phải được nêu trước. Ví dụ, đại lượng đó có thể là mean paired difference (chênh lệch cặp trung bình) giữa cuối và đầu vòng đời. Đại lượng này biểu diễn mức thay đổi theo đơn vị gốc. P-value trả lời một câu hỏi khác: dữ liệu tương thích đến mức nào với giả thuyết không.
 
-Wilcoxon signed-rank sử dụng thứ hạng của độ lớn các chênh lệch và dấu của chúng~\cite{wilcoxon1945,scipyWilcoxon}. Kiểm định cần xem xét tính độc lập giữa các cặp và giả định đối xứng của phân phối chênh lệch; ``nonparametric'' không có nghĩa là không cần giả định. Ties và chênh lệch bằng 0 ảnh hưởng phân phối thống kê và cách tính p-value. Không diễn giải Wilcoxon thành kiểm định trực tiếp trung bình chênh lệch.
+Wilcoxon signed-rank sử dụng thứ hạng của độ lớn các chênh lệch và dấu của chúng~\cite{wilcoxon1945,scipyWilcoxon}. Với giả định phân phối chênh lệch đối xứng quanh trung vị, kiểm định xem xét giả thuyết trung vị chênh lệch bằng 0. Các cặp cần độc lập giữa các engine. ``Nonparametric'' không có nghĩa là không cần giả định. Ties và chênh lệch bằng 0 ảnh hưởng đến phân phối thống kê và cách tính p-value. Không diễn giải Wilcoxon thành kiểm định trực tiếp trung bình chênh lệch.
 
-Bootstrap ước lượng biến thiên của một thống kê bằng lấy mẫu lại có hoàn lại~\cite{efron1979bootstrap,scipyBootstrap}. Trong thiết kế này, đơn vị lấy mẫu lại là engine: giữ cặp đầu/cuối cùng nhau để bảo toàn quan hệ ghép cặp. Khoảng tin cậy 95\% mô tả tính bao phủ qua các lần lấy mẫu theo giả định; nó không phải xác suất 95\% rằng một tham số cố định nằm trong khoảng đã tính. Không coi các cycles liên tiếp là các đơn vị độc lập để tạo khoảng tin cậy hẹp hơn.
+Bootstrap ước lượng biến thiên của một thống kê bằng lấy mẫu lại có hoàn lại~\cite{efron1979bootstrap,scipyBootstrap}. Trong thiết kế này, engine là đơn vị lấy mẫu lại. Cặp đầu/cuối được giữ cùng nhau để bảo toàn quan hệ ghép cặp. Khoảng tin cậy 95\% mô tả tính bao phủ qua các lần lấy mẫu theo quy trình và các giả định phù hợp; nó không phải xác suất 95\% rằng một tham số cố định nằm trong khoảng đã tính. Không coi các cycles liên tiếp là các đơn vị độc lập để tạo khoảng tin cậy hẹp hơn.
 
-Với nhiều sensor, Benjamini--Hochberg kiểm soát False Discovery Rate (FDR, tỷ lệ phát hiện sai kỳ vọng) dưới những điều kiện phù hợp~\cite{benjamini1995fdr,scipyFDR}. Nếu sắp $K$ p-values thành $p_{(1)}\leq\cdots\leq p_{(K)}$, quy tắc step-up tìm chỉ số lớn nhất $k$ thỏa $p_{(k)}\leq kq/K$, với $q$ là mức FDR đã định trước. Bảo đảm không áp dụng cho mọi cấu trúc phụ thuộc; sensor tương quan cần được thảo luận khi diễn giải. Khoảng tin cậy riêng từng sensor không tự trở thành khoảng tin cậy đồng thời sau hiệu chỉnh p-value.
+Với nhiều sensor, Benjamini--Hochberg kiểm soát False Discovery Rate (FDR, tỷ lệ phát hiện sai kỳ vọng) dưới những điều kiện phù hợp~\cite{benjamini1995fdr,scipyFDR}. Nếu sắp $K$ p-values thành $p_{(1)}\leq\cdots\leq p_{(K)}$, quy tắc step-up tìm chỉ số lớn nhất $k$ thỏa $p_{(k)}\leq kq/K$, với $q$ là mức FDR đã định trước. Bảo đảm này không áp dụng cho mọi cấu trúc phụ thuộc. Vì vậy, cần thảo luận tương quan giữa các sensor khi diễn giải. Khoảng tin cậy riêng từng sensor không tự trở thành khoảng tin cậy đồng thời sau hiệu chỉnh p-value.
 
 \subsection{Health Index từ PCA và phân tích ARIMA}
-PCA tìm các phương chiếu trực giao có phương sai lớn từ dữ liệu đã được xử lý~\cite{sklearnPCA}. Nếu dùng thành phần đầu làm Health Index thì $h_{i,t}=\mathbf v_1^{\mathsf T}\widetilde{\mathbf x}_{i,t}$, với $\mathbf v_1$ và phép chuẩn hóa được học từ training fold. Đây là cách xây dựng ứng viên Health Index; số thành phần và quy ước chiều tăng/giảm còn cần đặc tả. Phương sai lớn không tự chứng minh ý nghĩa sức khỏe hoặc tính đơn điệu; dấu của vector riêng cũng không xác định ý nghĩa suy giảm.
+PCA tìm các phương chiếu trực giao có phương sai lớn từ dữ liệu đã được xử lý~\cite{sklearnPCA}. Nếu dùng thành phần đầu làm Health Index thì $h_{i,t}=\mathbf v_1^{\mathsf T}\widetilde{\mathbf x}_{i,t}$, với $\mathbf v_1$ và phép chuẩn hóa được học từ training fold. Đây là cách xây dựng một ứng viên Health Index. Số thành phần và quy ước chiều tăng/giảm vẫn cần được đặc tả. Phương sai lớn không tự chứng minh ý nghĩa sức khỏe hoặc tính đơn điệu. Dấu của vector riêng cũng không xác định ý nghĩa suy giảm.
 
 ARIMA$(p,d,q)$ kết hợp autoregression bậc $p$, sai phân bậc $d$ và moving average bậc $q$~\cite{hyndman2021fpp3}. Viết $u_t=(1-B)^d h_t$, trong đó $Bh_t=h_{t-1}$, một dạng mô hình là
 \begin{equation}
  u_t=c+\sum_{j=1}^{p}\phi_j u_{t-j}+\varepsilon_t
        +\sum_{j=1}^{q}\theta_j\varepsilon_{t-j}.
 \end{equation}
-Sai phân hỗ trợ xử lý tính không dừng nhưng không được tăng bậc tùy ý. ADF kiểm định giả thuyết có unit root~\cite{statsmodelsADF}; Ljung--Box khảo sát autocorrelation của residual đến các lag được chọn~\cite{hyndman2021fpp3}. Không bác bỏ giả thuyết không không chứng minh residual độc lập. Forecast MAE/RMSE và coverage của prediction interval cần được đánh giá trên đoạn chuỗi chưa dùng fit. Coverage là tỷ lệ quan sát nằm trong khoảng dự đoán, khác khoảng tin cậy của một metric tổng hợp.
+Sai phân hỗ trợ xử lý tính không dừng, nhưng không nên tăng bậc tùy ý. ADF kiểm định giả thuyết có unit root~\cite{statsmodelsADF}. Ljung--Box khảo sát autocorrelation của residual tại các lag được chọn~\cite{hyndman2021fpp3}. Không bác bỏ giả thuyết không không chứng minh residual độc lập. Forecast MAE/RMSE và coverage của prediction interval cần được đánh giá trên đoạn chuỗi chưa dùng để fit. Coverage là tỷ lệ quan sát nằm trong khoảng dự đoán; đại lượng này khác khoảng tin cậy của một metric tổng hợp.
 
 \subsection{Spark, lưu trữ và giới hạn của benchmark}
 RDD là nền tảng trừu tượng của Spark cho xử lý dữ liệu phân tán và khả năng phục hồi tính toán~\cite{zaharia2012rdd}. Với dữ liệu có schema, Spark SQL/DataFrame cung cấp biểu diễn và các phép xử lý có cấu trúc~\cite{sparkSQLGuide}. Báo cáo dùng nguồn này cho phần ETL; không suy từ lý thuyết phân tán rằng Spark chắc chắn nhanh hơn Pandas trên FD001.

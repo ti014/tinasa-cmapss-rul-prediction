@@ -5,19 +5,20 @@ nộp cuối cùng. Nguồn chính là [main.tex](main.tex). Ngày cập nhật 
 22/09/2026.
 
 Bản hiện tại có bài toán RUL, dữ liệu và contract, cơ sở lý thuyết có trích
-dẫn, protocol thống kê mốc 2, phương pháp kèm lý do lựa chọn,
-kết quả validation và một số quan sát EDA, khó khăn, giới hạn, khai báo AI/LLM,
-nhật ký tiến độ và bảng đối chiếu bằng chứng. Chưa có kết quả mô hình, ARIMA,
-ETL Silver/Gold hoặc dashboard. Mốc EDA mô tả đã hoàn thành theo
-[biên bản nghiệm thu](../outputs/eda/validation.json); những số được trích
-được kiểm tra riêng trong [report-checks.txt](evidence/report-checks.txt).
+dẫn, protocol thống kê mốc 2, phương pháp kèm lý do lựa chọn, kết quả
+validation, một số quan sát EDA và bảng suy luận sensor đầu/cuối vòng đời trên
+train, khó khăn, giới hạn, khai báo AI/LLM, nhật ký tiến độ và bảng đối chiếu
+bằng chứng. Chưa có kết quả mô hình, ARIMA, ETL Silver/Gold hoặc dashboard.
+Mốc EDA mô tả đã hoàn thành theo [biên bản nghiệm thu](../outputs/eda/validation.json);
+bảng thống kê M2.3a có biên bản tại [outputs/statistics/validation.json](../outputs/statistics/validation.json).
 
 Ngày 22/09/2026 bổ sung lý thuyết window, Ridge, histogram gradient boosting,
 grouped validation, paired analysis, bootstrap, FDR, PCA–ARIMA và Spark.
 Đã chốt so sánh mean 30 cycles đầu với 30 cycles cuối của từng engine;
 helper tạo cặp và helper suy luận train theo engine--sensor đã có và được kiểm
-thử trong bộ nhớ, nhưng chưa xuất artifact hoặc chạy notebook suy luận. Effect
-size chính, cấu hình bootstrap, Wilcoxon permutation, ties/zeros và mức FDR đã
+thử. Notebook M2.3a đã xuất 2.100 cặp, 21 dòng suy luận, `run_info.json` và
+`validation.json`; hình phân phối và biểu đồ chênh lệch kèm khoảng tin cậy vẫn là bước tiếp theo.
+Chênh lệch cặp trung bình, cấu hình bootstrap, Wilcoxon permutation, ties/zeros và mức FDR đã
 được chốt ở M2.0 trong
 [protocol](sections/statistical-protocol.tex). Ví dụ engine sống 200 cycles
 được ghép cặp đoạn 1–30 với 171–200. Không dùng hai đoạn này làm feature
@@ -50,7 +51,7 @@ report/
 Bibliography dùng chung tại `../references/bibliography.bib`. Hai hình EDA
 được tham chiếu trực tiếp từ `../outputs/eda/figures/`, không tạo bản sao
 dễ lệch nguồn. Hai sơ đồ phân biệt luồng dữ liệu hiện có/dự kiến và protocol
-mốc 2 chưa chạy. Mức đọc/kiểm chứng tài liệu nằm ở
+mốc 2; bảng suy luận M2.3a đã chạy nhưng chưa có hình thống kê trong báo cáo. Mức đọc/kiểm chứng tài liệu nằm ở
 [danh mục nguồn](../references/README.md); không đồng nhất tài liệu đã có DOI
 với tài liệu đã đọc toàn văn.
 
@@ -117,11 +118,11 @@ overfull/underfull box và duplicate destination. Sau khi kiểm tra, có thể
 dọn aux/log riêng của report; giữ PDF và nguồn. Không đưa thư mục `tmp/`
 vào gói nộp.
 
-Bản M2.1a đã kiểm chứng PDF **30 trang**, **19 nguồn được trích** trong nội
-dung từ danh mục 22 nguồn. Log LaTeX/BibTeX không có overfull/underfull,
+Bản M2.3a hiện tại đã kiểm chứng PDF **31 trang**, **19 nguồn được trích** trong
+nội dung từ danh mục 22 nguồn. Log LaTeX/BibTeX không có overfull/underfull,
 glyph thiếu, citation/reference chưa giải quyết hoặc cảnh báo bibliography.
-Đã rà bản render và sơ đồ mốc 2 có kiểm tra độc lập; bằng chứng nằm trong
-`evidence/report-checks.txt`. Tectonic có diagnostic
+Đã rà bản render và hai sơ đồ TikZ có kiểm tra độc lập; bằng chứng mới nhất nằm
+trong `evidence/report-checks.txt`. Tectonic có diagnostic
 Fontconfig thiếu cấu hình mặc định và cảnh báo dùng font ở đường dẫn Windows;
 build vẫn trả mã 0, chữ tiếng Việt và font được kiểm tra trên bản render.
 Đây là giới hạn môi trường đã ghi nhận, không bảo đảm bố cục giống từng byte

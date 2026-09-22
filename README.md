@@ -8,7 +8,7 @@ A reproducible Big Data course project for analyzing multivariate turbofan senso
 
 ## Project Status
 
-This repository now provides **FD001 data validation, train RUL targets, a completed train-only EDA notebook (milestone 1), and the paired-data contract for milestone 2**.
+This repository now provides **FD001 data validation, train RUL targets, a completed train-only EDA notebook (milestone 1), and persisted M2.3a train-only sensor inference artifacts for milestone 2**.
 
 Available now:
 
@@ -22,18 +22,20 @@ Available now:
   work progress, decision rationale, and traceable validation/initial EDA observations.
   EDA milestone 1 passed independent validation; inferential analysis belongs to milestone 2.
 - A cited theoretical background and a [milestone 2 statistical protocol](report/sections/statistical-protocol.tex).
-  The paired comparison uses the mean of the first and last 30 cycles per engine.
-  The M2.0 statistical configuration is now fixed before inference; inferential tests have not run.
+  The paired comparison uses each sensor's mean over the first and last 30 cycles of every train engine.
+  The M2.0 statistical configuration was fixed before inference.
 - A train-only `build_engine_sensor_pairs` helper that creates and validates one
   first/last 30-cycle pair for every engine and all 21 sensors.
-- In-memory M2.2 helpers for effect size, percentile bootstrap CI, Wilcoxon
-  permutation, and Benjamini-Hochberg FDR under the fixed M2.0 configuration.
-  They do not persist CSV/PNG outputs and the milestone 2 notebook has not run.
+- M2.2 helpers for mean paired differences, percentile bootstrap confidence intervals,
+  Wilcoxon permutation, and Benjamini-Hochberg FDR under the fixed M2.0 configuration.
+- An [executed M2.3a inference notebook](notebooks/02_fd001_inference.ipynb),
+  two validated CSV tables, run metadata, and [validation notes](outputs/statistics/README.md).
+  The outputs keep all 21 sensors and do not read test observations or test labels.
 
 Not implemented yet:
 
 - Silver/Gold ETL pipelines in Pandas and PySpark.
-- Persisted milestone 2 statistics outputs, the inference notebook, and feature engineering.
+- Milestone 2 statistical figures and deeper report interpretation beyond the M2.3a tables, plus feature engineering.
 - RUL models and ARIMA analysis.
 - Streamlit dashboard and completed final report (the LaTeX draft has started).
 
@@ -118,7 +120,7 @@ Pandas is used in the EDA notebook and will also support statistics and model pr
 ### Statistical Analysis
 
 - Compare early-life and late-life sensor behavior per engine.
-- Report effect sizes and bootstrap 95% confidence intervals.
+- Report mean paired differences and bootstrap 95% confidence intervals.
 - Use paired Wilcoxon signed-rank tests where appropriate.
 - Control multiple testing across sensors with Benjamini-Hochberg FDR.
 - Estimate metric uncertainty with engine-level bootstrap resampling.
@@ -202,12 +204,13 @@ Current and planned public project structure:
 │   ├── raw/                 # Original FD001 files and provenance notes
 │   └── archive/             # Data retained for comparison, not active modeling
 ├── references/              # Bibliography, reading guide, and available papers
-├── notebooks/               # Executed FD001 train EDA
-├── src/cmapss/              # data/: contracts; eda.py; statistics.py; validate.py
-├── tests/                   # Data contract, CLI, EDA, and paired-data tests
+├── notebooks/               # Executed FD001 train EDA and statistics notebooks
+├── src/cmapss/              # data/: contracts; statistics/: pairs/inference/artifacts; eda.py; validate.py
+├── tests/                   # Data contract, CLI, EDA, and statistics tests
 ├── outputs/validation/      # Data-validation reports
 ├── outputs/eda/             # EDA tables, figures, methods, and validation
-├── assets/diagrams/         # Editable draw.io sources and SVG exports
+├── outputs/statistics/      # M2.3a paired sensor inference tables and metadata
+├── assets/diagrams/         # Editable draw.io sources, SVG previews, URL handles
 ├── pyproject.toml           # Package and direct dependencies
 ├── requirements.txt         # Pip installation: local package and runtime libraries
 ├── requirements-dev.txt     # Notebook and test dependencies
@@ -262,7 +265,16 @@ contracts.py     Column names, dtypes, and the validation exception
 readers.py       Read source files into DataFrames
 validation.py    Validate schemas, keys, and cycles
 targets.py       Create and validate train RUL
-statistics.py     Build pairs and summarize fixed-config sensor inference
+statistics/
+  config.py       Fixed M2.0 inference configuration
+  pairs.py        Build and validate engine/sensor pairs
+  inference.py    Bootstrap, Wilcoxon, FDR, and sensor summaries
+  validation.py   Validate sensor inference tables
+  artifact_io.py  CSV/JSON, hash, and round-trip readers
+  metadata.py     Run metadata and validation payloads
+  artifacts.py    Write CSV/JSON artifacts and round-trip validation
+statistics_artifacts.py
+                  Compatibility import for the artifact writer
 ```
 
 For example, a train engine ending at cycle 200 has `rul = 200 - cycle`.
@@ -281,20 +293,42 @@ Select the `.venv` Python kernel and **Restart Kernel and Run All Cells**.
 This analyzes only train and recreates 12 CSV tables and 11 PNG figures.
 The validated runs used fresh kernels and produced identical artifacts in the
 same environment; the EDA checkpoint suite passed **69 tests**. The current
-repository-wide suite, including the M2.2 in-memory inference helpers, passed
-**93 tests**.
+repository-wide suite, including M2.3a artifact export tests, passed **94 tests**.
 
 ![FD001 train EDA workflow](assets/diagrams/fd001-eda.svg)
 
 [Editable diagram](assets/diagrams/fd001-eda.drawio) ·
 [Methods, findings, and limits](outputs/eda/README.md)
 
+### Run the statistics notebook
+
+After installing `requirements-dev.txt`, open the train-only inference notebook:
+
+```powershell
+.venv\Scripts\python -m jupyterlab notebooks/02_fd001_inference.ipynb
+```
+
+Running all cells recreates `outputs/statistics/tables/engine_sensor_pairs.csv`,
+`outputs/statistics/tables/sensor_inference.csv`, `run_info.json`, and
+`validation.json`. For example, the current artifact has 2,100 engine-sensor
+pairs and 21 sensor-level inference rows. Six globally constant sensors remain
+in the output as `all_zero_difference`; 15 testable sensors reject the null after
+Benjamini-Hochberg FDR under the fixed protocol. These results are train-only
+and are not feature selection.
+
+![FD001 train statistics workflow](assets/diagrams/fd001-statistics.svg)
+
+[Editable draw.io source](assets/diagrams/fd001-statistics.drawio) ·
+[Browser URL file](assets/diagrams/fd001-statistics.drawio-url.txt) ·
+[Methods, tables, validation, and limits](outputs/statistics/README.md)
+
 For example, the 100 train engines have a median lifetime of 199 cycles.
 Six sensors are globally constant; `sensor_6` varies globally but is constant
 within 38 engines. These are descriptive findings, not model feature selection
-or inferential significance claims. Milestone 2 will address paired analysis,
-effect sizes, bootstrap, Wilcoxon testing, and multiple testing under the fixed
-M2.0 configuration.
+or inferential significance claims. Milestone 2 now has M2.3a persisted tables for
+paired analysis and mean paired differences, bootstrap confidence intervals,
+Wilcoxon testing, and multiple testing under the fixed M2.0 configuration; figures
+and deeper interpretation remain the next step.
 
 <details>
 <summary>Development and optional checks</summary>
@@ -323,8 +357,8 @@ Pytest clears its `--basetemp` directory on subsequent runs; reserve it for test
 
 </details>
 
-Silver/Gold ETL, PySpark, rolling features, inference, models, and dashboard
-are not implemented yet. The [report draft](report/main.pdf) is updated alongside
+Silver/Gold ETL, PySpark, rolling features, statistics figures beyond M2.3a,
+models, and dashboard are not implemented yet. The [report draft](report/main.pdf) is updated alongside
 verified work: its progress log records dates, rationale, artifacts, checks,
 and remaining work. See [report instructions](report/README.md) for source
 organization and PDF build commands. The current draft includes verified data

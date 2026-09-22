@@ -3,7 +3,7 @@
 \subsection{Mục tiêu, phạm vi và trạng thái quyết định}
 Mục tiêu là đánh giá mức thay đổi của sensor giữa đầu và cuối vòng đời trong cùng engine trên tập train FD001. Ngày 22/09/2026 đã chốt dùng trung bình \textbf{30 cycles đầu và 30 cycles cuối}. Phân tích chỉ đọc train và dùng engine làm đơn vị ghép cặp. Đây là protocol trước khi chạy kiểm định, được viết sau EDA; các giả thuyết phát sinh từ EDA mang tính khám phá, không được mô tả là đã đăng ký trước khi xem dữ liệu.
 
-Các phương pháp paired analysis, effect size, bootstrap 95\%, Wilcoxon khi phù hợp, Benjamini--Hochberg và seed 42 thuộc kế hoạch hiện có. Cấu hình M2.0 đã được chốt trước khi chạy suy luận: dùng mean paired difference, percentile bootstrap, Wilcoxon permutation và BH trên họ 21 sensors. Chưa có p-value, khoảng tin cậy hoặc kết luận suy luận từ protocol này.
+Phân tích ghép cặp (paired analysis), chênh lệch cặp trung bình, bootstrap 95\%, Wilcoxon khi phù hợp, Benjamini--Hochberg và seed 42 thuộc cấu hình hiện có. Cấu hình M2.0 đã được chốt trước khi chạy suy luận: dùng mean paired difference, percentile bootstrap, Wilcoxon permutation và BH trên họ 21 sensors. Notebook M2.3a đã chạy theo cấu hình này, đồng thời xuất bảng và metadata. Hình phân phối cùng diễn giải sâu hơn vẫn thuộc bước tiếp theo.
 
 \subsection{Định nghĩa cặp đầu/cuối và ví dụ}
 Với $x_{i,t,s}$ là giá trị sensor $s$ của engine $i$ ở cycle $t$, và $T_i$ là cycle cuối của train engine đó, đặt
@@ -22,26 +22,26 @@ Giữ độ dài bằng nhau giúp so sánh hai mức tín hiệu trên cùng s�
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.91\linewidth]{figures/statistical-protocol.pdf}
-\caption[Protocol thống kê đầu/cuối vòng đời]{Thiết kế phân tích mốc 2; bước tạo một cặp đầu/cuối cho mỗi engine--sensor đã có helper và kiểm thử, cấu hình M2.0 đã chốt. Chưa xuất artifact hoặc chạy phép tính suy luận.}
+\caption[Protocol thống kê đầu/cuối vòng đời]{Thiết kế phân tích mốc 2; bước tạo cặp, suy luận và xuất bảng M2.3a đã có helper, notebook và validation. Hình phân phối cùng diễn giải sâu sẽ bổ sung ở bước sau.}
 \label{fig:stat-protocol}
 \end{figure}
 
 \subsection{Đại lượng cần báo cáo và điều kiện diễn giải}
-Bảng kết quả dự kiến giữ đủ 21 sensors, không chọn danh sách từ thứ hạng correlation của EDA. Ba operational settings không được gộp vào cùng họ giả thuyết sensor. Bảng cần có số cặp hợp lệ, số chênh lệch bằng 0, mức thay đổi, khoảng tin cậy, thống kê kiểm định, p-value gốc, p-value hiệu chỉnh và trạng thái có thể kiểm định.
+Bảng kết quả M2.3a giữ đủ 21 sensors, không chọn danh sách theo thứ hạng correlation của EDA. Ba operational settings không được gộp vào cùng họ giả thuyết sensor. Bảng ghi số cặp hợp lệ, số chênh lệch bằng 0, chênh lệch cặp trung bình, khoảng tin cậy, thống kê kiểm định, p-value gốc, p-value hiệu chỉnh và trạng thái có thể kiểm định.
 
-Dùng mean paired difference $\widehat\Delta_s=m^{-1}\sum_i D_{i,s}$ làm effect size chính theo đơn vị gốc, kèm median và phân phối $D_{i,s}$. Đây là đại lượng mô tả độ lớn thay đổi, không phải effect size chuẩn hóa và không so sánh trực tiếp độ lớn giữa các sensor khác thang đo. Không gán đơn vị vật lý nếu nguồn chưa xác nhận. Bootstrap lấy mẫu lại các engine cùng cặp $E,L$ để tạo khoảng tin cậy 95\% cho $\widehat\Delta_s$~\cite{scipyBootstrap}. Cấu hình M2.0 dùng 10.000 resamples và percentile interval.
+Dùng chênh lệch cặp trung bình $\widehat\Delta_s=m^{-1}\sum_i D_{i,s}$ làm đại lượng chính theo đơn vị gốc, kèm trung vị và phân phối $D_{i,s}$. Đại lượng này mô tả mức thay đổi, không phải đại lượng thay đổi chuẩn hóa. Vì các sensor có thang đo khác nhau, không so sánh trực tiếp độ lớn của chúng. Không gán đơn vị vật lý nếu nguồn chưa xác nhận. Bootstrap lấy mẫu lại các engine cùng cặp $E,L$ để tạo khoảng tin cậy 95\% cho $\widehat\Delta_s$~\cite{scipyBootstrap}. Cấu hình M2.0 dùng 10.000 resamples và percentile interval.
 
-Wilcoxon hai phía xét phân phối chênh lệch đối xứng quanh 0, với các cặp độc lập giữa engine~\cite{scipyWilcoxon}. Cần xem phân phối chênh lệch và ghi giới hạn đối xứng; bootstrap của mean không thay thế giả định này. Sensor hằng hoặc toàn bộ $D_{i,s}=0$ vẫn phải xuất hiện trong bảng dưới trạng thái không có biến thiên quan sát được. Không biến p-value không xác định thành 0 và không tự kết luận rằng sensor có giá trị dự đoán bằng 0.
+Wilcoxon hai phía kiểm định giả thuyết trung vị của chênh lệch bằng 0. Việc diễn giải dựa vào giả định phân phối chênh lệch đối xứng quanh trung vị và các cặp độc lập giữa engine~\cite{scipyWilcoxon}. Cần xem phân phối chênh lệch và ghi rõ giới hạn của giả định đối xứng; bootstrap của trung bình không thay thế giả định này. Sensor hằng hoặc có toàn bộ $D_{i,s}=0$ vẫn phải xuất hiện trong bảng dưới trạng thái không có biến thiên quan sát được. Không biến p-value không xác định thành 0 hoặc tự kết luận sensor có giá trị dự đoán bằng 0.
 
 Benjamini--Hochberg áp dụng cho một họ kiểm định đã xác định trước~\cite{benjamini1995fdr,scipyFDR}. Cấu hình M2.0 giữ họ gồm 21 sensors, dùng giá trị 1 chỉ trong vector hiệu chỉnh cho trường hợp không kiểm định được, đồng thời giữ p-value gốc là không áp dụng và ghi rõ trạng thái trong bảng. Quy ước này tránh thu nhỏ họ giả thuyết theo kết quả thuận lợi; nó không sửa được p-value thiếu hợp lệ hoặc bảo đảm FDR dưới mọi dạng phụ thuộc giữa sensors. Các khoảng tin cậy bootstrap riêng lẻ không phải simultaneous intervals.
 
 \subsection{Cấu hình M2.0 đã chốt trước triển khai}
 Các giá trị sau là cấu hình đã chốt ngày 22/09/2026 trước khi tính kết quả; không lấy default của thư viện làm quyết định ngầm.
 \begin{itemize}
-\item Effect size chính: mean paired difference; kèm median, số dấu dương, số dấu âm và số zero để nhìn phân phối lệch. Chưa bổ sung effect size chuẩn hóa nếu chưa có câu hỏi cần so sánh giữa sensors.
+\item Đại lượng chính: mean paired difference; kèm median, số dấu dương, số dấu âm và số zero để xem phân phối lệch. Chưa bổ sung đại lượng thay đổi chuẩn hóa vì chưa có câu hỏi yêu cầu so sánh giữa sensors.
 \item Bootstrap: 10.000 lần lấy mẫu lại 100 engines có hoàn lại, seed 42; dùng percentile interval tại các quantile 2,5\% và 97,5\%. Ghi rõ giới hạn độ bao phủ hữu hạn; không mặc định tương đương BCa. Trường hợp phân phối bootstrap suy biến phải gắn nhãn, không diễn giải khoảng bằng 0 là chắc chắn tuyệt đối.
 \item Wilcoxon: hai phía, zero method \texttt{wilcox}, không dùng continuity correction và không dùng \texttt{auto}. Dùng permutation với 100.000 resamples và RNG cố định cho sensors có thể kiểm định. Zero được xác định bằng \texttt{difference == 0.0} sau tính mean \texttt{float64}; không tự làm tròn bằng một ngưỡng tùy ý cho mọi sensor.
-\item All-zero và p-value thiếu: nếu toàn bộ $D_{i,s}=0$, giữ sensor trong bảng với trạng thái all-zero, \texttt{raw\_p=NA} và không diễn giải như một kiểm định thành công. Lỗi số bất ngờ phải dừng thay vì biến thành p-value hợp lệ.
+\item All-zero và p-value thiếu: nếu toàn bộ $D_{i,s}=0$, giữ sensor trong bảng với trạng thái all-zero, \texttt{raw\_p=NA} và không diễn giải như một kiểm định thành công. Lỗi số bất ngờ phải làm lần chạy dừng thay vì biến thành p-value hợp lệ.
 \item FDR: dùng Benjamini--Hochberg với $q=0{,}05$ trên đúng họ 21 sensors bằng hàm SciPy đã cố định trong metadata. Với p-value không áp dụng, chỉ dùng sentinel 1,0 bên trong vector hiệu chỉnh; output vẫn giữ \texttt{raw\_p=NA} và trạng thái riêng.
 \item RNG và metadata: dùng seed 42 nhưng tách luồng RNG theo sensor và mục đích bootstrap/permutation để đổi thứ tự chạy không đổi kết quả của cùng sensor. \texttt{run\_info.json} phải ghi cấu hình thực tế, phiên bản SciPy/NumPy/Pandas, data hash và commit hash.
 \end{itemize}
@@ -49,8 +49,8 @@ Các giá trị sau là cấu hình đã chốt ngày 22/09/2026 trước khi t�
 Cấu hình này khóa cách tính trước khi xem p-value hoặc khoảng tin cậy thật. Nếu dùng phương án khác ở lượt sau, phải cập nhật protocol, lý do và thời điểm thay đổi trước khi tạo lại bảng kết quả; không trình bày lựa chọn mới như đã xác định từ đầu.
 
 \subsection{Đầu ra và điều kiện nghiệm thu}
-Đầu ra dự kiến gồm bảng cặp theo engine/sensor, bảng thống kê theo sensor, hình phân phối chênh lệch và effect size kèm khoảng tin cậy, cùng metadata ghi cấu hình và phiên bản. Cụm đầu tiên hiện có helper tạo/kiểm tra bảng cặp trong bộ nhớ theo đúng ranh giới 30 cycles; cấu hình M2.0 đã chốt, nhưng chưa tạo CSV, hình hoặc metadata. Không tạo artifact rỗng để thay kết quả chưa chạy.
+M2.3a đã xuất bảng cặp theo engine/sensor tại \texttt{engine\_sensor\_pairs.csv}, bảng suy luận theo sensor tại \texttt{sensor\_inference.csv}, cùng \texttt{run\_info.json} và \texttt{validation.json}. Validation xác nhận hai bảng round-trip, raw train không đổi và lần chạy không dùng quan sát test hoặc nhãn test. M2.3b cần bổ sung hình phân phối chênh lệch, biểu đồ chênh lệch kèm khoảng tin cậy và diễn giải trong báo cáo. Artifact hiện có không thay thế kết quả mô hình RUL chưa chạy.
 
-Kiểm tra phải bao gồm chỉ số 30 cycles đúng trong từng engine, không chồng đoạn, ghép cặp một--một, ví dụ tính tay và trường hợp hằng/ties/zeros. Bootstrap phải lấy mẫu theo engine và giữ cặp; FDR cần được kiểm tra trên một vector p-value nhỏ có đáp án biết trước. Chạy lại với cùng input và seed phải tái lập kết quả; raw và EDA gốc giữ nguyên. Khi có kết quả mới cập nhật phần kết quả, nhật ký và bằng chứng kiểm tra.
+Kiểm tra phải bao gồm chỉ số 30 cycles đúng trong từng engine, không chồng đoạn, ghép cặp một--một, ví dụ tính tay và trường hợp hằng/ties/zeros. Bootstrap phải lấy mẫu theo engine và giữ cặp; FDR cần được kiểm tra trên một vector p-value nhỏ có đáp án biết trước. Chạy lại với cùng input và seed phải tái lập kết quả; raw và EDA gốc giữ nguyên. Khi có hình và diễn giải mới, tiếp tục cập nhật phần kết quả, nhật ký và bằng chứng kiểm tra.
 
 Kết luận thống kê chỉ áp dụng cho thay đổi trên train mô phỏng theo protocol này. Phát hiện thay đổi không chứng minh quan hệ nhân quả hoặc hiệu quả dự đoán ngoài mẫu. Lựa chọn sensor cho mô hình vẫn phải học trong training fold; không dùng danh sách có ý nghĩa thống kê trên toàn train để chọn feature trước cross-validation.

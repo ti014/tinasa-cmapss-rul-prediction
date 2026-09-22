@@ -1,10 +1,12 @@
 # Data contract cho NASA C-MAPSS FD001
 
-Contract hiện thực thi việc đọc observations, kiểm tra dữ liệu, tạo train RUL,
-tạo bảng cặp sensor đầu/cuối đời và tóm tắt suy luận theo sensor trong bộ nhớ.
-Notebook suy luận, CSV/PNG, run metadata và kết luận thống kê chưa được xuất.
-Contract của rolling features và predictions mới mô tả phần đã chốt trong kế
-hoạch; chưa có code tạo hoặc kiểm tra hai artifact này.
+Contract hiện thực thi việc đọc quan sát, kiểm tra dữ liệu, tạo nhãn RUL train,
+tạo bảng cặp sensor đầu/cuối vòng đời, tóm tắt suy luận theo sensor và xuất
+tệp đầu ra M2.3a chỉ dùng train. Mốc này đã có notebook suy luận, hai bảng CSV,
+metadata lần chạy và biên bản validation tại `outputs/statistics/`; chưa có hình
+thống kê M2.3b hoặc kết quả mô hình RUL. Contract của rolling features và
+predictions mới mô tả phần đã chốt trong kế hoạch; chưa có code tạo hoặc kiểm
+tra hai artifact này.
 
 ## Nguồn quy tắc và phạm vi
 
@@ -12,7 +14,7 @@ hoạch; chưa có code tạo hoặc kiểm tra hai artifact này.
   giá cuối; đây là nguồn public của các quy tắc pipeline.
 - [Nguồn FD001](raw/DATA_SOURCE.md) và [mô tả NASA](raw/readme.txt): 26 cột,
   ý nghĩa cycle, engine, train/test và ánh xạ nhãn.
-- Kế hoạch local `docs/plans/active/2026-09-21-cmapss-rul-final-report.md`:
+- Kế hoạch cục bộ `docs/plans/active/2026-09-21-cmapss-rul-final-report.md`:
   raw RUL, window 30 cycles, 100 final predictions và phạm vi triển khai.
 - Quy tắc đã được yêu cầu triển khai trong đợt data contract ngày 2026-09-22.
 
@@ -31,7 +33,7 @@ không dùng cho fold, window hoặc dữ liệu benchmark.
 | Train targets | `split`, `engine_id`, `cycle`, `rul` | Khóa khớp observations train; `rul` nguyên, không âm, đơn vị cycle |
 | Test labels | `split`, `engine_id`, `rul` | `split=test`; ID và RUL `int64`; khóa `(split, engine_id)` |
 | Engine-sensor pairs | `split`, `engine_id`, `sensor`, `n_cycles`, ranh giới/số phần tử hai đoạn, `early_mean`, `late_mean`, `difference`, `pair_status` | Chỉ `train`; khóa `(split, engine_id, sensor)`; 21 dòng theo sensor cho mỗi engine; output canonical theo engine rồi `sensor_1`–`sensor_21` |
-| Sensor inference | `sensor`, số cặp/dấu/zero, effect size, CI, bootstrap status, Wilcoxon statistic/raw p, adjusted p, FDR và `test_status` | Một dòng mỗi sensor theo đúng thứ tự `sensor_1`–`sensor_21`; giữ all-zero là trạng thái riêng; không dùng để chọn feature trước cross-validation |
+| Sensor inference | `sensor`, số cặp/dấu/zero, chênh lệch cặp trung bình và trung vị, CI, bootstrap status, Wilcoxon statistic/raw p, adjusted p, FDR và `test_status` | Một dòng mỗi sensor theo đúng thứ tự `sensor_1`–`sensor_21`; giữ all-zero là trạng thái riêng; không dùng để chọn feature trước cross-validation |
 
 Reader observations nhận `split` do bên gọi xác định; CLI gán train/test từ tên
 file cố định. Không thể suy ra split chỉ từ 26 giá trị của một dòng. Validator
@@ -176,14 +178,18 @@ khác ở thang giá trị lớn.
 Mọi dòng đã tạo có `pair_status=valid`; input lỗi dừng ở contract thay vì tạo
 dòng trạng thái lỗi.
 
-Bảng cặp hiện là API trong bộ nhớ do `src/cmapss/statistics.py` tạo và kiểm
-tra. Chưa có CSV dưới `outputs/statistics/`; việc xuất artifact và metadata
-vẫn thuộc các cụm mốc 2 tiếp theo.
+Bảng cặp là API trong bộ nhớ do `src/cmapss/statistics/pairs.py` tạo và kiểm tra.
+`src/cmapss/statistics/artifacts.py` dùng API này để xuất
+`outputs/statistics/tables/engine_sensor_pairs.csv`,
+`outputs/statistics/tables/sensor_inference.csv`, `run_info.json` và
+`validation.json`; `src/cmapss/statistics_artifacts.py` vẫn giữ compatibility
+import cho caller cũ. Cả hai CSV được đọc lại và kiểm tra sau khi xuất. Hình phân
+phối, biểu đồ chênh lệch kèm khoảng tin cậy và diễn giải sâu thuộc M2.3b.
 
 ### INFERENCE_CONFIG
 
-Cấu hình M2.0 đã chốt trước khi xem kết quả: mean paired difference là effect
-size chính; bootstrap percentile 95% dùng 10.000 resamples theo engine và seed
+Cấu hình M2.0 đã chốt trước khi xem kết quả: mean paired difference là chênh lệch
+cặp trung bình chính theo đơn vị gốc; bootstrap percentile 95% dùng 10.000 resamples theo engine và seed
 42; Wilcoxon là two-sided, zero method `wilcox`, không continuity correction,
 không dùng `auto`, và dùng permutation 100.000 resamples; FDR dùng
 Benjamini-Hochberg với `q=0,05` trên đúng 21 sensors. Implementation dùng SciPy
@@ -223,9 +229,9 @@ minh sensor vô dụng cho dự đoán RUL.
 
 ### RAW_IMMUTABLE
 
-CLI không cho ghi báo cáo vào thư mục raw được truyền qua `--raw-dir`. Kiểm
-thử thử ghi đè file nguồn phải thất bại và giữ nguyên bytes. Đây là bảo vệ tại
-CLI, không phải filesystem permission áp dụng cho mọi chương trình khác.
+CLI không cho ghi báo cáo vào thư mục raw được truyền qua `--raw-dir`. Kiểm thử
+ghi đè file nguồn phải thất bại và giữ nguyên bytes. Đây là bảo vệ tại CLI,
+không phải filesystem permission áp dụng cho mọi chương trình khác.
 
 ## Test labels và phạm vi cô lập
 
@@ -275,5 +281,6 @@ Nếu gặp lỗi quyền thư mục tạm mặc định của pytest trên Wind
 `--basetemp` trong [README](../README.vi.md#bắt-đầu). Thư mục đó chỉ dành cho
 pytest và được pytest dọn khi chạy lại.
 
-Owner của validation là pytest và CLI trong package `cmapss`. Chưa có optional
-hook hoặc CI gọi các kiểm tra này; branch protection chưa được xác minh.
+Thành phần chịu trách nhiệm validation là pytest và CLI trong package `cmapss`.
+Chưa có optional hook hoặc CI gọi các kiểm tra này; branch protection chưa được
+xác minh.

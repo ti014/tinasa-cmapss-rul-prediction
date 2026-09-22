@@ -1,45 +1,116 @@
 \section{Thiết kế phương pháp và lý do lựa chọn}
 \label{sec:method}
 \subsection{Luồng xử lý và trạng thái triển khai}
-Hình~\ref{fig:pipeline} phân biệt phần đã có artifact với phần dự kiến. Dữ liệu raw là đầu vào bất biến. Hiện tại, reader/validator tạo observations và train targets trong bộ nhớ; EDA xuất bảng và hình trực tiếp từ train. Silver và Gold là thiết kế cho giai đoạn tiếp theo, chưa phải artifact đã được tạo.
+Hình~\ref{fig:pipeline} phân biệt các nhánh đã hiện thực hóa với nhánh dự kiến.
+Dữ liệu raw là đầu vào bất biến. Hiện tại, reader và validator tạo quan sát cùng
+nhãn RUL train trong bộ nhớ. EDA và suy luận M2.3a chỉ dùng train, đồng thời đã
+xuất bảng, hình hoặc metadata tương ứng. Silver và Gold vẫn là thiết kế cho giai
+đoạn tiếp theo, chưa có tệp đầu ra.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.98\linewidth]{figures/pipeline.pdf}
-\caption[Luồng dữ liệu và trạng thái triển khai]{Luồng dữ liệu: đường liền thể hiện nhánh đã có artifact; đường và khung nét đứt thể hiện phần dự kiến. Test labels chỉ nối vào bước đánh giá cuối.}
+\caption[Luồng dữ liệu và trạng thái triển khai]{Luồng dữ liệu: đường liền thể
+hiện nhánh đã hiện thực hóa hoặc đã có artifact; đường và khung nét đứt thể hiện
+phần dự kiến. Nhãn test chỉ nối vào bước đánh giá cuối.}
 \label{fig:pipeline}
 \end{figure}
 
-Bronze giữ nguồn để truy vết; Silver dự kiến lưu observations có kiểu dữ liệu trong Parquet; Gold dự kiến lưu đặc trưng, dự đoán và metric trong Parquet/SQLite. Cách tách lớp giúp phân biệt dữ liệu gốc với dữ liệu suy ra và xác định bước gây mất hoặc nhân bản dòng. Pandas phục vụ xử lý local và EDA; PySpark dự kiến tái hiện ETL để so sánh tính đúng và khảo sát khả năng mở rộng. Chưa có phép đo để kết luận công cụ nào nhanh hơn.
+Bronze giữ dữ liệu nguồn để truy vết. Silver dự kiến lưu quan sát đã gán kiểu dữ
+liệu trong Parquet; Gold dự kiến lưu đặc trưng, dự đoán và metric trong
+Parquet/SQLite. Cách tách lớp giúp phân biệt dữ liệu gốc với dữ liệu suy ra và
+xác định bước gây mất hoặc nhân bản dòng. Pandas phục vụ xử lý cục bộ và EDA;
+PySpark dự kiến tái hiện ETL để so sánh tính đúng và khảo sát khả năng mở rộng.
+Chưa có phép đo để kết luận công cụ nào nhanh hơn.
 
-FD001 có dung lượng nhỏ. Benchmark dự kiến ở mức $1\times$, $10\times$ và $100\times$ chỉ đánh giá chi phí xử lý dữ liệu; bản nhân dữ liệu sẽ đổi engine ID và tách khỏi phân tích khoa học. Nhân bản cùng quan sát không tạo thêm động cơ độc lập để huấn luyện hoặc thu hẹp khoảng tin cậy.
+FD001 có dung lượng nhỏ. Benchmark dự kiến ở mức $1\times$, $10\times$ và
+$100\times$ chỉ đánh giá chi phí xử lý dữ liệu; bản nhân dữ liệu sẽ đổi engine
+ID và tách khỏi phân tích khoa học. Việc nhân bản quan sát không tạo thêm động
+cơ độc lập để huấn luyện hoặc thu hẹp khoảng tin cậy.
 
 \subsection{EDA theo đơn vị động cơ}
-EDA hiện chỉ sử dụng train nhằm tìm hiểu dữ liệu mà không dựa vào test để quyết định phương pháp. Phân phối tuổi thọ tính mỗi động cơ một lần. Ngược lại, histogram RUL theo observations cho động cơ sống lâu nhiều quan sát hơn; hai cách tổng hợp trả lời hai câu hỏi khác nhau và không được diễn giải thay thế nhau.
+EDA chỉ sử dụng train để tìm hiểu dữ liệu mà không dựa vào test khi quyết định
+phương pháp. Phân phối tuổi thọ tính mỗi động cơ một lần. Ngược lại, histogram
+RUL theo quan sát cho động cơ sống lâu nhiều quan sát hơn. Hai cách tổng hợp trả
+lời hai câu hỏi khác nhau và không được diễn giải thay thế nhau.
 
-Correlation giữa sensor và RUL được tính bằng Spearman riêng trong từng engine, sau đó tóm tắt phân phối giữa các engine. Lựa chọn này khảo sát liên hệ đơn điệu và tránh để số dòng của một động cơ quyết định trực tiếp trọng số trong bảng tổng hợp correlation. Tuy vậy, dependence theo thời gian vẫn tồn tại; correlation mô tả chưa chứng minh quan hệ nhân quả hoặc hiệu quả dự đoán ngoài mẫu.
+Correlation giữa sensor và RUL được tính bằng Spearman riêng trong từng động
+cơ, sau đó tóm tắt phân phối giữa các động cơ. Lựa chọn này khảo sát liên hệ đơn
+điệu và tránh để số dòng của một động cơ quyết định trực tiếp trọng số trong
+bảng tổng hợp correlation. Tuy vậy, dependence theo thời gian vẫn tồn tại;
+correlation mô tả chưa chứng minh quan hệ nhân quả hoặc hiệu quả dự đoán ngoài
+mẫu.
 
-Sensor hằng có correlation không xác định, được giữ dưới dạng NaN thay vì gán 0. Ba engine minh họa được chọn gần các quartile tuổi thọ nhất, nếu hòa thì dùng ID nhỏ hơn. Quy tắc này được xác định theo tuổi thọ, không chọn dựa trên đường sensor đẹp. Quỹ đạo hiện có biểu diễn giá trị gốc theo cycle, không smooth; mỗi ô dùng thang đo riêng. Ba engine minh họa không được xem là mẫu đại diện thống kê. Tuổi thọ đầy đủ dùng trong phân tích sau khi quan sát toàn chuỗi không được đưa vào feature dự đoán tại cycle hiện tại.
+Sensor hằng có correlation không xác định, được giữ dưới dạng NaN thay vì gán
+0. Ba động cơ minh họa được chọn gần các tứ phân vị tuổi thọ; nếu bằng khoảng
+cách, chọn ID nhỏ hơn. Quy tắc này dựa trên tuổi thọ, không dựa trên quỹ đạo
+sensor có hình dạng dễ quan sát. Quỹ đạo hiện có biểu diễn giá trị gốc theo
+cycle, không smooth; mỗi ô dùng thang đo riêng. Ba động cơ này không đại diện
+thống kê. Tuổi thọ đầy đủ chỉ dùng cho phân tích hồi cứu sau khi đã quan sát cả
+chuỗi, không được dùng làm feature dự đoán tại cycle hiện tại.
 
 \subsection{Đặc trưng từ window: phần dự kiến}
-Biểu diễn chính đã chọn là trailing window (cửa sổ chỉ chứa hiện tại và quá khứ) dài 30 cycles. Ví dụ, dự đoán tại cycle 170 dùng các cycle 141--170 của cùng engine. Đặc trưng dự kiến gồm giá trị cuối, mean, standard deviation, min, max và linear slope của sensor không hằng được xác định trong training fold.
+Biểu diễn chính đã chọn là trailing window (cửa sổ chỉ chứa hiện tại và quá khứ)
+dài 30 cycles. Ví dụ, dự đoán tại cycle 170 dùng các cycle 141--170 của cùng
+động cơ. Đặc trưng dự kiến gồm giá trị cuối, trung bình, độ lệch chuẩn, nhỏ nhất,
+lớn nhất và độ dốc tuyến tính của sensor không hằng được xác định trong training
+fold.
 
-Window tổng hợp biến thiên gần thời điểm dự đoán và giảm phụ thuộc vào một quan sát nhiễu đơn lẻ. Độ dài 30 là cấu hình ban đầu trong phạm vi nghiên cứu, chưa được chứng minh tối ưu. Slope biểu diễn chiều và tốc độ thay đổi tuyến tính trong window; thống kê phân tán bổ sung thông tin biến động. Quy ước rolling standard deviation và cách xử lý test engine có ít hơn 30 cycles còn phải chốt trước triển khai. Quy ước sample standard deviation của EDA không tự động trở thành quy ước của feature transformer.
+Window tổng hợp biến thiên gần thời điểm dự đoán và giảm phụ thuộc vào một quan
+sát nhiễu đơn lẻ. Độ dài 30 là cấu hình ban đầu trong phạm vi nghiên cứu, chưa
+được chứng minh tối ưu. Độ dốc biểu diễn chiều và tốc độ thay đổi tuyến tính
+trong window; thống kê phân tán bổ sung thông tin về biến động. Quy ước rolling
+standard deviation và cách xử lý động cơ test có ít hơn 30 cycles còn phải chốt
+trước triển khai. Quy ước sample standard deviation của EDA không tự động trở
+thành quy ước của feature transformer.
 
 \subsection{Mô hình và đánh giá: phần dự kiến}
-Naive median-RUL baseline cung cấp mốc so sánh khi không dùng tín hiệu sensor. Ridge là baseline tuyến tính có regularization; HistGradientBoostingRegressor là ứng viên phi tuyến. So sánh này nhằm đánh giá tín hiệu mang lại lợi ích gì so với dự đoán đơn giản và mức cải thiện khi cho phép quan hệ phi tuyến. Chưa có hyperparameter search hoặc kết quả để xếp hạng ba phương pháp.
+Naive baseline theo trung vị RUL cung cấp mốc so sánh khi không dùng tín hiệu
+sensor. Ridge là baseline tuyến tính có regularization; HistGradientBoostingRegressor
+là ứng viên phi tuyến. So sánh này nhằm đánh giá lợi ích của tín hiệu sensor so
+với dự đoán đơn giản và mức cải thiện khi cho phép quan hệ phi tuyến. Chưa có
+hyperparameter search hoặc kết quả để xếp hạng ba phương pháp.
 
-Model selection dự kiến dùng 5-fold GroupKFold theo \texttt{engine\_id}. Các window liền nhau của một engine có thể dùng chung phần lớn quan sát: hai window 141--170 và 142--171 dùng chung 29 cycles. Nếu chia ngẫu nhiên theo dòng, những window gần như giống nhau có thể nằm ở cả train và validation, gây data leakage (rò rỉ dữ liệu). Vì vậy, toàn bộ window của một engine phải thuộc cùng fold; scaler, lựa chọn sensor và mô hình chỉ fit trên training fold.
+Model selection dự kiến dùng GroupKFold 5-fold theo \texttt{engine\_id}. Các
+window liền nhau của một động cơ có thể dùng chung phần lớn quan sát: hai window
+141--170 và 142--171 dùng chung 29 cycles. Nếu chia ngẫu nhiên theo dòng, những
+window gần như giống nhau có thể nằm ở cả train và validation, gây data leakage
+(rò rỉ dữ liệu). Vì vậy, toàn bộ window của một động cơ phải thuộc cùng fold;
+scaler, lựa chọn sensor và mô hình chỉ fit trên training fold.
 
-Metric chọn mô hình dự kiến là mean engine-level MAE. Với $m$ validation engines và $n_i$ dự đoán được đánh giá của engine $i$, đặt
+Metric chọn mô hình dự kiến là mean engine-level MAE. Với $m$ động cơ validation
+và $n_i$ dự đoán được đánh giá của động cơ $i$, đặt
 \begin{equation}
 \mathrm{MAE}_{\mathrm{engine}}=\frac{1}{m}\sum_{i=1}^{m}\left[\frac{1}{n_i}\sum_{t\in\mathcal E_i}|y_{i,t}-\widehat y_{i,t}|\right],
 \end{equation}
-trong đó $\mathcal E_i$ là tập cycle được protocol chọn để đánh giá. Cách lấy trung bình này cho mỗi engine trọng số bằng nhau. Quy tắc chọn $\mathcal E_i$ trong cross-validation còn phải được cụ thể hóa và lưu cùng cấu hình trước khi huấn luyện. RMSE và NASA asymmetric score dự kiến là metric phụ; chưa có số liệu cho các metric này.
+trong đó $\mathcal E_i$ là tập cycle được protocol chọn để đánh giá. Cách lấy
+trung bình này cho mỗi động cơ trọng số bằng nhau. Quy tắc chọn $\mathcal E_i$
+trong cross-validation còn phải được cụ thể hóa và lưu cùng cấu hình trước khi
+huấn luyện. RMSE và NASA asymmetric score dự kiến là metric phụ; chưa có số liệu
+cho các metric này.
 
-Sau khi chọn cấu hình bằng train/validation, mô hình được refit trên toàn train và tạo một dự đoán cho mỗi test engine tại cycle cuối quan sát. Chỉ sau đó mới join nhãn test để đánh giá cuối. Khoảng tin cậy dự kiến dùng bootstrap theo engine nhằm giữ nguyên đơn vị chuỗi, thay vì giả định các window chồng lấn là mẫu độc lập.
+Sau khi chọn cấu hình bằng train/validation, mô hình được refit trên toàn train
+và tạo một dự đoán cho mỗi động cơ test tại cycle cuối quan sát. Chỉ sau đó mới
+ghép nhãn test để đánh giá cuối. Khoảng tin cậy dự kiến dùng bootstrap theo động
+cơ nhằm giữ nguyên đơn vị chuỗi, thay vì giả định các window chồng lấn là mẫu độc
+lập.
 
-\subsection{Thống kê và ARIMA: phần dự kiến}
-Phân tích tiếp theo so sánh trung bình 30 cycles đầu và 30 cycles cuối trong cùng engine, theo quyết định ngày 22/09/2026. Helper tạo cặp và các hàm suy luận theo sensor đã được hiện thực hóa, kiểm bằng fixture và chỉ xử lý train trong bộ nhớ. Chúng chưa xuất artifact hoặc tạo kết quả báo cáo. Mục~\ref{sec:stat-protocol} định nghĩa cặp, chiều chênh lệch, đầu ra, giả định và cấu hình M2.0 đã chốt. Effect size, bootstrap 95\% confidence interval, Wilcoxon khi phù hợp và Benjamini--Hochberg FDR có cơ sở tại Mục~\ref{sec:theory}. Bản hiện tại chưa có notebook/output suy luận hoặc kết luận ý nghĩa thống kê.
+\subsection{Thống kê hiện có và ARIMA dự kiến}
+M2.3a so sánh trung bình 30 cycles đầu và 30 cycles cuối trong cùng động cơ,
+theo quyết định ngày 22/09/2026. Helper tạo cặp và các hàm suy luận theo sensor
+đã được hiện thực hóa, kiểm tra bằng fixture và chỉ xử lý train. Notebook 02 đã
+xuất bảng cặp, bảng suy luận, metadata và validation tại
+\filepath{outputs/statistics/}; bảng cặp có 2.100 dòng và bảng suy luận có 21
+dòng. Mục~\ref{sec:stat-protocol} định nghĩa cặp, chiều chênh lệch, đầu ra,
+giả định và cấu hình M2.0 đã chốt. Mục~\ref{sec:theory} trình bày cơ sở của
+chênh lệch cặp trung bình, khoảng tin cậy bootstrap 95\%, Wilcoxon và
+Benjamini--Hochberg FDR. Hình thống kê và diễn giải sâu hơn thuộc M2.3b. Kết quả
+M2.3a không phải feature selection và không kết luận về hiệu quả dự đoán RUL.
 
-ARIMA là phân tích phụ trên Health Index từ PCA fit trong training fold. Không áp dụng ARIMA trực tiếp lên nhãn train RUL vì Công thức~\ref{eq:rul} đã tạo một countdown tất định; dự báo lại countdown không chứng minh khả năng khai thác tín hiệu sensor. Kế hoạch hiện tại chọn 10 validation engines đại diện, dùng 70\% đầu chuỗi để fit và 30\% cuối để đánh giá. Cách chọn engine cụ thể và ARIMA order còn chưa triển khai. Kết quả sẽ cần ADF, Ljung--Box, forecast MAE/RMSE và coverage của khoảng dự đoán 95\%.
+ARIMA là phân tích phụ trên Health Index từ PCA được fit trong training fold.
+ARIMA không áp dụng trực tiếp lên nhãn RUL train vì Công thức~\ref{eq:rul} tạo
+một countdown tất định; dự báo lại countdown không chứng minh khả năng khai thác
+tín hiệu sensor. Kế hoạch hiện tại chọn 10 động cơ validation đại diện, dùng
+70\% đầu chuỗi để fit và 30\% cuối để đánh giá. Cách chọn động cơ cụ thể và
+ARIMA order còn chưa triển khai. Kết quả sẽ cần ADF, Ljung--Box, forecast
+MAE/RMSE và coverage của khoảng dự đoán 95\%.

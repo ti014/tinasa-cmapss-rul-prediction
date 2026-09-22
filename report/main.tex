@@ -61,11 +61,25 @@ Ngành: & Khoa học máy tính
 \pagenumbering{roman}
 \section*{Tóm tắt trạng thái báo cáo}
 \addcontentsline{toc}{section}{Tóm tắt trạng thái báo cáo}
-Báo cáo nghiên cứu bài toán dự đoán Remaining Useful Life (RUL, tuổi thọ hữu ích còn lại) theo đơn vị cycle trên NASA C-MAPSS FD001. Đến ngày \reportdate, repository đã có dữ liệu nguồn, data contract (đặc tả dữ liệu và các điều kiện hợp lệ), package kiểm tra dữ liệu, nhãn RUL cho train và các artifact EDA (Exploratory Data Analysis, phân tích khám phá dữ liệu) ban đầu. Báo cáo validation ghi nhận 20.631 quan sát train và 13.096 quan sát test; mỗi tập có 100 động cơ.
+Báo cáo nghiên cứu bài toán dự đoán Remaining Useful Life (RUL, tuổi thọ hữu ích
+còn lại) theo đơn vị cycle trên NASA C-MAPSS FD001. Đến ngày \reportdate,
+repository đã có dữ liệu nguồn, data contract (đặc tả dữ liệu và các điều kiện
+hợp lệ), gói kiểm tra dữ liệu, nhãn RUL train và các artifact EDA (Exploratory
+Data Analysis, phân tích khám phá dữ liệu). Báo cáo validation ghi nhận 20.631
+quan sát train và 13.096 quan sát test; mỗi tập có 100 động cơ.
 
-Bản hiện tại trình bày bài toán, cơ sở lý thuyết và nghiên cứu liên quan, cách kiểm tra chất lượng, thiết kế phương pháp và một số quan sát EDA có nguồn đối chiếu. Protocol thống kê đã xác định so sánh trung bình 30 cycles đầu với 30 cycles cuối của từng động cơ; helper tạo cặp train theo engine--sensor đã được kiểm thử, nhưng kiểm định chưa được thực hiện. Pipeline Silver/Gold, mô hình RUL, ARIMA và dashboard chưa hoàn thành. Vì chưa có dự đoán và metric mô hình, báo cáo chưa đưa ra kết luận về độ chính xác hoặc hiệu quả bảo trì.
+Bản hiện tại trình bày bài toán, cơ sở lý thuyết và nghiên cứu liên quan, cách
+kiểm tra chất lượng, thiết kế phương pháp và các quan sát EDA có nguồn đối
+chiếu. M2.3a so sánh trung bình 30 cycles đầu với 30 cycles cuối của từng động
+cơ train; notebook đã xuất bảng cặp, bảng suy luận, metadata và biên bản
+validation. Pipeline Silver/Gold, mô hình RUL, ARIMA và dashboard chưa hoàn
+thành. Vì chưa có dự đoán và metric mô hình, báo cáo chưa đưa ra kết luận về độ
+chính xác hoặc hiệu quả bảo trì.
 
-Tiến độ được ghi theo công việc và bằng chứng, không quy đổi thành phần trăm hoàn thành khi chưa có cơ sở ước lượng. Các ngày ghi nhận là mốc có tài liệu hoặc artifact hỗ trợ, không phải lịch sử giờ công được tái dựng. Nội dung về phương pháp chưa triển khai được đánh dấu rõ để tiếp tục cập nhật sau mỗi mốc.
+Tiến độ được ghi theo công việc và bằng chứng, không quy đổi thành phần trăm
+hoàn thành khi chưa có cơ sở ước lượng. Các ngày ghi nhận là mốc có tài liệu
+hoặc artifact hỗ trợ, không phải lịch sử giờ công được tái dựng. Nội dung về
+phương pháp chưa triển khai được đánh dấu rõ để tiếp tục cập nhật sau mỗi mốc.
 \clearpage
 \begin{spacing}{1.1}
 \tableofcontents

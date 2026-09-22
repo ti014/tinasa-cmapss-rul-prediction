@@ -1,0 +1,39 @@
+{
+  "status": "passed",
+  "scope": "M2.3a artifact validation for train-only sensor inference",
+  "test_data_used": false,
+  "test_labels_used": false,
+  "raw_sha256_unchanged": true,
+  "config_matches_m20": true,
+  "engine_sensor_pairs": {
+    "rows": 2100,
+    "expected_rows": 2100,
+    "roundtrip": "passed",
+    "pairs_per_sensor": 100,
+    "sensors_per_engine": 21,
+    "window_cycles": 30
+  },
+  "sensor_inference": {
+    "rows": 21,
+    "expected_rows": 21,
+    "roundtrip": "passed",
+    "test_status_counts": {
+      "all_zero_difference": 6,
+      "ok": 15
+    },
+    "bootstrap_status_counts": {
+      "degenerate": 6,
+      "ok": 15
+    },
+    "fdr_reject_true": 15,
+    "raw_p_values_defined": 15
+  },
+  "checks": [
+    "read_observations(train) and validate_fd001_profile passed",
+    "validate_engine_sensor_pairs passed before and after CSV round-trip",
+    "validate_sensor_inference passed before and after CSV round-trip",
+    "raw train SHA-256 unchanged",
+    "bootstrap_resamples=10000",
+    "wilcoxon_permutation_resamples=100000"
+  ]
+}

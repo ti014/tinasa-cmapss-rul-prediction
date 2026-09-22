@@ -1,10 +1,10 @@
 # Data contract cho NASA C-MAPSS FD001
 
-Contract hiện thực thi việc đọc observations, kiểm tra dữ liệu, tạo train RUL
-và tạo bảng cặp sensor đầu/cuối đời cho phân tích train. Bootstrap, Wilcoxon,
-FDR, notebook suy luận và các artifact kết quả chưa được triển khai. Contract
-của rolling features và predictions mới mô tả phần đã chốt trong kế hoạch;
-chưa có code tạo hoặc kiểm tra hai artifact này.
+Contract hiện thực thi việc đọc observations, kiểm tra dữ liệu, tạo train RUL,
+tạo bảng cặp sensor đầu/cuối đời và tóm tắt suy luận theo sensor trong bộ nhớ.
+Notebook suy luận, CSV/PNG, run metadata và kết luận thống kê chưa được xuất.
+Contract của rolling features và predictions mới mô tả phần đã chốt trong kế
+hoạch; chưa có code tạo hoặc kiểm tra hai artifact này.
 
 ## Nguồn quy tắc và phạm vi
 
@@ -31,6 +31,7 @@ không dùng cho fold, window hoặc dữ liệu benchmark.
 | Train targets | `split`, `engine_id`, `cycle`, `rul` | Khóa khớp observations train; `rul` nguyên, không âm, đơn vị cycle |
 | Test labels | `split`, `engine_id`, `rul` | `split=test`; ID và RUL `int64`; khóa `(split, engine_id)` |
 | Engine-sensor pairs | `split`, `engine_id`, `sensor`, `n_cycles`, ranh giới/số phần tử hai đoạn, `early_mean`, `late_mean`, `difference`, `pair_status` | Chỉ `train`; khóa `(split, engine_id, sensor)`; 21 dòng theo sensor cho mỗi engine; output canonical theo engine rồi `sensor_1`–`sensor_21` |
+| Sensor inference | `sensor`, số cặp/dấu/zero, effect size, CI, bootstrap status, Wilcoxon statistic/raw p, adjusted p, FDR và `test_status` | Một dòng mỗi sensor theo đúng thứ tự `sensor_1`–`sensor_21`; giữ all-zero là trạng thái riêng; không dùng để chọn feature trước cross-validation |
 
 Reader observations nhận `split` do bên gọi xác định; CLI gán train/test từ tên
 file cố định. Không thể suy ra split chỉ từ 26 giá trị của một dòng. Validator
@@ -176,8 +177,49 @@ Mọi dòng đã tạo có `pair_status=valid`; input lỗi dừng ở contract 
 dòng trạng thái lỗi.
 
 Bảng cặp hiện là API trong bộ nhớ do `src/cmapss/statistics.py` tạo và kiểm
-tra. Chưa có CSV dưới `outputs/statistics/`; việc xuất artifact, metadata,
-bootstrap và kiểm định vẫn thuộc các cụm mốc 2 tiếp theo.
+tra. Chưa có CSV dưới `outputs/statistics/`; việc xuất artifact và metadata
+vẫn thuộc các cụm mốc 2 tiếp theo.
+
+### INFERENCE_CONFIG
+
+Cấu hình M2.0 đã chốt trước khi xem kết quả: mean paired difference là effect
+size chính; bootstrap percentile 95% dùng 10.000 resamples theo engine và seed
+42; Wilcoxon là two-sided, zero method `wilcox`, không continuity correction,
+không dùng `auto`, và dùng permutation 100.000 resamples; FDR dùng
+Benjamini-Hochberg với `q=0,05` trên đúng 21 sensors. Implementation dùng SciPy
+đã khóa trong môi trường; không thêm `statsmodels` chỉ để hiệu chỉnh p-value.
+
+### INFERENCE_SENSOR
+
+Bảng suy luận phải có đủ 21 dòng theo thứ tự `sensor_1` đến `sensor_21`. Không
+lọc sensor theo p-value, CI, EDA hoặc correlation. Ba operational settings không
+nằm trong family kiểm định này.
+
+### INFERENCE_COUNTS
+
+Với mỗi sensor, `n_positive + n_negative + n_zero = n_pairs`. Các đếm này dựa
+trên `difference` gốc `float64`; zero được xác định bằng `difference == 0.0`,
+không làm tròn bằng ngưỡng tùy ý để đổi trạng thái kiểm định.
+
+### INFERENCE_CI
+
+`ci_lower <= ci_upper`, phương pháp là percentile và mức CI là 0,95 theo cấu
+hình M2.0. Bootstrap suy biến được ghi bằng `bootstrap_status=degenerate`;
+không diễn giải khoảng bằng 0 là chắc chắn tuyệt đối.
+
+### INFERENCE_PVALUE
+
+`raw_p_value` và `p_value_adjusted` phải thuộc `[0, 1]` khi sensor kiểm định
+được. Với all-zero, output public giữ p-value là NA; sentinel `1,0` chỉ dùng
+bên trong vector FDR để giữ family đủ 21 sensors. Lỗi số bất ngờ phải làm lần
+chạy thất bại, không chuyển thành all-zero hoặc p-value hợp lệ.
+
+### INFERENCE_STATUS
+
+`test_status` hiện nhận `ok` hoặc `all_zero_difference`. Sensor all-zero vẫn ở
+trong bảng, có Wilcoxon không áp dụng và FDR public là NA. Trạng thái này chỉ
+nói protocol đầu/cuối không quan sát được biến thiên trong train, không chứng
+minh sensor vô dụng cho dự đoán RUL.
 
 ### RAW_IMMUTABLE
 

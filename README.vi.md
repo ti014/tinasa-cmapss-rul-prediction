@@ -23,15 +23,17 @@ Repository đã có **package kiểm tra FD001, train RUL, notebook EDA chỉ d�
   Mốc 1 EDA đã được kiểm tra độc lập; thống kê suy luận thuộc mốc 2 tiếp theo.
 - Cơ sở lý thuyết có trích dẫn và [protocol thống kê mốc 2](report/sections/statistical-protocol.tex).
   Đã chốt so sánh mean 30 cycles đầu và 30 cycles cuối theo từng engine.
-  Cấu hình thống kê chi tiết còn là đề xuất; chưa chạy kiểm định suy luận.
+  Cấu hình thống kê M2.0 đã được chốt trước suy luận; chưa chạy kiểm định suy luận.
 - Helper `build_engine_sensor_pairs` chỉ nhận train, tạo và kiểm tra một cặp
-  30 cycles đầu/cuối cho từng engine và đủ 21 sensors. Chưa có output thống kê
-  được lưu, bootstrap hoặc kiểm định suy luận.
+  30 cycles đầu/cuối cho từng engine và đủ 21 sensors.
+- Helper M2.2 trong bộ nhớ để tính effect size, percentile bootstrap CI,
+  Wilcoxon permutation và Benjamini-Hochberg FDR theo cấu hình M2.0 đã chốt.
+  Chưa lưu CSV/PNG và notebook suy luận mốc 2 chưa chạy.
 
 Chưa triển khai:
 
 - Pipeline ETL Silver/Gold bằng Pandas và PySpark.
-- Bootstrap, Wilcoxon/FDR, notebook suy luận mốc 2 và xây dựng đặc trưng (feature engineering).
+- Output thống kê mốc 2 được lưu, notebook suy luận mốc 2 và xây dựng đặc trưng (feature engineering).
 - Các mô hình RUL và phân tích ARIMA.
 - Dashboard Streamlit và báo cáo hoàn chỉnh (đã bắt đầu bản thảo LaTeX).
 
@@ -259,7 +261,7 @@ contracts.py     Tên cột, kiểu dữ liệu và exception
 readers.py       Đọc file thành DataFrame
 validation.py    Kiểm tra schema, khóa và cycle
 targets.py       Tạo và kiểm tra train RUL
-statistics.py     Tạo và kiểm tra cặp engine/sensor 30 cycles
+statistics.py     Tạo cặp và tóm tắt suy luận sensor theo cấu hình đã chốt
 ```
 
 Ví dụ: engine train kết thúc tại cycle 200 thì `rul = 200 - cycle`.
@@ -278,7 +280,7 @@ Chọn kernel Python của `.venv` và **Restart Kernel and Run All Cells**.
 Notebook chỉ phân tích train và tạo lại 12 bảng CSV, 11 hình PNG.
 Các lần kiểm tra dùng kernel mới cho artifact giống nhau trong cùng môi
 trường; suite tại mốc nghiệm thu EDA đạt **69 tests**. Toàn bộ suite hiện tại,
-có cả contract cặp M2.1a, đạt **86 tests**.
+gồm helper suy luận M2.2 trong bộ nhớ, đạt **93 tests**.
 
 ![Quy trình EDA train FD001](assets/diagrams/fd001-eda.svg)
 
@@ -289,7 +291,7 @@ Ví dụ: median tuổi thọ của 100 train engines là 199 cycles. Sáu senso
 trên toàn train; `sensor_6` biến thiên toàn tập nhưng hằng trong 38 engines.
 Đây là kết quả mô tả, chưa phải feature selection hoặc kết luận có ý nghĩa
 thống kê. Mốc 2 sẽ thực hiện paired analysis, effect size, bootstrap và hiệu
-chỉnh nhiều kiểm định.
+chỉnh nhiều kiểm định theo cấu hình M2.0 đã chốt.
 
 <details>
 <summary>Dành cho phát triển và kiểm tra riêng</summary>

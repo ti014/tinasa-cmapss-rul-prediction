@@ -27,6 +27,29 @@ ENGINE_SENSOR_PAIR_COLUMNS = ENGINE_SENSOR_PAIR_KEY + (
     "difference",
     "pair_status",
 )
+SENSOR_INFERENCE_COLUMNS = (
+    "sensor",
+    "n_pairs",
+    "n_positive",
+    "n_negative",
+    "n_zero",
+    "mean_difference",
+    "median_difference",
+    "ci_method",
+    "ci_level",
+    "ci_lower",
+    "ci_upper",
+    "bootstrap_resamples",
+    "bootstrap_status",
+    "wilcoxon_method",
+    "wilcoxon_statistic",
+    "raw_p_value",
+    "p_value_adjusted",
+    "fdr_method",
+    "fdr_q",
+    "fdr_reject",
+    "test_status",
+)
 FD001_ROWS = {"train": 20_631, "test": 13_096}
 FD001_ENGINE_COUNT = 100
 RAW_DTYPES = {

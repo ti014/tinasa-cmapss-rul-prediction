@@ -15,9 +15,10 @@ ETL Silver/Gold hoặc dashboard. Mốc EDA mô tả đã hoàn thành theo
 Ngày 22/09/2026 bổ sung lý thuyết window, Ridge, histogram gradient boosting,
 grouped validation, paired analysis, bootstrap, FDR, PCA–ARIMA và Spark.
 Đã chốt so sánh mean 30 cycles đầu với 30 cycles cuối của từng engine;
-helper tạo cặp train theo engine--sensor đã có và được kiểm thử, nhưng chưa
-xuất artifact hoặc chạy thống kê suy luận. Effect size chính, cấu hình bootstrap,
-ties/zeros và mức FDR được ghi thành đề xuất cần chốt trước triển khai trong
+helper tạo cặp và helper suy luận train theo engine--sensor đã có và được kiểm
+thử trong bộ nhớ, nhưng chưa xuất artifact hoặc chạy notebook suy luận. Effect
+size chính, cấu hình bootstrap, Wilcoxon permutation, ties/zeros và mức FDR đã
+được chốt ở M2.0 trong
 [protocol](sections/statistical-protocol.tex). Ví dụ engine sống 200 cycles
 được ghép cặp đoạn 1–30 với 171–200. Không dùng hai đoạn này làm feature
 dự đoán tại một cycle chưa quan sát đến cuối đời.
@@ -33,7 +34,7 @@ report/
 │   ├── problem-data.tex         # Bài toán, dữ liệu và chất lượng
 │   ├── theory.tex               # Cơ sở lý thuyết và nghiên cứu liên quan
 │   ├── methodology.tex          # Thiết kế, lý do, giả định và phần còn mở
-│   ├── statistical-protocol.tex # Mốc 2: đã chốt và đề xuất còn mở
+│   ├── statistical-protocol.tex # Mốc 2: cặp và cấu hình M2.0 đã chốt
 │   ├── current-results.tex      # Chỉ ghi kết quả có artifact
 │   ├── discussion.tex           # Khó khăn, giới hạn và khai báo AI
 │   └── evidence.tex             # Đường dẫn đối chiếu và thông tin còn thiếu

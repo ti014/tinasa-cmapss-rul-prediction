@@ -142,12 +142,13 @@ phụ. Chưa mở thêm CNN, LSTM hoặc streaming.
   không resample từng cycle như mẫu độc lập. M2 là bài nền tảng, metadata đã
   đối chiếu nhưng chưa đọc toàn văn.
 - Đọc M3 abstract và M6 để phân biệt FDR với xác suất mỗi kết luận đúng.
-  BH có điều kiện về phụ thuộc; không suy từ correlation dương quan sát được
-  rằng mọi điều kiện bảo đảm đều đã thỏa.
+  BH có điều kiện về phụ thuộc; cấu hình M2.0 dùng
+  `scipy.stats.false_discovery_control` với phương pháp BH trên đúng 21 sensors.
+  Không suy từ correlation dương quan sát được rằng mọi điều kiện bảo đảm đều đã thỏa.
 - Đầu ra cần viết: estimand (đại lượng cần ước lượng), giả thuyết, đơn vị mẫu,
   họ kiểm định, cấu hình và xử lý trường hợp suy biến. Xem
   [protocol](../report/sections/statistical-protocol.tex): ranh giới mean 30
-  cycles đầu/cuối đã được người dùng chốt; cấu hình chi tiết còn là đề xuất.
+  cycles đầu/cuối và cấu hình M2.0 đã được người dùng chốt trước khi chạy suy luận.
 
 Ví dụ: engine kết thúc ở cycle 200 dùng 1–30 và 171–200 để phân tích hồi cứu.
 Hai số trung bình tạo một cặp, không tạo 60 quan sát độc lập. Chênh lệch cuối

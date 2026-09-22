@@ -429,6 +429,18 @@ from the comparison.
 ENVIRONMENT LIMIT: Tectonic still emits the known Fontconfig diagnostic and
 absolute Windows font warnings; these do not prevent the local PDF build.
 
+Dependency security remediation: 2026-09-23
+SCOPE: direct and transitive dependency manifests for base, dev and ETL
+environments.
+PASS: `pip-audit 2.10.1` identified `pyarrow==22.0.0` with `PYSEC-2026-113`
+and fix version `23.0.1`; `pyarrow` was upgraded consistently in
+`pyproject.toml`, `uv.lock`, `requirements.txt`, `requirements-dev.txt` and
+`requirements-etl.txt`.
+PASS: post-remediation audits of `requirements-dev.txt` and
+`requirements-etl.txt` reported `No known vulnerabilities found`.
+PASS: full test suite passed 116 tests after the upgrade; `uv lock --check`,
+`compileall` and `git diff --check` also passed.
+
 Pipeline spacing correction: 2026-09-23
 SCOPE: pipeline TikZ layout and regenerated PDF/PNG only.
 PASS: Node width was reduced and the three analytical columns were separated so

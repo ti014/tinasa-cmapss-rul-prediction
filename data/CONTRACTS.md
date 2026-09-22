@@ -2,11 +2,12 @@
 
 Contract hiện thực thi việc đọc quan sát, kiểm tra dữ liệu, tạo nhãn RUL train,
 tạo bảng cặp sensor đầu/cuối vòng đời, tóm tắt suy luận theo sensor và xuất
-tệp đầu ra M2.3a chỉ dùng train. Mốc này đã có notebook suy luận, hai bảng CSV,
+tệp đầu ra M2.3a chỉ dùng train. Mốc M2 đã có notebook suy luận, hai bảng CSV,
 metadata lần chạy, hai hình M2.3b và biên bản validation M2.4 tại
-`outputs/statistics/`; chưa có kết quả mô hình RUL. Contract của rolling
-features và predictions mới mô tả phần đã chốt trong kế hoạch; chưa có code tạo
-hoặc kiểm tra hai artifact này.
+`outputs/statistics/`. Mốc M3.1 đã bổ sung ETL Pandas cho Silver observations,
+Silver train targets và Gold engine summary tại `outputs/etl/`; PySpark adapter
+đã chạy parity với Pandas reference trong môi trường local có JRE. Rolling
+features và predictions vẫn mới có đặc tả, chưa có code tạo hoặc kiểm tra.
 
 ## Nguồn quy tắc và phạm vi
 
@@ -234,6 +235,32 @@ minh sensor vô dụng cho dự đoán RUL.
 CLI không cho ghi báo cáo vào thư mục raw được truyền qua `--raw-dir`. Kiểm thử
 ghi đè file nguồn phải thất bại và giữ nguyên bytes. Đây là bảo vệ tại CLI,
 không phải filesystem permission áp dụng cho mọi chương trình khác.
+
+### ETL_SILVER_GOLD
+
+Pipeline ETL phải đọc raw qua reader/validator hiện có, không sửa Bronze và
+ghi artifact ra ngoài `data/raw/`. Silver observations giữ đúng schema
+`OBSERVATION_COLUMNS`, khóa `(split, engine_id, cycle)` và thứ tự canonical theo
+`split`, `engine_id`, `cycle`. Silver train targets giữ đúng
+`TRAIN_TARGET_COLUMNS`, có cùng tập khóa với train observations và công thức
+`rul = max_cycle - cycle`.
+
+Gold engine summary có đúng một dòng cho mỗi `(split, engine_id)` với các cột
+`n_cycles`, `first_cycle`, `last_cycle`. Gold M3.1 là catalog engine-level để
+kiểm tra boundary và truy vấn cục bộ; nó chưa phải rolling feature hoặc
+prediction artifact. Parquet là định dạng analytical artifact; SQLite là lớp
+truy vấn portable, cả hai phải đọc lại được sau khi ghi.
+
+Pipeline Pandas là reference implementation. PySpark adapter phải tạo cùng ba
+boundary; parity checker so sánh schema, row count, khóa duy nhất và các cột số
+trong tolerance đã ghi ở API (`rtol=1e-9`, `atol=1e-12`). Nếu PySpark hoặc Java
+không sẵn sàng, phải báo giới hạn runtime và không được claim parity đã đạt.
+
+Benchmark 1×, 10× và 100× chỉ dùng observations nhân bản trong bộ nhớ, remap
+engine ID để không trùng khóa, và đánh dấu `scientific_artifacts_isolated=true`.
+Bản nhân bản không được ghi vào artifact khoa học, không được dùng tạo kết luận
+EDA hoặc huấn luyện mô hình. Metadata phải ghi scale, số lần lặp, cold/warm
+run, runtime và row counts.
 
 ## Test labels và phạm vi cô lập
 

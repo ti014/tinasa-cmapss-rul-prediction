@@ -8,7 +8,7 @@ Repository này phục vụ báo cáo cuối kỳ môn Phân tích dữ liệu l
 
 ## Trạng thái
 
-Repository đã có **gói kiểm tra dữ liệu FD001, nhãn RUL train, notebook EDA chỉ dùng train đã hoàn thành ở mốc 1 và các tệp đầu ra suy luận sensor M2.3a--M2.3b chỉ dùng train cho mốc 2**.
+Repository đã có **gói kiểm tra dữ liệu FD001, nhãn RUL train, notebook EDA chỉ dùng train đã hoàn thành ở mốc 1, các tệp suy luận sensor M2.3a--M2.4 chỉ dùng train ở mốc 2 và ETL Silver/Gold bằng Pandas/PySpark kèm benchmark, parity ở mốc M3.1**.
 
 Đã có:
 
@@ -21,8 +21,8 @@ Repository đã có **gói kiểm tra dữ liệu FD001, nhãn RUL train, notebo
 - [Báo cáo LaTeX cập nhật theo tiến độ](report/README.md) và [bản PDF](report/main.pdf),
   có data dictionary (từ điển dữ liệu), bảng thuật ngữ và chữ viết tắt, nhật ký
   công việc, lý do lựa chọn và nguồn đối chiếu kết quả validation/EDA/M2.3a--M2.4.
-  Mốc 1 EDA và mốc 2 thống kê train-only đã được kiểm tra độc lập; ETL,
-  rolling features, mô hình và dashboard là các bước tiếp theo.
+  Mốc 1 EDA, mốc 2 thống kê train-only và parity ETL M3.1 đã được kiểm tra
+  độc lập; rolling features, mô hình và dashboard là các bước tiếp theo.
 - Cơ sở lý thuyết có trích dẫn và [protocol thống kê mốc 2](report/sections/statistical-protocol.tex).
   Đã chốt so sánh giá trị trung bình của 30 cycles đầu và 30 cycles cuối theo từng động cơ.
   Cấu hình thống kê M2.0 đã được chốt trước suy luận; notebook M2.3a đã chạy bảng suy luận train-only.
@@ -35,17 +35,21 @@ Repository đã có **gói kiểm tra dữ liệu FD001, nhãn RUL train, notebo
   Đầu ra giữ đủ 21 sensor và không đọc quan sát test hoặc nhãn test.
 - Hình M2.3b được tạo từ các artifact trên: [phân phối chênh lệch](outputs/statistics/figures/difference_distributions.png)
   và [effect size kèm bootstrap CI](outputs/statistics/figures/effect_size_ci.png).
+- Pipeline ETL Pandas ghi observations và train targets đã gán kiểu vào Silver
+  Parquet, ghi engine summary vào Gold Parquet/SQLite, lưu checksum raw và đo
+  benchmark cô lập ở scale 1x/10x/100x trong [outputs/etl](outputs/etl/README.md).
+- Adapter PySpark lazy import và parity checker cho cùng các boundary Silver/Gold
+  đã có. Lần chạy local hiện tại dùng JRE portable và ghi `outputs/etl/parity.json`;
+  cả ba boundary Pandas/PySpark khớp với `max_abs_diff=0.0`.
 
 Chưa triển khai:
 
-- Pipeline ETL Silver/Gold bằng Pandas và PySpark.
-- Validation tái lập hai lần và audit train-only chủ động cho notebook thống kê
-  đã hoàn thành; pipeline ETL Silver/Gold và xây dựng đặc trưng
-  (feature engineering) chưa triển khai.
+- Rolling feature engineering từ window 30 cycles.
 - Các mô hình RUL và phân tích ARIMA.
 - Dashboard Streamlit và báo cáo hoàn chỉnh (đã bắt đầu bản thảo LaTeX).
 
-Lệnh cài đặt, kiểm tra dữ liệu và mở notebook có ở phần Bắt đầu. Huấn luyện, đánh giá mô hình và dashboard chưa có điểm khởi chạy.
+Lệnh cài đặt, kiểm tra dữ liệu, mở notebook và chạy ETL có ở phần Bắt đầu.
+Huấn luyện, đánh giá mô hình và dashboard chưa có điểm khởi chạy.
 
 ## Mục tiêu
 
@@ -86,7 +90,7 @@ FD001 đại diện cho một điều kiện vận hành và một dạng suy gi
 
 Đây là dữ liệu mô phỏng, không phải telemetry thu trực tiếp ngoài thực địa. Vì vậy, kết quả hỗ trợ so sánh học thuật tái lập trên FD001 nhưng chưa chứng minh hiệu quả khi triển khai thực tế.
 
-## Kiến trúc dữ liệu dự kiến
+## Kiến trúc dữ liệu
 
 ```text
 Các file text gốc của NASA
@@ -111,7 +115,11 @@ Phân tích thống kê      Mô hình dự đoán RUL
        và báo cáo LaTeX cuối kỳ
 ```
 
-Pandas đã được dùng trong notebook EDA và sẽ tiếp tục phục vụ thống kê, cũng như chuẩn bị dữ liệu cho mô hình. PySpark sẽ tái hiện quy trình ETL và phục vụ thử nghiệm khả năng mở rộng (scalability benchmark). Bộ dữ liệu gốc chỉ có dung lượng vài MB, vì vậy repository không tuyên bố FD001 tự thân chứng minh khả năng xử lý dữ liệu quy mô lớn.
+Pandas đã được dùng trong notebook EDA, làm reference cho ETL, thống kê và
+chuẩn bị dữ liệu mô hình. PySpark tái hiện các boundary ETL và phục vụ thử
+nghiệm khả năng mở rộng (scalability benchmark). Bộ dữ liệu gốc chỉ có dung
+lượng vài MB, vì vậy repository không tuyên bố FD001 tự thân chứng minh khả
+năng xử lý dữ liệu quy mô lớn.
 
 ## Phương pháp dự kiến
 
@@ -211,15 +219,17 @@ Cấu trúc hiện có và dự kiến của repository:
 │   └── archive/             # Dữ liệu lưu để đối chiếu, không dùng cho mô hình chính
 ├── references/              # Danh mục tài liệu, hướng dẫn đọc và các bài báo hiện có
 ├── notebooks/               # Notebook EDA và thống kê train FD001 đã chạy
-├── src/cmapss/              # data/: contract; statistics/: pairs/inference/artifacts/reproducibility; eda.py; validate.py
-├── tests/                   # Kiểm thử data contract, CLI, EDA, thống kê và tái lập
+├── src/cmapss/              # data/, statistics/, etl/, eda.py, validate.py
+├── tests/                   # Kiểm thử data contract, CLI, EDA, thống kê, ETL và tái lập
 ├── outputs/validation/      # Báo cáo kiểm tra dữ liệu hiện có
 ├── outputs/eda/             # Bảng, hình, phương pháp và kiểm tra EDA
 ├── outputs/statistics/      # Artifact suy luận M2.3a--M2.4 và validation
+├── outputs/etl/             # Parquet/SQLite Silver/Gold, metadata và benchmark
 ├── assets/diagrams/         # Nguồn draw.io, bản xem trước SVG và file URL
 ├── pyproject.toml           # Thông tin package và dependency trực tiếp
 ├── requirements.txt         # Cài bằng pip: package và thư viện chạy chương trình
 ├── requirements-dev.txt     # Thư viện notebook và kiểm thử
+├── requirements-etl.txt     # Dependency PySpark tùy chọn cho ETL
 ├── uv.lock                  # Phiên bản dependencies đã khóa
 ├── report/                  # Bản thảo LaTeX/PDF, tiến độ và bằng chứng
 ├── app.py                   # Entry point Streamlit dự kiến
@@ -300,8 +310,8 @@ Chọn kernel Python của `.venv` và **Restart Kernel and Run All Cells**.
 Notebook chỉ phân tích train và tạo lại 12 bảng CSV, 11 hình PNG.
 Các lần kiểm tra dùng kernel mới đã tạo tệp đầu ra giống nhau trong cùng môi
 trường; bộ kiểm thử tại mốc nghiệm thu EDA đạt **69 tests**. Toàn bộ bộ kiểm
-thử hiện tại, gồm kiểm thử xuất tệp đầu ra M2.3a và runtime audit M2.4, đạt
-**95 tests**.
+thử hiện tại, gồm kiểm thử xuất tệp đầu ra M2.3a, runtime audit M2.4 và kiểm
+tra ETL M3.1, đạt **100 tests**.
 
 ![Quy trình EDA train FD001](assets/diagrams/fd001-eda.svg)
 
@@ -354,6 +364,32 @@ Có thể chạy lại toàn bộ validation M2.4 bằng:
 Đây là audit cục bộ được nạp qua `PYTHONPATH`, không phải filesystem sandbox,
 CI enforcement hoặc branch protection.
 
+### Chạy ETL
+
+Pipeline Pandas tham chiếu đọc và kiểm tra hai file observations FD001, ghi
+artifact Silver/Gold và đo benchmark 1x/10x/100x:
+
+```powershell
+.venv\Scripts\python -m cmapss.etl `
+  --raw-dir data/raw `
+  --output-dir outputs/etl `
+  --benchmark-scales 1,10,100 `
+  --benchmark-repetitions 2
+```
+
+Cài extra PySpark và cung cấp Java/JAVA_HOME trước khi yêu cầu parity:
+
+```powershell
+uv sync --frozen --extra etl
+.venv\Scripts\python -m cmapss.etl `
+  --with-spark `
+  --raw-dir data/raw `
+  --output-dir outputs/etl
+```
+
+Xem [artifact và validation ETL](outputs/etl/README.md) để biết schema, số
+dòng, thời gian benchmark và kết quả parity Pandas/PySpark.
+
 <details>
 <summary>Dành cho phát triển và kiểm tra riêng</summary>
 
@@ -381,12 +417,13 @@ Pytest dọn thư mục `--basetemp` khi chạy lại; chỉ dành thư mục đ
 
 </details>
 
-ETL Silver/Gold, rolling features, PySpark, mô hình và dashboard chưa được
-triển khai; validation tái lập M2.4 đã đạt. [Bản thảo báo cáo](report/main.pdf) được cập nhật cùng công việc
+ETL Silver/Gold bằng Pandas/PySpark parity và benchmark đã có; rolling features,
+mô hình và dashboard vẫn còn. Validation tái lập M2.4 đã đạt.
+[Bản thảo báo cáo](report/main.pdf) được cập nhật cùng công việc
 đã kiểm chứng: nhật ký ghi ngày, lý do, tệp đầu ra, cách kiểm tra và phần còn lại.
 Xem [hướng dẫn báo cáo](report/README.md) để biết cấu trúc nguồn và lệnh build
-PDF. Bản hiện tại có kết quả validation và một số quan sát EDA ban đầu đã
-đối chiếu, chưa có kết quả đánh giá mô hình.
+PDF. Bản hiện tại có kết quả validation, một số quan sát EDA ban đầu và số đo
+ETL M3.1 đã đối chiếu, chưa có kết quả đánh giá mô hình.
 
 ## Bối cảnh học thuật và khai báo AI
 

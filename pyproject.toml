@@ -13,10 +13,17 @@ dependencies = [
     "matplotlib==3.10.6",
     "seaborn==0.13.2",
     "scipy==1.16.2",
+    "pyarrow==22.0.0",
 ]
 
 [project.scripts]
 cmapss-validate = "cmapss.validate:main"
+cmapss-etl = "cmapss.etl.cli:main"
+
+[project.optional-dependencies]
+etl = [
+    "pyspark==4.0.1",
+]
 
 [dependency-groups]
 dev = [

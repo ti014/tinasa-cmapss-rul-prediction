@@ -9,6 +9,37 @@ dự đoán.
 
 Các kết quả này cho phép tiếp tục phân tích trên dữ liệu đạt contract đã định nghĩa. Chúng không chứng minh dữ liệu không có nhiễu, không có sai lệch mô phỏng hoặc mô hình sẽ dự đoán chính xác.
 
+\subsection{ETL Silver/Gold và benchmark}
+M3.1 chạy pipeline Pandas và PySpark từ \filepath{data/raw/} sau khi đọc và
+kiểm tra contract. Silver gồm 33.727 observations của train và test trong
+\texttt{silver/observations.parquet}, cùng 20.631 train targets trong
+\texttt{silver/train\_targets.parquet}. Gold gồm 200 dòng engine summary trong
+\texttt{gold/engine\_summary.parquet} và bảng truy vấn tương ứng trong
+\texttt{gold/etl.sqlite}. Các artifact được đọc lại sau khi ghi; checksum raw
+được lưu trong \texttt{run\_info.json}. Engine summary không phải rolling
+feature và chưa được dùng để huấn luyện mô hình.
+
+\begin{table}[H]
+\centering
+\caption[Benchmark Pandas tạo engine summary]{Benchmark Pandas tạo engine
+summary trên observations nhân bản trong bộ nhớ; không dùng cho huấn luyện.}
+\label{tab:etl-benchmark}
+\begin{tabular}{rrrrr}
+\toprule Scale & Input rows & Engine rows & Cold (s) & Warm (s)\\\midrule
+1$\times$ & 33.727 & 200 & 0,0195 & 0,0196\\
+10$\times$ & 337.270 & 2.000 & 0,1589 & 0,1474\\
+100$\times$ & 3.372.700 & 20.000 & 1,6752 & 1,6732\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Lần đo dùng Python 3.12.14, Pandas 2.3.3 trên Windows 11, mỗi scale hai lần
+đo cold/warm theo metadata. Đây là chi phí của một phép tổng hợp cục bộ, không
+phải bằng chứng về xử lý phân tán. \texttt{parity.json} ghi Pandas/PySpark
+khớp schema, khóa, số dòng và giá trị số cho ba bảng Silver/Gold; cả ba
+\texttt{max\_abs\_diff} bằng 0,0. Lần chạy Spark dùng JRE portable trong
+\texttt{tmp/} và không cấu hình HDFS hoặc cluster.
+
 \subsection{Tuổi thọ động cơ trên train}
 \begin{table}[H]
 \centering

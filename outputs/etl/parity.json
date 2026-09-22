@@ -1,0 +1,72 @@
+{
+  "status": "passed",
+  "checks": [
+    {
+      "name": "silver_observations",
+      "status": "passed",
+      "rows": 33727,
+      "key_columns": [
+        "split",
+        "engine_id",
+        "cycle"
+      ],
+      "numeric_columns": [
+        "cycle",
+        "setting_1",
+        "setting_2",
+        "setting_3",
+        "sensor_1",
+        "sensor_2",
+        "sensor_3",
+        "sensor_4",
+        "sensor_5",
+        "sensor_6",
+        "sensor_7",
+        "sensor_8",
+        "sensor_9",
+        "sensor_10",
+        "sensor_11",
+        "sensor_12",
+        "sensor_13",
+        "sensor_14",
+        "sensor_15",
+        "sensor_16",
+        "sensor_17",
+        "sensor_18",
+        "sensor_19",
+        "sensor_20",
+        "sensor_21"
+      ],
+      "max_abs_diff": 0.0
+    },
+    {
+      "name": "silver_train_targets",
+      "status": "passed",
+      "rows": 20631,
+      "key_columns": [
+        "split",
+        "engine_id",
+        "cycle"
+      ],
+      "numeric_columns": [
+        "rul"
+      ],
+      "max_abs_diff": 0.0
+    },
+    {
+      "name": "gold_engine_summary",
+      "status": "passed",
+      "rows": 200,
+      "key_columns": [
+        "split",
+        "engine_id"
+      ],
+      "numeric_columns": [
+        "n_cycles",
+        "first_cycle",
+        "last_cycle"
+      ],
+      "max_abs_diff": 0.0
+    }
+  ]
+}

@@ -8,7 +8,7 @@ A reproducible Big Data course project for analyzing multivariate turbofan senso
 
 ## Project Status
 
-This repository now provides **FD001 data validation, train RUL targets, a completed train-only EDA notebook (milestone 1), and persisted M2.3a--M2.3b train-only sensor inference artifacts for milestone 2**.
+This repository now provides **FD001 data validation, train RUL targets, a completed train-only EDA notebook (milestone 1), persisted M2.3a--M2.4 train-only sensor inference artifacts (milestone 2), and Pandas/PySpark Silver/Gold ETL with benchmark and parity artifacts (M3.1)**.
 
 Available now:
 
@@ -21,8 +21,9 @@ Available now:
 - A [living LaTeX report](report/README.md) with a [PDF draft](report/main.pdf),
   a data dictionary, glossary of report terminology and abbreviations, work
   progress, decision rationale, and traceable validation/EDA/M2.3a--M2.4 evidence.
-  EDA milestone 1 and milestone 2 train-only statistics have passed independent
-  validation; ETL, rolling features, models, and the dashboard remain next.
+  EDA milestone 1, milestone 2 train-only statistics, and M3.1 ETL parity have
+  passed independent validation; rolling features, models, and the dashboard
+  remain next.
 - A cited theoretical background and a [milestone 2 statistical protocol](report/sections/statistical-protocol.tex).
   The paired comparison uses each sensor's mean over the first and last 30 cycles of every train engine.
   The M2.0 statistical configuration was fixed before inference.
@@ -36,15 +37,21 @@ Available now:
 - M2.3b figures generated from those artifacts:
   [difference distributions](outputs/statistics/figures/difference_distributions.png)
   and [effect sizes with bootstrap CI](outputs/statistics/figures/effect_size_ci.png).
+- A Pandas ETL that writes typed Silver observations and train targets to
+  Parquet, writes a Gold engine summary to Parquet and SQLite, records raw
+  checksums, and runs isolated 1x/10x/100x scalability measurements in
+  [outputs/etl](outputs/etl/README.md).
+- A lazy PySpark adapter and parity checker for the same Silver/Gold boundaries.
+  The current local run used a portable JRE and wrote `outputs/etl/parity.json`;
+  all three Pandas/PySpark boundaries matched with `max_abs_diff=0.0`.
 
 Not implemented yet:
 
-- Silver/Gold ETL pipelines in Pandas and PySpark.
-- Silver/Gold ETL and rolling feature engineering.
+- Rolling feature engineering from the 30-cycle window.
 - RUL models and ARIMA analysis.
 - Streamlit dashboard and completed final report (the LaTeX draft has started).
 
-Installation, data validation, and notebook instructions are available below. Model training, evaluation, and dashboard entry points are not implemented yet.
+Installation, data validation, notebook, and ETL instructions are available below. Model training, evaluation, and dashboard entry points are not implemented yet.
 
 ## Objectives
 
@@ -85,7 +92,7 @@ FD001 represents one operating condition and one High-Pressure Compressor degrad
 
 The data is simulated, not field telemetry. Results therefore support reproducible academic comparison on FD001, but do not by themselves establish real-world deployment performance.
 
-## Planned Data Architecture
+## Data Architecture
 
 ```text
 NASA raw text files
@@ -110,7 +117,11 @@ Statistical analysis   RUL prediction models
         and final LaTeX report
 ```
 
-Pandas is used in the EDA notebook and will also support statistics and model preparation. PySpark will reproduce the ETL path and support a transparent scalability benchmark. The original dataset is only a few megabytes, so the repository will not claim that FD001 itself demonstrates large-scale data processing.
+Pandas is used in the EDA notebook, ETL reference path, statistics and model
+preparation. PySpark reproduces the ETL boundaries and supports a transparent
+scalability benchmark. The original dataset is only a few megabytes, so the
+repository will not claim that FD001 itself demonstrates large-scale data
+processing.
 
 ## Planned Methodology
 
@@ -210,15 +221,17 @@ Current and planned public project structure:
 │   └── archive/             # Data retained for comparison, not active modeling
 ├── references/              # Bibliography, reading guide, and available papers
 ├── notebooks/               # Executed FD001 train EDA and statistics notebooks
-├── src/cmapss/              # data/: contracts; statistics/: pairs/inference/artifacts/reproducibility; eda.py; validate.py
-├── tests/                   # Data contract, CLI, EDA, statistics, and reproducibility tests
+├── src/cmapss/              # data/, statistics/, etl/, eda.py, validate.py
+├── tests/                   # Data contract, CLI, EDA, statistics, ETL, and reproducibility tests
 ├── outputs/validation/      # Data-validation reports
 ├── outputs/eda/             # EDA tables, figures, methods, and validation
 ├── outputs/statistics/      # M2.3a--M2.4 inference artifacts and validation
+├── outputs/etl/             # Silver/Gold Parquet, SQLite, metadata, benchmark
 ├── assets/diagrams/         # Editable draw.io sources, SVG previews, URL handles
 ├── pyproject.toml           # Package and direct dependencies
 ├── requirements.txt         # Pip installation: local package and runtime libraries
 ├── requirements-dev.txt     # Notebook and test dependencies
+├── requirements-etl.txt     # Optional PySpark ETL dependencies
 ├── uv.lock                  # Locked dependency versions
 ├── report/                  # Living LaTeX/PDF report, progress and evidence
 ├── app.py                   # Planned Streamlit dashboard entry point
@@ -300,8 +313,8 @@ Select the `.venv` Python kernel and **Restart Kernel and Run All Cells**.
 This analyzes only train and recreates 12 CSV tables and 11 PNG figures.
 The validated runs used fresh kernels and produced identical artifacts in the
 same environment; the EDA checkpoint suite passed **69 tests**. The current
-repository-wide suite, including M2.3a artifact export tests and the M2.4
-runtime audit, passed **95 tests**.
+repository-wide suite, including M2.3a artifact export tests, the M2.4 runtime
+audit, and M3.1 ETL checks, passed **100 tests**.
 
 ![FD001 train EDA workflow](assets/diagrams/fd001-eda.svg)
 
@@ -357,6 +370,33 @@ Run the complete M2.4 validation with:
 This is a local `PYTHONPATH` runtime audit, not a filesystem sandbox, CI
 enforcement, or verified branch protection.
 
+### Run the ETL
+
+The Pandas reference pipeline reads and validates both FD001 observation files,
+writes Silver/Gold artifacts, and records the 1x/10x/100x benchmark:
+
+```powershell
+.venv\Scripts\python -m cmapss.etl `
+  --raw-dir data/raw `
+  --output-dir outputs/etl `
+  --benchmark-scales 1,10,100 `
+  --benchmark-repetitions 2
+```
+
+Install the optional PySpark extra and provide Java/JAVA_HOME before requesting
+parity:
+
+```powershell
+uv sync --frozen --extra etl
+.venv\Scripts\python -m cmapss.etl `
+  --with-spark `
+  --raw-dir data/raw `
+  --output-dir outputs/etl
+```
+
+See [ETL artifacts and validation](outputs/etl/README.md) for schemas, row
+counts, benchmark measurements, and the Pandas/PySpark parity result.
+
 <details>
 <summary>Development and optional checks</summary>
 
@@ -384,12 +424,14 @@ Pytest clears its `--basetemp` directory on subsequent runs; reserve it for test
 
 </details>
 
-Silver/Gold ETL, PySpark, rolling features, models, and dashboard are not
-implemented yet; M2.4 repeated-run validation has passed. The [report draft](report/main.pdf) is updated alongside
+Pandas/PySpark Silver/Gold parity and benchmark artifacts are available; rolling
+features, models, and dashboard remain. M2.4 repeated-run validation has passed.
+The [report draft](report/main.pdf) is updated alongside
 verified work: its progress log records dates, rationale, artifacts, checks,
 and remaining work. See [report instructions](report/README.md) for source
 organization and PDF build commands. The current draft includes verified data
-validation and selected initial EDA observations, not model evaluation results.
+validation, selected initial EDA observations, and M3.1 ETL measurements, not
+model evaluation results.
 
 ## Academic Context and AI Disclosure
 

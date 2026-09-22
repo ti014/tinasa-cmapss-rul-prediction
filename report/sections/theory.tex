@@ -1,85 +1,68 @@
 \section{Cơ sở lý thuyết và nghiên cứu liên quan}
 \label{sec:theory}
-Phần này giải thích các phương pháp thuộc phạm vi đã chọn. Công thức và kết quả từ tài liệu được phân biệt với cấu hình của báo cáo. Việc một phương pháp có cơ sở lý thuyết không đồng nghĩa phương pháp đó đã có kết quả trên FD001 trong repository.
 
-\subsection{Prognostics, RUL và phạm vi so sánh}
-Prognostics nghiên cứu diễn biến suy giảm và thời gian còn lại đến trạng thái hỏng. Với FD001, lịch sử train chạy đến khi hỏng cho phép tạo nhãn theo Công thức~\ref{eq:rul}; test chỉ cung cấp một phần lịch sử. Nghiên cứu của Saxena và cộng sự mô tả mô phỏng suy giảm và bài toán đánh giá prognostics~\cite{saxena2008damage}. Tổng quan C-MAPSS của Ramasso và Saxena giúp phân biệt các tập con, điều kiện vận hành và protocol~\cite{ramasso2014review}. Vì vậy, cùng dùng tên C-MAPSS chưa đủ để so sánh trực tiếp metric giữa hai nghiên cứu.
+\subsection{Prognostics và RUL}
+Prognostics nghiên cứu diễn biến suy giảm và thời gian còn lại đến trạng thái
+hỏng. Với C-MAPSS FD001, train chứa chuỗi đến khi hỏng để tạo nhãn RUL, còn test
+chỉ cung cấp phần lịch sử trước thời điểm hỏng. Công trình của Saxena và cộng sự
+mô tả mô phỏng suy giảm và bài toán đánh giá prognostics~\cite{saxena2008damage};
+tổng quan của Ramasso và Saxena làm rõ sự khác biệt giữa các tập con và protocol
+đánh giá~\cite{ramasso2014review}.
 
-Li và cộng sự nghiên cứu CNN với đầu vào chuỗi đa cảm biến~\cite{li2018rul}. Báo cáo sử dụng công trình này để tham khảo cách tạo window và ảnh hưởng của nhãn, không xem CNN là mô hình đã triển khai. Window 30 cycles là lựa chọn ban đầu đã chốt, chưa phải độ dài tối ưu. Nhãn chính của báo cáo là raw RUL; cap 125 chỉ thuộc phân tích độ nhạy được tách riêng. Kết quả dùng nhãn có cap hoặc loại bớt test engines không được xếp hạng trực tiếp với đánh giá raw RUL trên toàn bộ test.
-
-Đánh giá prognostics còn quan tâm dự đoán xuất hiện sớm đến mức nào và thay đổi ra sao theo thời gian~\cite{saxena2010metrics}. Một dự đoán cuối chuỗi cho mỗi test engine đo chất lượng tại thời điểm cắt; nó không thay thế đánh giá cả trajectory. Báo cáo chưa có chi phí can thiệp, nên ngưỡng cảnh báo 30 cycles chỉ minh họa cách sử dụng đầu ra, không phải lịch bảo trì tối ưu.
+Một dự đoán tại cycle cuối của mỗi test engine chỉ đánh giá chất lượng tại thời
+điểm cắt, không đại diện cho toàn bộ trajectory~\cite{saxena2010metrics}. FD001
+không có chi phí can thiệp hoặc downtime, nên RUL không trực tiếp xác định lịch
+bảo trì tối ưu.
 
 \subsection{Biểu diễn chuỗi bằng trailing window}
-Gọi $\mathbf{x}_{i,t}\in\mathbb{R}^{p}$ là vector gồm $p$ sensor được giữ của engine $i$ tại cycle $t$. Với $w=30$, một mẫu đầu vào chỉ chứa các quan sát hiện có:
+Tại cycle $t$, một mẫu chỉ chứa các quan sát hiện có của cùng engine:
 \begin{equation}
  W_{i,t}=[\mathbf{x}_{i,t-w+1},\ldots,\mathbf{x}_{i,t}]^{\mathsf T}
  \in\mathbb{R}^{w\times p},\qquad t\geq w.
+ \label{eq:window}
 \end{equation}
-Khác với cách đưa toàn bộ ma trận vào CNN~\cite{li2018rul}, thiết kế hiện tại tổng hợp mỗi sensor thành sáu đặc trưng: last, mean, standard deviation, min, max và linear slope. Nếu giữ $p$ sensor thì biểu diễn có $6p$ đặc trưng. Giá trị $p$ phải được xác định trong training fold; không được nhìn toàn bộ train để chọn biến trước cross-validation.
 
-Với các giá trị $z_1,\ldots,z_w$ của một sensor trong window, slope của hồi quy tuyến tính theo vị trí $k$ là
+Trong Công thức~\ref{eq:window}, $i$ là engine; $t$ là cycle cuối của window;
+$w=30$ là số cycles trong window; $p=21$ là số sensor; $\mathbf{x}_{i,t}$ là
+vector sensor tại cycle $t$; và $W_{i,t}$ là ma trận đầu vào có $w$ hàng, $p$
+cột. Ví dụ, mẫu tại cycle 170 dùng cycles 141--170 và không dùng cycle 171.
+
+Mỗi sensor trong window được tóm tắt bằng giá trị cuối, mean, sample standard
+deviation, min, max và linear slope. Với dãy $z_1,\ldots,z_w$ của một sensor,
+slope được tính bởi
 \begin{equation}
  b=\frac{\sum_{k=1}^{w}(k-\bar{k})(z_k-\bar{z})}
  {\sum_{k=1}^{w}(k-\bar{k})^2}.
+ \label{eq:slope}
 \end{equation}
-Slope mô tả xu hướng tuyến tính cục bộ; mean và độ phân tán mô tả mức tín hiệu và biến động. Đây là diễn giải của đặc trưng, chưa chứng minh lợi ích dự đoán. Ví dụ, tại cycle 170, window gồm cycles 141--170; không dùng cycle 171 hoặc tuổi thọ đầy đủ của engine làm đầu vào.
-
-\subsection{Baseline và Ridge regression}
-Naive baseline trả về median của các nhãn training được protocol cho phép. Nó tạo mốc so sánh khi không sử dụng sensor. Cách lấy mẫu và trọng số nhãn phải được ghi cùng cấu hình, vì engine có nhiều window sẽ đóng góp nhiều nhãn nếu gộp trực tiếp.
-
-Ridge dùng hàm dự đoán tuyến tính $\widehat y=\beta_0+\mathbf{z}^{\mathsf T}\boldsymbol\beta$ với vector đặc trưng $\mathbf z$. Hàm mục tiêu gồm sai số bình phương và L2 regularization~\cite{sklearnRidge}:
-\begin{equation}
- \min_{\beta_0,\boldsymbol\beta}\ \sum_{n=1}^{N}
- (y_n-\beta_0-\mathbf z_n^{\mathsf T}\boldsymbol\beta)^2
- +\lambda\lVert\boldsymbol\beta\rVert_2^2,\qquad\lambda\geq0.
-\end{equation}
-Trong biểu thức này intercept không bị phạt. Regularization hạn chế độ lớn hệ số, hữu ích khi các đặc trưng liên quan với nhau. Scaler cần fit trong training fold để các thang đo không chi phối mức phạt. Giá trị $\lambda$ chưa được chọn; việc tối ưu loss bình phương cũng không đồng nghĩa MAE validation đã được tối ưu.
-
-\subsection{Histogram gradient boosting}
-Gradient boosting xây dựng hàm dự đoán bằng cách cộng dần các cây hồi quy, mỗi cây bổ sung thông tin để giảm loss của mô hình hiện tại. Một biểu diễn khái quát là
-\begin{equation}
- F_M(\mathbf z)=F_0(\mathbf z)+\eta\sum_{m=1}^{M}h_m(\mathbf z),
-\end{equation}
-với $h_m$ là cây thứ $m$, $M$ là số vòng boosting và $\eta$ là learning rate. HistGradientBoosting chia giá trị đặc trưng thành các bins để tìm phép tách trên histogram~\cite{sklearnHistBoost}. Mô hình có thể biểu diễn quan hệ phi tuyến và tương tác mà Ridge không mô tả trực tiếp. Số cây, độ phức tạp cây và learning rate còn phải chọn bằng validation; chưa có cấu hình hoặc kết quả để khẳng định mô hình này tốt hơn Ridge.
-
-\subsection{Đơn vị độc lập và đánh giá theo engine}
-Các window của cùng engine có thể chồng lấn và phụ thuộc thời gian. GroupKFold giữ một group ngoài training ở mỗi fold~\cite{sklearnGroupedCV}; trong báo cáo, group là engine ID. Việc này đánh giá khả năng áp dụng cho engine chưa xuất hiện trong training, còn scaler, lựa chọn sensor và PCA đều phải học lại bên trong mỗi fold.
-
-Với một dự đoán tại cycle cuối của mỗi test engine, đặt $e_i=\widehat y_i-y_i$ và $m$ là số engine được đánh giá:
-\begin{equation}
- \mathrm{MAE}=\frac1m\sum_{i=1}^{m}|e_i|,\qquad
- \mathrm{RMSE}=\sqrt{\frac1m\sum_{i=1}^{m}e_i^2}.
-\end{equation}
-Hai metric đều có đơn vị cycle và càng nhỏ càng tốt; RMSE nhạy hơn với sai số lớn. NASA asymmetric score bổ sung cách phạt khác nhau cho dự đoán sớm và muộn. Theo Công thức (5) trong Li và cộng sự~\cite{li2018rul}, với cùng quy ước $e_i=\widehat y_i-y_i$:
-\begin{equation}
- S=\sum_{i=1}^{m}s(e_i),\qquad
- s(e)=\begin{cases}
- \exp(-e/13)-1,& e<0,\\
- \exp(e/10)-1,& e\geq0.
- \end{cases}
-\end{equation}
-Score càng nhỏ càng tốt; dự đoán RUL quá lớn ($e>0$) bị phạt mạnh hơn dự đoán quá nhỏ với cùng độ lớn sai số. Công thức cộng score theo engine, không lấy trung bình; vì vậy số engine phải giống nhau khi đối chiếu. Khi triển khai cần kiểm thử cả hai dấu sai số theo quy ước này. Với nhiều dự đoán trên một validation engine, cách tổng hợp MAE được quy định tại Mục~\ref{sec:method}.
+Trong Công thức~\ref{eq:slope}, $k$ là vị trí cycle trong window; $z_k$ là giá
+trị sensor tại vị trí $k$; $\bar{k}$ và $\bar{z}$ là mean tương ứng; $b$ là mức
+thay đổi tuyến tính ước lượng trên mỗi cycle. Slope mô tả xu hướng cục bộ, không
+tự chứng minh utility dự đoán.
 
 \subsection{Paired analysis, bootstrap và nhiều kiểm định}
-Paired analysis ghép hai phép đo của cùng một engine để phân tích thay đổi trong vòng đời. Đại lượng cần ước lượng phải được nêu trước. Ví dụ, đại lượng đó có thể là mean paired difference (chênh lệch cặp trung bình) giữa cuối và đầu vòng đời. Đại lượng này biểu diễn mức thay đổi theo đơn vị gốc. P-value trả lời một câu hỏi khác: dữ liệu tương thích đến mức nào với giả thuyết không.
+Paired analysis ghép hai phép đo của cùng một engine để phân tích thay đổi trong
+vòng đời. Mean paired difference mô tả độ lớn thay đổi theo đơn vị gốc. Wilcoxon
+signed-rank dùng thứ hạng và dấu của chênh lệch; với giả định phân phối chênh
+lệch đối xứng quanh trung vị, kiểm định xem trung vị chênh lệch có bằng
+0 hay không~\cite{wilcoxon1945,scipyWilcoxon}. Đây không phải kiểm định trực
+tiếp cho mean paired difference.
 
-Wilcoxon signed-rank sử dụng thứ hạng của độ lớn các chênh lệch và dấu của chúng~\cite{wilcoxon1945,scipyWilcoxon}. Với giả định phân phối chênh lệch đối xứng quanh trung vị, kiểm định xem xét giả thuyết trung vị chênh lệch bằng 0. Các cặp cần độc lập giữa các engine. ``Nonparametric'' không có nghĩa là không cần giả định. Ties và chênh lệch bằng 0 ảnh hưởng đến phân phối thống kê và cách tính p-value. Không diễn giải Wilcoxon thành kiểm định trực tiếp trung bình chênh lệch.
+Bootstrap lấy mẫu lại engine có hoàn lại và giữ cặp đầu/cuối cùng nhau để ước
+lượng độ bất định~\cite{efron1979bootstrap,scipyBootstrap}. Với 21 sensor,
+Benjamini--Hochberg điều chỉnh p-value nhằm kiểm soát False Discovery Rate (FDR,
+tỷ lệ phát hiện sai kỳ vọng) trong họ kiểm định đã xác định~\cite{benjamini1995fdr,scipyFDR}.
+Khoảng tin cậy riêng từng sensor không trở thành simultaneous interval chỉ vì
+p-value đã được hiệu chỉnh.
 
-Bootstrap ước lượng biến thiên của một thống kê bằng lấy mẫu lại có hoàn lại~\cite{efron1979bootstrap,scipyBootstrap}. Trong thiết kế này, engine là đơn vị lấy mẫu lại. Cặp đầu/cuối được giữ cùng nhau để bảo toàn quan hệ ghép cặp. Khoảng tin cậy 95\% mô tả tính bao phủ qua các lần lấy mẫu theo quy trình và các giả định phù hợp; nó không phải xác suất 95\% rằng một tham số cố định nằm trong khoảng đã tính. Không coi các cycles liên tiếp là các đơn vị độc lập để tạo khoảng tin cậy hẹp hơn.
+\subsection{Spark, lưu trữ và giới hạn benchmark}
+RDD là abstraction nền tảng của Spark cho xử lý phân tán và khả năng phục hồi
+tính toán~\cite{zaharia2012rdd}. Với dữ liệu có schema, Spark SQL/DataFrame cung
+cấp các phép xử lý có cấu trúc~\cite{sparkSQLGuide}. Báo cáo dùng Pandas làm
+reference implementation và PySpark để đối chiếu kết quả ETL, không mặc định
+rằng Spark nhanh hơn trên FD001.
 
-Với nhiều sensor, Benjamini--Hochberg kiểm soát False Discovery Rate (FDR, tỷ lệ phát hiện sai kỳ vọng) dưới những điều kiện phù hợp~\cite{benjamini1995fdr,scipyFDR}. Nếu sắp $K$ p-values thành $p_{(1)}\leq\cdots\leq p_{(K)}$, quy tắc step-up tìm chỉ số lớn nhất $k$ thỏa $p_{(k)}\leq kq/K$, với $q$ là mức FDR đã định trước. Bảo đảm này không áp dụng cho mọi cấu trúc phụ thuộc. Vì vậy, cần thảo luận tương quan giữa các sensor khi diễn giải. Khoảng tin cậy riêng từng sensor không tự trở thành khoảng tin cậy đồng thời sau hiệu chỉnh p-value.
-
-\subsection{Health Index từ PCA và phân tích ARIMA}
-PCA tìm các phương chiếu trực giao có phương sai lớn từ dữ liệu đã được xử lý~\cite{sklearnPCA}. Nếu dùng thành phần đầu làm Health Index thì $h_{i,t}=\mathbf v_1^{\mathsf T}\widetilde{\mathbf x}_{i,t}$, với $\mathbf v_1$ và phép chuẩn hóa được học từ training fold. Đây là cách xây dựng một ứng viên Health Index. Số thành phần và quy ước chiều tăng/giảm vẫn cần được đặc tả. Phương sai lớn không tự chứng minh ý nghĩa sức khỏe hoặc tính đơn điệu. Dấu của vector riêng cũng không xác định ý nghĩa suy giảm.
-
-ARIMA$(p,d,q)$ kết hợp autoregression bậc $p$, sai phân bậc $d$ và moving average bậc $q$~\cite{hyndman2021fpp3}. Viết $u_t=(1-B)^d h_t$, trong đó $Bh_t=h_{t-1}$, một dạng mô hình là
-\begin{equation}
- u_t=c+\sum_{j=1}^{p}\phi_j u_{t-j}+\varepsilon_t
-       +\sum_{j=1}^{q}\theta_j\varepsilon_{t-j}.
-\end{equation}
-Sai phân hỗ trợ xử lý tính không dừng, nhưng không nên tăng bậc tùy ý. ADF kiểm định giả thuyết có unit root~\cite{statsmodelsADF}. Ljung--Box khảo sát autocorrelation của residual tại các lag được chọn~\cite{hyndman2021fpp3}. Không bác bỏ giả thuyết không không chứng minh residual độc lập. Forecast MAE/RMSE và coverage của prediction interval cần được đánh giá trên đoạn chuỗi chưa dùng để fit. Coverage là tỷ lệ quan sát nằm trong khoảng dự đoán; đại lượng này khác khoảng tin cậy của một metric tổng hợp.
-
-\subsection{Spark, lưu trữ và giới hạn của benchmark}
-RDD là nền tảng trừu tượng của Spark cho xử lý dữ liệu phân tán và khả năng phục hồi tính toán~\cite{zaharia2012rdd}. Với dữ liệu có schema, Spark SQL/DataFrame cung cấp biểu diễn và các phép xử lý có cấu trúc~\cite{sparkSQLGuide}. Báo cáo dùng nguồn này cho phần ETL; không suy từ lý thuyết phân tán rằng Spark chắc chắn nhanh hơn Pandas trên FD001.
-
-Bronze/Silver/Gold là cách tổ chức dữ liệu của báo cáo. Parquet phục vụ lưu bảng phân tích; SQLite phục vụ truy vấn và trình bày local. Bằng chứng cần có là khả năng đọc lại artifact, tính tương đương khóa/giá trị và thời gian đo theo cấu hình công bố. Dữ liệu nhân bản chỉ dùng benchmark xử lý, không tăng số mẫu khoa học độc lập. Streaming và LSTM vẫn là hướng đọc bổ sung, không mở rộng phạm vi thực nghiệm đã chốt.
+Bronze giữ dữ liệu nguồn; Silver lưu observations và train targets đã kiểm tra;
+Gold lưu engine summary và rolling features. Parquet phục vụ lưu bảng phân tích,
+SQLite phục vụ truy vấn local. Dữ liệu nhân bản chỉ dùng cho benchmark xử lý và
+không tăng số mẫu khoa học độc lập.

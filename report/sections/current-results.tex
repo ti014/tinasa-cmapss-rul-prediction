@@ -1,28 +1,22 @@
-\section{Kết quả hiện có và diễn giải}
-\subsection{Kết quả validation}
-File \filepath{outputs/validation/fd001.json} ghi trạng thái \texttt{passed}
-cho quan sát train, nhãn RUL train và quan sát test. Số dòng trước/sau khi tạo
-nhãn RUL train đều là 20.631. Luồng mặc định ghi
-\texttt{test\_labels\_requested=false} và \texttt{test\_labels\_joined=false}.
-Báo cáo integrity riêng ghi nhận 100 nhãn hợp lệ về cấu trúc, không tính metric
-dự đoán.
+\section{Kết quả và diễn giải}
 
-Các kết quả này cho phép tiếp tục phân tích trên dữ liệu đạt contract đã định nghĩa. Chúng không chứng minh dữ liệu không có nhiễu, không có sai lệch mô phỏng hoặc mô hình sẽ dự đoán chính xác.
+\subsection{Kiểm tra dữ liệu}
+Validation đạt cho observations train, nhãn RUL train và observations test. Tập
+train có 20.631 dòng, tập test có 13.096 dòng; mỗi tập gồm 100 engine. Một trăm
+test labels hợp lệ về cấu trúc nhưng được giữ tách khỏi EDA và suy luận trên
+train. Các kiểm tra schema, khóa duy nhất, kiểu số hữu hạn và cycle liên tục đều
+đạt.
 
 \subsection{ETL Silver/Gold và benchmark}
-M3.1 chạy pipeline Pandas và PySpark từ \filepath{data/raw/} sau khi đọc và
-kiểm tra contract. Silver gồm 33.727 observations của train và test trong
-\texttt{silver/observations.parquet}, cùng 20.631 train targets trong
-\texttt{silver/train\_targets.parquet}. Gold gồm 200 dòng engine summary trong
-\texttt{gold/engine\_summary.parquet} và bảng truy vấn tương ứng trong
-\texttt{gold/etl.sqlite}. Các artifact được đọc lại sau khi ghi; checksum raw
-được lưu trong \texttt{run\_info.json}. Engine summary không phải rolling
-feature và chưa được dùng để huấn luyện mô hình.
+Pipeline Pandas và PySpark đọc dữ liệu sau khi kiểm tra data contract. Silver gồm
+33.727 observations train/test và 20.631 train targets. Gold gồm 200 dòng engine
+summary trong Parquet và bảng truy vấn tương ứng trong SQLite. Các bảng được đọc
+lại sau khi ghi.
 
 \begin{table}[H]
 \centering
-\caption[Benchmark Pandas tạo engine summary]{Benchmark Pandas tạo engine
-summary trên observations nhân bản trong bộ nhớ; không dùng cho huấn luyện.}
+\caption[Benchmark Pandas tạo engine summary]{Benchmark tạo engine summary trên
+observations nhân bản trong bộ nhớ; dữ liệu nhân bản không dùng để huấn luyện.}
 \label{tab:etl-benchmark}
 \begin{tabular}{rrrrr}
 \toprule Scale & Input rows & Engine rows & Cold (s) & Warm (s)\\\midrule
@@ -33,26 +27,20 @@ summary trên observations nhân bản trong bộ nhớ; không dùng cho huấn
 \end{tabular}
 \end{table}
 
-Lần đo dùng Python 3.12.14, Pandas 2.3.3 trên Windows 11, mỗi scale hai lần
-đo cold/warm theo metadata. Đây là chi phí của một phép tổng hợp cục bộ, không
-phải bằng chứng về xử lý phân tán. \texttt{parity.json} ghi Pandas/PySpark
-khớp schema, khóa, số dòng và giá trị số cho ba bảng Silver/Gold; cả ba
-\texttt{max\_abs\_diff} bằng 0,0. Lần chạy Spark dùng JRE portable trong
-\texttt{tmp/} và không cấu hình HDFS hoặc cluster.
+Benchmark đo chi phí của phép tổng hợp cục bộ, không phải bằng chứng về xử lý
+phân tán. Pandas và PySpark khớp schema, khóa, số dòng và giá trị số cho ba bảng
+Silver/Gold; sai khác tuyệt đối lớn nhất đều bằng 0,0.
 
-\subsection{Rolling features M3.2}
-M3.2 đọc \filepath{outputs/etl/silver/observations.parquet} và tạo
-\filepath{outputs/features/gold/rolling\_features.parquet}. Artifact có 27.927
-rows: 17.731 train windows và 10.196 test windows. Mỗi row có khóa
-\texttt{(split, engine\_id, cycle)} và 126 feature columns cho 21 sensors nhân
-sáu thống kê: \texttt{last}, \texttt{mean}, sample \texttt{std} với
-\texttt{ddof=1}, \texttt{min}, \texttt{max} và \texttt{slope}. Tổng số cột là
-129 khi tính cả ba khóa.
+\subsection{Rolling features}
+Rolling features dài 30 cycles gồm 17.731 train windows và 10.196 test windows,
+tổng cộng 27.927 dòng. Mỗi dòng có khóa \texttt{(split, engine\_id, cycle)} và
+126 feature columns cho 21 sensor, gồm \texttt{last}, \texttt{mean}, sample
+\texttt{std}, \texttt{min}, \texttt{max} và \texttt{slope}. Test labels không
+được ghép trong bước này.
 
 \begin{table}[H]
 \centering
-\caption[Rolling features M3.2]{Số dòng rolling features M3.2 theo split. Mỗi
-window dài 30 cycles và kết thúc tại khóa observation của row.}
+\caption[Rolling features theo split]{Số rolling windows theo split.}
 \label{tab:rolling-features}
 \begin{tabular}{lrr}
 \toprule Split & Engines & Rolling windows\\\midrule
@@ -62,20 +50,15 @@ Tổng & 200 & 27.927\\\bottomrule
 \end{tabular}
 \end{table}
 
-Validator kiểm tra schema, khóa duy nhất, thứ tự canonical, số hữu hạn và các
-cycle có đủ trailing window trong cùng engine/split. Tests tính tay xác nhận
-sensor bằng cycle có \texttt{last}, mean, sample standard deviation, min, max
-và slope đúng; thay đổi cycle 31 không làm đổi feature tại cycle 30; hai engine
-không bị nối window. Metadata ghi \texttt{joins\_test\_labels=false} và
-\texttt{modeling.status=not\_started}; vì vậy artifact này chưa phải kết quả
-mô hình hoặc metric.
-
+Validator kiểm tra schema, khóa duy nhất, thứ tự canonical, số hữu hạn và đủ
+trailing window trong từng engine. Tests tính tay xác nhận sample standard
+deviation, slope, không dùng tương lai và không nối hai engine.
 
 \subsection{Tuổi thọ động cơ trên train}
 \begin{table}[H]
 \centering
-\caption[Thống kê tuổi thọ của 100 động cơ train]{Thống kê tuổi thọ của 100
-động cơ train, đơn vị cycle. Nguồn: \texttt{lifetime\_summary.csv}.}
+\caption[Thống kê tuổi thọ của 100 động cơ train]{Thống kê tuổi thọ, đơn vị
+cycle.}
 \label{tab:lifetime}
 \begin{tabular}{lr@{\qquad}lr}
 \toprule Thống kê & Giá trị & Thống kê & Giá trị\\\midrule
@@ -90,28 +73,22 @@ Tứ phân vị 75\% & 229,25 & Số động cơ & 100\\\bottomrule
 \centering
 \includegraphics[width=0.9\linewidth]{../outputs/eda/figures/engine_lifetimes.png}
 \caption[Phân phối tuổi thọ động cơ trên train]{Phân phối tuổi thọ train; mỗi
-động cơ đóng góp một giá trị. Hình lấy từ artifact EDA hiện có.}
+động cơ đóng góp một giá trị.}
 \label{fig:life}
 \end{figure}
 
-Tuổi thọ quan sát dao động từ 128 đến 362 cycles; trung bình lớn hơn trung vị.
-Sự khác biệt về độ dài chuỗi cho thấy cách lấy trung bình theo quan sát và theo
-động cơ có thể tạo trọng số khác nhau. Đây là cơ sở để ghi rõ đơn vị tổng hợp và
-dùng động cơ làm đơn vị đánh giá dự kiến. Các con số không được diễn giải thành
-tuổi thọ theo giờ hoặc ngày.
+Tuổi thọ dao động từ 128 đến 362 cycles; trung bình lớn hơn trung vị. Vì độ dài
+chuỗi khác nhau, báo cáo phân biệt rõ tổng hợp theo observation và theo engine.
+Các con số không được diễn giải thành tuổi thọ theo giờ hoặc ngày.
 
 \subsection{Sensor hằng và correlation theo engine}
-Metadata EDA ghi nhận \texttt{setting\_3} và các sensor 1, 5, 10, 16, 18, 19
-hằng trên train. Riêng sensor 6 hằng trong 38/100 động cơ; correlation
-sensor--RUL chỉ xác định trong 62 động cơ còn lại. Vì vậy, cần công bố số động
-cơ hợp lệ khi tóm tắt correlation.
-
 \begin{table}[H]
 \centering
-\caption[Correlation Spearman theo engine: các dòng minh họa]{Một số dòng minh họa từ bảng correlation Spearman theo engine. Không dùng bảng này để xếp hạng hoặc chọn sensor cho mô hình.}
+\caption[Correlation Spearman theo engine: các dòng minh họa]{Một số dòng minh
+họa; bảng này không dùng để chọn sensor.}
 \label{tab:correlation}
 \begin{tabular}{lrrr}
-\toprule Sensor & Động cơ xác định & Tương quan trung vị & Động cơ không xác định\\\midrule
+\toprule Sensor & Động cơ xác định & Tương quan trung vị & Không xác định\\\midrule
 1 & 0 & Không xác định & 100\\
 6 & 62 & $-0{,}1264$ & 38\\
 11 & 100 & $-0{,}8190$ & 0\\
@@ -119,43 +96,36 @@ cơ hợp lệ khi tóm tắt correlation.
 \end{tabular}
 \end{table}
 
-Sensor 11 có tương quan trung vị âm, trong khi sensor 12 có tương quan trung vị
-dương với RUL. RUL giảm theo cycle, nên dấu âm gợi ý sensor có xu hướng tăng khi
-tiến gần cuối vòng đời trong cách tổng hợp này. Đây là liên hệ mô tả trên train;
-chưa có kiểm định, chưa điều chỉnh multiple testing và chưa đo hiệu quả dự đoán
-ngoài mẫu.
+Sensor 1, 5, 10, 16, 18 và 19 hằng trên train. Sensor 6 hằng trong 38/100
+engine; correlation chỉ xác định trong 62 engine còn lại. Sensor 11 có tương
+quan trung vị âm, còn sensor 12 có tương quan trung vị dương với RUL. Đây là
+liên hệ mô tả trên train, không phải bằng chứng nhân quả hoặc hiệu quả ngoài mẫu.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\linewidth]{../outputs/eda/figures/sensor_rul_by_engine.png}
 \caption[Phân phối correlation Spearman sensor--RUL theo động cơ]{Phân phối
-correlation Spearman sensor--RUL giữa các động cơ train. Sensor hằng được giữ là
-không xác định; mỗi hệ số hợp lệ tương ứng một động cơ.}
+correlation Spearman giữa các engine train. Sensor hằng được giữ là không xác
+định.}
 \label{fig:corr}
 \end{figure}
 
 \subsection{Suy luận đầu/cuối vòng đời trên train}
-Notebook \filepath{notebooks/02\_fd001\_inference.ipynb} đã tạo artifact M2.3a
-tại \filepath{outputs/statistics/}. Bảng cặp có 2.100 dòng, tương ứng 100 động
-cơ train nhân 21 sensor. Mỗi dòng dùng trung bình 30 cycles đầu, trung bình 30
-cycles cuối và chênh lệch \texttt{late\_mean - early\_mean}. Bảng suy luận giữ
-đủ 21 sensor. Validation ghi \texttt{passed}, không đọc quan sát test hoặc nhãn
-test, đồng thời xác nhận SHA-256 của raw train không đổi.
+Bảng cặp gồm 2.100 dòng, tương ứng 100 engine train nhân 21 sensor. Mỗi dòng
+dùng mean của 30 cycles đầu, mean của 30 cycles cuối và chênh lệch cuối trừ đầu.
+Bảng suy luận giữ đủ 21 sensor.
 
-Trong 21 sensor, sáu sensor có toàn bộ chênh lệch bằng 0. Các sensor này là
+Trong 21 sensor, sáu sensor có toàn bộ chênh lệch bằng 0:
 \texttt{sensor\_1}, \texttt{sensor\_5}, \texttt{sensor\_10},
-\texttt{sensor\_16}, \texttt{sensor\_18} và \texttt{sensor\_19}. Chúng được
-giữ trong output với trạng thái \texttt{all\_zero\_difference}, khoảng tin cậy
-suy biến tại 0 và p-value không áp dụng. Mười lăm sensor còn lại kiểm định được;
-với cấu hình Wilcoxon permutation 100.000 resamples và Benjamini--Hochberg trên
-họ 21 sensor, các p-value đã hiệu chỉnh đều xấp xỉ 0,000028.
+\texttt{sensor\_16}, \texttt{sensor\_18} và \texttt{sensor\_19}. Mười lăm
+sensor còn lại kiểm định được; với cấu hình Wilcoxon permutation và
+Benjamini--Hochberg trên họ 21 sensor, các p-value đã hiệu chỉnh đều xấp xỉ
+0,000028.
 
 \begin{table}[H]
 \centering
-\caption[Ví dụ kết quả suy luận sensor đầu/cuối]{Một số dòng từ
-\texttt{sensor\_inference.csv}. Giá trị là chênh lệch cuối trừ đầu theo đơn vị
-gốc của từng sensor; không so sánh trực tiếp độ lớn giữa các sensor khác thang
-đo.}
+\caption[Ví dụ kết quả suy luận sensor đầu/cuối]{Một số kết quả tiêu biểu. Giá
+trị là chênh lệch cuối trừ đầu theo đơn vị gốc của từng sensor.}
 \label{tab:sensor-inference}
 \begin{tabular}{lrrl}
 \toprule Sensor & Chênh lệch trung bình & Khoảng tin cậy bootstrap 95\% & Dấu chính\\\midrule
@@ -170,10 +140,8 @@ gốc của từng sensor; không so sánh trực tiếp độ lớn giữa các
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.86\linewidth,height=0.78\textheight,keepaspectratio]{../outputs/statistics/figures/difference_distributions.png}
-\caption[Phân phối chênh lệch sensor đầu/cuối theo engine]{Phân phối
-\texttt{difference = late\_mean - early\_mean} của 100 engine cho từng sensor.
-Mỗi panel có thang x riêng vì các sensor dùng đơn vị và khoảng giá trị khác nhau;
-đường đứt là mốc không thay đổi, đường cam là mean paired difference.}
+\caption[Phân phối chênh lệch sensor đầu/cuối theo engine]{Phân phối chênh lệch
+cuối trừ đầu của 100 engine cho từng sensor.}
 \label{fig:statistics-distributions}
 \end{figure}
 
@@ -181,51 +149,14 @@ Mỗi panel có thang x riêng vì các sensor dùng đơn vị và khoảng gi�
 \centering
 \includegraphics[width=0.86\linewidth,height=0.78\textheight,keepaspectratio]{../outputs/statistics/figures/effect_size_ci.png}
 \caption[Chênh lệch cặp trung bình và khoảng tin cậy bootstrap]{Mean paired
-difference và bootstrap CI 95\% theo từng sensor. Các panel giữ trục riêng để
-không tạo so sánh effect size giữa các sensor khác thang đo; điểm xám là sensor
-toàn bộ chênh lệch bằng 0.}
+difference và bootstrap CI 95\% theo từng sensor.}
 \label{fig:statistics-effect-ci}
 \end{figure}
 
-Kết quả này cho thấy nhiều sensor có thay đổi có hệ thống giữa hai đoạn 30
-cycles trên train FD001 theo protocol đã chốt. Tuy nhiên, đây không phải bằng
-chứng chọn đặc trưng cho mô hình trên toàn train. Việc chọn feature, scaler hoặc
-model vẫn phải nằm trong training folds để tránh data leakage.
-
-\paragraph{Diễn giải hình.}
-Sáu sensor all-zero nêu ở trên không có biến thiên quan sát được trong hai đoạn
-ghép cặp. Mười lăm sensor còn lại đủ điều kiện kiểm định; theo cấu hình
-Wilcoxon permutation và BH FDR đã chốt trước khi chạy, các sensor này đều bác
-bỏ giả thuyết không. Đây là bằng chứng thống kê trong protocol đầu/cuối 30
-cycles, không phải bằng chứng rằng các sensor này có utility dự đoán RUL ngoài
+Kết quả cho thấy nhiều sensor thay đổi có hệ thống giữa hai đoạn 30 cycles trên
+train FD001 theo protocol đã chọn. Sensor 4 có chênh lệch trung bình khoảng
+20,13, còn sensor 7 giảm khoảng 1,91; hai giá trị không được xếp hạng trực tiếp
+vì khác thang đo. Sensor 6 có 47 chênh lệch dương và 53 chênh lệch bằng 0 nhưng
+mean difference chỉ khoảng 0,00045; p-value nhỏ không đồng nghĩa thay đổi lớn.
+Phân tích này không phải bằng chứng chọn feature hoặc utility dự đoán RUL ngoài
 mẫu.
-
-Độ lớn thay đổi cần được đọc cùng \texttt{mean\_difference} và khoảng tin cậy
-theo đơn vị gốc của từng sensor. \texttt{sensor\_4} có chênh lệch trung bình
-khoảng 20,13, trong khi \texttt{sensor\_7} giảm khoảng 1,91; hai giá trị này
-không được xếp hạng trực tiếp vì thang đo khác nhau. \texttt{sensor\_6} có 47
-chênh lệch dương và 53 chênh lệch bằng 0 nhưng mean difference chỉ khoảng
-0,00045, cho thấy p-value nhỏ không đồng nghĩa với thay đổi lớn về đơn vị đo.
-\texttt{sensor\_9} có 71 chênh lệch dương và 29 chênh lệch âm, nên phân phối
-theo engine cần được xem cùng effect size và CI thay vì chỉ đọc mean.
-
-\subsection{Phạm vi bằng chứng EDA và thống kê}
-Các số liệu trên được đối chiếu với bảng CSV và metadata hiện có. Các phép tổng
-hợp được trích từ train cũng đã được kiểm tra lại trong lượt tạo báo cáo. Bản PDF
-tham chiếu trực tiếp hai hình EDA; không vẽ lại giá trị hoặc thay số để minh họa.
-
-Biên bản \filepath{outputs/eda/validation.json} ghi nhận 69 tests đạt; notebook
-chạy từ kernel mới và được kiểm tra độc lập trong thư mục chỉ có train input.
-Runtime audit chặn việc đọc hai file test trong lần kiểm tra. Mười hai CSV và 11
-PNG của hai lần chạy giống nhau theo byte trong cùng môi trường.
-
-Đây là bằng chứng đã lưu của mốc EDA, không phải kết quả chạy lại notebook trong
-lượt viết báo cáo. Mốc EDA mô tả không bao gồm feature selection hoặc kết quả mô
-hình. Với mốc thống kê, \filepath{outputs/statistics/validation.json} ghi nhận
-focused statistics tests đạt 26 tests, full suite đạt 95 tests, notebook 02
-chạy hai lần từ fresh kernel, hai CSV và hai PNG giống nhau theo SHA-256 trong
-cùng môi trường. Runtime audit \texttt{STATISTICS\_TRAIN\_ONLY} cho phép đọc
-\texttt{train\_FD001.txt} và chặn probe đọc \texttt{test\_FD001.txt} cùng
-\texttt{RUL\_FD001.txt}. Đây là bằng chứng validation cục bộ, không phải
-filesystem sandbox, CI enforcement hoặc branch protection. Tính đồng nhất từng
-byte của PNG không được bảo đảm trên môi trường có font hoặc rendering khác.

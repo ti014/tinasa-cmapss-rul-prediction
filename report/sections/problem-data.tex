@@ -1,25 +1,29 @@
 \section{Bài toán, mục tiêu và phạm vi}
 \subsection{Bài toán nghiên cứu}
-Đề tài phân tích chuỗi cảm biến động cơ nhằm ước lượng số cycle còn lại trước khi hỏng. Đầu vào tại cycle $t$ là các quan sát đã có đến $t$ của một động cơ; đầu ra là RUL dự đoán tại cycle đó. Supervised regression (hồi quy có giám sát) là cách mô hình hóa biến mục tiêu dạng số. Mục tiêu báo cáo là dự đoán RUL và giải thích bằng chứng cảnh báo sớm, không chỉ trình bày một thuật toán hồi quy.
+Đề tài phân tích chuỗi cảm biến động cơ nhằm ước lượng số cycle còn lại trước
+khi hỏng. Đầu vào tại cycle $t$ là các quan sát đã có đến $t$ của một động cơ;
+đầu ra mục tiêu là RUL tại cycle đó. Phạm vi kết quả trong báo cáo gồm kiểm tra
+dữ liệu, EDA, ETL, rolling features và suy luận thống kê đầu/cuối vòng đời.
 
 Đối với train, đặt $T_i$ là cycle cuối của động cơ $i$ trong lịch sử đầy đủ đến khi hỏng. Nhãn được xác định bởi
 \begin{equation}
  y_{i,t}=T_i-t,\qquad 1\leq t\leq T_i.
  \label{eq:rul}
 \end{equation}
+Trong Công thức~\ref{eq:rul}, $i$ là engine, $t$ là cycle đang xét, $T_i$ là
+cycle cuối của engine $i$ trong train và $y_{i,t}$ là RUL tính bằng cycle.
 Ví dụ minh họa: một động cơ kết thúc ở cycle 200 có RUL bằng 30 cycles tại cycle 170 và bằng 0 tại cycle 200. Đây là ví dụ tính nhãn, không phải kết quả dự đoán.
 
 Lịch sử test bị cắt trước khi hỏng nên không được lấy cycle cuối quan sát của test làm $T_i$. Mục tiêu đánh giá cuối là một dự đoán tại cycle cuối quan sát cho mỗi test engine. Bộ nhãn chính thức được tách khỏi quá trình lựa chọn mô hình.
 
 \subsection{Câu hỏi và giới hạn nghiên cứu}
-Các câu hỏi chính gồm: dữ liệu có đáp ứng contract không; cảm biến biến đổi thế nào theo vòng đời; đặc trưng từ 30 cycles gần nhất dự đoán RUL được đến mức nào; và kết quả có thể trình bày minh bạch ra sao. Bản hiện tại cung cấp bằng chứng cho câu hỏi chất lượng dữ liệu và một phần EDA, chưa trả lời được câu hỏi độ chính xác mô hình.
+Các câu hỏi được trả lời gồm: dữ liệu có đáp ứng contract không; cảm biến biến
+đổi thế nào theo vòng đời; ETL Pandas và PySpark có tạo kết quả tương đương
+không; và trailing window 30 cycles tạo ra tập đặc trưng có cấu trúc nào.
 
-FD001 không có chi phí bảo trì, downtime hoặc lịch can thiệp. Do đó, RUL không tự động xác định thời điểm bảo trì tối ưu. Ngưỡng cảnh báo dự kiến 30 cycles chỉ dùng để minh họa cách đọc kết quả. Cycle cũng không được đổi thành giờ hoặc ngày vì chưa có thông tin quy đổi.
-
-\subsection{Liên hệ với yêu cầu môn học}
-Theo tài liệu môn học, tiêu chí quy trình xử lý dữ liệu chiếm 40\%, trực quan hóa và phân tích 25\%, chất lượng mã nguồn 20\%, trình bày và phản biện 15\%. Vì vậy, báo cáo dành nội dung riêng cho provenance, contract, ETL, lưu trữ và tái lập, bên cạnh mô hình dự đoán. Các trọng số này là tiêu chí chấm điểm, không phải tỷ lệ hoàn thành hiện tại.
-
-Nguồn yêu cầu là hai tài liệu \textit{Đề cương môn học Phân tích dữ liệu lớn} và \textit{Danh sách đề tài báo cáo cuối kỳ}, được đối chiếu ngày \reportdate. Yêu cầu ghi rõ tiến độ được bổ sung theo trao đổi ngày này. Chưa có mẫu bìa bắt buộc hoặc tên giảng viên được xác nhận trong các nguồn đã đọc; bản hiện tại không tự điền các thông tin đó.
+FD001 không có chi phí bảo trì, downtime hoặc lịch can thiệp. Do đó, RUL không
+tự động xác định thời điểm bảo trì tối ưu. Cycle cũng không được đổi thành giờ
+hoặc ngày vì dữ liệu không cung cấp thông tin quy đổi.
 
 \section{Dữ liệu và kiểm soát chất lượng}
 \subsection{Nguồn dữ liệu và lý do lựa chọn}
@@ -79,7 +83,7 @@ hằng ở 100. & Biến bối cảnh vận hành; không thuộc họ 21 sensor
 M2.\\[0.35em]
 \texttt{sensor\_1}--\texttt{sensor\_21} & Hai mươi mốt phép đo sensor trong
 mỗi cycle. & \texttt{float64} hữu hạn; không có missing trong train. & Nguồn
-tín hiệu chính cho EDA, paired analysis và feature engineering dự kiến.\\[0.35em]
+tín hiệu chính cho EDA, paired analysis và feature engineering.\\[0.35em]
 \texttt{rul} trong train targets & Nhãn RUL được suy ra từ lịch sử train đầy
 đủ đến khi hỏng. & Số nguyên không âm; trên train hiện có miền 0--361 cycles. &
 Biến mục tiêu cho supervised regression; không phải cột raw.\\[0.35em]
@@ -97,11 +101,9 @@ trong train kết thúc ở cycle 192, nên sau khi tạo nhãn, dòng này có
 \texttt{rul=191}. Đây là nhãn hồi cứu của train, không phải dự đoán của mô hình.
 
 \subsection{Hồ sơ cột trên tập train}
-Bảng~\ref{tab:column-profile} tóm tắt các nhóm cột sau khi ghép RUL train.
-Các thống kê này lấy từ \filepath{outputs/eda/tables/input\_summary.csv},
-\filepath{outputs/eda/tables/rul\_summary.csv} và
-\filepath{outputs/eda/tables/measurement\_summary.csv}. Chúng dùng để hiểu cấu
-trúc dữ liệu trước khi xây feature; không phải bằng chứng lựa chọn mô hình.
+Bảng~\ref{tab:column-profile} tóm tắt các nhóm cột sau khi ghép RUL train. Các
+thống kê dùng để mô tả cấu trúc dữ liệu trước khi xây feature, không phải bằng
+chứng về hiệu quả dự đoán.
 
 \begin{table}[H]
 \centering
@@ -154,10 +156,8 @@ Sensor & Số giá trị khác nhau & Min--max & Ghi chú\\
 \end{small}
 
 Các cột hằng toàn train không có correlation Spearman xác định với RUL và không
-thể tạo chênh lệch đầu/cuối khác 0 trong paired analysis. Tuy nhiên, báo cáo
-vẫn giữ chúng trong output thống kê để người đọc thấy rõ phạm vi kiểm định đủ
-21 sensor. Với mô hình dự đoán, việc giữ hay loại sensor phải được quyết định
-trong từng training fold; không được dùng toàn bộ train để chọn sẵn feature.
+thể tạo chênh lệch đầu/cuối khác 0 trong paired analysis. Báo cáo vẫn giữ chúng
+trong bảng thống kê để thể hiện đầy đủ phạm vi 21 sensor.
 
 \subsection{Các kiểm tra đã triển khai và lý do}
 Reader và validator thực hiện kiểm tra số trường, schema, kiểu số hữu hạn, bảng không rỗng, split hợp lệ, khóa duy nhất và cycle liên tục trong từng động cơ. Profile FD001 đối chiếu thêm số dòng, ID động cơ và cycle bắt đầu. Với train targets, validator kiểm tra đủ khóa và đối chiếu Công thức~\ref{eq:rul}.
@@ -167,4 +167,6 @@ Các kiểm tra được đặt trước EDA vì dữ liệu sai có thể tạo
 \subsection{Tính toàn vẹn và giới hạn của validation}
 Báo cáo JSON lưu SHA-256 của input để nhận biết phiên bản dữ liệu đã đọc. Dấu vân tay này chỉ hỗ trợ đối chiếu; tự tính checksum không chứng minh nguồn gốc file là chính xác. Việc kiểm tra row count và cycle continuity cũng không đủ phát hiện mọi thay đổi giá trị sensor.
 
-Đặc biệt, một chuỗi train bị cắt đuôi nhưng vẫn liên tục có thể tạo ra RUL sai nếu bị hiểu nhầm là lịch sử đầy đủ. Vì vậy, giữ raw bất biến và ghi nguồn dữ liệu là điều kiện đi kèm công thức tính nhãn. API test labels được tách riêng nhưng chưa có cơ chế phân quyền filesystem ngăn mọi chương trình đọc file; ranh giới không dùng test để chọn mô hình còn phải được kiểm tra khi xây pipeline mô hình.
+Đặc biệt, một chuỗi train bị cắt đuôi nhưng vẫn liên tục có thể tạo ra RUL sai
+nếu bị hiểu nhầm là lịch sử đầy đủ. Vì vậy, raw được giữ bất biến, nguồn dữ liệu
+được ghi nhận và test labels được tách khỏi các phân tích train.

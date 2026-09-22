@@ -18,9 +18,10 @@ Available now:
 - An [executed EDA notebook](notebooks/01_fd001_eda.ipynb), 12 CSV tables,
   11 figures, and [analysis notes and validation evidence](outputs/eda/README.md).
 - A curated bibliography and reading guide.
-- A [living LaTeX report](report/README.md) with a [PDF draft](report/main.pdf),
-  a data dictionary, glossary of report terminology and abbreviations, work
-  progress, decision rationale, and traceable validation/EDA/M2.3a--M2.4 evidence.
+- A [LaTeX report](report/README.md) with a [PDF](report/main.pdf) summarizing
+  the current validated results, a data dictionary, glossary of report
+  terminology and abbreviations, decision rationale, and validation/EDA/M2.3a--M2.4
+  interpretations.
   EDA milestone 1, milestone 2 train-only statistics, M3.1 ETL parity, and
   M3.2 rolling features have passed independent validation; models and the
   dashboard remain next.
@@ -51,7 +52,7 @@ Available now:
 Not implemented yet:
 
 - RUL models and ARIMA analysis.
-- Streamlit dashboard and completed final report (the LaTeX draft has started).
+- RUL models, ARIMA analysis, and the Streamlit dashboard.
 
 Installation, data validation, notebook, ETL, and feature-generation instructions are available below. Model training, evaluation, and dashboard entry points are not implemented yet.
 

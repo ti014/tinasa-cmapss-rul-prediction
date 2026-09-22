@@ -36,4 +36,16 @@ PASS: raw train SHA-256 remains 963b5e22825b34d8b21c69e1aeb4af3e647050eb672ee883
 LIMIT: mean paired difference, percentile bootstrap settings, Wilcoxon ties/zeros/permutation settings and FDR details are proposals, not finalized execution configuration. Validation cycle sampling and model hyperparameters remain open.
 LIMIT: no claim of completed inference or model performance; previous 69-test result is historical evidence, not a new test run for this documentation change.
 ENVIRONMENT LIMIT: existing Fontconfig diagnostic and absolute Windows font warnings remain; successful PDF build/render was verified locally.
+
+M2.1a paired-data contract update: 2026-09-22
+SCOPE: train-only pair construction and contract; no inference, model training, ETL, notebook execution or statistical artifact export.
+AUTHORITY: user selected mean of the first and final 30 cycles per train engine, with late mean minus early mean.
+PASS: `build_engine_sensor_pairs` and `validate_engine_sensor_pairs` use the existing observations contract, fixed 30-cycle windows, canonical engine/sensor order, all 21 sensors and a finite late-minus-early difference.
+PASS: focused pytest command passed 17 tests; final full suite passed 86 tests in 6.00 seconds using a dedicated `--basetemp` directory.
+PASS: real FD001 train profile test creates 2,100 in-memory pairs, 21 sensors per engine and 100 pairs per sensor; test labels are not read and no output artifact is written.
+PASS: negative tests reject a short engine, non-one cycle start, test/mixed split, cycle gap, non-finite sensor input, invalid pair status, invalid difference including a large-scale mismatch, duplicate/missing pair, non-canonical order, NaN and float32.
+PASS: Tectonic 0.17.0 rebuilt `statistical-protocol.pdf` and `main.pdf` after the progress update; final report has 30 A4 pages and no overfull/underfull boxes, missing glyphs, undefined citations/references or duplicate destinations.
+PASS: rendered latest progress and statistical-protocol pages were reviewed. The progress table continues below the new row without an isolated mostly blank page; the updated helper node and planned inference nodes are legible with no collision or clipping. Independent TikZ review reported 0 collision, 0 whitespace collision and 0 clipping.
+LIMIT: no CSV, PNG, run metadata, bootstrap confidence interval, Wilcoxon statistic, raw/adjusted p-value or FDR result exists yet. No statement about sensor significance or predictive utility is supported by this update.
+ENVIRONMENT LIMIT: Tectonic still reports missing default Fontconfig configuration and absolute Windows font paths; both PDFs build successfully and were visually inspected on this machine.
 PASS: git diff --check and whitespace checks including untracked report sources passed. Build logs retained in tmp/report-theory-review/; no .blg build artifact left in report/.

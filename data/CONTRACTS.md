@@ -1,8 +1,10 @@
 # Data contract cho NASA C-MAPSS FD001
 
-Contract hiện thực thi việc đọc observations, kiểm tra dữ liệu và tạo train RUL.
-Contract của rolling features và predictions mới mô tả phần đã chốt trong kế
-hoạch; chưa có code tạo hoặc kiểm tra hai artifact này.
+Contract hiện thực thi việc đọc observations, kiểm tra dữ liệu, tạo train RUL
+và tạo bảng cặp sensor đầu/cuối đời cho phân tích train. Bootstrap, Wilcoxon,
+FDR, notebook suy luận và các artifact kết quả chưa được triển khai. Contract
+của rolling features và predictions mới mô tả phần đã chốt trong kế hoạch;
+chưa có code tạo hoặc kiểm tra hai artifact này.
 
 ## Nguồn quy tắc và phạm vi
 
@@ -28,6 +30,7 @@ không dùng cho fold, window hoặc dữ liệu benchmark.
 | Observations | `split`, sau đó 26 cột raw | Reader trả `split` dạng Pandas string; ID/cycle `int64`; settings/sensors `float64`; khóa `(split, engine_id, cycle)` |
 | Train targets | `split`, `engine_id`, `cycle`, `rul` | Khóa khớp observations train; `rul` nguyên, không âm, đơn vị cycle |
 | Test labels | `split`, `engine_id`, `rul` | `split=test`; ID và RUL `int64`; khóa `(split, engine_id)` |
+| Engine-sensor pairs | `split`, `engine_id`, `sensor`, `n_cycles`, ranh giới/số phần tử hai đoạn, `early_mean`, `late_mean`, `difference`, `pair_status` | Chỉ `train`; khóa `(split, engine_id, sensor)`; 21 dòng theo sensor cho mỗi engine; output canonical theo engine rồi `sensor_1`–`sensor_21` |
 
 Reader observations nhận `split` do bên gọi xác định; CLI gán train/test từ tên
 file cố định. Không thể suy ra split chỉ từ 26 giá trị của một dòng. Validator
@@ -108,6 +111,12 @@ Chỉ tạo nhãn theo max cycle cho lịch sử train đầy đủ đến khi h
 test. Bên gọi phải cung cấp toàn bộ lịch sử trước khi lọc window: một chuỗi
 train bị cắt đuôi nhưng vẫn liên tục không thể được nhận diện chỉ từ công thức.
 
+`build_engine_sensor_pairs` cũng chỉ nhận observations thuộc `train`, sau khi
+chạy contract observations chung. Nó không đọc test observations hoặc test
+labels. Ví dụ bảng trộn engine train với engine test bị từ chối trước khi tính
+mean; đây là ranh giới phân tích hồi cứu train, không phải cơ chế filesystem
+access control cho mọi code trong repository.
+
 ### TARGET_KEYS
 
 Train targets phải có đúng tập khóa observations, không thiếu/thêm dòng. Bảng
@@ -119,6 +128,56 @@ theo vị trí dòng.
 `rul = max_cycle - cycle` trong từng train engine, không cap ở đợt này. Ví dụ
 engine có cycle `1, 2, 3, 4` nhận RUL `3, 2, 1, 0`; engine khác kết thúc ở
 cycle 2 nhận `1, 0`. Test kiểm tra các giá trị tính tay và trường hợp sai RUL.
+
+### CYCLE_START
+
+Mỗi engine dùng tạo cặp phải bắt đầu ở cycle 1 và liên tục. Không suy diễn
+đoạn đầu từ vị trí dòng input; cycle 2–61 dù liên tục vẫn bị từ chối.
+
+### PAIR_WINDOW
+
+Mỗi engine phải có ít nhất 60 cycles. Đoạn đầu cố định là 1–30; nếu `T_i` là
+cycle cuối thì đoạn cuối là `T_i-29`–`T_i`. Hai đoạn có đúng 30 observations
+và không chồng nhau. Engine 59 cycles bị từ chối, không rút ngắn window hoặc
+bỏ engine để tiếp tục chạy. Ví dụ engine dài 200 cycles dùng 1–30 và 171–200.
+
+### PAIR_SENSOR
+
+Mỗi engine phải có đúng một dòng cho từng `sensor_1` đến `sensor_21`; không
+lọc sensor từ EDA, correlation hoặc kết quả suy luận. Một dòng thiếu sensor
+hoặc tên ngoài tập này làm validator dừng.
+
+### PAIR_KEY
+
+Khóa bảng cặp là `(split, engine_id, sensor)`. Không nhận hai dòng có cùng
+khóa, kể cả khi các giá trị mean trùng nhau.
+
+### PAIR_ORDER
+
+Bảng canonical luôn sắp engine ID tăng dần, rồi đúng thứ tự `sensor_1` đến
+`sensor_21`; tránh thứ tự chuỗi làm `sensor_10` đứng trước `sensor_2`.
+
+### PAIR_NUMERIC
+
+`early_mean`, `late_mean` và `difference` là `float64` hữu hạn; không ghi
+null, NaN hoặc Infinity.
+
+### PAIR_DIFFERENCE
+
+`difference = late_mean - early_mean` trước khi làm tròn để trình bày. Ví dụ
+sensor bằng cycle trong engine 60 cycles có `early_mean=15,5`,
+`late_mean=45,5` và `difference=30`. Validator yêu cầu đúng kết quả `float64`
+của phép trừ này, không dùng relative tolerance có thể chấp nhận chênh lệch
+khác ở thang giá trị lớn.
+
+### PAIR_STATUS
+
+Mọi dòng đã tạo có `pair_status=valid`; input lỗi dừng ở contract thay vì tạo
+dòng trạng thái lỗi.
+
+Bảng cặp hiện là API trong bộ nhớ do `src/cmapss/statistics.py` tạo và kiểm
+tra. Chưa có CSV dưới `outputs/statistics/`; việc xuất artifact, metadata,
+bootstrap và kiểm định vẫn thuộc các cụm mốc 2 tiếp theo.
 
 ### RAW_IMMUTABLE
 

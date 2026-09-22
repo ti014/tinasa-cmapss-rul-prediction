@@ -22,7 +22,7 @@ Giữ độ dài bằng nhau giúp so sánh hai mức tín hiệu trên cùng s�
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.91\linewidth]{figures/statistical-protocol.pdf}
-\caption[Protocol thống kê đầu/cuối vòng đời]{Thiết kế phân tích mốc 2; chỉ bước chọn hai đoạn 30 cycles và các nguyên tắc đã nêu được chốt. Các phép tính suy luận chưa chạy, cấu hình chi tiết còn cần chốt.}
+\caption[Protocol thống kê đầu/cuối vòng đời]{Thiết kế phân tích mốc 2; bước tạo một cặp đầu/cuối cho mỗi engine--sensor đã có helper và kiểm thử. Chưa xuất artifact, chạy phép tính suy luận hoặc chốt cấu hình chi tiết.}
 \label{fig:stat-protocol}
 \end{figure}
 
@@ -47,7 +47,7 @@ Các giá trị sau là đề xuất cụ thể để lượt triển khai có t
 Phải chốt các mục còn mở này trước khi chạy mốc 2. Nếu dùng phương án khác, cập nhật protocol, lý do và thời điểm thay đổi trước khi tạo bảng kết quả; không trình bày lựa chọn mới như đã xác định từ đầu.
 
 \subsection{Đầu ra và điều kiện nghiệm thu}
-Đầu ra dự kiến gồm bảng cặp theo engine/sensor, bảng thống kê theo sensor, hình phân phối chênh lệch và effect size kèm khoảng tin cậy, cùng metadata ghi cấu hình và phiên bản. Không tạo artifact rỗng để thay kết quả chưa chạy.
+Đầu ra dự kiến gồm bảng cặp theo engine/sensor, bảng thống kê theo sensor, hình phân phối chênh lệch và effect size kèm khoảng tin cậy, cùng metadata ghi cấu hình và phiên bản. Cụm đầu tiên hiện có helper tạo/kiểm tra bảng cặp trong bộ nhớ theo đúng ranh giới 30 cycles; chưa tạo CSV, hình hoặc metadata. Không tạo artifact rỗng để thay kết quả chưa chạy.
 
 Kiểm tra phải bao gồm chỉ số 30 cycles đúng trong từng engine, không chồng đoạn, ghép cặp một--một, ví dụ tính tay và trường hợp hằng/ties/zeros. Bootstrap phải lấy mẫu theo engine và giữ cặp; FDR cần được kiểm tra trên một vector p-value nhỏ có đáp án biết trước. Chạy lại với cùng input và seed phải tái lập kết quả; raw và EDA gốc giữ nguyên. Khi có kết quả mới cập nhật phần kết quả, nhật ký và bằng chứng kiểm tra.
 

@@ -15,7 +15,8 @@ ETL Silver/Gold hoặc dashboard. Mốc EDA mô tả đã hoàn thành theo
 Ngày 22/09/2026 bổ sung lý thuyết window, Ridge, histogram gradient boosting,
 grouped validation, paired analysis, bootstrap, FDR, PCA–ARIMA và Spark.
 Đã chốt so sánh mean 30 cycles đầu với 30 cycles cuối của từng engine;
-chưa chạy thống kê suy luận. Effect size chính, cấu hình bootstrap,
+helper tạo cặp train theo engine--sensor đã có và được kiểm thử, nhưng chưa
+xuất artifact hoặc chạy thống kê suy luận. Effect size chính, cấu hình bootstrap,
 ties/zeros và mức FDR được ghi thành đề xuất cần chốt trước triển khai trong
 [protocol](sections/statistical-protocol.tex). Ví dụ engine sống 200 cycles
 được ghép cặp đoạn 1–30 với 171–200. Không dùng hai đoạn này làm feature
@@ -115,8 +116,8 @@ overfull/underfull box và duplicate destination. Sau khi kiểm tra, có thể
 dọn aux/log riêng của report; giữ PDF và nguồn. Không đưa thư mục `tmp/`
 vào gói nộp.
 
-Lần bổ sung lý thuyết đã kiểm chứng PDF **28 trang**, **19 nguồn được trích**
-trong nội dung từ danh mục 22 nguồn. Log LaTeX/BibTeX không có overfull/underfull,
+Bản M2.1a đã kiểm chứng PDF **30 trang**, **19 nguồn được trích** trong nội
+dung từ danh mục 22 nguồn. Log LaTeX/BibTeX không có overfull/underfull,
 glyph thiếu, citation/reference chưa giải quyết hoặc cảnh báo bibliography.
 Đã rà bản render và sơ đồ mốc 2 có kiểm tra độc lập; bằng chứng nằm trong
 `evidence/report-checks.txt`. Tectonic có diagnostic

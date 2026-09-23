@@ -58,7 +58,7 @@ Repository đã có **gói kiểm tra dữ liệu FD001, nhãn RUL train, notebo
 
 Chưa triển khai:
 
-- Tái tạo end-to-end từ raw input bằng một lệnh được ghi nhận đầy đủ.
+- Slide trình bày và gói bàn giao cuối.
 
 Lệnh cài đặt, kiểm tra dữ liệu, mở notebook, chạy ETL, tạo rolling features,
 modeling và PCA--ARIMA có ở phần Bắt đầu. Dashboard dùng dependency tùy chọn
@@ -350,8 +350,8 @@ Notebook chỉ phân tích train và tạo lại 12 bảng CSV, 11 hình PNG.
 Các lần kiểm tra dùng kernel mới đã tạo tệp đầu ra giống nhau trong cùng môi
 trường; bộ kiểm thử tại mốc nghiệm thu EDA đạt **69 tests**. Toàn bộ bộ kiểm
 thử hiện tại, gồm kiểm thử xuất tệp đầu ra M2.3a, runtime audit M2.4 và kiểm
-tra ETL M3.1, kiểm tra features M3.2, modeling theo group và PCA--ARIMA, đạt
-**116 tests**.
+tra ETL M3.1, kiểm tra features M3.2, modeling theo group, PCA--ARIMA và tái
+lập end-to-end, đạt **123 tests**.
 
 ![Quy trình EDA train FD001](assets/diagrams/fd001-eda.svg)
 
@@ -492,6 +492,24 @@ RUL cuối, evaluation của một test engine, forecast Health Index, coverage 
 khoảng dự đoán, diagnostics và provenance. Dashboard không huấn luyện lại model
 và không đọc `data/raw/RUL_FD001.txt`.
 
+### Kiểm tra pipeline end-to-end
+
+Tái tạo pipeline khoa học từ raw FD001 bất biến vào một thư mục tạm mới, rồi so
+sánh nội dung bảng, metric, hình, checksum raw và dashboard loader với artifact
+đã có:
+
+```powershell
+uv run python -m cmapss.reproducibility `
+  --output-root tmp/e2e-repro-final `
+  --repo-root . `
+  --evidence-path tmp/e2e-repro-final/validation.json
+```
+
+Lệnh chạy ETL Pandas với benchmark 1x, rolling features, modeling RUL và
+PCA--ARIMA train-only. Lệnh yêu cầu output root mới, xác nhận raw hash không đổi
+và so sánh bảng với `rtol=1e-9`, `atol=1e-9`. Parity PySpark và tái lập notebook
+là các kiểm tra riêng, đã được ghi trong evidence.
+
 <details>
 <summary>Dành cho phát triển và kiểm tra riêng</summary>
 
@@ -520,8 +538,9 @@ Pytest dọn thư mục `--basetemp` khi chạy lại; chỉ dành thư mục đ
 </details>
 
 ETL Silver/Gold bằng Pandas/PySpark parity, benchmark, rolling features M3.2,
-đánh giá mô hình RUL theo group, phân tích PCA--ARIMA train-only và dashboard
-đọc artifact đã có; tái tạo end-to-end vẫn còn. Validation tái lập M2.4 đã đạt.
+đánh giá mô hình RUL theo group, phân tích PCA--ARIMA train-only, dashboard đọc
+artifact và kiểm tra tái tạo end-to-end đã có; slide và gói bàn giao cuối vẫn
+còn. Validation tái lập M2.4 đã đạt.
 [Báo cáo kết quả hiện có](report/main.pdf) được cập nhật cùng các kết quả đã
 kiểm chứng và diễn giải trong phạm vi FD001.
 Xem [hướng dẫn báo cáo](report/README.md) để biết cấu trúc nguồn và lệnh build

@@ -19,6 +19,7 @@ def test_dashboard_loader_reports_missing_artifact(tmp_path: Path) -> None:
 def test_dashboard_loader_reads_persisted_artifacts() -> None:
     data = load_dashboard_data(Path(__file__).resolve().parents[1])
     assert len(data.model_evaluation) == 100
+    assert data.model_comparison.loc[data.model_comparison["selected"] == True, "model_name"].tolist() == ["hist_gradient_boosting"]
     assert len(data.health_index) == 20_631
     assert len(data.forecasts) == 704
     assert data.timeseries_run_info["isolation"]["uses_test_labels"] is False

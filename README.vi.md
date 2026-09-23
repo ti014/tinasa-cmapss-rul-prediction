@@ -56,9 +56,10 @@ Repository đã có **gói kiểm tra dữ liệu FD001, nhãn RUL train, notebo
   engine, Health Index/ARIMA và provenance của lần chạy. Dashboard không fit
   lại model và không đọc nhãn test thô khi mở trang.
 
-Chưa triển khai:
+Gói bàn giao cuối:
 
-- Slide trình bày và gói bàn giao cuối.
+- Đã có [slide trình bày](slides/cmapss_fd001_presentation.pptx) và
+  [checklist bàn giao](handoff/FINAL_HANDOFF.md).
 
 Lệnh cài đặt, kiểm tra dữ liệu, mở notebook, chạy ETL, tạo rolling features,
 modeling và PCA--ARIMA có ở phần Bắt đầu. Dashboard dùng dependency tùy chọn
@@ -227,7 +228,7 @@ Báo cáo không đặt trước một mức điểm mục tiêu. Kết quả â
 - Dự kiến: RUL thật và RUL dự đoán trên các động cơ validation.
 - Dự kiến: biểu đồ phân tán giá trị dự đoán và phân phối phần dư trên tập test.
 - Dự kiến: phân tích sai số theo động cơ và khoảng RUL.
-- Dự kiến: dashboard Streamlit để xem quỹ đạo và kết quả mô hình của từng động cơ.
+- Đã có: dashboard Streamlit để xem RUL dự đoán tại cycle cuối của từng test engine, quỹ đạo Health Index của validation engines và provenance của artifact.
 
 Dashboard có thể minh họa cảnh báo khi RUL dự đoán không quá 30 cycles. Đây không phải ngưỡng bảo trì tối ưu vì FD001 không cung cấp chi phí bảo trì, downtime hoặc intervention records.
 
@@ -487,10 +488,11 @@ uv sync --extra dashboard
 uv run --extra dashboard streamlit run app.py
 ```
 
-Dashboard đọc `outputs/modeling` và `outputs/timeseries`, sau đó hiển thị metric
-RUL cuối, evaluation của một test engine, forecast Health Index, coverage của
-khoảng dự đoán, diagnostics và provenance. Dashboard không huấn luyện lại model
-và không đọc `data/raw/RUL_FD001.txt`.
+Dashboard đọc `outputs/modeling` và `outputs/timeseries`, sau đó hiển thị so
+sánh model, metric RUL cuối, evaluation của một test engine, forecast Health
+Index, coverage của khoảng dự đoán, diagnostics và provenance. Giao diện light
+theme có bốn view để demo ngắn. Dashboard không huấn luyện lại model và không
+đọc `data/raw/RUL_FD001.txt`.
 
 ### Kiểm tra pipeline end-to-end
 
@@ -539,8 +541,8 @@ Pytest dọn thư mục `--basetemp` khi chạy lại; chỉ dành thư mục đ
 
 ETL Silver/Gold bằng Pandas/PySpark parity, benchmark, rolling features M3.2,
 đánh giá mô hình RUL theo group, phân tích PCA--ARIMA train-only, dashboard đọc
-artifact và kiểm tra tái tạo end-to-end đã có; slide và gói bàn giao cuối vẫn
-còn. Validation tái lập M2.4 đã đạt.
+artifact, kiểm tra tái tạo end-to-end, slide và checklist bàn giao đã có.
+Validation tái lập M2.4 đã đạt.
 [Báo cáo kết quả hiện có](report/main.pdf) được cập nhật cùng các kết quả đã
 kiểm chứng và diễn giải trong phạm vi FD001.
 Xem [hướng dẫn báo cáo](report/README.md) để biết cấu trúc nguồn và lệnh build

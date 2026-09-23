@@ -369,8 +369,9 @@ không đọc `data/raw/RUL_FD001.txt` khi mở trang. Nếu artifact bắt bu�
 hoặc sai schema, dashboard hiển thị lỗi đầu vào và không dựng biểu đồ từ dữ liệu
 không đầy đủ.
 
-Các view đã triển khai gồm metric final evaluation, chi tiết một test engine,
-Health Index/ARIMA của một validation engine và provenance của hai lần chạy.
+Các view đã triển khai gồm tổng quan có model comparison, metric final
+evaluation, chi tiết một test engine, Health Index/ARIMA của một validation
+engine và provenance của hai lần chạy.
 Ví dụ, chọn `engine_id=39` trong view Health Index sẽ hiển thị lịch sử Health
 Index, holdout forecast, prediction interval 95% và diagnostics đã lưu trong
 Parquet/CSV; dashboard không tạo lại các giá trị này.

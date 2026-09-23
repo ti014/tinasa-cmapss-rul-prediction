@@ -529,3 +529,24 @@ tests, focused reproducibility tests passed 3 tests, and compileall,
 LIMIT: This command validates the Pandas scientific path. PySpark parity and
 fresh-kernel notebook reproducibility remain separate checks already recorded
 in earlier evidence entries.
+
+Dashboard UI refinement: 2026-09-23
+SCOPE: Streamlit demo presentation and persisted dashboard loader contract.
+PASS: Added light theme, hero context, model comparison and four navigable views:
+overview, RUL evaluation, Health Index/ARIMA and provenance. Browser smoke test
+visited all four views; `/_stcore/health` and `/` returned HTTP 200.
+PASS: Focused dashboard tests passed 4 tests after the UI update; full suite
+passed 123 tests, compileall and git diff check passed.
+LIMIT: The browser smoke test validates local rendering and navigation; it does
+not replace a live classroom demo or a native PowerPoint test.
+
+Presentation and handoff: 2026-09-23
+SCOPE: 10-slide FD001 presentation deck and final handoff checklist.
+PASS: `slides/cmapss_fd001_presentation.pptx` was exported with Artifact Tool;
+package integrity, first-party import, layout geometry, font policy and
+10-slide count passed. The deck was rendered slide-by-slide and inspected as a
+montage with no clipping or overflow findings.
+PASS: `handoff/FINAL_HANDOFF.md` records the scope, module tree, commands,
+validated metrics, artifact locations, limitations and seven defense questions.
+LIMIT: Native PowerPoint execution was not available in this environment;
+finalizer import and rendered-slide checks passed.

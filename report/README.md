@@ -13,6 +13,9 @@ các công thức. Dashboard Streamlit đã được bổ sung như một consum
 của artifact; PCA--ARIMA vẫn được trình bày như phân tích phụ trên Health Index,
 không phải RUL model. Lệnh tái lập end-to-end đã chạy lại pipeline Pandas từ
 raw và đối chiếu artifact cuối.
+Slide trình bày và checklist bàn giao nằm tại `slides/` và
+`handoff/FINAL_HANDOFF.md`; chúng dùng cùng số liệu đã kiểm chứng trong
+báo cáo và artifact.
 
 ## Cấu trúc
 

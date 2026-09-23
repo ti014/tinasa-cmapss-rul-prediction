@@ -23,6 +23,7 @@ class DashboardData:
     """Loaded, persisted artifacts consumed by the dashboard."""
 
     model_metrics: dict[str, Any]
+    model_comparison: pd.DataFrame
     model_predictions: pd.DataFrame
     model_evaluation: pd.DataFrame
     health_index: pd.DataFrame
@@ -71,6 +72,7 @@ def load_dashboard_data(repo_root: str | Path = ".") -> DashboardData:
     timeseries = root / "outputs" / "timeseries"
     model_predictions = _read_table(modeling / "predictions" / "final_predictions.parquet", parquet=True)
     model_evaluation = _read_table(modeling / "predictions" / "final_evaluation.parquet", parquet=True)
+    model_comparison = _read_table(modeling / "tables" / "model_metrics.csv")
     health_index = _read_table(timeseries / "tables" / "health_index.csv")
     forecast_metrics = _read_table(timeseries / "tables" / "forecast_metrics.csv")
     diagnostics = _read_table(timeseries / "tables" / "diagnostics.csv")
@@ -86,6 +88,7 @@ def load_dashboard_data(repo_root: str | Path = ".") -> DashboardData:
         {"split", "engine_id", "cycle", "y_true", "y_pred", "absolute_error"},
         "final_evaluation.parquet",
     )
+    _require_columns(model_comparison, {"model_name", "mean_engine_mae", "selected"}, "model_metrics.csv")
     _require_columns(health_index, {"split", "engine_id", "cycle", "health_index"}, "health_index.csv")
     _require_columns(forecast_metrics, {"engine_id", "mae", "rmse", "coverage_95", "status"}, "forecast_metrics.csv")
     _require_columns(diagnostics, {"engine_id", "adf_pvalue", "ljung_box_pvalue", "status"}, "diagnostics.csv")
@@ -97,6 +100,7 @@ def load_dashboard_data(repo_root: str | Path = ".") -> DashboardData:
 
     return DashboardData(
         model_metrics=_read_json(modeling / "tables" / "final_metrics.json"),
+        model_comparison=model_comparison,
         model_predictions=model_predictions,
         model_evaluation=model_evaluation,
         health_index=health_index,
@@ -146,9 +150,33 @@ def _render_dashboard() -> None:
     import matplotlib.pyplot as plt
     import streamlit as st
 
-    st.set_page_config(page_title="C-MAPSS FD001 dashboard", layout="wide")
-    st.title("C-MAPSS FD001: RUL và Health Index")
-    st.caption("Dashboard đọc artifact đã kiểm chứng; không huấn luyện lại model khi mở trang.")
+    st.set_page_config(
+        page_title="C-MAPSS FD001 | RUL dashboard",
+        page_icon="R",
+        layout="wide",
+        initial_sidebar_state="expanded",
+    )
+    st.markdown(
+        """
+        <style>
+        .block-container {padding-top: 2rem; padding-bottom: 3rem; max-width: 1380px;}
+        [data-testid="stSidebar"] {border-right: 1px solid #e2e8f0;}
+        [data-testid="stMetric"] {background: #f8fafc; border: 1px solid #e2e8f0; padding: 14px 16px; border-radius: 12px;}
+        [data-testid="stMetricLabel"] {color: #52606d; font-size: 0.82rem;}
+        [data-testid="stMetricValue"] {color: #0f243e; font-size: 1.65rem;}
+        .hero {background: linear-gradient(115deg, #0f243e 0%, #1f7a8c 100%); border-radius: 18px; padding: 30px 34px; color: white; margin-bottom: 26px;}
+        .hero-kicker {font-size: 0.75rem; letter-spacing: 0.14em; text-transform: uppercase; color: #bfe7ea; font-weight: 700;}
+        .hero-title {font-size: 2.35rem; line-height: 1.1; font-weight: 750; margin-top: 8px;}
+        .hero-subtitle {font-size: 1.08rem; color: #e4f5f6; margin-top: 10px; max-width: 850px;}
+        .hero-meta {margin-top: 18px; font-size: 0.84rem; color: #d8f2f3;}
+        .pill {display: inline-block; border: 1px solid rgba(255,255,255,0.35); border-radius: 999px; padding: 5px 10px; margin-right: 8px;}
+        .section-kicker {font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; color: #1f7a8c; font-weight: 750; margin-top: 12px;}
+        .insight {background: #eef7f7; border-left: 4px solid #1f7a8c; border-radius: 10px; padding: 16px 18px; color: #16202a;}
+        .warning-card {background: #fff6e9; border-left: 4px solid #f28e2b; border-radius: 10px; padding: 15px 18px; color: #5f3b10;}
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
 
     try:
         data = load_dashboard_data(Path(__file__).resolve().parent)
@@ -157,24 +185,54 @@ def _render_dashboard() -> None:
         st.info("Hãy chạy ETL, rolling features, modeling và PCA--ARIMA trước khi mở dashboard.")
         return
 
-    pages = ["Tổng quan", "Đánh giá RUL", "Health Index / ARIMA"]
-    page = st.sidebar.radio("Trang", pages)
-    st.sidebar.caption("Nguồn: outputs/modeling và outputs/timeseries")
+    st.markdown(
+        """
+        <div class="hero">
+          <div class="hero-kicker">Big Data · Artifact-driven model review</div>
+          <div class="hero-title">C-MAPSS FD001</div>
+          <div class="hero-subtitle">RUL prediction theo engine và Health Index forecast trên dữ liệu train-only.</div>
+          <div class="hero-meta"><span class="pill">read-only</span><span class="pill">100 test engines</span><span class="pill">model: HistGradientBoosting</span></div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    pages = ["Tổng quan", "Đánh giá RUL", "Health Index / ARIMA", "Provenance"]
+    st.sidebar.markdown("### Điều hướng")
+    page = st.sidebar.radio("Trang", pages, label_visibility="collapsed")
+    st.sidebar.divider()
+    st.sidebar.markdown("**Run hiện tại**")
+    st.sidebar.caption("Artifact đã sinh sẵn. Dashboard không fit lại model.")
+    st.sidebar.metric("Model", data.model_run_info.get("selected_model", "n/a"))
+    st.sidebar.metric("RUL engines", f"{len(data.model_evaluation):,}")
 
     metrics = data.model_metrics.get("metrics", {})
     if page == "Tổng quan":
-        st.subheader("Kết quả modeling cuối")
+        st.markdown('<div class="section-kicker">Tổng quan</div>', unsafe_allow_html=True)
+        st.header("Kết quả modeling cuối")
         cards = st.columns(4)
-        cards[0].metric("Engine MAE", format_metric(metrics.get("mean_engine_mae", 0)))
-        cards[1].metric("RMSE", format_metric(metrics.get("rmse", 0)))
-        cards[2].metric("NASA score", format_metric(metrics.get("nasa_score", 0)))
-        cards[3].metric("Số test engines", str(metrics.get("n_engines", 0)))
-        st.image(
-            str(Path(__file__).resolve().parent / "outputs" / "modeling" / "figures" / "final_true_vs_predicted.png"),
-            caption="RUL thật và RUL dự đoán trong final evaluation",
-            use_container_width=True,
-        )
-        st.subheader("PCA--ARIMA train-only")
+        cards[0].metric("Mean engine MAE", format_metric(metrics.get("mean_engine_mae", 0)), help="Primary selection metric; lower is better.")
+        cards[1].metric("RMSE", format_metric(metrics.get("rmse", 0)), help="Root mean squared error on 100 test engines.")
+        cards[2].metric("NASA score", format_metric(metrics.get("nasa_score", 0)), help="Asymmetric NASA scoring function.")
+        cards[3].metric("Test engines", f"{int(metrics.get('n_engines', 0)):,}")
+
+        left, right = st.columns([1.35, 1])
+        with left:
+            st.image(
+                str(Path(__file__).resolve().parent / "outputs" / "modeling" / "figures" / "final_true_vs_predicted.png"),
+                caption="Final RUL evaluation: true versus predicted",
+                width="stretch",
+            )
+        with right:
+            st.markdown('<div class="insight"><b>Model finding</b><br>HistGradientBoosting đạt MAE theo engine thấp nhất trong protocol 5-fold GroupKFold. Predictions được tạo trước khi join test labels.</div>', unsafe_allow_html=True)
+            st.markdown("#### So sánh ứng viên")
+            comparison = data.model_comparison[["model_name", "mean_engine_mae", "selected"]].copy()
+            comparison["mean_engine_mae"] = comparison["mean_engine_mae"].round(4)
+            comparison = comparison.rename(columns={"model_name": "Model", "mean_engine_mae": "Mean engine MAE", "selected": "Selected"})
+            st.dataframe(comparison, hide_index=True, width="stretch")
+
+        st.markdown('<div class="section-kicker">PCA--ARIMA train-only</div>', unsafe_allow_html=True)
+        st.header("Health Index và forecast phụ")
         ts_cards = st.columns(3)
         ts_cards[0].metric("Health Index rows", f"{len(data.health_index):,}")
         ts_cards[1].metric("Forecast rows", f"{len(data.forecasts):,}")
@@ -182,15 +240,15 @@ def _render_dashboard() -> None:
         st.image(
             str(Path(__file__).resolve().parent / "outputs" / "timeseries" / "figures" / "arima_forecasts.png"),
             caption="Health Index thực, forecast và prediction interval 95%",
-            use_container_width=True,
+            width="stretch",
         )
-        with st.expander("Provenance"):
-            st.json({"modeling": data.model_run_info, "timeseries": data.timeseries_run_info})
+        st.markdown('<div class="warning-card"><b>Cách đọc</b><br>Health Index forecast là phân tích chuỗi thời gian phụ. Nó không thay thế mô hình RUL và không được dùng để suy ra lịch bảo trì.</div>', unsafe_allow_html=True)
         return
 
     if page == "Đánh giá RUL":
-        st.subheader("Final RUL evaluation")
-        engine_id = st.sidebar.selectbox("Test engine", sorted(data.model_evaluation["engine_id"].unique()))
+        st.markdown('<div class="section-kicker">Chi tiết RUL</div>', unsafe_allow_html=True)
+        st.header("Final RUL evaluation")
+        engine_id = st.selectbox("Chọn test engine", sorted(data.model_evaluation["engine_id"].unique()), format_func=lambda value: f"Engine {int(value):03d}")
         row = engine_rul_view(data, int(engine_id))
         if row.empty:
             st.warning("Không có evaluation row cho engine đã chọn.")
@@ -201,7 +259,11 @@ def _render_dashboard() -> None:
         cards[1].metric("RUL dự đoán", format_metric(record["y_pred"]))
         cards[2].metric("Absolute error", format_metric(record["absolute_error"]))
         cards[3].metric("Cycle cuối", format_metric(record["cycle"], 0))
-        st.dataframe(row, use_container_width=True, hide_index=True)
+        st.markdown(
+            f'<div class="insight"><b>Engine {int(engine_id):03d}</b><br>Sai số tuyệt đối là {format_metric(record["absolute_error"])} cycles. Mỗi test engine chỉ có một dòng đánh giá tại cycle cuối.</div>',
+            unsafe_allow_html=True,
+        )
+        st.dataframe(row, width="stretch", hide_index=True)
 
         fig, ax = plt.subplots(figsize=(7, 4))
         ax.scatter(data.model_evaluation["y_true"], data.model_evaluation["y_pred"], alpha=0.45, label="All engines")
@@ -211,34 +273,54 @@ def _render_dashboard() -> None:
         ax.set(xlabel="True RUL (cycles)", ylabel="Predicted RUL (cycles)", title="Final RUL predictions")
         ax.legend()
         ax.grid(alpha=0.2)
+        ax.set_facecolor("#f8fafc")
         st.pyplot(fig, clear_figure=True)
         return
 
-    st.subheader("Health Index và ARIMA forecast")
-    engine_options = sorted(data.forecast_metrics["engine_id"].unique())
-    engine_id = st.sidebar.selectbox("Validation engine", engine_options)
-    history, forecast = engine_timeseries_view(data, int(engine_id))
-    metric = data.forecast_metrics.loc[data.forecast_metrics["engine_id"] == engine_id]
-    diagnostic = data.diagnostics.loc[data.diagnostics["engine_id"] == engine_id]
-    cards = st.columns(4)
-    if not metric.empty:
-        metric_row = metric.iloc[0]
-        cards[0].metric("MAE", format_metric(metric_row["mae"]))
-        cards[1].metric("RMSE", format_metric(metric_row["rmse"]))
-        cards[2].metric("Coverage 95%", f"{float(metric_row['coverage_95']) * 100:.2f}%")
-    if not diagnostic.empty:
-        cards[3].metric("ADF p-value", format_metric(diagnostic.iloc[0]["adf_pvalue"]))
-    fig, ax = plt.subplots(figsize=(10, 4.5))
-    ax.plot(history["cycle"], history["health_index"], label="Health Index", color="tab:blue")
-    if not forecast.empty:
-        ax.plot(forecast["cycle"], forecast["health_index_true"], label="Holdout actual", color="tab:orange")
-        ax.plot(forecast["cycle"], forecast["health_index_pred"], label="ARIMA forecast", color="tab:red")
-        ax.fill_between(forecast["cycle"], forecast["lower_95"], forecast["upper_95"], color="tab:red", alpha=0.15, label="95% interval")
-    ax.set(xlabel="Cycle", ylabel="Health Index", title=f"Engine {int(engine_id)}")
-    ax.grid(alpha=0.2)
-    ax.legend()
-    st.pyplot(fig, clear_figure=True)
-    st.caption("Health Index forecast là phân tích chuỗi thời gian phụ, không phải dự đoán RUL.")
+    if page == "Health Index / ARIMA":
+        st.markdown('<div class="section-kicker">Time-series phụ</div>', unsafe_allow_html=True)
+        st.header("Health Index và ARIMA forecast")
+        engine_options = sorted(data.forecast_metrics["engine_id"].unique())
+        engine_id = st.selectbox("Chọn validation engine", engine_options, format_func=lambda value: f"Engine {int(value):03d}")
+        history, forecast = engine_timeseries_view(data, int(engine_id))
+        metric = data.forecast_metrics.loc[data.forecast_metrics["engine_id"] == engine_id]
+        diagnostic = data.diagnostics.loc[data.diagnostics["engine_id"] == engine_id]
+        cards = st.columns(4)
+        if not metric.empty:
+            metric_row = metric.iloc[0]
+            cards[0].metric("MAE", format_metric(metric_row["mae"]))
+            cards[1].metric("RMSE", format_metric(metric_row["rmse"]))
+            cards[2].metric("Coverage 95%", f"{float(metric_row['coverage_95']) * 100:.2f}%")
+        if not diagnostic.empty:
+            cards[3].metric("ADF p-value", format_metric(diagnostic.iloc[0]["adf_pvalue"]))
+        fig, ax = plt.subplots(figsize=(10, 4.5))
+        ax.plot(history["cycle"], history["health_index"], label="Health Index", color="tab:blue")
+        if not forecast.empty:
+            ax.plot(forecast["cycle"], forecast["health_index_true"], label="Holdout actual", color="tab:orange")
+            ax.plot(forecast["cycle"], forecast["health_index_pred"], label="ARIMA forecast", color="tab:red")
+            ax.fill_between(forecast["cycle"], forecast["lower_95"], forecast["upper_95"], color="tab:red", alpha=0.15, label="95% interval")
+        ax.set(xlabel="Cycle", ylabel="Health Index", title=f"Engine {int(engine_id)}")
+        ax.set_facecolor("#f8fafc")
+        ax.grid(alpha=0.2)
+        ax.legend()
+        st.pyplot(fig, clear_figure=True)
+        st.markdown('<div class="warning-card"><b>Giới hạn diễn giải</b><br>Health Index forecast là phân tích chuỗi thời gian phụ, không phải dự đoán RUL. Diagnostics được đọc trực tiếp từ artifact.</div>', unsafe_allow_html=True)
+        with st.expander("Diagnostics của engine"):
+            st.dataframe(diagnostic, width="stretch", hide_index=True)
+        return
+
+    st.markdown('<div class="section-kicker">Traceability</div>', unsafe_allow_html=True)
+    st.header("Provenance và data contract")
+    st.markdown('<div class="insight"><b>Read-only contract</b><br>Dashboard chỉ đọc artifact trong outputs/modeling và outputs/timeseries. Nó không mở raw test labels và không huấn luyện lại model.</div>', unsafe_allow_html=True)
+    validation = st.columns(4)
+    validation[0].metric("Evaluation rows", f"{len(data.model_evaluation):,}")
+    validation[1].metric("Forecast rows", f"{len(data.forecasts):,}")
+    validation[2].metric("Model schema", str(data.model_run_info.get("schema_version", "n/a")))
+    validation[3].metric("Timeseries schema", str(data.timeseries_run_info.get("schema_version", "n/a")))
+    with st.expander("Modeling run_info.json", expanded=True):
+        st.json(data.model_run_info)
+    with st.expander("Timeseries run_info.json"):
+        st.json(data.timeseries_run_info)
 
 
 if __name__ == "__main__":

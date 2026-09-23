@@ -505,5 +505,27 @@ ETL or dashboard requirement exports.
 PASS: `uv run --extra dashboard streamlit run app.py --server.headless true
 --server.port 8501` reached `/_stcore/health` with HTTP 200 and body `ok`; the
 root page returned HTTP 200. The process was stopped after the owned smoke test.
-LIMIT: Dashboard does not yet regenerate upstream artifacts from raw input;
-end-to-end pipeline proof remains separate work.
+LIMIT: Dashboard does not regenerate upstream artifacts from raw input; that
+rebuild is provided by the separate reproducibility CLI.
+
+End-to-end reproducibility: 2026-09-23
+SCOPE: isolated raw FD001 regeneration through Pandas ETL, rolling features,
+grouped RUL modeling, PCA--ARIMA, dashboard loader and artifact comparison.
+PASS: `python -m cmapss.reproducibility --output-root tmp/e2e-repro-final2`
+completed in a fresh output root. ETL, features, modeling and timeseries stages
+reported success; 15 persisted tables matched the reference semantically with
+`rtol=1e-9` and `atol=1e-9`.
+PASS: Selected model remained `hist_gradient_boosting`; final metrics remained
+mean engine MAE 15.349047, RMSE 20.541267 and NASA score 1513.257656. The
+regenerated outputs contained 100 final evaluation rows and 704 ARIMA forecast
+rows, and the dashboard loader read both counts successfully.
+PASS: Four regenerated PNG figures were SHA-256 byte-identical to the reference
+figures. Raw train, test and label hashes were unchanged before and after the
+run. Validation details are saved in the ignored temporary
+`tmp/e2e-repro-final2/validation.json` snapshot.
+PASS: Added `tests/test_end_to_end_reproducibility.py`; full suite passed 123
+tests, focused reproducibility tests passed 3 tests, and compileall,
+`uv lock --check` and `git diff --check` passed.
+LIMIT: This command validates the Pandas scientific path. PySpark parity and
+fresh-kernel notebook reproducibility remain separate checks already recorded
+in earlier evidence entries.

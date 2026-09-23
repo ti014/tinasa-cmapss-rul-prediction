@@ -400,13 +400,14 @@ enforcement hoặc branch protection cho toàn repository.
 | Rolling features | Đã có artifact M3.2 tại `outputs/features/gold/rolling_features.parquet`: khóa observation tại cycle cuối window, trailing window đủ 30 cycles, cùng engine/split, không dùng tương lai; giữ 21 sensors; cột `<sensor>__<stat>` với `last`, `mean`, sample `std` (`ddof=1`), `min`, `max`, slope | Chưa có PCA hoặc feature selection; nếu thêm, phải fit trong training fold |
 | Final predictions | Đã có artifact tại `outputs/modeling/predictions/final_predictions.parquet`: khóa `(split, engine_id, cycle)` tại cycle cuối test; một giá trị RUL dự đoán mỗi engine, đúng 100 dòng; tạo trước khi join test labels | Chưa có serving API; chưa clip prediction vì lần chạy hiện tại không sinh giá trị âm |
 | PCA--ARIMA Health Index | Đã có artifact tại `outputs/timeseries/`: PCA fit trên train, 10 engine chọn trước forecast, split 70/30, AIC order selection trên fit segment, MAE/RMSE/coverage/ADF/Ljung--Box | Health Index forecast không phải RUL |
-| Dashboard reproducibility | Đã có `app.py`, optional extra `dashboard`, loader kiểm schema và view RUL/Health Index/provenance đọc từ artifact | Chưa có tái tạo end-to-end từ raw input hoặc serving API |
+| Dashboard reproducibility | Đã có `app.py`, optional extra `dashboard`, loader kiểm schema và view RUL/Health Index/provenance đọc từ artifact; loader được kiểm tra trong lệnh tái lập end-to-end | Chưa có serving API; giao diện không tự chạy lại upstream pipeline |
+| End-to-end reproducibility | Đã có `python -m cmapss.reproducibility`: chạy raw → ETL → features → modeling → PCA--ARIMA trong output root mới, đối chiếu 15 bảng, metric, hình, hash raw và dashboard loader | Chưa có serving API; PySpark parity và notebook vẫn là kiểm tra riêng |
 
 Ví dụ window tại cycle 170 là cycle 141–170 của cùng engine. M3.2 đã hiện
 thực hóa feature transformer và validator cho artifact rolling features. Mốc
 modeling đã tạo metrics và prediction cho FD001; PCA--ARIMA đã có artifact và
-diagnostics. Dashboard đã triển khai dạng read-only; kiểm tra tái lập end-to-end
-vẫn chưa hoàn thành.
+diagnostics. Dashboard đã triển khai dạng read-only và kiểm tra tái lập
+end-to-end đã đạt; PySpark parity và notebook vẫn được kiểm tra riêng.
 
 ## Chạy kiểm tra
 

@@ -11,7 +11,8 @@ hoặc khai báo AI/LLM. Phần dữ liệu giải thích rõ nhãn kết cục,
 phân bố và cách xử lý; phần phương pháp giải thích lý do, đơn vị và nguồn của
 các công thức. Dashboard Streamlit đã được bổ sung như một consumer read-only
 của artifact; PCA--ARIMA vẫn được trình bày như phân tích phụ trên Health Index,
-không phải RUL model.
+không phải RUL model. Lệnh tái lập end-to-end đã chạy lại pipeline Pandas từ
+raw và đối chiếu artifact cuối.
 
 ## Cấu trúc
 

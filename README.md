@@ -64,7 +64,7 @@ Available now:
 
 Not implemented yet:
 
-- End-to-end regeneration from raw inputs in one documented command.
+- Presentation slides and the final handoff package.
 
 Installation, data validation, notebook, ETL, feature-generation, modeling and
 time-series instructions are available below. The dashboard requires the
@@ -358,7 +358,7 @@ The validated runs used fresh kernels and produced identical artifacts in the
 same environment; the EDA checkpoint suite passed **69 tests**. The current
 repository-wide suite, including M2.3a artifact export tests, the M2.4 runtime
 audit, M3.1 ETL checks, M3.2 feature checks, grouped modeling checks and
-PCA--ARIMA checks, passed **116 tests**.
+PCA--ARIMA and end-to-end reproducibility checks, passed **123 tests**.
 
 ![FD001 train EDA workflow](assets/diagrams/fd001-eda.svg)
 
@@ -504,6 +504,25 @@ final RUL metrics, a selected test-engine evaluation, Health Index forecasts,
 prediction-interval coverage, diagnostics and run provenance. It does not
 retrain models or read `data/raw/RUL_FD001.txt`.
 
+### Validate the end-to-end pipeline
+
+Regenerate the scientific path from immutable FD001 raw files into a fresh
+temporary root and compare table content, metrics, figures, raw hashes and the
+dashboard loader with the checked-in artifacts:
+
+```powershell
+uv run python -m cmapss.reproducibility `
+  --output-root tmp/e2e-repro-final `
+  --repo-root . `
+  --evidence-path tmp/e2e-repro-final/validation.json
+```
+
+The command runs the Pandas ETL path with a 1x benchmark, rolling features,
+grouped RUL modeling and train-only PCA--ARIMA. It uses a fresh output root,
+keeps raw hashes unchanged, and compares persisted tables with numeric tolerance
+`rtol=1e-9`, `atol=1e-9`. PySpark parity and notebook reproducibility remain
+separate checks documented in the validation evidence.
+
 <details>
 <summary>Development and optional checks</summary>
 
@@ -532,8 +551,9 @@ Pytest clears its `--basetemp` directory on subsequent runs; reserve it for test
 </details>
 
 Pandas/PySpark Silver/Gold parity, benchmark artifacts, M3.2 rolling features,
-grouped RUL model evaluation, train-only PCA--ARIMA artifacts and the
-artifact-driven dashboard are available; end-to-end regeneration remains.
+grouped RUL model evaluation, train-only PCA--ARIMA artifacts, the
+artifact-driven dashboard and the end-to-end regeneration check are available;
+slides and final handoff remain.
 M2.4 repeated-run validation has passed.
 The [report draft](report/main.pdf) is updated alongside
 verified work: its progress log records dates, rationale, artifacts, checks,

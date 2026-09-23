@@ -17,6 +17,7 @@ dependencies = [
     "scikit-learn==1.9.1",
     "joblib==1.6.0",
     "statsmodels==0.14.5",
+    "pillow==12.3.0",
 ]
 
 [project.scripts]
@@ -28,6 +29,9 @@ cmapss-modeling = "cmapss.modeling.cli:main"
 [project.optional-dependencies]
 etl = [
     "pyspark==4.0.1",
+]
+dashboard = [
+    "streamlit==1.54.0",
 ]
 
 [dependency-groups]

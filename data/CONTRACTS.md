@@ -360,6 +360,21 @@ ghi MAE, RMSE và coverage; `diagnostics.csv` ghi ADF trên fit segment và
 Ljung--Box trên residual. Pipeline không đọc test observations hoặc
 `RUL_FD001.txt`, và không dùng forecast để thay đổi danh sách engine.
 
+### DASHBOARD_REPRODUCIBILITY
+
+Dashboard Streamlit tại `app.py` là consumer read-only của các artifact đã có.
+Dashboard bắt buộc đọc `outputs/modeling` và `outputs/timeseries`, kiểm tra file
+và cột đầu vào trước khi hiển thị, không fit model, không chạy lại ARIMA và
+không đọc `data/raw/RUL_FD001.txt` khi mở trang. Nếu artifact bắt buộc thiếu
+hoặc sai schema, dashboard hiển thị lỗi đầu vào và không dựng biểu đồ từ dữ liệu
+không đầy đủ.
+
+Các view đã triển khai gồm metric final evaluation, chi tiết một test engine,
+Health Index/ARIMA của một validation engine và provenance của hai lần chạy.
+Ví dụ, chọn `engine_id=39` trong view Health Index sẽ hiển thị lịch sử Health
+Index, holdout forecast, prediction interval 95% và diagnostics đã lưu trong
+Parquet/CSV; dashboard không tạo lại các giá trị này.
+
 ## Test labels và phạm vi cô lập
 
 Lệnh validation mặc định chỉ đọc observations, không mở `RUL_FD001.txt`.
@@ -383,13 +398,15 @@ enforcement hoặc branch protection cho toàn repository.
 | Artifact | Quy tắc đã chốt | Phần chưa triển khai |
 | --- | --- | --- |
 | Rolling features | Đã có artifact M3.2 tại `outputs/features/gold/rolling_features.parquet`: khóa observation tại cycle cuối window, trailing window đủ 30 cycles, cùng engine/split, không dùng tương lai; giữ 21 sensors; cột `<sensor>__<stat>` với `last`, `mean`, sample `std` (`ddof=1`), `min`, `max`, slope | Chưa có PCA hoặc feature selection; nếu thêm, phải fit trong training fold |
-| Final predictions | Đã có artifact tại `outputs/modeling/predictions/final_predictions.parquet`: khóa `(split, engine_id, cycle)` tại cycle cuối test; một giá trị RUL dự đoán mỗi engine, đúng 100 dòng; tạo trước khi join test labels | Chưa có dashboard hoặc serving API; chưa clip prediction vì lần chạy hiện tại không sinh giá trị âm |
-| PCA--ARIMA Health Index | Đã có artifact tại `outputs/timeseries/`: PCA fit trên train, 10 engine chọn trước forecast, split 70/30, AIC order selection trên fit segment, MAE/RMSE/coverage/ADF/Ljung--Box | Chưa có dashboard hoặc serving API; Health Index forecast không phải RUL |
+| Final predictions | Đã có artifact tại `outputs/modeling/predictions/final_predictions.parquet`: khóa `(split, engine_id, cycle)` tại cycle cuối test; một giá trị RUL dự đoán mỗi engine, đúng 100 dòng; tạo trước khi join test labels | Chưa có serving API; chưa clip prediction vì lần chạy hiện tại không sinh giá trị âm |
+| PCA--ARIMA Health Index | Đã có artifact tại `outputs/timeseries/`: PCA fit trên train, 10 engine chọn trước forecast, split 70/30, AIC order selection trên fit segment, MAE/RMSE/coverage/ADF/Ljung--Box | Health Index forecast không phải RUL |
+| Dashboard reproducibility | Đã có `app.py`, optional extra `dashboard`, loader kiểm schema và view RUL/Health Index/provenance đọc từ artifact | Chưa có tái tạo end-to-end từ raw input hoặc serving API |
 
 Ví dụ window tại cycle 170 là cycle 141–170 của cùng engine. M3.2 đã hiện
 thực hóa feature transformer và validator cho artifact rolling features. Mốc
 modeling đã tạo metrics và prediction cho FD001; PCA--ARIMA đã có artifact và
-diagnostics, dashboard và kiểm tra tái lập toàn bộ vẫn chưa hoàn thành.
+diagnostics. Dashboard đã triển khai dạng read-only; kiểm tra tái lập end-to-end
+vẫn chưa hoàn thành.
 
 ## Chạy kiểm tra
 

@@ -10,7 +10,7 @@ kiwisolver==1.5.1
 matplotlib==3.10.6
 narwhals==2.26.0
 numpy==2.3.3
-packaging==26.3
+packaging==25.0
 pandas==2.3.3
 patsy==1.0.3
 pillow==12.3.0

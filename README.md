@@ -24,7 +24,8 @@ Available now:
   interpretations.
   EDA milestone 1, milestone 2 train-only statistics, M3.1 ETL parity, M3.2
   rolling features, grouped RUL model evaluation, and the train-only PCA--ARIMA
-  analysis have passed independent validation; the dashboard remains next.
+  analysis have passed independent validation; the artifact-driven dashboard is
+  now available for inspection.
 - A cited theoretical background and a [milestone 2 statistical protocol](report/sections/statistical-protocol.tex).
   The paired comparison uses each sensor's mean over the first and last 30 cycles of every train engine.
   The M2.0 statistical configuration was fixed before inference.
@@ -57,14 +58,17 @@ Available now:
   on 10 representative validation engines. It writes 20,631 Health Index rows,
   704 holdout forecasts, MAE/RMSE, 95% prediction-interval coverage, ADF and
   Ljung--Box diagnostics without reading test labels.
+- An [artifact-driven Streamlit dashboard](app.py) for final RUL evaluation,
+  per-engine Health Index/ARIMA inspection and run provenance. It does not fit
+  models or read raw test labels when opened.
 
 Not implemented yet:
 
-- The Streamlit dashboard.
+- End-to-end regeneration from raw inputs in one documented command.
 
 Installation, data validation, notebook, ETL, feature-generation, modeling and
-time-series instructions are available below. The dashboard entry point is not
-implemented yet.
+time-series instructions are available below. The dashboard requires the
+optional `dashboard` dependency group.
 
 ## Objectives
 
@@ -258,9 +262,10 @@ Current and planned public project structure:
 ├── requirements.txt         # Pip installation: local package and runtime libraries
 ├── requirements-dev.txt     # Notebook and test dependencies
 ├── requirements-etl.txt     # Optional PySpark ETL dependencies
+├── requirements-dashboard.txt # Optional Streamlit dashboard dependencies
 ├── uv.lock                  # Locked dependency versions
 ├── report/                  # Living LaTeX/PDF report, progress and evidence
-├── app.py                   # Streamlit dashboard entry point (planned)
+├── app.py                   # Streamlit dashboard entry point
 ├── README.md                # English documentation
 └── README.vi.md             # Vietnamese documentation
 ```
@@ -336,8 +341,8 @@ modeling; `RUL_FD001.txt` is joined only during final evaluation.
 
 ![FD001 overall data pipeline](assets/diagrams/fd001-pipeline.png)
 
-[Report PDF figure](report/figures/pipeline.pdf) ·
-[TikZ source](report/figures/pipeline.tex)
+[Editable Draw.io source](assets/diagrams/fd001-pipeline.drawio) ·
+[Report PDF figure](report/figures/pipeline.pdf)
 
 ### Run the EDA notebook
 
@@ -484,6 +489,21 @@ The current artifact contains 20,631 train Health Index rows and 704 holdout
 forecasts from 10 engines. See [PCA--ARIMA artifacts and diagnostics](outputs/timeseries/README.md)
 for the selection rule, metrics, figures, and limitations.
 
+### Run the reproducibility dashboard
+
+Install the optional dashboard dependencies and start Streamlit after the
+modeling and PCA--ARIMA artifacts exist:
+
+```powershell
+uv sync --extra dashboard
+uv run --extra dashboard streamlit run app.py
+```
+
+The dashboard reads `outputs/modeling` and `outputs/timeseries`, then shows
+final RUL metrics, a selected test-engine evaluation, Health Index forecasts,
+prediction-interval coverage, diagnostics and run provenance. It does not
+retrain models or read `data/raw/RUL_FD001.txt`.
+
 <details>
 <summary>Development and optional checks</summary>
 
@@ -512,8 +532,8 @@ Pytest clears its `--basetemp` directory on subsequent runs; reserve it for test
 </details>
 
 Pandas/PySpark Silver/Gold parity, benchmark artifacts, M3.2 rolling features,
-grouped RUL model evaluation, and train-only PCA--ARIMA artifacts are available;
-the dashboard remains.
+grouped RUL model evaluation, train-only PCA--ARIMA artifacts and the
+artifact-driven dashboard are available; end-to-end regeneration remains.
 M2.4 repeated-run validation has passed.
 The [report draft](report/main.pdf) is updated alongside
 verified work: its progress log records dates, rationale, artifacts, checks,

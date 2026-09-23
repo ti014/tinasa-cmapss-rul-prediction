@@ -9,8 +9,9 @@ phân tích PCA--ARIMA train-only và đánh giá mô hình RUL hiện tại.
 Báo cáo không đưa vào timeline, kế hoạch tiếp theo, đường dẫn artifact nội bộ
 hoặc khai báo AI/LLM. Phần dữ liệu giải thích rõ nhãn kết cục, ý nghĩa cột,
 phân bố và cách xử lý; phần phương pháp giải thích lý do, đơn vị và nguồn của
-các công thức. Dashboard chưa thuộc tập kết quả hiện có; PCA--ARIMA đã được
-trình bày như phân tích phụ trên Health Index, không phải RUL model.
+các công thức. Dashboard Streamlit đã được bổ sung như một consumer read-only
+của artifact; PCA--ARIMA vẫn được trình bày như phân tích phụ trên Health Index,
+không phải RUL model.
 
 ## Cấu trúc
 
@@ -27,7 +28,7 @@ report/
 │   ├── current-results.tex      # Bảng, hình và diễn giải kết quả
 │   └── discussion.tex           # Bài học và giới hạn
 └── figures/
-    ├── pipeline.tex             # Nguồn TikZ của luồng dữ liệu đã thực hiện
+    ├── pipeline.tex             # Bản TeX giữ cho report PDF hiện tại
     ├── pipeline.pdf             # Hình pipeline dùng trong báo cáo
     ├── statistical-protocol.tex # Nguồn TikZ của protocol thống kê
     └── statistical-protocol.pdf # Bản xuất của protocol
@@ -36,6 +37,11 @@ report/
 Hình EDA và thống kê được tham chiếu trực tiếp từ thư mục `outputs/` để tránh
 sao chép và lệch nguồn. Bibliography dùng chung tại
 `../references/bibliography.bib`.
+
+Sơ đồ pipeline có nguồn Draw.io chỉnh sửa được tại
+`../assets/diagrams/fd001-pipeline.drawio`. File này là nguồn để mở và chỉnh
+trong Draw.io; bản PDF trong report vẫn được giữ riêng để biên dịch LaTeX ổn
+định.
 
 ## Biên dịch
 

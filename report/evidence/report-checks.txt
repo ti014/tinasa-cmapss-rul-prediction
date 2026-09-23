@@ -550,3 +550,14 @@ PASS: `handoff/FINAL_HANDOFF.md` records the scope, module tree, commands,
 validated metrics, artifact locations, limitations and seven defense questions.
 LIMIT: Native PowerPoint execution was not available in this environment;
 finalizer import and rendered-slide checks passed.
+
+Dashboard demo rehearsal: 2026-09-23
+SCOPE: Full local Streamlit flow using `handoff/DEMO_SCRIPT.md`.
+PASS: Rehearsal visited all four views. Engine 023 showed true RUL 113,
+predicted RUL 170.4768 and absolute error 57.4768; Engine 070 showed Health
+Index MAE 1.0396, RMSE 1.2232 and 95% interval coverage 21.43%.
+PASS: Provenance view showed 100 evaluation rows, 704 forecast rows, schema
+version 1 for both artifacts and `test_label_join.status` equal to
+`completed_after_final_predictions`.
+LIMIT: This is a local browser rehearsal; it does not replace the classroom
+presentation or native PowerPoint execution.

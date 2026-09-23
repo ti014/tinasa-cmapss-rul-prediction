@@ -50,6 +50,12 @@ uv lock --check
 Mốc end-to-end ngày 2026-09-23 đã đối chiếu 15 bảng, metrics, bốn hình
 byte-identical, raw hashes và dashboard loader. Full suite đạt 123 tests.
 
+Rehearsal dashboard ngày 2026-09-23 đã mở đủ bốn view trong Streamlit local.
+Case demo Engine 023 hiển thị RUL thật 113, dự đoán 170.4768 và absolute error
+57.4768; Engine 070 hiển thị Health Index MAE 1.0396, RMSE 1.2232 và coverage
+95% là 21.43%. View Provenance hiển thị 100 evaluation rows, 704 forecast rows
+và `test_label_join.status=completed_after_final_predictions`.
+
 ## Kết quả cần trình bày
 
 Model được chọn là `hist_gradient_boosting` bằng 5-fold `GroupKFold` theo

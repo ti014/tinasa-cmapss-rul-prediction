@@ -62,9 +62,10 @@ Available now:
   per-engine Health Index/ARIMA inspection and run provenance. It does not fit
   models or read raw test labels when opened.
 
-Not implemented yet:
+Final handoff:
 
-- Presentation slides and the final handoff package.
+- [Presentation deck](slides/cmapss_fd001_presentation.pptx) and
+  [handoff checklist](handoff/FINAL_HANDOFF.md) are available.
 
 Installation, data validation, notebook, ETL, feature-generation, modeling and
 time-series instructions are available below. The dashboard requires the
@@ -233,7 +234,7 @@ No target score is declared in advance. A negative result remains valid if the p
 - Planned: true versus predicted RUL on validation engines.
 - Planned: test-set prediction scatter and residual distributions.
 - Planned: per-engine and RUL-range error analysis.
-- Planned: a Streamlit dashboard for inspecting individual engine trajectories and model outputs.
+- Available: a Streamlit dashboard for inspecting the final RUL prediction per test engine, Health Index trajectories on selected train engines and artifact provenance.
 
 An illustrative warning may be shown when predicted RUL is at most 30 cycles. This is not presented as an optimized maintenance threshold because FD001 contains no maintenance costs, downtime, or intervention records.
 
@@ -499,9 +500,10 @@ uv sync --extra dashboard
 uv run --extra dashboard streamlit run app.py
 ```
 
-The dashboard reads `outputs/modeling` and `outputs/timeseries`, then shows
-final RUL metrics, a selected test-engine evaluation, Health Index forecasts,
-prediction-interval coverage, diagnostics and run provenance. It does not
+The dashboard reads `outputs/modeling` and `outputs/timeseries`, then shows a
+model comparison, final RUL metrics, a selected test-engine evaluation, Health
+Index forecasts, prediction-interval coverage, diagnostics and run provenance.
+The light theme and four views are designed for a short live demo. It does not
 retrain models or read `data/raw/RUL_FD001.txt`.
 
 ### Validate the end-to-end pipeline
@@ -552,8 +554,8 @@ Pytest clears its `--basetemp` directory on subsequent runs; reserve it for test
 
 Pandas/PySpark Silver/Gold parity, benchmark artifacts, M3.2 rolling features,
 grouped RUL model evaluation, train-only PCA--ARIMA artifacts, the
-artifact-driven dashboard and the end-to-end regeneration check are available;
-slides and final handoff remain.
+artifact-driven dashboard, end-to-end regeneration check, presentation deck and
+handoff checklist are available.
 M2.4 repeated-run validation has passed.
 The [report draft](report/main.pdf) is updated alongside
 verified work: its progress log records dates, rationale, artifacts, checks,

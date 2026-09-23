@@ -75,8 +75,8 @@ quát hóa sang điều kiện vận hành hoặc fault mode khác.
 ## Giới hạn
 
 - Phân tích PCA--ARIMA train-only đã được ghi tại
-  [`outputs/timeseries`](../timeseries/README.md); dashboard và phân tích lỗi
-  theo sensor vẫn chưa có.
+  [`outputs/timeseries`](../timeseries/README.md); dashboard đọc các artifact
+  modeling và timeseries tại `app.py`. Phân tích lỗi theo sensor vẫn chưa có.
 - Chưa cắt prediction âm vì lần chạy hiện tại không sinh giá trị âm; config ghi
   rõ `prediction_clipping=none`.
 - NASA score trong cross-validation là tổng theo window validation nên chỉ dùng

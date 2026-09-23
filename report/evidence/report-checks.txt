@@ -477,3 +477,33 @@ PASS: Manual line breaks remove accidental TeX hyphenation in `Pandas--PySpark`,
 arrowhead at its entry from the validation split.
 PASS: Independent render review found no node overlap, clipping or edge through
 nodes; the late test-label join remains legible.
+
+Draw.io source migration: 2026-09-23
+PASS: Installed the official `drawio` Codex plugin from the `jgraph/drawio-mcp`
+marketplace and added native `assets/diagrams/fd001-pipeline.drawio` XML.
+PowerShell XML parsing confirms the file is well-formed with root `mxfile`.
+The editable diagram was opened through an `app.diagrams.net` URL generated
+from the local XML.
+LIMIT: Draw.io Desktop is not installed in this environment, so PNG/SVG/PDF
+export was not run by the Draw.io CLI. The existing report PDF remains the
+separately built TeX artifact; the native `.drawio` file is the editable source.
+
+Dashboard reproducibility: 2026-09-23
+SCOPE: `app.py`, dashboard optional dependency, artifact loader, focused tests,
+README/data-contract/report synchronization and Streamlit runtime smoke check.
+PASS: Dashboard reads persisted `outputs/modeling` and `outputs/timeseries`
+artifacts, validates required files/columns, and exposes overview, final RUL,
+per-engine Health Index/ARIMA and provenance views without fitting models or
+opening raw test labels.
+PASS: Added `streamlit==1.54.0` and pinned `pillow==12.3.0` under the optional
+`dashboard` extra, then exported `requirements-dashboard.txt` from `uv.lock`.
+PASS: `tests/test_dashboard.py` passed 4 tests; `compileall`, `uv lock --check`
+and `git diff --check` passed.
+PASS: The full suite passed 120 tests after adding the dashboard and pinning
+`pillow==12.3.0`; `pip-audit` reported no known vulnerabilities for base, dev,
+ETL or dashboard requirement exports.
+PASS: `uv run --extra dashboard streamlit run app.py --server.headless true
+--server.port 8501` reached `/_stcore/health` with HTTP 200 and body `ok`; the
+root page returned HTTP 200. The process was stopped after the owned smoke test.
+LIMIT: Dashboard does not yet regenerate upstream artifacts from raw input;
+end-to-end pipeline proof remains separate work.

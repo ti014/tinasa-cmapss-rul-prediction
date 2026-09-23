@@ -42,6 +42,14 @@ nhất bằng 0 trong lần chạy local có JRE. Kết quả benchmark chỉ đ
 engine summary trên dữ liệu nhân bản, không tạo thêm engine độc lập cho phân
 tích khoa học.
 
+Dashboard Streamlit tại \texttt{app.py} chỉ đọc các artifact modeling và
+PCA--ARIMA đã ghi. Loader kiểm tra sự tồn tại và schema của file trước khi dựng
+view; dashboard không fit lại model, không chạy lại forecast và không mở
+\texttt{RUL\_FD001.txt}. Các view gồm metric final evaluation, chi tiết một test
+engine, Health Index/ARIMA của một validation engine và provenance của hai lần
+chạy. Đây là lớp trình bày kết quả, không phải một bước mới trong evaluation
+protocol.
+
 \subsection{EDA theo đơn vị động cơ}
 EDA chỉ sử dụng train. Phân phối tuổi thọ được tính mỗi động cơ một lần, trong
 khi histogram RUL theo observation phản ánh số quan sát khác nhau giữa các động

@@ -23,7 +23,7 @@ Repository đã có **gói kiểm tra dữ liệu FD001, nhãn RUL train, notebo
   lựa chọn và diễn giải kết quả validation/EDA/M2.3a--M2.4.
   Mốc 1 EDA, mốc 2 thống kê train-only, parity ETL M3.1, rolling features
   M3.2, đánh giá mô hình RUL theo group và phân tích PCA--ARIMA train-only
-  hiện tại đã được kiểm tra độc lập; dashboard là bước tiếp theo.
+  hiện tại đã được kiểm tra độc lập; dashboard đọc artifact đã có thể sử dụng.
 - Cơ sở lý thuyết có trích dẫn và [protocol thống kê mốc 2](report/sections/statistical-protocol.tex).
   Đã chốt so sánh giá trị trung bình của 30 cycles đầu và 30 cycles cuối theo từng động cơ.
   Cấu hình thống kê M2.0 đã được chốt trước suy luận; notebook M2.3a đã chạy bảng suy luận train-only.
@@ -52,13 +52,17 @@ Repository đã có **gói kiểm tra dữ liệu FD001, nhãn RUL train, notebo
 - Phân tích [PCA--ARIMA trên Health Index](outputs/timeseries/README.md) chỉ
   dùng train: 10 engine validation đại diện, chia 70/30, 704 forecast, khoảng
   dự đoán 95%, ADF và Ljung--Box; không đọc nhãn test.
+- [Dashboard Streamlit đọc artifact](app.py) để xem metric RUL cuối, từng test
+  engine, Health Index/ARIMA và provenance của lần chạy. Dashboard không fit
+  lại model và không đọc nhãn test thô khi mở trang.
 
 Chưa triển khai:
 
-- Dashboard Streamlit.
+- Tái tạo end-to-end từ raw input bằng một lệnh được ghi nhận đầy đủ.
 
 Lệnh cài đặt, kiểm tra dữ liệu, mở notebook, chạy ETL, tạo rolling features,
-modeling và PCA--ARIMA có ở phần Bắt đầu. Dashboard chưa có điểm khởi chạy.
+modeling và PCA--ARIMA có ở phần Bắt đầu. Dashboard dùng dependency tùy chọn
+`dashboard`.
 
 ## Mục tiêu
 
@@ -252,9 +256,10 @@ Cấu trúc hiện có và dự kiến của repository:
 ├── requirements.txt         # Cài bằng pip: package và thư viện chạy chương trình
 ├── requirements-dev.txt     # Thư viện notebook và kiểm thử
 ├── requirements-etl.txt     # Dependency PySpark tùy chọn cho ETL
+├── requirements-dashboard.txt # Dependency Streamlit tùy chọn cho dashboard
 ├── uv.lock                  # Phiên bản dependencies đã khóa
 ├── report/                  # Nguồn LaTeX/PDF và hình của báo cáo
-├── app.py                   # Entry point Streamlit dự kiến
+├── app.py                   # Entry point Streamlit
 ├── README.md                # Tài liệu tiếng Anh
 └── README.vi.md             # Tài liệu tiếng Việt
 ```
@@ -329,8 +334,8 @@ PCA--ARIMA được thể hiện là các nhánh train-only độc lập; nhánh
 
 ![Pipeline dữ liệu tổng thể FD001](assets/diagrams/fd001-pipeline.png)
 
-[Hình trong báo cáo (PDF)](report/figures/pipeline.pdf) ·
-[Nguồn TikZ](report/figures/pipeline.tex)
+[Nguồn Draw.io có thể chỉnh sửa](assets/diagrams/fd001-pipeline.drawio) ·
+[Hình trong báo cáo (PDF)](report/figures/pipeline.pdf)
 
 ### Chạy notebook EDA
 
@@ -472,6 +477,21 @@ Artifact hiện có 20.631 dòng Health Index train và 704 forecast holdout tr�
 10 engine. Xem [artifact và validation PCA--ARIMA](outputs/timeseries/README.md)
 để biết quy tắc chọn engine, metric, hình và giới hạn.
 
+### Chạy dashboard tái lập
+
+Cài dependency tùy chọn và khởi động Streamlit sau khi đã có artifact modeling
+và PCA--ARIMA:
+
+```powershell
+uv sync --extra dashboard
+uv run --extra dashboard streamlit run app.py
+```
+
+Dashboard đọc `outputs/modeling` và `outputs/timeseries`, sau đó hiển thị metric
+RUL cuối, evaluation của một test engine, forecast Health Index, coverage của
+khoảng dự đoán, diagnostics và provenance. Dashboard không huấn luyện lại model
+và không đọc `data/raw/RUL_FD001.txt`.
+
 <details>
 <summary>Dành cho phát triển và kiểm tra riêng</summary>
 
@@ -500,8 +520,8 @@ Pytest dọn thư mục `--basetemp` khi chạy lại; chỉ dành thư mục đ
 </details>
 
 ETL Silver/Gold bằng Pandas/PySpark parity, benchmark, rolling features M3.2,
-đánh giá mô hình RUL theo group và phân tích PCA--ARIMA train-only đã có;
-dashboard vẫn còn. Validation tái lập M2.4 đã đạt.
+đánh giá mô hình RUL theo group, phân tích PCA--ARIMA train-only và dashboard
+đọc artifact đã có; tái tạo end-to-end vẫn còn. Validation tái lập M2.4 đã đạt.
 [Báo cáo kết quả hiện có](report/main.pdf) được cập nhật cùng các kết quả đã
 kiểm chứng và diễn giải trong phạm vi FD001.
 Xem [hướng dẫn báo cáo](report/README.md) để biết cấu trúc nguồn và lệnh build

@@ -23,7 +23,8 @@ Repository đã có **gói kiểm tra dữ liệu FD001, nhãn RUL train, notebo
   lựa chọn và diễn giải kết quả validation/EDA/M2.3a--M2.4.
   Mốc 1 EDA, mốc 2 thống kê train-only, parity ETL M3.1, rolling features
   M3.2, đánh giá mô hình RUL theo group và phân tích PCA--ARIMA train-only
-  hiện tại đã được kiểm tra độc lập; dashboard đọc artifact đã có thể sử dụng.
+  hiện tại đã được kiểm tra độc lập; dashboard đọc artifact, slide và checklist
+  bàn giao cuối đã có thể sử dụng.
 - Cơ sở lý thuyết có trích dẫn và [protocol thống kê mốc 2](report/sections/statistical-protocol.tex).
   Đã chốt so sánh giá trị trung bình của 30 cycles đầu và 30 cycles cuối theo từng động cơ.
   Cấu hình thống kê M2.0 đã được chốt trước suy luận; notebook M2.3a đã chạy bảng suy luận train-only.
@@ -224,11 +225,14 @@ Báo cáo không đặt trước một mức điểm mục tiêu. Kết quả â
 
 - Phân phối vòng đời động cơ (đã có ở mốc 1).
 - Biến thiên và quỹ đạo sensor theo cycle gốc (đã có ở mốc 1).
-- Dự kiến: quỹ đạo sensor và Health Index theo vòng đời đã chuẩn hóa.
-- Dự kiến: RUL thật và RUL dự đoán trên các động cơ validation.
-- Dự kiến: biểu đồ phân tán giá trị dự đoán và phân phối phần dư trên tập test.
-- Dự kiến: phân tích sai số theo động cơ và khoảng RUL.
-- Đã có: dashboard Streamlit để xem RUL dự đoán tại cycle cuối của từng test engine, quỹ đạo Health Index của validation engines và provenance của artifact.
+- Đã có: quỹ đạo Health Index train-only và forecast holdout của các engine đã
+  chọn trong [artifact PCA--ARIMA](outputs/timeseries/README.md).
+- Đã có: biểu đồ RUL thật--dự đoán trên test và phần dư theo khoảng RUL trong
+  [artifact modeling](outputs/modeling/README.md).
+- Đã có: xem từng engine qua dashboard Streamlit và out-of-fold predictions cho
+  phân tích validation theo group.
+- Phạm vi hiện tại: chưa lưu riêng hình quỹ đạo sensor chuẩn hóa và biểu đồ
+  validation chuyên dụng trong gói bàn giao.
 
 Dashboard có thể minh họa cảnh báo khi RUL dự đoán không quá 30 cycles. Đây không phải ngưỡng bảo trì tối ưu vì FD001 không cung cấp chi phí bảo trì, downtime hoặc intervention records.
 
@@ -260,6 +264,8 @@ Cấu trúc hiện có và dự kiến của repository:
 ├── requirements-dashboard.txt # Dependency Streamlit tùy chọn cho dashboard
 ├── uv.lock                  # Phiên bản dependencies đã khóa
 ├── report/                  # Nguồn LaTeX/PDF và hình của báo cáo
+├── slides/                  # Slide trình bày 10 trang đã kiểm tra
+├── handoff/                 # Kịch bản demo và checklist bàn giao cuối
 ├── app.py                   # Entry point Streamlit
 ├── README.md                # Tài liệu tiếng Anh
 └── README.vi.md             # Tài liệu tiếng Việt
@@ -269,7 +275,7 @@ Các file hỗ trợ agent trong môi trường cục bộ được loại khỏ
 
 ## Khả năng tái lập
 
-Khi hoàn thành, repository sẽ cung cấp một quy trình được ghi chép rõ từ dữ liệu nguồn bất biến đến dữ liệu đã xử lý, metric, hình minh họa, dữ liệu dashboard và báo cáo cuối kỳ. Các yêu cầu tái lập gồm:
+Repository cung cấp một quy trình được ghi chép rõ từ dữ liệu nguồn bất biến đến dữ liệu đã xử lý, metric, hình minh họa, dữ liệu dashboard và báo cáo cuối kỳ. Các yêu cầu tái lập gồm:
 
 - Dùng random seed cố định `42` cho chia dữ liệu và mô hình ngẫu nhiên.
 - Cố định phiên bản các dependency Python.

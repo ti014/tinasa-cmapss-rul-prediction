@@ -24,8 +24,8 @@ Available now:
   interpretations.
   EDA milestone 1, milestone 2 train-only statistics, M3.1 ETL parity, M3.2
   rolling features, grouped RUL model evaluation, and the train-only PCA--ARIMA
-  analysis have passed independent validation; the artifact-driven dashboard is
-  now available for inspection.
+  analysis have passed independent validation; the artifact-driven dashboard,
+  presentation deck and handoff checklist are now available.
 - A cited theoretical background and a [milestone 2 statistical protocol](report/sections/statistical-protocol.tex).
   The paired comparison uses each sensor's mean over the first and last 30 cycles of every train engine.
   The M2.0 statistical configuration was fixed before inference.
@@ -230,11 +230,14 @@ No target score is declared in advance. A negative result remains valid if the p
 
 - Engine-life distribution (completed in milestone 1).
 - Sensor variability and raw-cycle trajectories (completed in milestone 1).
-- Planned: sensor and Health Index trajectories over normalized life.
-- Planned: true versus predicted RUL on validation engines.
-- Planned: test-set prediction scatter and residual distributions.
-- Planned: per-engine and RUL-range error analysis.
-- Available: a Streamlit dashboard for inspecting the final RUL prediction per test engine, Health Index trajectories on selected train engines and artifact provenance.
+- Available: train-only Health Index trajectories and holdout forecasts for the
+  selected engines in [the PCA--ARIMA artifacts](outputs/timeseries/README.md).
+- Available: final test-set true-versus-predicted RUL scatter and residuals by
+  RUL range in [the modeling artifacts](outputs/modeling/README.md).
+- Available: per-engine inspection through the Streamlit dashboard and persisted
+  out-of-fold predictions for grouped validation analysis.
+- Scope note: normalized sensor trajectories and a dedicated validation scatter
+  are not separate persisted figures in the current handoff.
 
 An illustrative warning may be shown when predicted RUL is at most 30 cycles. This is not presented as an optimized maintenance threshold because FD001 contains no maintenance costs, downtime, or intervention records.
 
@@ -266,6 +269,8 @@ Current and planned public project structure:
 ├── requirements-dashboard.txt # Optional Streamlit dashboard dependencies
 ├── uv.lock                  # Locked dependency versions
 ├── report/                  # Living LaTeX/PDF report, progress and evidence
+├── slides/                  # Validated 10-slide presentation deck
+├── handoff/                 # Demo script and final handoff checklist
 ├── app.py                   # Streamlit dashboard entry point
 ├── README.md                # English documentation
 └── README.vi.md             # Vietnamese documentation
@@ -275,7 +280,7 @@ Local agent-support files are intentionally excluded from GitHub through `.gitig
 
 ## Reproducibility
 
-The completed repository will provide one documented path from immutable raw data to processed artifacts, metrics, figures, dashboard data, and the final report. Reproducibility requirements include:
+The repository provides one documented path from immutable raw data to processed artifacts, metrics, figures, dashboard data, and the final report. Reproducibility requirements include:
 
 - Fixed random seed `42` for data splitting and stochastic models.
 - Version-pinned Python dependencies.

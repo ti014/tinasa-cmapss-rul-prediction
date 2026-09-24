@@ -1,10 +1,12 @@
 # Báo cáo cuối kỳ
 
 [Bản PDF](main.pdf) được biên dịch từ [main.tex](main.tex), cập nhật ngày
-23/09/2026. Báo cáo trình bày các kết quả đã có trên NASA C-MAPSS FD001:
+24/09/2026. Báo cáo trình bày các kết quả đã có trên NASA C-MAPSS FD001 và
+được biên tập theo cấu trúc mục tiêu--phương pháp--kết quả--thảo luận:
 kiểm tra dữ liệu, EDA train-only, ETL Silver/Gold, đối chiếu Pandas--PySpark,
 rolling features 30 cycles, suy luận chênh lệch sensor đầu/cuối vòng đời,
-phân tích PCA--ARIMA train-only và đánh giá mô hình RUL hiện tại.
+phân tích PCA--ARIMA train-only, đánh giá mô hình RUL, cảnh báo sớm OOF và phân
+tích lỗi theo engine.
 
 Báo cáo không đưa vào timeline, kế hoạch tiếp theo, đường dẫn artifact nội bộ
 hoặc khai báo AI/LLM. Phần dữ liệu giải thích rõ nhãn kết cục, ý nghĩa cột,
@@ -13,9 +15,9 @@ các công thức. Dashboard Streamlit đã được bổ sung như một consum
 của artifact; PCA--ARIMA vẫn được trình bày như phân tích phụ trên Health Index,
 không phải RUL model. Lệnh tái lập end-to-end đã chạy lại pipeline Pandas từ
 raw và đối chiếu artifact cuối.
-Slide trình bày và checklist bàn giao nằm tại `slides/` và
-`handoff/FINAL_HANDOFF.md`; chúng dùng cùng số liệu đã kiểm chứng trong
-báo cáo và artifact.
+Checklist bàn giao nằm tại `handoff/FINAL_HANDOFF.md` đã đồng bộ với báo cáo.
+Slide tại `slides/` là artifact của lượt trước, chưa được biên tập hoặc
+nghiệm thu lại sau cập nhật timing; không coi đây là bản trình chiếu mới nhất.
 
 ## Cấu trúc
 
@@ -30,7 +32,9 @@ report/
 │   ├── methodology.tex          # Luồng xử lý, EDA, feature và suy luận
 │   ├── statistical-protocol.tex # Protocol ghép cặp đầu/cuối vòng đời
 │   ├── current-results.tex      # Bảng, hình và diễn giải kết quả
-│   └── discussion.tex           # Bài học và giới hạn
+│   ├── discussion.tex           # Thảo luận, giới hạn và hướng phát triển
+│   ├── conclusion.tex           # Kết luận và phạm vi khái quát hóa
+│   └── appendix.tex             # Cấu hình, lệnh tái lập và mapping artifact
 └── figures/
     ├── pipeline.tex             # Bản TeX giữ cho report PDF hiện tại
     ├── pipeline.pdf             # Hình pipeline dùng trong báo cáo
@@ -70,6 +74,6 @@ Push-Location report
 Pop-Location
 ```
 
-Lần build ngày 23/09/2026 tạo PDF 34 trang, không có lỗi biên dịch, citation
+Lần build ngày 24/09/2026 tạo PDF 45 trang, không có lỗi biên dịch, citation
 undefined, reference undefined hoặc overfull/underfull box. Tectonic vẫn ghi
 cảnh báo môi trường về Fontconfig và font Windows; đây không phải lỗi nội dung.

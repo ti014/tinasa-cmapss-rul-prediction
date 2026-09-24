@@ -1,6 +1,6 @@
 """Contract cho artifact PCA--ARIMA trên Health Index train FD001."""
 
-TIMESERIES_SCHEMA_VERSION = 1
+TIMESERIES_SCHEMA_VERSION = 3
 TIMESERIES_SEED = 42
 TIMESERIES_N_ENGINES = 10
 TIMESERIES_TRAIN_FRACTION = 0.70
@@ -32,8 +32,20 @@ FORECAST_METRIC_COLUMNS = (
     "mae",
     "rmse",
     "coverage_95",
+    "fit_converged",
+    "fit_warning_count",
     "status",
     "error",
+)
+BASELINE_METRIC_COLUMNS = (
+    "split",
+    "engine_id",
+    "fold",
+    "baseline_name",
+    "n_train",
+    "n_holdout",
+    "mae",
+    "rmse",
 )
 DIAGNOSTIC_COLUMNS = (
     "split",
@@ -48,6 +60,9 @@ DIAGNOSTIC_COLUMNS = (
     "ljung_box_statistic",
     "ljung_box_pvalue",
     "order",
+    "model_df",
+    "fit_converged",
+    "fit_warning_count",
     "status",
     "error",
 )

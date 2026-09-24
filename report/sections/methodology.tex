@@ -2,11 +2,13 @@
 \label{sec:method}
 
 \subsection{Luồng xử lý}
-Hình~\ref{fig:pipeline} tóm tắt các bước đã thực hiện: đọc và kiểm tra dữ liệu
-FD001, sau đó tách thành hai lane. Lane chính đi qua ETL, rolling features,
-modeling và đánh giá RUL; lane phụ gồm ba phân tích train-only độc lập là EDA,
-suy luận thống kê và PCA--ARIMA trên Health Index. Cách bố trí này phân biệt
-dependency dữ liệu với các artifact phân tích không đi vào modeling.
+Hình~\ref{fig:pipeline} mô tả pipeline từ raw FD001 đến các artifact cuối. Sau
+khi reader và validator kiểm tra dữ liệu, pipeline tách thành hai nhánh. Nhánh
+chính thực hiện ETL, xây dựng rolling features, huấn luyện và đánh giá RUL.
+Nhánh phụ gồm EDA, suy luận thống kê đầu/cuối và PCA--ARIMA trên Health Index;
+các phân tích này chỉ dùng train và không cung cấp feature cho mô hình RUL.
+Việc tách nhánh làm rõ dependency dữ liệu và ngăn kết quả mô tả bị hiểu nhầm là
+đầu vào của bước modeling.
 
 \begin{figure}[H]
 \centering
@@ -19,28 +21,41 @@ khi final predictions đã được ghi.}
 \end{figure}
 
 Dữ liệu raw được giữ bất biến. Reader và validator tạo observations cùng nhãn
-RUL train trong bộ nhớ. EDA và suy luận thống kê chỉ đọc train. ETL ghi
-observations và train targets vào Silver Parquet, đồng thời tạo engine summary ở
-Gold Parquet và SQLite. Rolling features được tạo từ Silver observations và ghi
-ở Gold. Pipeline modeling join rolling features train với train targets, ghi
-final predictions cho test trước, rồi mới đọc nhãn test để đánh giá cuối. Cách
-tách lớp giúp xác định ranh giới của từng phép biến đổi và kiểm tra việc mất
-hoặc nhân bản dòng.
+RUL train trong bộ nhớ; EDA và suy luận thống kê chỉ đọc phần train. ETL ghi
+observations và train targets vào Silver Parquet, sau đó tạo engine summary trong
+Gold Parquet và SQLite. Rolling features được xây dựng từ Silver observations
+và ghi vào Gold. Modeling ghép rolling features train với train targets, ghi
+final predictions cho test, rồi mới đọc nhãn test để tính metric cuối. Ranh giới
+này giúp kiểm tra việc mất hoặc nhân bản dòng và ngăn test labels đi vào model
+selection.
 
-Phân tích PCA--ARIMA đọc cùng Silver observations nhưng chỉ giữ train. Pipeline
-fit StandardScaler và PCA một thành phần trên 21 sensor của train, định hướng
-PC1 theo tương quan với cycle để tạo Health Index, rồi chọn 10 engine theo fold
-và vị trí lifetime cách đều trước khi xem forecast. Mỗi chuỗi được chia theo
-thứ tự cycle với 70\% đầu cho fit và 30\% cuối cho evaluation. ARIMA order được
-chọn bằng grid AIC trên fit segment của từng engine; kết quả ghi MAE, RMSE,
-coverage prediction interval 95\%, ADF và Ljung--Box. Health Index forecast là
-phân tích diễn biến sensor, không được diễn giải như RUL và không đọc test labels.
+PCA--ARIMA đọc cùng Silver observations nhưng chỉ giữ train. Pipeline chọn 10
+engine theo fold và vị trí lifetime cách đều trước khi xem forecast. Để giữ ranh
+giới temporal holdout, StandardScaler, PCA một thành phần, hướng PC1 theo tương
+quan với cycle và tham số chuẩn hóa Health Index được fit trên 90 train engines
+còn lại; 10 engine được chọn chỉ được transform. Mỗi chuỗi được chia theo thứ
+tự cycle: 70\% đầu dùng để fit ARIMA và 30\% cuối dùng để đánh giá. ARIMA order
+được chọn bằng grid AIC trên fit segment của từng engine; output gồm MAE, RMSE,
+coverage của prediction interval 95\%, ADF và Ljung--Box với bậc tự do điều
+chỉnh theo $p+q$. Health Index forecast chỉ mô tả diễn biến cảm biến trong train
+và không đọc test labels.
 
-Pandas là reference implementation; PySpark tái hiện ba boundary và parity
-checker xác nhận schema, khóa, số dòng và giá trị số khớp nhau với sai khác lớn
-nhất bằng 0 trong lần chạy local có JRE. Kết quả benchmark chỉ đo chi phí tạo
-engine summary trên dữ liệu nhân bản, không tạo thêm engine độc lập cho phân
-tích khoa học.
+Pandas là reference implementation. PySpark tái hiện ba boundary và parity
+checker đối chiếu schema, khóa, số dòng và giá trị số; sai khác tuyệt đối lớn
+nhất bằng 0 trong lần chạy local có JRE. Benchmark chỉ đo chi phí tạo engine
+summary trên dữ liệu nhân bản, vì vậy không tạo thêm engine độc lập và không
+được dùng để kết luận về scalability của hệ thống phân tán.
+
+\subsection{Vai trò của thành phần Big Data}
+FD001 chỉ có 33.727 observations sau khi ghép train và test, nên chưa phải
+workload đủ lớn để kết luận về throughput của cluster. Thành phần Big Data của
+báo cáo được thể hiện ở ba lớp. Thứ nhất, data contract và validation kiểm soát
+veracity trước khi dữ liệu đi vào phân tích. Thứ hai, ETL tổ chức dữ liệu qua
+Bronze, Silver và Gold; Parquet giữ bảng phân tích còn SQLite cung cấp truy vấn
+local. Thứ ba, PySpark tái hiện các boundary ETL và parity checker đối chiếu
+kết quả với Pandas. Benchmark 1$\times$, 10$\times$ và 100$\times$ chỉ là phép
+đo cục bộ trên dữ liệu nhân bản; nó minh họa cách kiểm tra chi phí theo quy mô,
+không thay thế scalability benchmark trên cluster hoặc dữ liệu streaming.
 
 Dashboard Streamlit tại \texttt{app.py} chỉ đọc các artifact modeling và
 PCA--ARIMA đã ghi. Loader kiểm tra sự tồn tại và schema của file trước khi dựng
@@ -51,15 +66,15 @@ chạy. Đây là lớp trình bày kết quả, không phải một bước m�
 protocol.
 
 \subsection{EDA theo đơn vị động cơ}
-EDA chỉ sử dụng train. Phân phối tuổi thọ được tính mỗi động cơ một lần, trong
-khi histogram RUL theo observation phản ánh số quan sát khác nhau giữa các động
-cơ. Hai cách tổng hợp trả lời hai câu hỏi khác nhau và không được diễn giải thay
-thế nhau.
+EDA chỉ sử dụng train. Phân phối tuổi thọ được tính một lần cho mỗi engine,
+trong khi histogram RUL theo observation chịu ảnh hưởng của việc các engine có
+độ dài chuỗi khác nhau. Hai phép tổng hợp trả lời hai câu hỏi khác nhau và phải
+được diễn giải riêng.
 
-Correlation giữa sensor và RUL được tính bằng Spearman riêng trong từng động
-cơ, sau đó tóm tắt phân phối giữa các động cơ. Cách này giữ engine là đơn vị
-tổng hợp và tránh để chuỗi dài có trọng số quá lớn. Correlation chỉ mang tính mô
-tả, không chứng minh quan hệ nhân quả hoặc hiệu quả dự đoán ngoài mẫu.
+Correlation giữa sensor và RUL được tính bằng Spearman riêng trong từng engine,
+sau đó tóm tắt bằng phân phối giữa các engine. Cách tính này giữ engine là đơn
+vị tổng hợp và tránh để chuỗi dài có trọng số quá lớn. Correlation chỉ có vai
+trò mô tả; nó không chứng minh quan hệ nhân quả hoặc hiệu quả dự đoán ngoài mẫu.
 
 Sensor hằng có correlation không xác định và được giữ dưới dạng NaN. Ba động cơ
 minh họa được chọn gần các tứ phân vị tuổi thọ, không dựa trên hình dạng sensor;
@@ -78,12 +93,22 @@ standard deviation (\texttt{ddof=1}), min, max và linear slope theo vị trí
 các lựa chọn phụ thuộc dữ liệu được giữ ở bước modeling riêng để tránh data
 leakage.
 
-\subsection{Mô hình dự đoán RUL}
+\subsection{Mô hình và cấu hình đánh giá RUL}
 Modeling dùng 17.731 train windows và 126 feature columns từ artifact M3.2. Tập
 validation được chia bằng GroupKFold 5-fold theo \texttt{engine\_id}; mọi window
 của cùng một engine nằm trong cùng một fold validation. Trong training fold,
 tổng sample weight của mỗi engine bằng 1 để engine dài không chi phối loss chỉ
 vì có nhiều window hơn.
+
+Weighted median baseline dự đoán một hằng số học từ training fold, với tổng
+trọng số mỗi engine bằng 1. Ridge chuẩn hóa đặc trưng trong training fold rồi
+học quan hệ tuyến tính bằng sai số bình phương có trọng số và phạt L2 với
+$\alpha=1$. Trong implementation, sample weight truyền cho bước Ridge, không
+truyền cho StandardScaler. HistGradientBoosting xây dựng một tổ hợp cộng các
+cây hồi quy qua 200 iterations với learning rate 0,05; mỗi cây có tối đa
+31 leaf nodes và tối thiểu 20 samples/leaf. Các cấu hình này giữ cố định giữa
+fold; khác biệt metric phản ánh ba ứng viên trong cấu hình đã chạy, không
+phải kết quả tối ưu hyperparameter đầy đủ.
 
 Ba ứng viên được so sánh là median baseline, Ridge regression và
 HistGradientBoostingRegressor. Ridge đặt StandardScaler trong pipeline để scaler
@@ -92,6 +117,67 @@ và NASA asymmetric score được ghi kèm. Sau khi chọn mô hình, pipeline 
 toàn bộ train windows và ghi đúng một dự đoán tại cycle cuối của mỗi test
 engine. File nhãn \texttt{RUL\_FD001.txt} chỉ được đọc trong bước final
 evaluation sau khi \texttt{final\_predictions.parquet} đã tồn tại.
+
+Để tránh trộn các estimand, artifact
+\texttt{outputs/modeling/tables/evaluation\_protocol.csv} ghi riêng đơn vị
+phân tích, group key, split, metric và vai trò của từng phép đo. OOF dùng cho
+model selection trên train; final evaluation dùng 100 test engines sau khi
+model đã được chọn; forecast Health Index là phân tích trajectory phụ trên 10
+train engines và không được dùng để xếp hạng model RUL.
+
+Đầu ra hỗ trợ quyết định được giới hạn ở một cảnh báo minh họa: với model được
+chọn, mỗi engine train được tổng hợp từ OOF predictions và phát cảnh báo đầu
+tiên khi predicted RUL $\leq 30$ cycles. Ngưỡng được khai báo trước, không tối
+ưu trên 100 test labels. Lead time được ghi bằng RUL thật tại thời điểm cảnh
+báo, tức proxy số cycle còn lại đến endpoint run-to-failure của FD001; đây
+không phải lịch bảo trì hoặc false-alarm rate có tính vận hành.
+
+Đặt $a_i=\min\{t:\hat y_{i,t}\leq30\}$ và
+$b_i=\min\{t:y_{i,t}\leq30\}$ trên các window OOF quan sát được. Lead time
+$L_i=T_i-a_i$ và độ trễ so với ngưỡng $D_i=a_i-b_i$ chỉ xác định khi có cảnh
+báo. $D_i<0$, $D_i=0$ và $D_i>0$ lần lượt là cảnh báo trước, đúng và sau
+ngưỡng; trường hợp $a_i=T_i$ được ghi riêng là cảnh báo tại failure. Nếu không
+có $a_i$, trạng thái là không cảnh báo, không gán lead time bằng 0. Helper yêu
+cầu cycle liên tục và nhãn $y_{i,t}=T_i-t$ đến RUL bằng 0. Vì cùng OOF đã phục
+vụ model selection, đây không phải đánh giá độc lập sau chọn model.
+
+False alarm ở cấp toàn trajectory được định nghĩa là có cảnh báo nhưng không
+có event RUL thấp trong lịch sử quan sát. Tất cả train engines đều đi đến
+RUL bằng 0 nên số engine âm tính bằng 0; false-alarm rate được lưu là null,
+không phải 0\%. Điều này không ngăn phân tích riêng cảnh báo quá sớm hoặc thời
+gian ở trạng thái cảnh báo ngoài vùng RUL thấp; đó là estimand khác, chưa tính
+trong phiên hiện tại. Không chọn thêm yêu cầu lead time tối thiểu khi chưa có
+thông tin chuẩn bị bảo trì.
+
+\begin{table}[H]
+\centering
+\caption{Cấu hình mô hình và evaluation protocol.}
+\label{tab:model-config}
+\begin{tabularx}{\linewidth}{L{4.0cm}L{3.0cm}X}
+\toprule
+Thành phần & Giá trị & Vai trò \\\midrule
+Số fold & 5 & GroupKFold theo \texttt{engine\_id}. \\
+Seed & 42 & Tái lập bootstrap và các thành phần ngẫu nhiên của model; GroupKFold không shuffle. \\
+Baseline & Weighted median & Mốc so sánh với tổng trọng số mỗi engine bằng 1. \\
+Ridge & $\alpha=1{,}0$ & Có StandardScaler bên trong pipeline của từng training fold. \\
+HistGradientBoosting & learning rate $0{,}05$; 200 iterations; 31 leaf nodes;
+20 samples/leaf & Mô hình được chọn theo mean engine-level MAE. \\
+Early stopping & Tắt & Giữ cấu hình huấn luyện cố định giữa các fold. \\
+Test evaluation & 1 prediction/engine & Dự đoán tại cycle cuối quan sát; test labels
+được đọc sau khi ghi predictions. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Các giá trị trong Bảng~\ref{tab:model-config} lấy từ \texttt{ModelingConfig} và
+\texttt{run\_info.json}. Bảng mô tả cấu hình đã chạy, không phải một tuyên bố
+rằng đây là cấu hình tối ưu cho các subset C-MAPSS khác.
+
+Với nhánh Health Index, cùng prefix 70\% và suffix 30\% được dùng cho ARIMA và
+hai point-forecast baseline. Baseline \texttt{last\_value} giữ giá trị cuối
+prefix; baseline \texttt{drift} ngoại suy mức thay đổi trung bình từ giá trị
+đầu đến cuối prefix. Hai baseline không có prediction interval, nên chỉ được
+so sánh bằng MAE và RMSE; coverage 95\% chỉ thuộc về ARIMA.
 
 \subsection{Suy luận thống kê}
 Phân tích suy luận so sánh mean của 30 cycles đầu và 30 cycles cuối trong cùng

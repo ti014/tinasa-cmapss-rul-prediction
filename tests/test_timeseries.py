@@ -8,6 +8,7 @@ import pytest
 
 from cmapss.data.contracts import MEASUREMENTS, OBSERVATION_COLUMNS
 from cmapss.timeseries.arima import evaluate_arima_forecast, split_forecast_series
+from cmapss.timeseries.baselines import evaluate_forecast_baselines
 from cmapss.timeseries.contracts import (
     FORECAST_COLUMNS,
     HEALTH_INDEX_COLUMNS,
@@ -66,6 +67,24 @@ def test_health_index_fit_is_train_only_and_validates_contract() -> None:
     validate_health_index(result.health_index)
 
 
+def test_health_index_fit_can_exclude_temporal_holdout_engines() -> None:
+    observations = _observations(n_engines=3, length=20)
+    shifted = observations.loc[observations["engine_id"].eq(3)].copy()
+    shifted.loc[:, list(MEASUREMENTS)] += 10_000.0
+    observations = pd.concat(
+        [observations.loc[~observations["engine_id"].eq(3)], shifted],
+        ignore_index=True,
+    )
+
+    result = fit_health_index(observations, fit_engine_ids=[1, 2])
+
+    assert result.fit_engine_ids == (1, 2)
+    fit_scores = result.health_index.loc[result.health_index["engine_id"].isin([1, 2]), "health_index"]
+    assert fit_scores.mean() == pytest.approx(0.0, abs=1e-10)
+    assert fit_scores.std(ddof=0) == pytest.approx(1.0)
+    assert result.health_index["engine_id"].nunique() == 3
+
+
 def test_validation_engine_selection_is_deterministic_and_forecast_independent() -> None:
     observations = _observations()
     folds = _folds()
@@ -109,6 +128,24 @@ def test_forecast_metrics_calculate_mae_rmse_and_coverage() -> None:
     assert metrics["mae"] == pytest.approx(1.0)
     assert metrics["rmse"] == pytest.approx(np.sqrt(5.0 / 3.0))
     assert metrics["coverage_95"] == pytest.approx(1.0)
+
+
+def test_forecast_baselines_share_holdout_and_use_prefix_only() -> None:
+    fit = pd.Series([1.0, 2.0, 3.0])
+    holdout = pd.Series([4.0, 5.0])
+
+    rows = evaluate_forecast_baselines(fit, holdout)
+
+    assert rows["last_value"]["mae"] == pytest.approx(1.5)
+    assert rows["last_value"]["rmse"] == pytest.approx(np.sqrt(2.5))
+    assert rows["drift"]["mae"] == pytest.approx(0.0)
+    assert rows["drift"]["rmse"] == pytest.approx(0.0)
+    assert rows["drift"]["n_holdout"] == 2
+
+
+def test_forecast_baselines_reject_insufficient_prefix() -> None:
+    with pytest.raises(ValueError, match="BASELINE_PREFIX"):
+        evaluate_forecast_baselines(pd.Series([1.0]), pd.Series([2.0]))
 
 
 def test_short_series_is_rejected_before_forecast() -> None:

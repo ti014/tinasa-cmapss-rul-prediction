@@ -47,12 +47,15 @@ Kiểm tra test và cú pháp:
 uv lock --check
 ```
 
-Mốc end-to-end ngày 2026-09-23 đã đối chiếu 15 bảng, metrics, bốn hình
-byte-identical, raw hashes và dashboard loader. Full suite đạt 123 tests.
+Mốc end-to-end ngày 2026-09-24 đã đối chiếu 18 bảng, metrics, năm hình
+byte-identical, raw hashes và dashboard loader. Lượt nghiệm thu timing tiếp
+theo tại `tmp/e2e-review-20260924` cũng đạt; full suite cuối đạt 151 tests.
 
-Rehearsal dashboard ngày 2026-09-23 đã mở đủ bốn view trong Streamlit local.
+Kiểm tra ngày 2026-09-24 gồm loader và trang Cảnh báo sớm trên browser thật
+ở localhost:8517; đã quan sát bảng timing và phân phối lead time. Không gọi
+kiểm tra loader là rehearsal toàn bộ năm view.
 Case demo Engine 023 hiển thị RUL thật 113, dự đoán 170.4768 và absolute error
-57.4768; Engine 070 hiển thị Health Index MAE 1.0396, RMSE 1.2232 và coverage
+57.4768; Engine 070 hiển thị Health Index MAE 1.0372, RMSE 1.2205 và coverage
 95% là 21.43%. View Provenance hiển thị 100 evaluation rows, 704 forecast rows
 và `test_label_join.status=completed_after_final_predictions`.
 
@@ -66,11 +69,15 @@ Model được chọn là `hist_gradient_boosting` bằng 5-fold `GroupKFold` th
 | Mean engine MAE | 15.3490 |
 | RMSE | 20.5413 |
 | NASA score | 1513.2577 |
-| Bootstrap 95% CI của MAE | [13.2594, 17.3941] |
+| Bootstrap 95% CI của MAE | [12.7286, 18.0866] |
 
 Rolling features dùng window 30 cycles, tạo 27.927 windows và 126 feature
 columns. PCA--ARIMA dùng 10 validation engines, split 70/30 và tạo 704 forecast
 rows; diagnostics gồm ADF, Ljung--Box và prediction interval coverage.
+Cảnh báo RUL 30 cycles: 100/100 engine từng cảnh báo; timing là 44 trước,
+7 đúng và 49 sau ngưỡng. Lead time: median 30, Q1--Q3 26--35, min--max
+19--55 cycles. OOF cũng dùng chọn model; đây là mô tả nội bộ. False-alarm
+rate cấp engine là null theo định nghĩa event toàn trajectory, không phải 0%.
 
 ## Câu hỏi phản biện và câu trả lời ngắn
 
@@ -86,7 +93,7 @@ rows; diagnostics gồm ADF, Ljung--Box và prediction interval coverage.
 5. **Kết quả có áp dụng cho động cơ thực tế không?** Chưa thể kết luận. FD001
    chỉ đại diện một điều kiện vận hành và một dạng lỗi mô phỏng.
 6. **PySpark có thay thế Pandas trong modeling không?** PySpark được dùng cho
-   parity và benchmark ETL; modeling khoa học chính vẫn chạy bằng Pandas và
+   parity ETL; runtime benchmark chỉ đo Pandas. Modeling vẫn chạy bằng Pandas và
    scikit-learn.
 7. **Tái lập được bằng chứng nào?** Lệnh reproducibility dựng lại output trong
    thư mục mới, so sánh nội dung bảng với tolerance `1e-9`, kiểm raw hashes và

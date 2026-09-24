@@ -1,0 +1,85 @@
+\section{Tái lập và ánh xạ artifact}
+
+Phụ lục này tập trung các thông tin cần thiết để đối chiếu kết quả trong báo
+cáo với repository. Các lệnh dưới đây được chạy từ thư mục gốc; output mới nên
+được ghi vào một thư mục tạm để không ghi đè artifact đã nghiệm thu.
+
+\subsection{Môi trường và cấu hình chính}
+
+\begin{table}[H]
+\centering
+\caption{Phiên bản môi trường được khóa trong repository.}
+\label{tab:environment}
+\begin{tabular}{ll@{\qquad}ll}
+\toprule
+Thành phần & Phiên bản & Thành phần & Phiên bản \\\midrule
+Python & 3.12.x & Pandas & 2.3.3 \\
+NumPy & 2.3.3 & SciPy & 1.16.2 \\
+scikit-learn & 1.9.1 & statsmodels & 0.14.5 \\
+PyArrow & 23.0.1 & PySpark (optional) & 4.0.1 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Các cấu hình có ảnh hưởng trực tiếp đến kết quả gồm window 30 cycles, seed 42,
+5-fold GroupKFold theo \texttt{engine\_id}, 10.000 engine cluster bootstrap
+resamples cho metric cuối và 100.000 permutation resamples cho Wilcoxon. Trong
+bootstrap cuối, engine được lấy mẫu có hoàn lại và multiplicity được giữ khi
+tính mean engine-level MAE. Nhánh PCA--ARIMA fit transformer trên 90 engine
+train không được chọn, sau đó transform 10 engine forecast; Ljung--Box ghi
+\texttt{model\_df=p+q}. Những giá trị này được lưu trong code hoặc metadata của
+từng artifact; chúng không được suy ra từ default của thư viện.
+
+\subsection{Lệnh kiểm tra và tái lập}
+
+Kiểm tra test, cú pháp và lockfile:
+
+\begin{verbatim}
+.venv\Scripts\python.exe -m pytest -q --basetemp=tmp/pytest-handoff --tb=short
+.venv\Scripts\python.exe -m compileall -q src tests
+uv lock --check
+\end{verbatim}
+
+Tái lập pipeline Pandas từ raw vào output root mới:
+
+\begin{verbatim}
+uv run python -m cmapss.reproducibility `
+  --output-root tmp/e2e-repro-final `
+  --repo-root . `
+  --evidence-path tmp/e2e-repro-final/validation.json
+\end{verbatim}
+
+Lần chạy được ghi trong handoff tạo lại 18 bảng, các metric cuối, năm hình và
+dashboard loader; việc đối chiếu dùng tolerance $10^{-9}$ cho bảng số. Đây là
+bằng chứng tái lập của pipeline Pandas hiện tại, không phải bằng chứng về khả
+năng mở rộng của một cluster phân tán.
+
+\subsection{Ánh xạ kết quả với nguồn}
+
+\begin{table}[H]
+\centering
+\caption{Ánh xạ một số kết quả chính với artifact nguồn.}
+\label{tab:artifact-map}
+\small\sloppy
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{L{3.6cm}L{4.5cm}L{6.5cm}}
+\toprule
+Kết quả trong báo cáo & Artifact nguồn & Kiểm tra liên quan \\\midrule
+Quy mô và chất lượng dữ liệu & \filepath{outputs/validation/} và data contract &
+Schema, khóa, cycle continuity, row count. \\
+Rolling features & \filepath{outputs/features/gold/rolling_features.parquet} &
+Window đủ 30 cycle, cùng engine, không dùng tương lai. \\
+Cross-validation và model selection & \filepath{outputs/modeling/tables/model_metrics.csv} &
+GroupKFold, mean engine-level MAE, sample weighting. \\
+Protocol matrix & \filepath{outputs/modeling/tables/evaluation_protocol.csv} &
+Tách unit of analysis, group, split/horizon, metric và vai trò báo cáo. \\
+Metric test cuối & \filepath{outputs/modeling/tables/final_metrics.json} &
+100 final predictions, bootstrap CI, test-label join sau predictions. \\
+Suy luận sensor & \filepath{outputs/statistics/tables/sensor_inference.csv} &
+21 sensor, bootstrap CI, Wilcoxon permutation, BH FDR. \\
+PCA--ARIMA & \filepath{outputs/timeseries/} &
+Health Index train-only, fit trên 90 engine và transform 10 engine, 70/30 split,
+convergence, diagnostics và baseline cùng horizon. \\
+\bottomrule
+\end{tabular}
+\end{table}

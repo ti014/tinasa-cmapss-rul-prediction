@@ -1,6 +1,6 @@
 {
-  "schema_version": 1,
-  "evaluated_at_utc": "2026-09-22T15:17:51.040380+00:00",
+  "schema_version": 3,
+  "evaluated_at_utc": "2026-09-24T00:00:04.219469+00:00",
   "test_label_sha256": "a19c8ec94931949d0485bdc35118206e9c81c4547b422efb9cf86f4ceddbceca",
   "metrics": {
     "n_rows": 100,
@@ -13,10 +13,11 @@
   "bootstrap": {
     "resamples": 10000,
     "seed": 42,
+    "method": "engine_cluster_resampling_with_replacement; mean_engine_mae preserves duplicate engine draws",
     "intervals": {
       "mean_engine_mae": {
-        "ci_lower": 13.259449673514451,
-        "ci_upper": 17.394105373356403
+        "ci_lower": 12.728606926330093,
+        "ci_upper": 18.086553527187498
       },
       "rmse": {
         "ci_lower": 17.344213024532703,

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 
 import numpy as np
@@ -22,6 +23,9 @@ class HealthIndexResult:
     scaler: StandardScaler
     pca: PCA
     orientation_sign: int
+    normalization_mean: float
+    normalization_scale: float
+    fit_engine_ids: tuple[int, ...]
 
 
 def _orient_scores(scores: np.ndarray, cycles: np.ndarray) -> tuple[np.ndarray, int]:
@@ -32,11 +36,18 @@ def _orient_scores(scores: np.ndarray, cycles: np.ndarray) -> tuple[np.ndarray, 
     return -scores, -1
 
 
-def fit_health_index(observations: pd.DataFrame) -> HealthIndexResult:
-    """Fit scaler/PCA trên train sensors và trả Health Index chuẩn hóa.
+def fit_health_index(
+    observations: pd.DataFrame,
+    *,
+    fit_engine_ids: Iterable[int] | None = None,
+) -> HealthIndexResult:
+    """Fit scaler/PCA trên permitted train engines và trả Health Index.
 
     Test observations vẫn có thể tồn tại trong input Silver, nhưng luôn bị
-    loại trước khi fit và không xuất hiện trong output.
+    loại trước khi fit và không xuất hiện trong output. Khi ``fit_engine_ids``
+    được truyền, chỉ các engine đó được dùng để fit transformer và xác định
+    hướng/scale; các engine còn lại chỉ được transform. Cơ chế này giữ phần
+    suffix của engine holdout ngoài ranh giới fit của temporal evaluation.
     """
     validate_observations(observations, source="timeseries observations")
     train = (
@@ -47,19 +58,39 @@ def fit_health_index(observations: pd.DataFrame) -> HealthIndexResult:
     if train.empty:
         raise ContractError("TRAIN_ONLY", "health index", "cần train observations để fit PCA")
 
-    values = train.loc[:, list(SENSORS)].to_numpy(dtype="float64")
+    available_engine_ids = tuple(sorted(int(value) for value in train["engine_id"].unique()))
+    if fit_engine_ids is None:
+        resolved_fit_engine_ids = available_engine_ids
+    else:
+        resolved_fit_engine_ids = tuple(sorted({int(value) for value in fit_engine_ids}))
+        if not resolved_fit_engine_ids:
+            raise ContractError("HEALTH_INDEX_FIT", "health index", "cần ít nhất một engine để fit transformer")
+        unknown = set(resolved_fit_engine_ids).difference(available_engine_ids)
+        if unknown:
+            raise ContractError(
+                "HEALTH_INDEX_FIT",
+                "health index",
+                f"fit_engine_ids không thuộc train observations: {sorted(unknown)}",
+            )
+
+    fit_train = train.loc[train["engine_id"].isin(resolved_fit_engine_ids)].reset_index(drop=True)
+    fit_values = fit_train.loc[:, list(SENSORS)].to_numpy(dtype="float64")
     scaler = StandardScaler()
-    scaled = scaler.fit_transform(values)
+    scaler.fit(fit_values)
     pca = PCA(n_components=1, svd_solver="full")
-    raw_scores = pca.fit_transform(scaled).ravel()
+    fit_scaled = scaler.transform(fit_values)
+    raw_fit_scores = pca.fit_transform(fit_scaled).ravel()
     oriented_scores, orientation_sign = _orient_scores(
-        raw_scores,
-        train["cycle"].to_numpy(dtype="float64"),
+        raw_fit_scores,
+        fit_train["cycle"].to_numpy(dtype="float64"),
     )
     scale = float(np.std(oriented_scores, ddof=0))
     if not np.isfinite(scale) or scale == 0.0:
         raise ContractError("HEALTH_INDEX_SCALE", "health index", "PC1 không có độ biến thiên hữu hạn")
-    normalized = (oriented_scores - float(np.mean(oriented_scores))) / scale
+    center = float(np.mean(oriented_scores))
+    all_scores = pca.transform(scaler.transform(train.loc[:, list(SENSORS)].to_numpy(dtype="float64"))).ravel()
+    oriented_all_scores = orientation_sign * all_scores
+    normalized = (oriented_all_scores - center) / scale
     result = train.loc[:, ["split", "engine_id", "cycle"]].copy()
     result["health_index"] = normalized.astype("float64")
     validate_health_index(result)
@@ -68,6 +99,9 @@ def fit_health_index(observations: pd.DataFrame) -> HealthIndexResult:
         scaler=scaler,
         pca=pca,
         orientation_sign=orientation_sign,
+        normalization_mean=center,
+        normalization_scale=scale,
+        fit_engine_ids=resolved_fit_engine_ids,
     )
 
 

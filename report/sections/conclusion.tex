@@ -1,0 +1,38 @@
+\section{Kết luận}
+
+Báo cáo trả lời năm câu hỏi nghiên cứu trong phạm vi NASA C-MAPSS FD001.
+Thứ nhất, 20.631 train observations và 13.096 test observations đáp ứng các
+kiểm tra schema, khóa và tính liên tục của cycle; điều này xác nhận khả năng
+xử lý dữ liệu theo contract, không xác nhận tính đại diện cho động cơ thực tế.
+Thứ hai, phân tích đầu/cuối 30 cycles ghi nhận 15 sensor bác bỏ giả thuyết
+không của Wilcoxon sau hiệu chỉnh BH trong cấu hình đã chọn; kết quả cần đọc
+cùng giả định signed-rank, độ lớn chênh lệch và số zero, không dùng làm
+feature selection ngoài training fold.
+
+Thứ ba, Pandas và PySpark khớp ba boundary Silver/Gold đã kiểm tra, với sai
+khác tuyệt đối lớn nhất bằng 0. Runtime chỉ được đo cho Pandas; báo cáo chưa
+có bằng chứng so sánh tốc độ hai engine hoặc hiệu năng cluster. Thứ tư,
+HistGradientBoosting có mean engine MAE thấp nhất trong ba ứng viên trên
+GroupKFold. Sau refit, model đạt MAE 15,3490 cycles và RMSE 20,5413 cycles tại
+điểm cắt của 100 test engines; bootstrap CI 95\% cho MAE là
+[12,7286; 18,0866]. Metric tại điểm cắt không mô tả toàn bộ trajectory.
+
+Thứ năm, ngưỡng cảnh báo minh họa 30 cycles tạo ít nhất một event trên mỗi
+engine OOF train, nhưng chỉ 44 engine cảnh báo trước ngưỡng và 7 đúng ngưỡng;
+49 engine cảnh báo sau ngưỡng. Lead time có trung vị 30 cycles, khoảng tứ
+phân vị 26--35 và miền 19--55. Vì OOF cũng dùng để chọn model, đây là đánh giá
+nội bộ, chưa chứng minh chất lượng cảnh báo độc lập hay utility bảo trì.
+Ví dụ engine 1 cảnh báo tại cycle 162, trước failure proxy cycle 192 đúng
+30 cycles; điều đó chưa quy định cần can thiệp khi nào.
+
+Nhánh phụ PCA--ARIMA có MAE trung bình 0,4110, thấp hơn drift 0,7469 và
+last-value 0,9478 trên cùng 10 holdout trajectories. Tuy nhiên, ARIMA chỉ có
+MAE thấp hơn drift ở 7/10 engine, và coverage thay đổi từ 21,43\% đến 97,03\%.
+Kết quả này hỗ trợ phân tích Health Index, không thay thế dự đoán RUL.
+
+Đóng góp của báo cáo là pipeline có thể tái lập, các phép so sánh có nguồn
+artifact và giới hạn đánh giá được công bố. Ưu tiên tiếp theo là độ nhạy window,
+đánh giá temporal trên nhiều engine và kiểm tra warning độc lập với model
+selection. Mở rộng model, dataset hoặc hạ tầng chỉ có ý nghĩa khi phục vụ một
+giả thuyết cụ thể; dữ liệu hiện tại chưa cho phép kết luận về lịch bảo trì
+tối ưu hoặc khả năng khái quát ra ngoài FD001.

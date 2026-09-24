@@ -22,6 +22,8 @@ def test_dashboard_loader_reads_persisted_artifacts() -> None:
     assert data.model_comparison.loc[data.model_comparison["selected"] == True, "model_name"].tolist() == ["hist_gradient_boosting"]
     assert len(data.health_index) == 20_631
     assert len(data.forecasts) == 704
+    assert len(data.warning_events) == 100
+    assert data.warning_summary["split"] == "train_oof"
     assert data.timeseries_run_info["isolation"]["uses_test_labels"] is False
 
 

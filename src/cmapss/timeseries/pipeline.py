@@ -16,7 +16,9 @@ import pandas as pd
 
 from cmapss.data.validation import validate_observations
 from cmapss.timeseries.arima import fit_engine_arima
+from cmapss.timeseries.baselines import evaluate_forecast_baselines
 from cmapss.timeseries.contracts import (
+    BASELINE_METRIC_COLUMNS,
     DIAGNOSTIC_COLUMNS,
     FORECAST_COLUMNS,
     FORECAST_METRIC_COLUMNS,
@@ -58,6 +60,7 @@ class TimeseriesResult:
     selected_engines: pd.DataFrame
     forecasts: pd.DataFrame
     forecast_metrics: pd.DataFrame
+    baseline_metrics: pd.DataFrame
     diagnostics: pd.DataFrame
     input_sha256: dict[str, str]
 
@@ -142,21 +145,42 @@ def run_timeseries_pipeline(
     observations = pd.read_parquet(observation_path)
     validate_observations(observations, source=str(observation_path))
     folds = pd.read_csv(fold_path)
-    health_result = fit_health_index(observations)
-    validate_health_index(health_result.health_index)
     selected = select_validation_engines(
         observations,
         folds,
         n_engines=run_config.n_engines,
     )
+    selected_engine_ids = set(int(value) for value in selected["engine_id"])
+    train_engine_ids = set(
+        int(value)
+        for value in observations.loc[observations["split"].eq("train"), "engine_id"].unique()
+    )
+    fit_engine_ids = train_engine_ids.difference(selected_engine_ids)
+    health_result = fit_health_index(observations, fit_engine_ids=fit_engine_ids)
+    validate_health_index(health_result.health_index)
     forecast_rows: list[pd.DataFrame] = []
     metric_rows: list[dict[str, Any]] = []
+    baseline_rows: list[dict[str, Any]] = []
     diagnostic_rows: list[dict[str, Any]] = []
     for row in selected.itertuples(index=False):
         series = health_result.health_index.loc[
             health_result.health_index["engine_id"].eq(row.engine_id),
             ["cycle", "health_index"],
         ]
+        n_train = int(np.floor(len(series) * run_config.train_fraction))
+        for name, baseline in evaluate_forecast_baselines(
+            series["health_index"].iloc[:n_train],
+            series["health_index"].iloc[n_train:],
+        ).items():
+            baseline_rows.append(
+                {
+                    "split": str(row.split),
+                    "engine_id": int(row.engine_id),
+                    "fold": int(row.fold),
+                    "baseline_name": name,
+                    **baseline,
+                }
+            )
         try:
             forecast, metrics, diagnostics = fit_engine_arima(
                 series,
@@ -168,6 +192,7 @@ def run_timeseries_pipeline(
                 alpha=run_config.prediction_alpha,
             )
         except (ValueError, np.linalg.LinAlgError) as error:
+            warning_count = int(getattr(error, "warning_count", 0))
             metrics = {
                 "split": str(row.split),
                 "engine_id": int(row.engine_id),
@@ -178,6 +203,8 @@ def run_timeseries_pipeline(
                 "mae": np.nan,
                 "rmse": np.nan,
                 "coverage_95": np.nan,
+                "fit_converged": False,
+                "fit_warning_count": warning_count,
                 "status": "fit_failed",
                 "error": str(error),
             }
@@ -194,6 +221,9 @@ def run_timeseries_pipeline(
                 "ljung_box_statistic": np.nan,
                 "ljung_box_pvalue": np.nan,
                 "order": "",
+                "model_df": -1,
+                "fit_converged": False,
+                "fit_warning_count": warning_count,
                 "status": "fit_failed",
                 "error": str(error),
             }
@@ -207,6 +237,7 @@ def run_timeseries_pipeline(
         else pd.DataFrame(columns=FORECAST_COLUMNS)
     )
     metrics = pd.DataFrame(metric_rows, columns=FORECAST_METRIC_COLUMNS)
+    baseline_metrics = pd.DataFrame(baseline_rows, columns=BASELINE_METRIC_COLUMNS)
     diagnostics = pd.DataFrame(diagnostic_rows, columns=DIAGNOSTIC_COLUMNS)
     return TimeseriesResult(
         config=run_config,
@@ -214,6 +245,7 @@ def run_timeseries_pipeline(
         selected_engines=selected,
         forecasts=forecasts,
         forecast_metrics=metrics,
+        baseline_metrics=baseline_metrics,
         diagnostics=diagnostics,
         input_sha256={observation_path.name: _sha256(observation_path), fold_path.name: _sha256(fold_path)},
     )
@@ -234,12 +266,14 @@ def write_timeseries_artifacts(result: TimeseriesResult, output_dir: str | Path)
         "selected_engines": table_dir / "selected_engines.csv",
         "health_index": table_dir / "health_index.csv",
         "forecast_metrics": table_dir / "forecast_metrics.csv",
+        "baseline_metrics": table_dir / "baseline_metrics.csv",
         "diagnostics": table_dir / "diagnostics.csv",
         "arima_forecasts": prediction_dir / "arima_forecasts.parquet",
         "health_index_figure": figure_dir / "health_index_selected_engines.png",
         "forecast_figure": figure_dir / "arima_forecasts.png",
         "scaler": output_path / "models" / "health_index_scaler.joblib",
         "pca": output_path / "models" / "health_index_pca.joblib",
+        "health_index_parameters": output_path / "models" / "health_index_parameters.json",
         "run_info": output_path / "run_info.json",
     }
     paths["models"] = output_path / "models"
@@ -247,10 +281,25 @@ def write_timeseries_artifacts(result: TimeseriesResult, output_dir: str | Path)
     result.selected_engines.to_csv(paths["selected_engines"], index=False)
     result.health_index_result.health_index.to_csv(paths["health_index"], index=False)
     result.forecast_metrics.to_csv(paths["forecast_metrics"], index=False)
+    result.baseline_metrics.to_csv(paths["baseline_metrics"], index=False)
     result.diagnostics.to_csv(paths["diagnostics"], index=False)
     result.forecasts.to_parquet(paths["arima_forecasts"], index=False)
     joblib.dump(result.health_index_result.scaler, paths["scaler"])
     joblib.dump(result.health_index_result.pca, paths["pca"])
+    paths["health_index_parameters"].write_text(
+        json.dumps(
+            {
+                "orientation_sign": result.health_index_result.orientation_sign,
+                "normalization_mean": result.health_index_result.normalization_mean,
+                "normalization_scale": result.health_index_result.normalization_scale,
+                "fit_engine_ids": list(result.health_index_result.fit_engine_ids),
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
     _plot_health_index(result.health_index_result.health_index, result.selected_engines, paths["health_index_figure"])
     _plot_forecasts(
         result.health_index_result.health_index,
@@ -259,6 +308,19 @@ def write_timeseries_artifacts(result: TimeseriesResult, output_dir: str | Path)
         paths["forecast_figure"],
     )
     ok_metrics = result.forecast_metrics.loc[result.forecast_metrics["status"].eq("ok")]
+    baseline_summary = (
+        result.baseline_metrics.groupby("baseline_name", sort=True)
+        .agg(mean_engine_mae=("mae", "mean"), mean_rmse=("rmse", "mean"))
+        .reset_index()
+    )
+    arima_by_engine = result.forecast_metrics.loc[
+        result.forecast_metrics["status"].eq("ok"), ["engine_id", "mae"]
+    ].rename(columns={"mae": "arima_mae"})
+    comparison_rows = result.baseline_metrics.merge(arima_by_engine, on="engine_id", how="inner")
+    comparison_rows["arima_lower_mae"] = comparison_rows["arima_mae"] < comparison_rows["mae"]
+    baseline_comparison = (
+        comparison_rows.groupby("baseline_name", sort=True)["arima_lower_mae"].sum().astype(int).to_dict()
+    )
     payload: dict[str, Any] = {
         "schema_version": TIMESERIES_SCHEMA_VERSION,
         "pipeline": "train_only_pca_arima_health_index",
@@ -271,20 +333,26 @@ def write_timeseries_artifacts(result: TimeseriesResult, output_dir: str | Path)
             "prediction_interval": 1.0 - result.config.prediction_alpha,
             "seed": result.config.seed,
             "order_selection": "AIC grid p,q=0..2 and d in {0,1} on fit segment only",
-            "health_index": "standardized sensor columns -> PCA PC1; orientation chosen by train cycle correlation",
+            "point_forecast_baselines": "last_value and endpoint drift; same fit prefix and holdout as ARIMA; no prediction intervals",
+            "health_index": "standardized sensor columns -> PCA PC1; orientation and normalization fit on non-selected train engines",
         },
         "selection": {
             "rule": "quota cân bằng theo GroupKFold fold; lifetime quantile positions trong từng fold",
             "forecast_independent": True,
             "n_selected": int(len(result.selected_engines)),
+            "selected_engine_ids": [int(value) for value in result.selected_engines["engine_id"]],
+            "fit_engine_ids": [int(value) for value in result.health_index_result.fit_engine_ids],
         },
         "row_counts": {
             "health_index": int(len(result.health_index_result.health_index)),
             "selected_engines": int(len(result.selected_engines)),
             "forecasts": int(len(result.forecasts)),
             "forecast_metrics": int(len(result.forecast_metrics)),
+            "baseline_metrics": int(len(result.baseline_metrics)),
             "diagnostics": int(len(result.diagnostics)),
             "successful_engines": int(len(ok_metrics)),
+            "baseline_summary": baseline_summary.to_dict(orient="records"),
+            "arima_lower_mae_engines_by_baseline": baseline_comparison,
         },
         "outputs": {
             name: str(path.relative_to(output_path))
@@ -296,6 +364,9 @@ def write_timeseries_artifacts(result: TimeseriesResult, output_dir: str | Path)
             "uses_test_labels": False,
             "forecast_is_rul": False,
             "health_index_fit_split": "train",
+            "health_index_fit_excludes_selected_engines": True,
+            "health_index_normalization_mean": result.health_index_result.normalization_mean,
+            "health_index_normalization_scale": result.health_index_result.normalization_scale,
         },
     }
     paths["run_info"].write_text(

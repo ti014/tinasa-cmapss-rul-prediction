@@ -19,8 +19,10 @@ Available now:
   11 figures, and [analysis notes and validation evidence](outputs/eda/README.md).
 - A curated bibliography and reading guide.
 - A [LaTeX report](report/README.md) with a [PDF](report/main.pdf) summarizing
-  the current validated results, a data dictionary, glossary of report
-  terminology and abbreviations, decision rationale, and validation/EDA/M2.3a--M2.4
+  the current validated results in a revised academic structure, with a data
+  dictionary, glossary of report terminology and abbreviations, decision
+  rationale, model configuration, error analysis, reproducibility appendix, and
+  validation/EDA/M2.3a--M2.4
   interpretations.
   EDA milestone 1, milestone 2 train-only statistics, M3.1 ETL parity, M3.2
   rolling features, grouped RUL model evaluation, and the train-only PCA--ARIMA
@@ -55,9 +57,11 @@ Available now:
   test predictions before reading labels, and evaluates the selected model on
   NASA test labels.
 - A train-only [PCA--ARIMA Health Index analysis](outputs/timeseries/README.md)
-  on 10 representative validation engines. It writes 20,631 Health Index rows,
-  704 holdout forecasts, MAE/RMSE, 95% prediction-interval coverage, ADF and
-  Ljung--Box diagnostics without reading test labels.
+  on 10 selected validation engines. StandardScaler/PCA are fit on the other
+  90 train engines before the selected engines are transformed. It writes
+  20,631 Health Index rows, 704 holdout forecasts, ARIMA and same-horizon
+  last-value/drift baseline MAE/RMSE, 95% prediction-interval coverage, ADF and
+  adjusted Ljung--Box diagnostics without reading test labels.
 - An [artifact-driven Streamlit dashboard](app.py) for final RUL evaluation,
   per-engine Health Index/ARIMA inspection and run provenance. It does not fit
   models or read raw test labels when opened.
@@ -73,12 +77,13 @@ optional `dashboard` dependency group.
 
 ## Objectives
 
-The project is designed to answer four questions:
+The report addresses five questions:
 
 1. How trustworthy and suitable is FD001 for an academic predictive-maintenance study?
 2. Which sensor signals exhibit measurable degradation across engine life cycles?
-3. How accurately can RUL be predicted from the most recent 30 operating cycles?
-4. How can model results be communicated as transparent, reproducible early-warning evidence?
+3. Do Pandas and PySpark produce matching ETL outputs on the same input?
+4. How accurately can RUL be predicted from the most recent 30 operating cycles?
+5. How can model results be communicated as transparent, reproducible early-warning evidence?
 
 The primary objective is **RUL prediction**. Supervised regression is the modeling formulation because the target is a numeric number of remaining cycles; it is not the title or purpose of the project.
 
@@ -136,8 +141,8 @@ Statistical analysis   RUL prediction models
 ```
 
 Pandas is used in the EDA notebook, ETL reference path, statistics and model
-preparation. PySpark reproduces the ETL boundaries and supports a transparent
-scalability benchmark. The original dataset is only a few megabytes, so the
+preparation. PySpark reproduces the ETL boundaries for parity; recorded runtime
+benchmarks measure Pandas only. The original dataset is only a few megabytes, so the
 repository will not claim that FD001 itself demonstrates large-scale data
 processing.
 
@@ -196,10 +201,18 @@ and forecasts the final 30% of 10 representative validation engines. It reports:
 - Ljung-Box residual autocorrelation diagnostics.
 
 The current run selects ARIMA order by an AIC grid on each 70% fit segment only.
-All 10 engines fit successfully; forecast MAE is 0.1518--1.0396 and 95%
+All 10 engines have converged fits; forecast MAE is 0.1515--1.0372 and 95%
 prediction-interval coverage is 21.43%--97.03%. ADF does not reject
-non-stationarity on the fit segments. ARIMA is not applied directly to the
-deterministic training RUL countdown; Health Index forecast is not RUL.
+non-stationarity on the fit segments. After adjusting Ljung--Box by `p+q`,
+engines 69 and 70 have p-values below 0.05. ARIMA is not applied directly to
+the deterministic training RUL countdown; Health Index forecast is not RUL.
+On the same holdouts, mean MAE is 0.4110 for ARIMA, 0.7469 for drift and 0.9478
+for last-value; this comparison is descriptive and has no claim of statistical
+superiority.
+The fixed 30-cycle OOF warning protocol produces 44 before-threshold, 7 at-threshold,
+and 49 after-threshold first warnings. Lead time has median 30 cycles and range
+19--55 cycles. Because OOF predictions also selected the model, this is internal
+descriptive evidence rather than an independent post-selection evaluation.
 
 ## Big Data Scope
 
@@ -214,6 +227,15 @@ The Big Data component focuses on lifecycle and reproducibility rather than over
 Replicated records used in the scalability benchmark will receive remapped engine identifiers and remain isolated from scientific analysis and model training.
 
 ## Evaluation Protocol
+
+The estimand, unit of analysis, split/horizon, metric role, and uncertainty
+method are recorded in
+[`outputs/modeling/tables/evaluation_protocol.csv`](outputs/modeling/tables/evaluation_protocol.csv).
+It keeps OOF train model selection, final test-engine evaluation, Health Index
+trajectory forecasting, train-only low-RUL warning analysis, and the descriptive
+Pandas benchmark as separate protocols. The warning artifact uses a fixed
+`RUL <= 30` threshold on selected-model OOF predictions; it is descriptive and
+does not use test labels.
 
 - Use a trailing window of 30 cycles.
 - Split validation folds by engine, never by overlapping rows or windows.
@@ -282,7 +304,7 @@ Local agent-support files are intentionally excluded from GitHub through `.gitig
 
 The repository provides one documented path from immutable raw data to processed artifacts, metrics, figures, dashboard data, and the final report. Reproducibility requirements include:
 
-- Fixed random seed `42` for data splitting and stochastic models.
+- Seed `42` for stochastic models and bootstrap; GroupKFold does not shuffle.
 - Version-pinned Python dependencies.
 - Logged row counts and validation outcomes.
 - Persisted model configurations and evaluation results.
@@ -364,7 +386,8 @@ The validated runs used fresh kernels and produced identical artifacts in the
 same environment; the EDA checkpoint suite passed **69 tests**. The current
 repository-wide suite, including M2.3a artifact export tests, the M2.4 runtime
 audit, M3.1 ETL checks, M3.2 feature checks, grouped modeling checks and
-PCA--ARIMA and end-to-end reproducibility checks, passed **123 tests**.
+PCA--ARIMA and end-to-end reproducibility checks, passed **151 tests** after the
+engine-bootstrap, temporal-fit and warning-timing corrections.
 
 ![FD001 train EDA workflow](assets/diagrams/fd001-eda.svg)
 
@@ -508,7 +531,7 @@ uv run --extra dashboard streamlit run app.py
 The dashboard reads `outputs/modeling` and `outputs/timeseries`, then shows a
 model comparison, final RUL metrics, a selected test-engine evaluation, Health
 Index forecasts, prediction-interval coverage, diagnostics and run provenance.
-The light theme and four views are designed for a short live demo. It does not
+The light theme and five views include the OOF early-warning analysis. It does not
 retrain models or read `data/raw/RUL_FD001.txt`.
 
 ### Validate the end-to-end pipeline

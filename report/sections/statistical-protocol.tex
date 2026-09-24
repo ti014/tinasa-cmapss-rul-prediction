@@ -55,7 +55,7 @@ theo engine trên tập train FD001.}
 \end{figure}
 
 \subsection{Đại lượng cần báo cáo và điều kiện diễn giải}
-Bảng kết quả M2.3a giữ đủ 21 sensors, không chọn danh sách theo thứ hạng correlation của EDA. Ba operational settings không được gộp vào cùng họ giả thuyết sensor. Bảng ghi số cặp hợp lệ, số chênh lệch bằng 0, chênh lệch cặp trung bình, khoảng tin cậy, thống kê kiểm định, p-value gốc, p-value hiệu chỉnh và trạng thái có thể kiểm định.
+Bảng kết quả giữ đủ 21 sensors, không chọn danh sách theo thứ hạng correlation của EDA. Ba operational settings không được gộp vào cùng họ giả thuyết sensor. Bảng ghi số cặp hợp lệ, số chênh lệch bằng 0, chênh lệch cặp trung bình, khoảng tin cậy, thống kê kiểm định, p-value gốc, p-value hiệu chỉnh và trạng thái có thể kiểm định.
 
 Dùng chênh lệch cặp trung bình làm đại lượng chính theo đơn vị gốc:
 \begin{equation}
@@ -90,7 +90,7 @@ toàn bộ $D_{i,s}=0$ vẫn xuất hiện dưới trạng thái không có bi�
 được. Không biến p-value không xác định thành 0 hay suy ra sensor không có
 giá trị dự đoán ngoài mẫu.
 
-Benjamini--Hochberg áp dụng cho một họ kiểm định đã xác định trước~\cite{benjamini1995fdr,scipyFDR}. Cấu hình M2.0 giữ họ gồm 21 sensors, dùng giá trị 1 chỉ trong vector hiệu chỉnh cho trường hợp không kiểm định được, đồng thời giữ p-value gốc là không áp dụng và ghi rõ trạng thái trong bảng. Quy ước này tránh thu nhỏ họ giả thuyết theo kết quả thuận lợi; nó không sửa được p-value thiếu hợp lệ hoặc bảo đảm FDR dưới mọi dạng phụ thuộc giữa sensors. Các khoảng tin cậy bootstrap riêng lẻ không phải simultaneous intervals.
+Benjamini--Hochberg áp dụng cho một họ kiểm định đã xác định trước~\cite{benjamini1995fdr,scipyFDR}. Họ gồm 21 sensors được giữ cố định, dùng giá trị 1 chỉ trong vector hiệu chỉnh cho trường hợp không kiểm định được, đồng thời giữ p-value gốc là không áp dụng và ghi rõ trạng thái trong bảng. Quy ước này tránh thu nhỏ họ giả thuyết theo kết quả thuận lợi; nó không sửa được p-value thiếu hợp lệ hoặc bảo đảm FDR dưới mọi dạng phụ thuộc giữa sensors. Các khoảng tin cậy bootstrap riêng lẻ không phải simultaneous intervals.
 
 \subsection{Cấu hình suy luận}
 Các giá trị sau là cấu hình sử dụng khi tính kết quả; không lấy default của thư viện làm quyết định ngầm.

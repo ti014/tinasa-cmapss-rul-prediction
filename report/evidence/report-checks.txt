@@ -604,3 +604,12 @@ WP2 protocol and baseline update (2026-09-23)
 - PDF final build: 45 pages; zero fatal/undefined/reference/citation/overfull/underfull matches. Visual QA covered abstract, methodology, results/warning, discussion, conclusion and appendix. Browser QA opened the loopback dashboard's Overview and Early warning pages; timing table showed 44/7/49/0/0 and lead-time quantiles 19/26/30/35/55.
 - WP5 gate: decision matrix recorded in the completed plan. No new model, dataset, cost policy, cluster benchmark or streaming extension was run. Existing slide deck remains un-rehearsed after this timing update.
 - Diagram QA: TikZ and Draw.io pipeline labels now include OOF warning and Health Index baselines; public PNG rendered successfully. Independent review found no label collision, edge clipping or unreadable lane boundary.
+- Public-report cleanup (2026-09-25): removed M1/M2/M3 milestone identifiers,
+  personal-plan wording, internal output paths and run filenames from the
+  report source. Replaced them with general academic descriptions while
+  preserving quantitative results, formulas and limitations.
+- Tectonic rebuilt `report/figures/statistical-protocol.tex` and
+  `report/main.tex`; PDF remains 45 pages. `main.log` has no fatal,
+  undefined-reference, undefined-citation, overfull or underfull matches.
+  Rendered protocol figure, discussion and appendix pages were checked without
+  visible clipping or overlap.

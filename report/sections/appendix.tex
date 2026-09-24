@@ -1,85 +1,64 @@
-\section{Tái lập và ánh xạ artifact}
+\section{Cấu hình và khả năng tái lập}
 
-Phụ lục này tập trung các thông tin cần thiết để đối chiếu kết quả trong báo
-cáo với repository. Các lệnh dưới đây được chạy từ thư mục gốc; output mới nên
-được ghi vào một thư mục tạm để không ghi đè artifact đã nghiệm thu.
+Phụ lục này tóm tắt các cấu hình có ảnh hưởng trực tiếp đến kết quả. Báo cáo
+giữ nguyên dữ liệu đầu vào và không thay đổi số liệu trong quá trình biên tập.
+Quy trình tái lập gồm kiểm tra schema và ranh giới train/test, tạo rolling
+features, huấn luyện theo engine, đánh giá trên test và đối chiếu các bảng kết
+quả sau khi ghi.
 
 \subsection{Môi trường và cấu hình chính}
 
 \begin{table}[H]
 \centering
-\caption{Phiên bản môi trường được khóa trong repository.}
+\caption{Các cấu hình chính của thực nghiệm.}
 \label{tab:environment}
 \begin{tabular}{ll@{\qquad}ll}
 \toprule
-Thành phần & Phiên bản & Thành phần & Phiên bản \\\midrule
+Thành phần & Phiên bản/Giá trị & Thành phần & Phiên bản/Giá trị \\\midrule
 Python & 3.12.x & Pandas & 2.3.3 \\
 NumPy & 2.3.3 & SciPy & 1.16.2 \\
 scikit-learn & 1.9.1 & statsmodels & 0.14.5 \\
-PyArrow & 23.0.1 & PySpark (optional) & 4.0.1 \\
+PyArrow & 23.0.1 & PySpark & 4.0.1 \\
+Window & 30 cycles & GroupKFold & 5 folds \\
+Seed & 42 & Bootstrap metric & 10.000 lần \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Các cấu hình có ảnh hưởng trực tiếp đến kết quả gồm window 30 cycles, seed 42,
-5-fold GroupKFold theo \texttt{engine\_id}, 10.000 engine cluster bootstrap
-resamples cho metric cuối và 100.000 permutation resamples cho Wilcoxon. Trong
-bootstrap cuối, engine được lấy mẫu có hoàn lại và multiplicity được giữ khi
-tính mean engine-level MAE. Nhánh PCA--ARIMA fit transformer trên 90 engine
-train không được chọn, sau đó transform 10 engine forecast; Ljung--Box ghi
-\texttt{model\_df=p+q}. Những giá trị này được lưu trong code hoặc metadata của
-từng artifact; chúng không được suy ra từ default của thư viện.
+Bootstrap cuối lấy mẫu lại engine có hoàn lại và giữ số lần xuất hiện của mỗi
+engine khi tính mean engine-level MAE. Wilcoxon dùng 100.000 permutation
+resamples với Benjamini--Hochberg trên 21 sensors. Nhánh PCA--ARIMA fit
+transformer trên 90 engine train và chỉ transform 10 engine được đánh giá; mỗi
+chuỗi dùng 70\% đầu để fit và 30\% cuối để forecast. Các giá trị này mô tả đúng
+cấu hình đã chạy, không phải mặc định tối ưu cho mọi subset C-MAPSS.
 
-\subsection{Lệnh kiểm tra và tái lập}
+\subsection{Nguyên tắc tái lập}
 
-Kiểm tra test, cú pháp và lockfile:
+Các phép kiểm tra được thực hiện theo thứ tự: xác nhận schema và cycle
+continuity; tách dữ liệu train/test; tạo nhãn RUL và rolling features; chạy
+EDA, paired analysis và PCA--ARIMA trên train; thực hiện grouped
+cross-validation; ghi final predictions rồi mới ghép test labels. Kết quả được
+đối chiếu lại theo schema, khóa, số dòng và giá trị số sau mỗi bước ghi dữ liệu.
 
-\begin{verbatim}
-.venv\Scripts\python.exe -m pytest -q --basetemp=tmp/pytest-handoff --tb=short
-.venv\Scripts\python.exe -m compileall -q src tests
-uv lock --check
-\end{verbatim}
+Quy trình này chứng minh khả năng tái lập của lần chạy trên FD001 với cấu hình
+đã nêu. Nó không chứng minh scalability trên cluster, khả năng khái quát sang
+điều kiện vận hành khác hoặc tính phù hợp của metric cho quyết định bảo trì.
 
-Tái lập pipeline Pandas từ raw vào output root mới:
-
-\begin{verbatim}
-uv run python -m cmapss.reproducibility `
-  --output-root tmp/e2e-repro-final `
-  --repo-root . `
-  --evidence-path tmp/e2e-repro-final/validation.json
-\end{verbatim}
-
-Lần chạy được ghi trong handoff tạo lại 18 bảng, các metric cuối, năm hình và
-dashboard loader; việc đối chiếu dùng tolerance $10^{-9}$ cho bảng số. Đây là
-bằng chứng tái lập của pipeline Pandas hiện tại, không phải bằng chứng về khả
-năng mở rộng của một cluster phân tán.
-
-\subsection{Ánh xạ kết quả với nguồn}
+\subsection{Nguồn đối chiếu kết quả}
 
 \begin{table}[H]
 \centering
-\caption{Ánh xạ một số kết quả chính với artifact nguồn.}
-\label{tab:artifact-map}
-\small\sloppy
-\setlength{\tabcolsep}{3pt}
-\begin{tabular}{L{3.6cm}L{4.5cm}L{6.5cm}}
+\caption{Đối chiếu các nhóm kết quả trong báo cáo.}
+\label{tab:result-map}
+\small
+\begin{tabular}{L{4.2cm}L{5.2cm}L{5.1cm}}
 \toprule
-Kết quả trong báo cáo & Artifact nguồn & Kiểm tra liên quan \\\midrule
-Quy mô và chất lượng dữ liệu & \filepath{outputs/validation/} và data contract &
-Schema, khóa, cycle continuity, row count. \\
-Rolling features & \filepath{outputs/features/gold/rolling_features.parquet} &
-Window đủ 30 cycle, cùng engine, không dùng tương lai. \\
-Cross-validation và model selection & \filepath{outputs/modeling/tables/model_metrics.csv} &
-GroupKFold, mean engine-level MAE, sample weighting. \\
-Protocol matrix & \filepath{outputs/modeling/tables/evaluation_protocol.csv} &
-Tách unit of analysis, group, split/horizon, metric và vai trò báo cáo. \\
-Metric test cuối & \filepath{outputs/modeling/tables/final_metrics.json} &
-100 final predictions, bootstrap CI, test-label join sau predictions. \\
-Suy luận sensor & \filepath{outputs/statistics/tables/sensor_inference.csv} &
-21 sensor, bootstrap CI, Wilcoxon permutation, BH FDR. \\
-PCA--ARIMA & \filepath{outputs/timeseries/} &
-Health Index train-only, fit trên 90 engine và transform 10 engine, 70/30 split,
-convergence, diagnostics và baseline cùng horizon. \\
+Nhóm kết quả & Nội dung đối chiếu & Kiểm tra liên quan \\\midrule
+Chất lượng dữ liệu & Schema, khóa và độ liên tục của cycle & Row count, kiểu số hữu hạn và khóa duy nhất \\
+Rolling features & Đặc trưng từ 30 cycles gần nhất & Đủ window, cùng engine và không dùng tương lai \\
+Model RUL & Cross-validation và metric test & GroupKFold, sample weighting và test-label join sau prediction \\
+Suy luận sensor & Chênh lệch đầu/cuối vòng đời & Cặp một--một, bootstrap, Wilcoxon và FDR \\
+Health Index & PCA--ARIMA và baseline cùng horizon & Temporal holdout, convergence, residual diagnostics và coverage \\
 \bottomrule
 \end{tabular}
 \end{table}

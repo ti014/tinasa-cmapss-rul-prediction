@@ -24,6 +24,17 @@ from cmapss.timeseries.contracts import (
 )
 
 
+class ARIMAConvergenceError(ValueError):
+    """Candidate ARIMA fit returned without a converged optimizer status."""
+
+    def __init__(self, order: tuple[int, int, int], warning_count: int) -> None:
+        super().__init__(
+            f"[ARIMA_CONVERGENCE] order={order} không hội tụ; warnings={warning_count}"
+        )
+        self.order = order
+        self.warning_count = warning_count
+
+
 def split_forecast_series(
     cycles: pd.Series,
     values: pd.Series,
@@ -58,20 +69,34 @@ def _order_grid() -> list[tuple[int, int, int]]:
     ]
 
 
+def _fit_arima_model(
+    values: np.ndarray,
+    order: tuple[int, int, int],
+) -> tuple[Any, int]:
+    """Fit ARIMA, ghi nhận warnings và yêu cầu optimizer hội tụ."""
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        fitted = ARIMA(
+            values,
+            order=order,
+            enforce_stationarity=False,
+            enforce_invertibility=False,
+        ).fit()
+    warning_count = len(caught)
+    mle_retvals = getattr(fitted, "mle_retvals", {})
+    converged = bool(mle_retvals.get("converged", True)) if isinstance(mle_retvals, dict) else True
+    if not converged:
+        raise ARIMAConvergenceError(order, warning_count)
+    return fitted, warning_count
+
+
 def select_arima_order(values: pd.Series | np.ndarray) -> tuple[int, int, int]:
     """Chọn order có AIC nhỏ nhất, chỉ trên fit segment."""
     series = np.asarray(values, dtype="float64")
     candidates: list[tuple[float, tuple[int, int, int]]] = []
     for order in _order_grid():
         try:
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                fitted = ARIMA(
-                    series,
-                    order=order,
-                    enforce_stationarity=False,
-                    enforce_invertibility=False,
-                ).fit()
+            fitted, _ = _fit_arima_model(series, order)
             aic = float(fitted.aic)
             if np.isfinite(aic):
                 candidates.append((aic, order))
@@ -105,8 +130,8 @@ def evaluate_arima_forecast(
 
 def _diagnostics(values: np.ndarray) -> dict[str, float | int]:
     """Tính ADF trên fit segment và Ljung--Box trên residual."""
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+    with warnings.catch_warnings(record=True):
+        warnings.simplefilter("always")
         adf_result = adfuller(values, autolag="AIC")
     return {
         "adf_statistic": float(adf_result[0]),
@@ -137,14 +162,11 @@ def fit_engine_arima(
     n_train = len(train_values)
     n_holdout = len(holdout_values)
     order = select_arima_order(train_values)
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        fitted = ARIMA(
-            train_values.to_numpy(dtype="float64"),
-            order=order,
-            enforce_stationarity=False,
-            enforce_invertibility=False,
-        ).fit()
+    fitted, fit_warning_count = _fit_arima_model(
+        train_values.to_numpy(dtype="float64"),
+        order,
+    )
+    model_df = int(order[0] + order[2])
     forecast_result = fitted.get_forecast(steps=n_holdout)
     predicted = np.asarray(forecast_result.predicted_mean, dtype="float64")
     interval = forecast_result.conf_int(alpha=alpha)
@@ -161,6 +183,8 @@ def fit_engine_arima(
         "n_holdout": n_holdout,
         "order": str(order),
         **metrics,
+        "fit_converged": True,
+        "fit_warning_count": fit_warning_count,
         "status": "ok",
         "error": "",
     }
@@ -168,14 +192,22 @@ def fit_engine_arima(
         diagnostics = _diagnostics(np.asarray(train_values, dtype="float64"))
         residuals = np.asarray(fitted.resid, dtype="float64")
         lag = min(10, max(1, len(residuals) // 5))
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            ljung = acorr_ljungbox(residuals, lags=[lag], return_df=True)
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("always")
+            ljung = acorr_ljungbox(
+                residuals,
+                lags=[lag],
+                model_df=model_df,
+                return_df=True,
+            )
         diagnostics.update(
             {
                 "ljung_box_lag": lag,
                 "ljung_box_statistic": float(ljung["lb_stat"].iloc[-1]),
                 "ljung_box_pvalue": float(ljung["lb_pvalue"].iloc[-1]),
+                "model_df": model_df,
+                "fit_converged": True,
+                "fit_warning_count": fit_warning_count,
                 "status": "ok",
                 "error": "",
             }
@@ -189,6 +221,9 @@ def fit_engine_arima(
             "ljung_box_lag": -1,
             "ljung_box_statistic": np.nan,
             "ljung_box_pvalue": np.nan,
+            "model_df": model_df,
+            "fit_converged": True,
+            "fit_warning_count": fit_warning_count,
             "status": "diagnostic_failed",
             "error": str(error),
         }
@@ -198,6 +233,9 @@ def fit_engine_arima(
         "fold": fold,
         "n_train": n_train,
         "order": str(order),
+        "model_df": model_df,
+        "fit_converged": True,
+        "fit_warning_count": fit_warning_count,
         **diagnostics,
     }
     forecast_rows = pd.DataFrame(

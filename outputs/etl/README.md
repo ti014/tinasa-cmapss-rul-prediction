@@ -54,7 +54,7 @@ Ví dụ: engine train 1 có toàn bộ lịch sử đến cycle cuối thì tar
 cuối bằng `0`; engine summary của cùng engine ghi tổng số cycle và hai ranh giới
 cycle, không làm thay đổi raw observations.
 
-## Kết quả benchmark
+## Kết quả Pandas scalability benchmark
 
 Benchmark chỉ nhân bản observations trong bộ nhớ và remap engine ID; bản sao
 không được ghi vào Silver/Gold khoa học hoặc dùng huấn luyện. Lần chạy hiện tại
@@ -66,8 +66,11 @@ dùng Python 3.12.14, Pandas 2.3.3 trên Windows 11:
 | 10× | 337.270 | 2.000 | 0,1589 | 0,1474 |
 | 100× | 3.372.700 | 20.000 | 1,6752 | 1,6732 |
 
-Các số đo này mô tả transform `build_engine_summary` trong một môi trường cục
-bộ; chúng không chứng minh khả năng xử lý cluster hoặc PySpark nhanh hơn Pandas.
+Các số đo này chỉ đo transform `build_engine_summary` trên bảng đã ở trong
+bộ nhớ; không gồm replication, đọc raw hay ghi Parquet/SQLite. Nhãn cold/warm
+trong metadata chỉ là lần 1/lần 2 liên tiếp, không phải cache được kiểm soát.
+Pandas materialize kết quả ngay; chưa đo runtime PySpark. Hai lần đo mỗi scale
+chưa đủ đánh giá biến thiên runtime; không kết luận tốc độ cluster.
 
 ## Kiểm tra
 

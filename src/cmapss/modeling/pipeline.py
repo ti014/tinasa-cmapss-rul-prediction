@@ -36,14 +36,17 @@ from cmapss.modeling.contracts import (
     MODELING_PRIMARY_METRIC,
     MODELING_SCHEMA_VERSION,
     MODELING_SEED,
+    MODELING_WARNING_RUL_THRESHOLD,
     MODEL_METRIC_COLUMNS,
     OOF_PREDICTION_COLUMNS,
+    EVALUATION_PROTOCOL_COLUMNS,
 )
 from cmapss.modeling.metrics import (
     add_prediction_errors,
     bootstrap_metric_intervals,
     summarize_prediction_errors,
 )
+from cmapss.modeling.early_warning import build_warning_events
 
 matplotlib.use("Agg")
 from matplotlib import pyplot as plt  # noqa: E402
@@ -98,6 +101,68 @@ class WeightedMedianRegressor(BaseEstimator, RegressorMixin):
 
     def predict(self, X: pd.DataFrame | np.ndarray) -> np.ndarray:
         return np.full(len(X), self.constant_, dtype="float64")
+
+
+def build_evaluation_protocol() -> pd.DataFrame:
+    """Return the repository-wide evaluation matrix used by the report."""
+    rows = [
+        {
+            "protocol_id": "rul_cv",
+            "target": "RUL (cycles)",
+            "unit_of_analysis": "engine; windows aggregated within engine",
+            "group_key": "engine_id",
+            "split_and_horizon": "5-fold GroupKFold on train windows; no temporal horizon",
+            "metrics": "mean_engine_mae (primary); RMSE; NASA score",
+            "selection_or_reporting_role": "OOF model selection and train-only comparison",
+            "uncertainty_or_repetition": "fold mean and standard deviation",
+            "artifact": "tables/fold_metrics.csv; tables/model_metrics.csv",
+        },
+        {
+            "protocol_id": "rul_final",
+            "target": "RUL (cycles)",
+            "unit_of_analysis": "test engine; one prediction at final observed cycle",
+            "group_key": "engine_id",
+            "split_and_horizon": "refit on all train windows; 100 FD001 test engines",
+            "metrics": "mean_engine_mae; RMSE; NASA score",
+            "selection_or_reporting_role": "final held-out evaluation after model selection",
+            "uncertainty_or_repetition": "10,000 engine-cluster bootstrap resamples",
+            "artifact": "predictions/final_evaluation.parquet; tables/final_metrics.json",
+        },
+        {
+            "protocol_id": "health_index_forecast",
+            "target": "Health Index (standardized PC1)",
+            "unit_of_analysis": "engine trajectory; cycles in holdout suffix",
+            "group_key": "engine_id",
+            "split_and_horizon": "10 selected train engines; 70% prefix fit and 30% suffix holdout",
+            "metrics": "MAE; RMSE; ARIMA coverage 95%; baseline point metrics",
+            "selection_or_reporting_role": "secondary temporal analysis, not RUL evaluation",
+            "uncertainty_or_repetition": "ARIMA prediction interval; baselines have no interval",
+            "artifact": "tables/forecast_metrics.csv; tables/baseline_metrics.csv",
+        },
+        {
+            "protocol_id": "rul_warning_oof",
+            "target": "low RUL event (RUL <= 30 cycles)",
+            "unit_of_analysis": "engine trajectory; first warning event",
+            "group_key": "engine_id",
+            "split_and_horizon": "selected-model OOF predictions on train windows",
+            "metrics": "ever-warning rate; no-warning count; threshold timing; lead-time distribution",
+            "selection_or_reporting_role": "descriptive early-warning evidence only",
+            "uncertainty_or_repetition": "fixed threshold declared before scoring; no test-label tuning",
+            "artifact": "tables/warning_events.csv; tables/warning_summary.json",
+        },
+        {
+            "protocol_id": "etl_benchmark",
+            "target": "build_engine_summary transform",
+            "unit_of_analysis": "benchmark run",
+            "group_key": "none",
+            "split_and_horizon": "synthetic in-memory 1x, 10x and 100x replicas",
+            "metrics": "duration_seconds; input/output row counts",
+            "selection_or_reporting_role": "descriptive Pandas benchmark only",
+            "uncertainty_or_repetition": "two cold/warm repetitions per scale",
+            "artifact": "outputs/etl/benchmark.json",
+        },
+    ]
+    return pd.DataFrame(rows, columns=EVALUATION_PROTOCOL_COLUMNS)
 
 
 def _sha256(path: Path) -> str:
@@ -218,6 +283,33 @@ def _prediction_frame(
     frame["y_pred"] = predictions.astype("float64")
     frame = add_prediction_errors(frame)
     return frame.loc[:, list(OOF_PREDICTION_COLUMNS)]
+
+
+def _write_warning_figure(
+    oof_predictions: pd.DataFrame,
+    event: pd.Series,
+    path: Path,
+) -> None:
+    """Plot one train OOF trajectory with the fixed warning threshold."""
+    frame = oof_predictions.loc[
+        oof_predictions["engine_id"].eq(int(event["engine_id"]))
+        & oof_predictions["model_name"].eq(str(event["model_name"]))
+    ].sort_values("cycle", kind="mergesort")
+    fig, ax = plt.subplots(figsize=(8, 4.5))
+    ax.plot(frame["cycle"], frame["y_true"], label="Actual RUL", color="#2166ac")
+    ax.plot(frame["cycle"], frame["y_pred"], label="OOF prediction", color="#b2182b")
+    ax.axhline(int(event["rul_threshold"]), color="#f28e2b", linestyle="--", label="Warning threshold")
+    ax.axvline(int(event["failure_cycle"]), color="black", linestyle="--", linewidth=0.8, label="Failure proxy")
+    if int(event["first_warning_cycle"]) >= 0:
+        ax.axvline(int(event["first_warning_cycle"]), color="#762a83", linestyle=":", label="First warning")
+    ax.set_xlabel("Cycle")
+    ax.set_ylabel("RUL (cycles)")
+    ax.set_title(f"Train OOF early-warning trajectory — engine {int(event['engine_id'])}")
+    ax.grid(alpha=0.2)
+    ax.legend()
+    fig.tight_layout()
+    fig.savefig(path, dpi=160)
+    plt.close(fig)
 
 
 def _cross_validate_candidates(
@@ -352,7 +444,8 @@ def write_modeling_artifacts(result: ModelingResult, output_dir: str | Path) -> 
     table_dir = output_path / "tables"
     prediction_dir = output_path / "predictions"
     model_dir = output_path / "models"
-    for directory in (table_dir, prediction_dir, model_dir):
+    figure_dir = output_path / "figures"
+    for directory in (table_dir, prediction_dir, model_dir, figure_dir):
         directory.mkdir(parents=True, exist_ok=True)
 
     paths = {
@@ -363,10 +456,26 @@ def write_modeling_artifacts(result: ModelingResult, output_dir: str | Path) -> 
         "final_predictions": prediction_dir / "final_predictions.parquet",
         "selected_model": model_dir / "selected_model.joblib",
         "run_info": output_path / "run_info.json",
+        "evaluation_protocol": table_dir / "evaluation_protocol.csv",
+        "warning_events": table_dir / "warning_events.csv",
+        "warning_summary": table_dir / "warning_summary.json",
+        "warning_figure": figure_dir / "warning_trajectory.png",
     }
     result.fold_assignments.to_csv(paths["fold_assignments"], index=False)
     result.fold_metrics.to_csv(paths["fold_metrics"], index=False)
     result.model_metrics.to_csv(paths["model_metrics"], index=False)
+    build_evaluation_protocol().to_csv(paths["evaluation_protocol"], index=False)
+    warning_events, warning_summary = build_warning_events(
+        result.oof_predictions,
+        model_name=result.selected_model,
+        rul_threshold=MODELING_WARNING_RUL_THRESHOLD,
+    )
+    warning_events.to_csv(paths["warning_events"], index=False)
+    paths["warning_summary"].write_text(
+        json.dumps(warning_summary, ensure_ascii=False, indent=2, default=_json_safe) + "\n",
+        encoding="utf-8",
+    )
+    _write_warning_figure(result.oof_predictions, warning_events.iloc[0], paths["warning_figure"])
     result.oof_predictions.to_parquet(paths["oof_predictions"], index=False)
     result.final_predictions.to_parquet(paths["final_predictions"], index=False)
     joblib.dump(result.selected_estimator, paths["selected_model"])
@@ -383,6 +492,11 @@ def write_modeling_artifacts(result: ModelingResult, output_dir: str | Path) -> 
             "primary_metric": MODELING_PRIMARY_METRIC,
             "engine_equal_sample_weighting": True,
             "prediction_clipping": "none",
+            "early_warning": {
+                "target": "low RUL",
+                "threshold_cycles": MODELING_WARNING_RUL_THRESHOLD,
+                "source": "selected-model OOF predictions on train only",
+            },
         },
         "selected_model": result.selected_model,
         "row_counts": {
@@ -391,6 +505,7 @@ def write_modeling_artifacts(result: ModelingResult, output_dir: str | Path) -> 
             "fold_metrics": int(len(result.fold_metrics)),
             "model_metrics": int(len(result.model_metrics)),
             "final_predictions": int(len(result.final_predictions)),
+            "warning_events": int(len(warning_events)),
         },
         "outputs": {
             name: str(path.relative_to(output_path))
@@ -501,6 +616,7 @@ def write_final_evaluation_artifacts(
         "bootstrap": {
             "resamples": bootstrap_resamples,
             "seed": seed,
+            "method": "engine_cluster_resampling_with_replacement; mean_engine_mae preserves duplicate engine draws",
             "intervals": intervals,
         },
         "outputs": {

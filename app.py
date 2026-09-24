@@ -24,6 +24,8 @@ class DashboardData:
 
     model_metrics: dict[str, Any]
     model_comparison: pd.DataFrame
+    warning_events: pd.DataFrame
+    warning_summary: dict[str, Any]
     model_predictions: pd.DataFrame
     model_evaluation: pd.DataFrame
     health_index: pd.DataFrame
@@ -73,6 +75,7 @@ def load_dashboard_data(repo_root: str | Path = ".") -> DashboardData:
     model_predictions = _read_table(modeling / "predictions" / "final_predictions.parquet", parquet=True)
     model_evaluation = _read_table(modeling / "predictions" / "final_evaluation.parquet", parquet=True)
     model_comparison = _read_table(modeling / "tables" / "model_metrics.csv")
+    warning_events = _read_table(modeling / "tables" / "warning_events.csv")
     health_index = _read_table(timeseries / "tables" / "health_index.csv")
     forecast_metrics = _read_table(timeseries / "tables" / "forecast_metrics.csv")
     diagnostics = _read_table(timeseries / "tables" / "diagnostics.csv")
@@ -89,6 +92,7 @@ def load_dashboard_data(repo_root: str | Path = ".") -> DashboardData:
         "final_evaluation.parquet",
     )
     _require_columns(model_comparison, {"model_name", "mean_engine_mae", "selected"}, "model_metrics.csv")
+    _require_columns(warning_events, {"engine_id", "first_warning_cycle", "lead_time_to_failure_cycles", "missed_warning", "threshold_delay_cycles", "warning_timing"}, "warning_events.csv")
     _require_columns(health_index, {"split", "engine_id", "cycle", "health_index"}, "health_index.csv")
     _require_columns(forecast_metrics, {"engine_id", "mae", "rmse", "coverage_95", "status"}, "forecast_metrics.csv")
     _require_columns(diagnostics, {"engine_id", "adf_pvalue", "ljung_box_pvalue", "status"}, "diagnostics.csv")
@@ -101,6 +105,8 @@ def load_dashboard_data(repo_root: str | Path = ".") -> DashboardData:
     return DashboardData(
         model_metrics=_read_json(modeling / "tables" / "final_metrics.json"),
         model_comparison=model_comparison,
+        warning_events=warning_events,
+        warning_summary=_read_json(modeling / "tables" / "warning_summary.json"),
         model_predictions=model_predictions,
         model_evaluation=model_evaluation,
         health_index=health_index,
@@ -197,7 +203,7 @@ def _render_dashboard() -> None:
         unsafe_allow_html=True,
     )
 
-    pages = ["Tổng quan", "Đánh giá RUL", "Health Index / ARIMA", "Provenance"]
+    pages = ["Tổng quan", "Đánh giá RUL", "Cảnh báo sớm", "Health Index / ARIMA", "Provenance"]
     st.sidebar.markdown("### Điều hướng")
     page = st.sidebar.radio("Trang", pages, label_visibility="collapsed")
     st.sidebar.divider()
@@ -275,6 +281,35 @@ def _render_dashboard() -> None:
         ax.grid(alpha=0.2)
         ax.set_facecolor("#f8fafc")
         st.pyplot(fig, clear_figure=True)
+        return
+
+    if page == "Cảnh báo sớm":
+        st.markdown('<div class="section-kicker">Cảnh báo sớm</div>', unsafe_allow_html=True)
+        st.header("Cảnh báo RUL thấp trên OOF train")
+        summary = data.warning_summary
+        cards = st.columns(4)
+        cards[0].metric("Ngưỡng RUL", f"{int(summary['rul_threshold'])} cycles")
+        cards[1].metric("Engine có cảnh báo", f"{int(summary['n_warning'])}/{int(summary['n_engines'])}")
+        cards[2].metric("Không từng cảnh báo", f"{int(summary['n_missed_warning'])}")
+        cards[3].metric("Lead time trung bình", format_metric(summary["mean_lead_time_cycles"], 2))
+        st.markdown(
+            '<div class="warning-card"><b>Phạm vi diễn giải</b><br>Có cảnh báo không đồng nghĩa cảnh báo đủ sớm. Ngưỡng minh họa là 30 cycles; OOF cũng đã dùng để chọn model nên đây là đánh giá nội bộ, không độc lập sau model selection. Không có engine âm tính theo định nghĩa event trọn vòng đời: false-alarm rate không xác định, không phải 0%. Chưa có yêu cầu lead time tối thiểu cho bảo trì.</div>',
+            unsafe_allow_html=True,
+        )
+        timing_labels = {"before_threshold": "Trước ngưỡng", "at_threshold": "Đúng ngưỡng", "after_threshold": "Sau ngưỡng, trước failure", "at_failure": "Tại failure", "no_warning": "Không cảnh báo"}
+        st.dataframe(pd.DataFrame({"Thời điểm": list(timing_labels.values()), "Số engine": [summary["timing_counts"].get(key, 0) for key in timing_labels]}), hide_index=True)
+        distribution = summary["lead_time_distribution"]
+        st.caption(f"Lead time (cycles), n={distribution['n']}: min={distribution['min']}; Q1={distribution['q25']}; median={distribution['median']}; Q3={distribution['q75']}; max={distribution['max']}.")
+        st.image(
+            str(Path(__file__).resolve().parent / "outputs" / "modeling" / "figures" / "warning_trajectory.png"),
+            caption="Ví dụ trajectory OOF và ngưỡng cảnh báo RUL",
+            width="stretch",
+        )
+        table = data.warning_events[["engine_id", "first_warning_cycle", "actual_rul_at_first_warning", "lead_time_to_failure_cycles", "threshold_delay_cycles", "warning_timing", "missed_warning"]].copy()
+        table["warning_timing"] = table["warning_timing"].map(timing_labels)
+        table = table.rename(columns={"threshold_delay_cycles": "Độ trễ so với ngưỡng (cycles)", "warning_timing": "Phân loại thời điểm"})
+        table = table.rename(columns={"engine_id": "Engine", "first_warning_cycle": "Cycle cảnh báo đầu", "actual_rul_at_first_warning": "RUL thật tại cảnh báo", "lead_time_to_failure_cycles": "Lead time (cycles)", "missed_warning": "Không từng cảnh báo"})
+        st.dataframe(table, width="stretch", hide_index=True)
         return
 
     if page == "Health Index / ARIMA":

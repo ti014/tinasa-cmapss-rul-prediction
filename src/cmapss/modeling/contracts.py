@@ -3,11 +3,12 @@
 from cmapss.data.contracts import KEY
 from cmapss.features.contracts import ROLLING_FEATURE_VALUE_COLUMNS
 
-MODELING_SCHEMA_VERSION = 1
+MODELING_SCHEMA_VERSION = 3
 MODELING_SEED = 42
 MODELING_N_SPLITS = 5
 MODELING_BOOTSTRAP_RESAMPLES = 10_000
 MODELING_PRIMARY_METRIC = "mean_engine_mae"
+MODELING_WARNING_RUL_THRESHOLD = 30
 MODELING_KEY = KEY
 MODELING_FEATURE_COLUMNS = ROLLING_FEATURE_VALUE_COLUMNS
 
@@ -54,4 +55,16 @@ FINAL_EVALUATION_COLUMNS = (
     "absolute_error",
     "squared_error",
     "nasa_score_component",
+)
+
+EVALUATION_PROTOCOL_COLUMNS = (
+    "protocol_id",
+    "target",
+    "unit_of_analysis",
+    "group_key",
+    "split_and_horizon",
+    "metrics",
+    "selection_or_reporting_role",
+    "uncertainty_or_repetition",
+    "artifact",
 )

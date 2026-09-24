@@ -50,20 +50,40 @@ def bootstrap_metric_intervals(
     n_resamples: int,
     seed: int,
 ) -> dict[str, dict[str, float]]:
-    """Bootstrap final metrics theo engine, dùng một dòng cho mỗi test engine."""
+    """Bootstrap final metrics theo engine và giữ nguyên cluster multiplicity.
+
+    Mỗi resample chọn các engine có hoàn lại. Các dòng của engine được chọn
+    được ghép lại để tính row-level RMSE/NASA score; engine-level MAE được tính
+    trên vector MAE theo đúng số lần engine xuất hiện trong resample. Cách này
+    tránh làm mất trọng số khi một engine được chọn nhiều lần.
+    """
     rng = np.random.default_rng(seed)
-    rows = evaluation.reset_index(drop=True)
-    n_rows = len(rows)
+    rows = add_prediction_errors(evaluation.reset_index(drop=True))
+    if rows.empty:
+        raise ValueError("[BOOTSTRAP] evaluation phải có ít nhất một dòng")
+    engine_groups = {
+        engine_id: group.reset_index(drop=True)
+        for engine_id, group in rows.groupby("engine_id", sort=True)
+    }
+    engine_ids = np.asarray(list(engine_groups), dtype="int64")
+    engine_mae = rows.groupby("engine_id", sort=True)["absolute_error"].mean()
+    n_engines = len(engine_ids)
     values = {
         "mean_engine_mae": np.empty(n_resamples, dtype="float64"),
         "rmse": np.empty(n_resamples, dtype="float64"),
         "nasa_score": np.empty(n_resamples, dtype="float64"),
     }
     for index in range(n_resamples):
-        sample = rows.iloc[rng.integers(0, n_rows, size=n_rows)]
-        metrics = summarize_prediction_errors(sample)
-        for name in values:
-            values[name][index] = float(metrics[name])
+        sampled_engine_ids = rng.choice(engine_ids, size=n_engines, replace=True)
+        sampled = pd.concat(
+            [engine_groups[int(engine_id)] for engine_id in sampled_engine_ids],
+            ignore_index=True,
+        )
+        values["mean_engine_mae"][index] = float(
+            engine_mae.loc[sampled_engine_ids].mean()
+        )
+        values["rmse"][index] = float(np.sqrt(sampled["squared_error"].mean()))
+        values["nasa_score"][index] = float(sampled["nasa_score_component"].sum())
 
     return {
         name: {

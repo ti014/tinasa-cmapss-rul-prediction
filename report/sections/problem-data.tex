@@ -1,9 +1,11 @@
-\section{Bài toán, mục tiêu và phạm vi}
+\section{Mở đầu: bài toán, mục tiêu và phạm vi}
 \subsection{Bài toán nghiên cứu}
-Đề tài phân tích chuỗi cảm biến động cơ nhằm ước lượng số cycle còn lại trước
-khi hỏng. Đầu vào tại cycle $t$ là các quan sát đã có đến $t$ của một động cơ;
-đầu ra mục tiêu là RUL tại cycle đó. Phạm vi kết quả trong báo cáo gồm kiểm tra
-dữ liệu, EDA, ETL, rolling features và suy luận thống kê đầu/cuối vòng đời.
+Báo cáo xem bài toán dự báo RUL là một bài toán supervised regression trên chuỗi
+cảm biến động cơ. Tại cycle $t$, mô hình chỉ được phép sử dụng các quan sát đã
+xuất hiện đến cycle đó; biến mục tiêu là số cycle còn lại trước khi động cơ hỏng.
+Phạm vi nghiên cứu gồm kiểm tra dữ liệu, exploratory data analysis (EDA), ETL,
+xây dựng rolling features, suy luận thống kê đầu/cuối vòng đời, phân tích
+PCA--ARIMA trên Health Index và đánh giá mô hình RUL.
 
 Đối với train, đặt $T_i$ là cycle cuối của động cơ $i$ trong lịch sử đầy đủ đến
 khi hỏng. Nhãn RUL được xác định bởi:
@@ -26,20 +28,49 @@ ra. Độ tin cậy của nhãn train phụ thuộc vào giả định của ngu
 đã đi đến failure; vì vậy validator chỉ áp dụng công thức này cho train và
 không áp dụng cho test.
 
-Ví dụ minh họa: một động cơ kết thúc ở cycle 200 có RUL bằng 30 cycles tại
-cycle 170 và bằng 0 tại cycle 200. Đây là ví dụ tính nhãn, không phải kết quả
-dự đoán.
+Ví dụ, nếu lịch sử train của một động cơ kết thúc ở cycle 200 thì nhãn tại cycle
+170 là 30 cycles, còn nhãn tại cycle 200 là 0. Ví dụ này chỉ minh họa cách tạo
+nhãn từ lịch sử đã biết; nó không phải là một dự đoán của mô hình.
 
 Lịch sử test bị cắt trước khi hỏng nên không được lấy cycle cuối quan sát của test làm $T_i$. Mục tiêu đánh giá cuối là một dự đoán tại cycle cuối quan sát cho mỗi test engine. Bộ nhãn chính thức được tách khỏi quá trình lựa chọn mô hình.
 
-\subsection{Câu hỏi và giới hạn nghiên cứu}
-Các câu hỏi được trả lời gồm: dữ liệu có đáp ứng contract không; cảm biến biến
-đổi thế nào theo vòng đời; ETL Pandas và PySpark có tạo kết quả tương đương
-không; và trailing window 30 cycles tạo ra tập đặc trưng có cấu trúc nào.
+\subsection{Mục tiêu và câu hỏi nghiên cứu}
+Mục tiêu tổng quát là xây dựng và kiểm chứng một quy trình tái lập để chuyển dữ
+liệu cảm biến FD001 thành artifact phân tích và kết quả đánh giá RUL có thể truy
+ngược về nguồn dữ liệu. Mục tiêu cụ thể gồm:
+\begin{enumerate}
+\item kiểm tra data contract và mô tả cấu trúc, chất lượng của FD001;
+\item xây dựng ETL cùng trailing features mà không làm rò rỉ thông tin từ
+      cycle tương lai;
+\item so sánh một số mô hình hồi quy bằng GroupKFold theo engine và đánh giá
+      mô hình được chọn trên test set theo protocol đã chốt;
+\item mô tả thay đổi của sensor giữa đầu và cuối vòng đời, đồng thời khảo sát
+      Health Index bằng PCA--ARIMA như một phân tích phụ.
+\item chuyển OOF prediction thành cảnh báo RUL thấp theo engine với ngưỡng được
+      khai báo trước, đồng thời ghi lead time và giới hạn diễn giải.
+\end{enumerate}
 
-FD001 không có chi phí bảo trì, downtime hoặc lịch can thiệp. Do đó, RUL không
-tự động xác định thời điểm bảo trì tối ưu. Cycle cũng không được đổi thành giờ
-hoặc ngày vì dữ liệu không cung cấp thông tin quy đổi.
+Từ các mục tiêu trên, báo cáo trả lời năm câu hỏi: (i) dữ liệu có đáp ứng
+contract để phân tích hay không; (ii) các sensor biến đổi như thế nào giữa hai
+đoạn đầu/cuối vòng đời; (iii) ETL Pandas và PySpark có cho kết quả tương đương
+trên cùng input hay không; và (iv) trailing window 30 cycles cùng mô hình được
+chọn cho kết quả RUL nào trong protocol đánh giá theo engine; (v) OOF prediction
+có thể tạo cảnh báo RUL thấp minh bạch đến mức nào khi ngưỡng được cố định
+trước.
+
+\subsection{Đóng góp và phạm vi của báo cáo}
+Đóng góp chính của báo cáo là một quy trình có ranh giới dữ liệu rõ ràng: raw
+được giữ bất biến, các bước train-only được tách khỏi đánh giá test, và nhãn
+test chỉ được ghép sau khi đã ghi final predictions. Báo cáo cũng cung cấp
+artifact, kiểm tra validation và lệnh tái lập để người đọc đối chiếu từng kết
+quả với nguồn tương ứng. Các đóng góp này nhằm bảo đảm tính minh bạch của quy
+trình; chúng không được diễn giải thành bằng chứng rằng mô hình đã sẵn sàng
+triển khai ngoài môi trường mô phỏng.
+
+FD001 không cung cấp chi phí bảo trì, downtime hoặc lịch can thiệp. Vì vậy, RUL
+chỉ là mục tiêu dự báo trong đơn vị cycle, chưa phải quyết định thời điểm bảo
+trì. Cycle cũng không được chuyển sang giờ hoặc ngày vì không có thông tin quy
+đổi tương ứng.
 
 \section{Dữ liệu và kiểm soát chất lượng}
 \subsection{Nguồn dữ liệu và lý do lựa chọn}

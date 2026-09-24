@@ -25,7 +25,7 @@
         <mxCell id="features" value="Rolling features&lt;br&gt;Window 30 cycles · 21 sensors&lt;br&gt;27.927 rows" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1F5FE;strokeColor=#0277BD;strokeWidth=2;fontSize=16;align=center;verticalAlign=middle;" vertex="1" parent="1">
           <mxGeometry x="90" y="445" width="420" height="78" as="geometry" />
         </mxCell>
-        <mxCell id="model" value="Grouped RUL modeling&lt;br&gt;Train features + train targets&lt;br&gt;5-fold GroupKFold" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1F5FE;strokeColor=#0277BD;strokeWidth=2;fontSize=16;align=center;verticalAlign=middle;" vertex="1" parent="1">
+        <mxCell id="model" value="Grouped RUL modeling&lt;br&gt;5-fold GroupKFold&lt;br&gt;OOF: chọn model và warning 30 cycles" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1F5FE;strokeColor=#0277BD;strokeWidth=2;fontSize=16;align=center;verticalAlign=middle;" vertex="1" parent="1">
           <mxGeometry x="90" y="560" width="420" height="78" as="geometry" />
         </mxCell>
         <mxCell id="predictions" value="Final predictions&lt;br&gt;Ghi 100 dự đoán test&lt;br&gt;trước khi đọc nhãn" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#EF6C00;strokeWidth=2;fontSize=16;align=center;verticalAlign=middle;" vertex="1" parent="1">
@@ -47,7 +47,7 @@
         <mxCell id="stats" value="&lt;b&gt;Paired analysis train-only&lt;/b&gt;&lt;br&gt;30 cycles đầu/cuối&lt;br&gt;&lt;font style=&quot;font-size:12px&quot;&gt;Bootstrap, Wilcoxon và FDR&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF7FB;strokeColor=#0277BD;strokeWidth=2;fontSize=16;align=center;verticalAlign=middle;" vertex="1" parent="1">
           <mxGeometry x="780" y="450" width="450" height="82" as="geometry" />
         </mxCell>
-        <mxCell id="timeseries" value="&lt;b&gt;PCA–ARIMA train-only&lt;/b&gt;&lt;br&gt;Health Index · 10 validation engines&lt;br&gt;&lt;font style=&quot;font-size:12px&quot;&gt;Forecast, ADF và Ljung–Box&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF7FB;strokeColor=#0277BD;strokeWidth=2;fontSize=16;align=center;verticalAlign=middle;" vertex="1" parent="1">
+        <mxCell id="timeseries" value="&lt;b&gt;PCA–ARIMA train-only&lt;/b&gt;&lt;br&gt;PCA fit 90 engines; transform 10&lt;br&gt;&lt;font style=&quot;font-size:12px&quot;&gt;ARIMA, last-value/drift; diagnostics&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF7FB;strokeColor=#0277BD;strokeWidth=2;fontSize=16;align=center;verticalAlign=middle;" vertex="1" parent="1">
           <mxGeometry x="780" y="570" width="450" height="82" as="geometry" />
         </mxCell>
         <mxCell id="analysisNote" value="Các nhánh chỉ đọc dữ liệu train; không đi vào RUL modeling." style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=12;fontColor=#616161;" vertex="1" parent="1">

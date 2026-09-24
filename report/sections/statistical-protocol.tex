@@ -81,7 +81,14 @@ cặp $E,L$ để tạo khoảng tin cậy 95\% cho $\widehat{\Delta}_s$ theo ph
 bootstrap của Efron và hàm SciPy đã khóa phiên bản~\cite{efron1979bootstrap,scipyBootstrap}.
 Cấu hình dùng 10.000 resamples và percentile interval.
 
-Wilcoxon hai phía kiểm định giả thuyết trung vị của chênh lệch bằng 0. Việc diễn giải dựa vào giả định phân phối chênh lệch đối xứng quanh trung vị và các cặp độc lập giữa engine~\cite{scipyWilcoxon}. Cần xem phân phối chênh lệch và ghi rõ giới hạn của giả định đối xứng; bootstrap của trung bình không thay thế giả định này. Sensor hằng hoặc có toàn bộ $D_{i,s}=0$ vẫn phải xuất hiện trong bảng dưới trạng thái không có biến thiên quan sát được. Không biến p-value không xác định thành 0 hoặc tự kết luận sensor có giá trị dự đoán bằng 0.
+Wilcoxon hai phía đánh giá giả thuyết phân phối chênh lệch đối xứng quanh 0;
+các cặp được giả định độc lập giữa engine~\cite{scipyWilcoxon}. Cách diễn giải
+theo median cần giả định đối xứng, không phải kiểm định median không điều kiện.
+Với \texttt{zero\_method=wilcox}, chênh lệch bằng 0 không tham gia xếp hạng.
+Bootstrap của mean không thay thế giả định signed-rank. Sensor hằng hoặc có
+toàn bộ $D_{i,s}=0$ vẫn xuất hiện dưới trạng thái không có biến thiên quan sát
+được. Không biến p-value không xác định thành 0 hay suy ra sensor không có
+giá trị dự đoán ngoài mẫu.
 
 Benjamini--Hochberg áp dụng cho một họ kiểm định đã xác định trước~\cite{benjamini1995fdr,scipyFDR}. Cấu hình M2.0 giữ họ gồm 21 sensors, dùng giá trị 1 chỉ trong vector hiệu chỉnh cho trường hợp không kiểm định được, đồng thời giữ p-value gốc là không áp dụng và ghi rõ trạng thái trong bảng. Quy ước này tránh thu nhỏ họ giả thuyết theo kết quả thuận lợi; nó không sửa được p-value thiếu hợp lệ hoặc bảo đảm FDR dưới mọi dạng phụ thuộc giữa sensors. Các khoảng tin cậy bootstrap riêng lẻ không phải simultaneous intervals.
 

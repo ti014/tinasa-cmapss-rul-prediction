@@ -1,7 +1,7 @@
 {
-  "schema_version": 1,
+  "schema_version": 3,
   "pipeline": "sklearn_grouped_rul_modeling",
-  "generated_at_utc": "2026-09-22T15:17:39.282959+00:00",
+  "generated_at_utc": "2026-09-23T23:59:33.427599+00:00",
   "input_sha256": {
     "rolling_features.parquet": "3adf4810d9f3181bc244005592a0d9dea5d07ce2420ebd57d9c27abeaeb69231",
     "train_targets.parquet": "51da68e3be2b379e71c29cd7ac6ea34834722b372373dee2e36a04b63cf61905"
@@ -16,7 +16,12 @@
     ],
     "primary_metric": "mean_engine_mae",
     "engine_equal_sample_weighting": true,
-    "prediction_clipping": "none"
+    "prediction_clipping": "none",
+    "early_warning": {
+      "target": "low RUL",
+      "threshold_cycles": 30,
+      "source": "selected-model OOF predictions on train only"
+    }
   },
   "selected_model": "hist_gradient_boosting",
   "row_counts": {
@@ -24,7 +29,8 @@
     "oof_predictions": 53193,
     "fold_metrics": 15,
     "model_metrics": 3,
-    "final_predictions": 100
+    "final_predictions": 100,
+    "warning_events": 100
   },
   "outputs": {
     "fold_assignments": "tables\\fold_assignments.csv",
@@ -33,6 +39,10 @@
     "oof_predictions": "predictions\\oof_predictions.parquet",
     "final_predictions": "predictions\\final_predictions.parquet",
     "selected_model": "models\\selected_model.joblib",
+    "evaluation_protocol": "tables\\evaluation_protocol.csv",
+    "warning_events": "tables\\warning_events.csv",
+    "warning_summary": "tables\\warning_summary.json",
+    "warning_figure": "figures\\warning_trajectory.png",
     "final_evaluation": "predictions\\final_evaluation.parquet",
     "final_metrics": "tables\\final_metrics.json",
     "final_true_vs_predicted": "figures\\final_true_vs_predicted.png",
@@ -52,10 +62,11 @@
     "bootstrap": {
       "resamples": 10000,
       "seed": 42,
+      "method": "engine_cluster_resampling_with_replacement; mean_engine_mae preserves duplicate engine draws",
       "intervals": {
         "mean_engine_mae": {
-          "ci_lower": 13.259449673514451,
-          "ci_upper": 17.394105373356403
+          "ci_lower": 12.728606926330093,
+          "ci_upper": 18.086553527187498
         },
         "rmse": {
           "ci_lower": 17.344213024532703,

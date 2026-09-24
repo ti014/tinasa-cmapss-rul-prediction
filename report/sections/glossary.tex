@@ -29,6 +29,13 @@ Extract, Transform, Load (ETL) & Quy trình đọc, biến đổi và ghi dữ l
 Bronze / Silver / Gold & Bronze giữ raw; Silver lưu observations và train targets đã kiểm tra; Gold lưu engine summary và rolling features.\\
 Trailing window & Đoạn quan sát liên tiếp gần nhất của một engine tại cycle đang xét; báo cáo dùng 30 cycles.\\
 Feature & Biến được tạo từ observations; mỗi sensor có last, mean, sample standard deviation, min, max và slope.\\
+Metric & Đại lượng định lượng dùng để đánh giá hoặc so sánh kết quả, chẳng hạn MAE, RMSE và NASA score.\\
+Artifact & Tệp kết quả có schema và metadata được ghi ra để đọc lại, kiểm tra hoặc tái lập.\\
+Provenance & Thông tin truy nguyên nguồn input, cấu hình, phiên bản và trạng thái tạo artifact.\\
+Model selection & Quy trình chọn mô hình dựa trên metric của validation; trong báo cáo dùng mean engine-level MAE.\\
+Holdout & Đoạn dữ liệu được giữ lại để đánh giá sau khi fit; PCA--ARIMA dùng 30\% cuối chuỗi làm holdout.\\
+Parity & Đối chiếu schema, khóa, số dòng và giá trị giữa hai implementation trên cùng input.\\
+Trajectory & Toàn bộ chuỗi diễn biến của một engine theo cycle; metric cuối chỉ đánh giá tại một điểm cắt.\\
 Paired analysis & Ghép hai phép đo của cùng một engine; protocol dùng 30 cycles đầu và 30 cycles cuối.\\
 Bootstrap & Lấy mẫu lại có hoàn lại để ước lượng độ bất định; engine là đơn vị lấy mẫu.\\
 Wilcoxon signed-rank test & Kiểm định phi tham số cho dữ liệu ghép cặp dựa trên thứ hạng và dấu chênh lệch.\\
@@ -38,7 +45,7 @@ Spark / PySpark & Framework xử lý dữ liệu phân tán và API Python dùng
 Health Index & Điểm tổng hợp PC1 sau chuẩn hóa 21 sensor; dùng để mô tả diễn biến sensor và không phải RUL.\\
 Principal Component Analysis (PCA) & Phương pháp giảm chiều tuyến tính; báo cáo dùng PC1 để tạo Health Index từ train sensor.\\
 ARIMA & Mô hình chuỗi thời gian tự hồi quy tích hợp trung bình trượt, dùng như phân tích phụ trên Health Index.\\
-Augmented Dickey--Fuller (ADF) & Kiểm định chẩn đoán tính dừng của fit segment Health Index.\\
+Augmented Dickey--Fuller (ADF) & Kiểm định nghiệm đơn vị, được dùng để đánh giá bằng chứng về tính dừng của fit segment Health Index.\\
 Ljung--Box & Kiểm định chẩn đoán tự tương quan của residual sau khi fit ARIMA.\\
 
 \end{longtable}

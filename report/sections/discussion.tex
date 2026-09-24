@@ -1,25 +1,83 @@
-\section{Khó khăn, bài học và giới hạn}
+\section{Thảo luận, giới hạn và hướng phát triển}
 
-Khó khăn đầu tiên là phân biệt dữ liệu đủ để tính nhãn với dữ liệu đủ để dự đoán
-trong thực tế. Train cho phép biết $T_i$ sau khi chuỗi kết thúc, còn tại cycle
-$t$ thì $T_i$ chưa biết. Vì vậy, việc tạo nhãn được tách khỏi feature và không
-dùng tuổi thọ đầy đủ để tạo biến đầu vào.
+\subsection{Diễn giải các kết quả chính}
+Kết quả cho thấy việc đặt engine làm đơn vị split và đánh giá giúp hạn chế việc
+đếm các window có phụ thuộc thời gian như những quan sát độc lập. Trong protocol
+đã chốt, HistGradientBoosting đạt mean engine-level MAE thấp nhất trên
+cross-validation và được refit trước khi tạo một dự đoán cuối cho mỗi test
+engine. Metric cuối vì vậy phản ánh sai số ở điểm cắt của 100 engine test, không
+phải sai số của toàn bộ trajectory theo thời gian.
 
-Khó khăn thứ hai là xác định đơn vị phân tích. Một engine sống lâu tạo nhiều dòng
-hơn, trong khi các quan sát liền nhau có dependence theo thời gian. Tăng số dòng
-không đồng nghĩa tăng số mẫu độc lập; EDA và bootstrap vì vậy giữ engine là đơn
-vị tổng hợp hoặc lấy mẫu.
+Phân tích đầu/cuối vòng đời cho thấy nhiều sensor có thay đổi có hệ thống trong
+hai đoạn 30 cycles. Tuy nhiên, độ lớn chênh lệch nằm ở đơn vị gốc của từng
+sensor, nên không thể dùng các giá trị này để xếp hạng trực tiếp giữa các
+sensor. Wilcoxon signed-rank được diễn giải dưới giả định phân phối chênh lệch
+đối xứng quanh 0; không nên rút gọn thành kiểm định median cho mọi phân phối.
+Với sensor 6, 53 chênh lệch bằng 0 bị loại khỏi phép xếp hạng theo
+\texttt{zero\_method=wilcox}, còn 47 chênh lệch dương tham gia kiểm định.
+P-value nhỏ không chứng minh quan hệ nhân quả hay giá trị dự báo ngoài mẫu.
 
-Khó khăn thứ ba là giới hạn của dữ liệu mô phỏng và benchmark cục bộ. PySpark có
-thể chịu overhead trên FD001 nhỏ; parity xác nhận tính tương đương nhưng không
-cho phép suy ra công cụ phân tán luôn nhanh hơn Pandas.
+PCA--ARIMA cung cấp một cách kiểm tra độc lập về diễn biến của Health Index.
+Coverage của khoảng dự đoán 95\% thay đổi đáng kể giữa các engine, từ 21,43\%
+đến 97,03\%. ADF trên các fit segment không bác bỏ giả thuyết gốc về nghiệm
+đơn vị; do đó, các chuỗi này chưa cung cấp bằng chứng đủ mạnh về tính dừng theo
+kiểm định ADF. Sau khi điều chỉnh bậc tự do theo order ARIMA, Ljung--Box vẫn cho
+thấy p-value dưới 0,05 ở engine 69 và 70. Health Index forecast vì vậy chỉ được
+giữ như một phân tích phụ, không được dùng để thay thế mô hình RUL.
 
-Các kết quả trong báo cáo đã có validation dữ liệu, EDA, ETL, rolling features,
-suy luận thay đổi sensor đầu/cuối, forecast Health Index bằng ARIMA và đánh giá
-mô hình RUL. Forecast phụ cho thấy coverage prediction interval không đồng đều
-và ADF không bác bỏ tính không dừng trên các fit segment; vì vậy Health Index
-forecast không được dùng để thay thế mô hình RUL hoặc suy ra lịch bảo trì.
-Đây vẫn là kết quả trên FD001 mô phỏng với một điều kiện vận hành và một dạng
-lỗi; dashboard hiện đọc artifact để trình bày kết quả, và lệnh tái lập
-end-to-end đã xác nhận pipeline Pandas tạo lại artifact từ raw. Kết quả vẫn
-chưa có bằng chứng khái quát hóa sang dữ liệu thực tế.
+So sánh với baseline trên cùng prefix và suffix cho thấy ARIMA có MAE trung bình
+0,4110, thấp hơn \texttt{drift} (0,7469) và \texttt{last\_value} (0,9478); RMSE tương ứng là
+0,5027, 0,9128 và 1,1553. ARIMA chỉ thấp hơn \texttt{drift} ở 7/10 engine và
+\texttt{last\_value} ở 8/10 engine, nên kết quả này phù hợp với một lợi thế mô tả trong
+subset được chọn hơn là bằng chứng về ưu thế tổng quát. Baseline không có
+prediction interval, vì vậy không được so coverage với ARIMA.
+
+Cảnh báo sớm minh họa trên OOF cho thấy ngưỡng 30 cycles có thể chuyển
+prediction thành một event theo engine thay vì đếm từng cycle như các quan sát
+độc lập. Tuy nhiên, 49/100 cảnh báo đầu tiên đến sau mốc RUL thật bằng 30;
+lead time thấp nhất là 19 cycles. Không có engine hoàn toàn thiếu cảnh báo
+không đồng nghĩa mọi cảnh báo đều đủ sớm. Các nhóm trước/đúng/sau ngưỡng chỉ
+mô tả thời điểm, chưa phản ánh chi phí hoặc utility bảo trì. Không có engine
+âm tính theo định nghĩa event toàn vòng đời, nên false-alarm rate cấp engine
+không xác định. Vẫn có thể định nghĩa sai cảnh báo theo từng vùng thời gian,
+nhưng không được thay thế âm thầm estimand hiện tại bằng phép đo đó.
+
+Kết quả warning còn chịu ảnh hưởng của model selection: cùng tập OOF đã dùng
+để chọn HistGradientBoosting rồi mô tả event. Dự đoán mỗi engine không dùng
+engine đó trong fit, nhưng toàn bộ phân tích chưa độc lập với lựa chọn model.
+Muốn ước lượng hiệu quả của cả quy trình lựa chọn cần một outer evaluation
+riêng; 100\% từng phát cảnh báo không thay thế được đánh giá này.
+
+\subsection{Giới hạn phương pháp}
+Thứ nhất, FD001 chỉ gồm một điều kiện vận hành và một dạng suy giảm mô phỏng.
+Không có đánh giá trên tập dữ liệu độc lập hoặc fault mode khác, nên chưa thể
+khẳng định khả năng khái quát của metric. Thứ hai, test evaluation chỉ có một
+điểm cắt cho mỗi engine; cách đánh giá này không mô tả sai số khi mô hình được
+gọi lặp lại ở nhiều cycle. Thứ ba, runtime benchmark hiện chỉ đo Pandas trên
+dữ liệu nhân bản trong bộ nhớ, với hai lần đo mỗi scale. PySpark mới được
+kiểm tra parity: kết quả tương đương trên input đã xét không phải bằng chứng
+về tốc độ hoặc scalability của hệ thống phân tán.
+Cuối cùng, dữ liệu không cung cấp chi phí bảo trì, downtime hoặc quy đổi cycle
+sang thời gian lịch; vì vậy báo cáo chưa thể chuyển metric RUL thành quyết định
+bảo trì.
+
+\subsection{Hướng phát triển}
+Ưu tiên gần nhất là kiểm tra độ nhạy của window 10/20/30 trên cùng tập engine,
+fold và cycle đủ điều kiện cho cả ba cấu hình. Câu hỏi là lợi ích của lịch sử
+dài hơn có ổn định theo engine hay không; không chọn lại cấu hình bằng test
+labels đã xem. Đây là thực nghiệm mới cần được đăng ký protocol trước, không
+phải sửa văn bản hoặc kết quả đã hoàn tất trong báo cáo này.
+
+Với Health Index, nên đánh giá trên nhiều engine bằng cách fit transformer
+ngoài tập engine đang forecast, vẫn giữ last-value/drift làm baseline và báo
+cáo cả failure rate lẫn coverage theo horizon. Không chỉ tăng số engine rồi
+fit PCA trên chính các suffix cần đánh giá. Với warning, ưu tiên outer
+evaluation và phân tích ngưỡng có điều kiện trước khi đưa ra claim vận hành.
+
+FD002--FD004 chỉ phù hợp cho bước tiếp theo nếu mục tiêu được đổi rõ thành
+khả năng khái quát qua điều kiện vận hành hoặc fault mode. LSTM/Transformer
+cần một giả thuyết về biểu diễn thời gian và comparison cùng protocol với
+baseline hiện tại. Cluster/streaming cần workload và ngân sách tài nguyên cụ
+thể. Cost-aware maintenance chưa được đặt thành kết quả tiếp theo khi thiếu
+cost, downtime và intervention. Do đó, phiên hiện tại ưu tiên hoàn thiện
+evidence và giới hạn diễn giải; chưa triển khai thêm các mở rộng này.

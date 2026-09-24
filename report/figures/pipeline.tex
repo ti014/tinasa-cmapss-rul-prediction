@@ -31,14 +31,14 @@ lateEdge/.style={->,thick,dashed,draw=artifactStroke}]
 % Lane trái: dependency dữ liệu thực sự của pipeline dự đoán RUL.
 \node[processNode] (etl) at (0,-4.4) {ETL Silver/Gold\\\mbox{Pandas--PySpark} parity;\\Parquet và SQLite};
 \node[processNode] (features) at (0,-6.5) {Rolling features\\Window 30 cycles; 21 sensors; 27.927 rows};
-\node[processNode] (model) at (0,-8.6) {Grouped RUL modeling\\Train features +\\train targets; 5-fold GroupKFold};
+\node[processNode] (model) at (0,-8.6) {Grouped RUL modeling\\5-fold GroupKFold\\[-1pt]\scriptsize OOF: chọn model và warning 30 cycles};
 \node[artifactNode] (predictions) at (0,-10.7) {Final predictions\\Ghi 100 dự đoán test trước khi đọc nhãn};
 \node[processNode] (eval) at (0,-12.8) {Final evaluation\\MAE, RMSE và NASA score};
 
 % Lane phải: ba consumer độc lập của train data đã kiểm tra.
 \node[analysisNode] (eda) at (7.4,-4.4) {\textbf{EDA train-only}\\Tuổi thọ, sensor,\\correlation theo engine\\[-1pt]\scriptsize Bảng, hình và metadata};
 \node[analysisNode] (stats) at (7.4,-6.7) {\textbf{Paired analysis train-only}\\30 cycles đầu/cuối\\[-1pt]\scriptsize Bootstrap, Wilcoxon và FDR};
-\node[analysisNode] (timeseries) at (7.4,-9.0) {\textbf{PCA--ARIMA train-only}\\Health Index trên 10 validation engines\\[-1pt]\scriptsize Forecast, ADF và Ljung--Box};
+\node[analysisNode] (timeseries) at (7.4,-9.0) {\textbf{PCA--ARIMA train-only}\\PCA fit 90 engines; transform 10\\[-1pt]\scriptsize ARIMA, last-value/drift; diagnostics};
 
 % Test labels là side input muộn, không thuộc train/model selection.
 \node[dataNode] (labels) at (7.4,-12.8) {Test labels\\\texttt{RUL\_FD001.txt}\\[-1pt]\scriptsize Chỉ mở ở final evaluation};

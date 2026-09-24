@@ -14,7 +14,8 @@ from cmapss.modeling.contracts import (
     MODEL_METRIC_COLUMNS,
     OOF_PREDICTION_COLUMNS,
 )
-from cmapss.modeling.metrics import nasa_score_components
+from cmapss.modeling.metrics import bootstrap_metric_intervals, nasa_score_components
+from cmapss.modeling.early_warning import build_warning_events
 from cmapss.modeling.pipeline import (
     ModelingConfig,
     build_group_folds,
@@ -24,6 +25,7 @@ from cmapss.modeling.pipeline import (
     run_modeling_pipeline,
     write_final_evaluation_artifacts,
     write_modeling_artifacts,
+    build_evaluation_protocol,
 )
 
 
@@ -51,7 +53,7 @@ def _feature_rows(split: str, engine_lengths: dict[int, int]) -> pd.DataFrame:
 
 def _targets_from_features(features: pd.DataFrame) -> pd.DataFrame:
     train = features.loc[features["split"].eq("train"), ["split", "engine_id", "cycle"]].copy()
-    train["rul"] = (100 - train["cycle"] + train["engine_id"]).astype("int64")
+    train["rul"] = (train.groupby("engine_id")["cycle"].transform("max") - train["cycle"]).astype("int64")
     return train.astype({"split": "string", "engine_id": "int64", "cycle": "int64", "rul": "int64"})
 
 
@@ -64,6 +66,26 @@ def test_nasa_score_uses_fd001_piecewise_penalty() -> None:
     assert score[0] == pytest.approx(np.exp(10.0 / 13.0) - 1.0)
     assert score[1] == 0.0
     assert score[2] == pytest.approx(np.exp(10.0 / 10.0) - 1.0)
+
+
+def test_bootstrap_metric_intervals_preserve_duplicate_engine_draws() -> None:
+    evaluation = pd.DataFrame(
+        {
+            "engine_id": [1, 1, 2, 3],
+            "y_true": [0.0, 0.0, 0.0, 0.0],
+            "y_pred": [0.0, 0.0, 10.0, 20.0],
+        }
+    )
+
+    intervals = bootstrap_metric_intervals(evaluation, n_resamples=1, seed=60)
+
+    # The draw is [engine 1, engine 1, engine 2]. Collapsing duplicate engine 1
+    # would yield 5, while the correct engine-level bootstrap MAE is 10 / 3.
+    assert intervals["mean_engine_mae"] == {
+        "ci_lower": pytest.approx(10.0 / 3.0),
+        "ci_upper": pytest.approx(10.0 / 3.0),
+    }
+    assert intervals["rmse"]["ci_lower"] == pytest.approx(np.sqrt(20.0))
 
 
 def test_prepare_modeling_dataset_joins_only_train_features() -> None:
@@ -99,6 +121,59 @@ def test_engine_equal_sample_weights_sum_to_one_per_engine() -> None:
     weight_sums = pd.Series(weights).groupby(dataset["engine_id"].to_numpy()).sum()
 
     assert weight_sums.to_dict() == {1: pytest.approx(1.0), 2: pytest.approx(1.0)}
+
+
+def test_evaluation_protocol_has_distinct_estimands() -> None:
+    protocol = build_evaluation_protocol()
+
+    assert set(protocol["protocol_id"]) == {
+        "rul_cv",
+        "rul_final",
+        "health_index_forecast",
+        "rul_warning_oof",
+        "etl_benchmark",
+    }
+    assert protocol.loc[protocol["protocol_id"].eq("rul_cv"), "unit_of_analysis"].item().startswith("engine")
+    assert "100 FD001 test engines" in protocol.loc[protocol["protocol_id"].eq("rul_final"), "split_and_horizon"].item()
+
+
+def test_warning_events_are_aggregated_by_engine_and_keep_lead_time() -> None:
+    predictions = pd.DataFrame(
+        {
+            "split": ["train"] * 5,
+            "engine_id": [1] * 5,
+            "cycle": [1, 2, 3, 4, 5],
+            "model_name": ["selected"] * 5,
+            "y_true": [4.0, 3.0, 2.0, 1.0, 0.0],
+            "y_pred": [4.5, 3.2, 2.5, 1.5, 0.5],
+        }
+    )
+
+    events, summary = build_warning_events(predictions, model_name="selected", rul_threshold=3)
+
+    row = events.iloc[0]
+    assert row["first_warning_cycle"] == 3
+    assert row["actual_rul_at_first_warning"] == pytest.approx(2.0)
+    assert row["lead_time_to_failure_cycles"] == pytest.approx(2.0)
+    assert bool(row["warning_before_actual_threshold"]) is False
+    assert summary["n_engines"] == 1
+    assert summary["n_missed_warning"] == 0
+
+
+def test_warning_events_reject_non_train_or_unknown_model() -> None:
+    predictions = pd.DataFrame(
+        {
+            "split": ["test"],
+            "engine_id": [1],
+            "cycle": [1],
+            "model_name": ["other"],
+            "y_true": [0.0],
+            "y_pred": [0.0],
+        }
+    )
+
+    with pytest.raises(ValueError, match="WARNING_INPUT"):
+        build_warning_events(predictions, model_name="selected", rul_threshold=30)
 
 
 def test_group_folds_keep_engine_boundaries_disjoint() -> None:

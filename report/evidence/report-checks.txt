@@ -561,3 +561,46 @@ version 1 for both artifacts and `test_label_join.status` equal to
 `completed_after_final_predictions`.
 LIMIT: This is a local browser rehearsal; it does not replace the classroom
 presentation or native PowerPoint execution.
+
+WP1 correctness update: 2026-09-23
+SCOPE: Engine-level bootstrap, PCA--ARIMA temporal boundary and diagnostics.
+PASS: Added a regression test whose resample contains duplicate engine IDs;
+the corrected bootstrap preserves cluster multiplicity. Regenerated final
+metrics with 10,000 resamples and seed 42. Mean engine MAE remains 15.3490;
+the corrected 95% CI is [12.7286, 18.0866].
+PASS: PCA and StandardScaler now fit on 90 non-selected train engines before
+transforming the 10 selected engines. The regenerated run records schema
+version 2, 10/10 converged fits, adjusted Ljung--Box `model_df=p+q`, and no
+test observations or labels.
+PASS: Focused tests for bootstrap duplicate draws, train-only Health Index,
+temporal fit-engine exclusion and forecast metrics passed 4 tests. Full
+artifact regeneration completed with 100 RUL evaluation rows and 704 forecast
+rows.
+LIMIT: The regenerated Health Index coverage remains heterogeneous
+(21.43%--97.03%; mean 66.96%), and adjusted Ljung--Box p-values are below 0.05
+for engines 69 and 70. This is retained as a negative diagnostic result.
+PASS: Rebuilt `report/figures/pipeline.pdf` and `report/main.pdf` with Tectonic;
+the final PDF has 41 pages, and the log has zero overfull/underfull boxes,
+undefined references/citations or fatal errors. Rendered result pages and the
+updated pipeline diagram were visually checked without clipping or overlap.
+PASS: Fresh end-to-end run in `tmp/e2e-wp1-20260923` completed from raw FD001,
+recreated 15 tables, 100 final evaluation rows and 704 forecast rows, and
+passed semantic artifact comparison plus dashboard loader validation.
+WP2 protocol and baseline update (2026-09-23)
+- Added outputs/modeling/tables/evaluation_protocol.csv with separate estimands for RUL OOF selection, final test evaluation, Health Index forecast, and descriptive ETL benchmark.
+- Added outputs/timeseries/tables/baseline_metrics.csv: last_value and drift on the same 70% prefix/30% suffix as ARIMA for 10 selected train engines.
+- Baseline summary from run_info.json: ARIMA mean MAE/RMSE 0.4110/0.5027; drift 0.7469/0.9128; last_value 0.9478/1.1553. ARIMA had lower MAE on 7/10 drift comparisons and 8/10 last-value comparisons; no statistical superiority claim added.
+- README, report methodology/results/discussion, and active plan updated to distinguish unit of analysis, split/horizon, metric role, and interval availability.
+- Fresh end-to-end validation `tmp/e2e-wp2-20260923` passed: 17 tables, 100 final evaluation rows, 704 forecast rows, dashboard loader, and raw-input immutability.
+- Full suite after WP2 passed 128 tests with 14 dependency deprecation warnings; no test failure.
+- Tectonic rebuilt `report/main.pdf` successfully at 42 pages; `report/main.log` has zero fatal/undefined/citation/reference/overfull/underfull matches. Rendered pages 20--23 were visually checked; tables and forecast figure are readable without clipping.
+- WP3 early-warning artifact: `warning_events.csv` has 100 train engines from selected-model OOF, threshold 30 cycles, 100/100 warnings, 0 missed warnings, 44 early warnings and mean lead time 31.22 cycles. `warning_summary.json` records the false-alarm denominator limitation; `warning_trajectory.png` is generated from the same OOF data.
+- Fresh end-to-end validation `tmp/e2e-wp3-20260924` passed: 18 tables, five figures, 100 final evaluation rows, 704 forecast rows, dashboard loader, warning-summary equality and raw-input immutability.
+- Full suite after WP3 passed 130 tests with 14 dependency deprecation warnings; compileall and git diff check passed.
+- Tectonic rebuilt `report/main.pdf` at 43 pages; log has zero fatal/undefined/citation/reference/overfull/underfull matches. The new OOF warning figure was visually checked with surrounding results pages.
+- WP4 editorial pass aligned the abstract, research questions, conclusion, README, and report date with the implemented OOF warning evidence; no new quantitative claim was added beyond persisted artifacts.
+- Review rerun: full PDF build is 45 pages with zero fatal/undefined/citation/reference/overfull/underfull matches; pages 26--29 and warning/dashboard surfaces were visually checked.
+- Final review evidence (2026-09-24): 151 tests passed with 14 dependency warnings; current warning code reproduces `warning_events.csv` and `warning_summary.json` exactly. Fresh end-to-end `tmp/e2e-review-20260924` passed with 18 tables and 5 figures, including warning summary equality and raw immutability.
+- PDF final build: 45 pages; zero fatal/undefined/reference/citation/overfull/underfull matches. Visual QA covered abstract, methodology, results/warning, discussion, conclusion and appendix. Browser QA opened the loopback dashboard's Overview and Early warning pages; timing table showed 44/7/49/0/0 and lead-time quantiles 19/26/30/35/55.
+- WP5 gate: decision matrix recorded in the completed plan. No new model, dataset, cost policy, cluster benchmark or streaming extension was run. Existing slide deck remains un-rehearsed after this timing update.
+- Diagram QA: TikZ and Draw.io pipeline labels now include OOF warning and Health Index baselines; public PNG rendered successfully. Independent review found no label collision, edge clipping or unreadable lane boundary.

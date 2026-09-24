@@ -19,8 +19,9 @@ Repository đã có **gói kiểm tra dữ liệu FD001, nhãn RUL train, notebo
   11 hình và [diễn giải kết quả, bằng chứng kiểm tra](outputs/eda/README.md).
 - Danh mục tài liệu tham khảo và hướng dẫn đọc.
 - [Báo cáo LaTeX tổng hợp kết quả hiện có](report/README.md) và [bản PDF](report/main.pdf),
-  có data dictionary (từ điển dữ liệu), bảng thuật ngữ và chữ viết tắt, lý do
-  lựa chọn và diễn giải kết quả validation/EDA/M2.3a--M2.4.
+  được biên tập theo cấu trúc học thuật rõ hơn, có data dictionary (từ điển dữ liệu),
+  bảng thuật ngữ và chữ viết tắt, cấu hình mô hình, phân tích lỗi, phụ lục tái
+  lập, lý do lựa chọn và diễn giải kết quả validation/EDA/M2.3a--M2.4.
   Mốc 1 EDA, mốc 2 thống kê train-only, parity ETL M3.1, rolling features
   M3.2, đánh giá mô hình RUL theo group và phân tích PCA--ARIMA train-only
   hiện tại đã được kiểm tra độc lập; dashboard đọc artifact, slide và checklist
@@ -68,12 +69,13 @@ modeling và PCA--ARIMA có ở phần Bắt đầu. Dashboard dùng dependency 
 
 ## Mục tiêu
 
-Báo cáo tập trung trả lời bốn câu hỏi:
+Báo cáo tập trung trả lời năm câu hỏi:
 
 1. FD001 đáng tin và phù hợp đến mức nào cho một nghiên cứu học thuật về predictive maintenance?
 2. Những tín hiệu cảm biến nào thể hiện sự suy giảm có thể đo lường theo vòng đời động cơ?
-3. Có thể dự đoán RUL chính xác đến mức nào từ 30 cycles vận hành gần nhất?
-4. Làm thế nào trình bày kết quả mô hình thành bằng chứng cảnh báo sớm minh bạch và tái lập được?
+3. ETL Pandas và PySpark có cho kết quả tương đương trên cùng input hay không?
+4. Có thể dự đoán RUL chính xác đến mức nào từ 30 cycles vận hành gần nhất?
+5. Làm thế nào trình bày kết quả mô hình thành bằng chứng cảnh báo sớm minh bạch và tái lập được?
 
 Mục tiêu chính là **dự đoán RUL**. Supervised regression (hồi quy có giám sát) là cách mô hình hóa phù hợp vì biến mục tiêu là số cycle còn lại; đây không phải tên hoặc mục tiêu của báo cáo.
 
@@ -131,8 +133,8 @@ Phân tích thống kê      Mô hình dự đoán RUL
 ```
 
 Pandas đã được dùng trong notebook EDA, làm reference cho ETL, thống kê và
-chuẩn bị dữ liệu mô hình. PySpark tái hiện các boundary ETL và phục vụ thử
-nghiệm khả năng mở rộng (scalability benchmark). Bộ dữ liệu gốc chỉ có dung
+chuẩn bị dữ liệu mô hình. PySpark tái hiện các boundary ETL để kiểm tra parity;
+runtime benchmark hiện chỉ đo Pandas. Bộ dữ liệu gốc chỉ có dung
 lượng vài MB, vì vậy repository không tuyên bố FD001 tự thân chứng minh khả
 năng xử lý dữ liệu quy mô lớn.
 
@@ -182,8 +184,8 @@ cậy bootstrap được lưu trong `outputs/modeling/tables/final_metrics.json`
 ### Phân tích ARIMA
 
 ARIMA là phân tích chuỗi thời gian phụ, không phải mô hình RUL chính. Pipeline
-đã triển khai fit Health Index bằng StandardScaler và PCA trên train, chọn 10
-engine validation đại diện trước forecast, sau đó dùng 70% đầu chuỗi để fit và
+đã triển khai chọn 10 engine validation trước forecast, fit StandardScaler và
+PCA trên 90 engine train còn lại rồi transform các engine được chọn, sau đó dùng 70% đầu chuỗi để fit và
 30% cuối để đánh giá:
 
 - MAE và RMSE của dự báo.
@@ -191,10 +193,25 @@ engine validation đại diện trước forecast, sau đó dùng 70% đầu chu
 - Chẩn đoán tính dừng Augmented Dickey-Fuller.
 - Chẩn đoán tự tương quan phần dư Ljung-Box.
 
-Lần chạy hiện tại fit thành công cả 10 engine; MAE nằm trong khoảng 0,1518--1,0396
+Lần chạy hiện tại fit hội tụ cả 10 engine; MAE nằm trong khoảng 0,1515--1,0372
 và coverage khoảng dự đoán 95% nằm trong khoảng 21,43%--97,03%. ADF không bác
-bỏ tính không dừng trên các fit segment. ARIMA không được áp dụng trực tiếp lên
+bỏ tính không dừng trên các fit segment. Sau khi điều chỉnh Ljung--Box theo
+`p+q`, engine 69 và 70 có p-value dưới 0,05. ARIMA không được áp dụng trực tiếp lên
 nhãn RUL train; Health Index forecast không phải RUL.
+Trên cùng holdout, MAE trung bình của ARIMA là 0,4110, của `drift` là 0,7469 và
+của `last_value` là 0,9478; đây là so sánh mô tả, chưa phải bằng chứng ưu thế
+thống kê. Warning OOF dùng ngưỡng 30 cycles: 44 engine cảnh báo trước ngưỡng,
+7 đúng ngưỡng và 49 sau ngưỡng; lead time có median 30 cycles. OOF đã được dùng
+để chọn model nên đây là phân tích nội bộ, không phải đánh giá độc lập.
+
+Ma trận estimand, đơn vị phân tích, split/horizon, metric và vai trò báo cáo
+được lưu trong
+[`outputs/modeling/tables/evaluation_protocol.csv`](outputs/modeling/tables/evaluation_protocol.csv).
+Phân tích cảnh báo sớm dùng OOF train của model được chọn với ngưỡng cố định
+`RUL <= 30` cycles: 44 engine cảnh báo trước ngưỡng, 7 đúng ngưỡng và 49 sau
+ngưỡng; lead time có median 30 cycles và miền 19--55. OOF đã được dùng để chọn
+model nên đây là bằng chứng mô tả nội bộ, không phải đánh giá độc lập hoặc lịch
+bảo trì tối ưu.
 
 ## Phạm vi Big Data
 
@@ -277,7 +294,7 @@ Các file hỗ trợ agent trong môi trường cục bộ được loại khỏ
 
 Repository cung cấp một quy trình được ghi chép rõ từ dữ liệu nguồn bất biến đến dữ liệu đã xử lý, metric, hình minh họa, dữ liệu dashboard và báo cáo cuối kỳ. Các yêu cầu tái lập gồm:
 
-- Dùng random seed cố định `42` cho chia dữ liệu và mô hình ngẫu nhiên.
+- Dùng seed `42` cho model ngẫu nhiên và bootstrap; GroupKFold không shuffle.
 - Cố định phiên bản các dependency Python.
 - Ghi lại số dòng và kết quả validation.
 - Lưu cấu hình mô hình và kết quả đánh giá.
@@ -358,7 +375,8 @@ Các lần kiểm tra dùng kernel mới đã tạo tệp đầu ra giống nhau
 trường; bộ kiểm thử tại mốc nghiệm thu EDA đạt **69 tests**. Toàn bộ bộ kiểm
 thử hiện tại, gồm kiểm thử xuất tệp đầu ra M2.3a, runtime audit M2.4 và kiểm
 tra ETL M3.1, kiểm tra features M3.2, modeling theo group, PCA--ARIMA và tái
-lập end-to-end, đạt **123 tests**.
+lập end-to-end, đạt **151 tests** sau khi sửa bootstrap theo engine, ranh giới
+fit temporal của PCA--ARIMA và kiểm tra warning timing.
 
 ![Quy trình EDA train FD001](assets/diagrams/fd001-eda.svg)
 
@@ -497,7 +515,7 @@ uv run --extra dashboard streamlit run app.py
 Dashboard đọc `outputs/modeling` và `outputs/timeseries`, sau đó hiển thị so
 sánh model, metric RUL cuối, evaluation của một test engine, forecast Health
 Index, coverage của khoảng dự đoán, diagnostics và provenance. Giao diện light
-theme có bốn view để demo ngắn. Dashboard không huấn luyện lại model và không
+theme có năm view, gồm Cảnh báo sớm. Dashboard không huấn luyện lại model và không
 đọc `data/raw/RUL_FD001.txt`.
 
 ### Kiểm tra pipeline end-to-end

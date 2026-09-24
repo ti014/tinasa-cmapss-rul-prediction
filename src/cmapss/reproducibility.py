@@ -23,12 +23,15 @@ TABLES = (
     ("modeling/tables/fold_assignments.csv", "csv"),
     ("modeling/tables/fold_metrics.csv", "csv"),
     ("modeling/tables/model_metrics.csv", "csv"),
+    ("modeling/tables/evaluation_protocol.csv", "csv"),
+    ("modeling/tables/warning_events.csv", "csv"),
     ("modeling/predictions/oof_predictions.parquet", "parquet"),
     ("modeling/predictions/final_predictions.parquet", "parquet"),
     ("modeling/predictions/final_evaluation.parquet", "parquet"),
     ("timeseries/tables/selected_engines.csv", "csv"),
     ("timeseries/tables/health_index.csv", "csv"),
     ("timeseries/tables/forecast_metrics.csv", "csv"),
+    ("timeseries/tables/baseline_metrics.csv", "csv"),
     ("timeseries/tables/diagnostics.csv", "csv"),
     ("timeseries/predictions/arima_forecasts.parquet", "parquet"),
 )
@@ -36,6 +39,7 @@ TABLES = (
 FIGURES = (
     "modeling/figures/final_true_vs_predicted.png",
     "modeling/figures/final_residuals_by_rul.png",
+    "modeling/figures/warning_trajectory.png",
     "timeseries/figures/health_index_selected_engines.png",
     "timeseries/figures/arima_forecasts.png",
 )
@@ -136,6 +140,11 @@ def validate_rebuilt_outputs(output_root: Path, reference_root: Path, raw_dir: P
         raise ReproducibilityError("Selected RUL model differs from reference")
     if model_run["test_label_join"]["status"] != "completed_after_final_predictions":
         raise ReproducibilityError("Final label join was not recorded after predictions")
+    warning_summary = _read_json(output_dir / "modeling/tables/warning_summary.json")
+    reference_warning_summary = _read_json(reference_dir / "modeling/tables/warning_summary.json")
+    _compare_nested_numbers(warning_summary, reference_warning_summary, "warning.summary")
+    if warning_summary["split"] != "train_oof" or warning_summary["n_engines"] != 100:
+        raise ReproducibilityError("Early-warning artifact is not a 100-engine train OOF summary")
     time_run = _read_json(output_dir / "timeseries/run_info.json")
     if time_run["isolation"]["uses_test_labels"] or time_run["isolation"]["uses_test_observations"]:
         raise ReproducibilityError("PCA--ARIMA isolation contract failed")

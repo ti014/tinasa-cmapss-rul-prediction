@@ -67,7 +67,7 @@ biến cảm biến bằng phân tích thống kê cùng PCA--ARIMA. Phương ph
 data contract, ETL qua các lớp Silver/Gold, tạo đặc trưng từ window 30 cycles,
 GroupKFold theo engine và đánh giá cuối trên 100 test engines. Mô hình
 HistGradientBoosting đạt mean engine-level MAE bằng 15,3490 cycles, RMSE bằng
-20,5413 cycles và NASA score bằng 1.513,2577 trong protocol đã chốt. Phân tích
+20,5413 cycles và NASA score bằng 1.513,2577 trong evaluation protocol được xác định trước. Phân tích
 PCA--ARIMA tạo 704 dự báo Health Index trên 10 engine train được chọn trước;
 phân tích này được xem là nhánh phụ và không phải mô hình dự báo RUL. Với đầu
 ra cảnh báo sớm minh họa, ngưỡng cố định $\mathrm{RUL}\leq 30$ cycles trên OOF

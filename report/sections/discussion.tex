@@ -2,8 +2,8 @@
 
 \subsection{Diễn giải các kết quả chính}
 Kết quả cho thấy việc đặt engine làm đơn vị split và đánh giá giúp hạn chế việc
-đếm các window có phụ thuộc thời gian như những quan sát độc lập. Trong protocol
-đã chốt, HistGradientBoosting đạt mean engine-level MAE thấp nhất trên
+đếm các window có phụ thuộc thời gian như những quan sát độc lập. Trong
+evaluation protocol, HistGradientBoosting đạt mean engine-level MAE thấp nhất trên
 cross-validation và được refit trước khi tạo một dự đoán cuối cho mỗi test
 engine. Metric cuối vì vậy phản ánh sai số ở điểm cắt của 100 engine test, không
 phải sai số của toàn bộ trajectory theo thời gian.
@@ -61,23 +61,13 @@ Cuối cùng, dữ liệu không cung cấp chi phí bảo trì, downtime hoặc
 sang thời gian lịch; vì vậy báo cáo chưa thể chuyển metric RUL thành quyết định
 bảo trì.
 
-\subsection{Hướng phát triển}
-Ưu tiên gần nhất là kiểm tra độ nhạy của window 10/20/30 trên cùng tập engine,
-fold và cycle đủ điều kiện cho cả ba cấu hình. Câu hỏi là lợi ích của lịch sử
-dài hơn có ổn định theo engine hay không; không chọn lại cấu hình bằng test
-labels đã xem. Đây là thực nghiệm mới cần được đăng ký protocol trước, không
-phải sửa văn bản hoặc kết quả đã hoàn tất trong báo cáo này.
+\subsection{Hướng nghiên cứu tiếp theo}
+Khả năng khái quát có thể được khảo sát thêm bằng cách thay đổi độ dài window,
+đánh giá theo temporal split trên nhiều engine và dùng outer evaluation cho
+quy trình chọn model. Với Health Index, cần fit transformer ngoài các engine
+được forecast và báo cáo đồng thời failure rate, coverage và horizon.
 
-Với Health Index, nên đánh giá trên nhiều engine bằng cách fit transformer
-ngoài tập engine đang forecast, vẫn giữ last-value/drift làm baseline và báo
-cáo cả failure rate lẫn coverage theo horizon. Không chỉ tăng số engine rồi
-fit PCA trên chính các suffix cần đánh giá. Với warning, ưu tiên outer
-evaluation và phân tích ngưỡng có điều kiện trước khi đưa ra claim vận hành.
-
-FD002--FD004 chỉ phù hợp cho bước tiếp theo nếu mục tiêu được đổi rõ thành
-khả năng khái quát qua điều kiện vận hành hoặc fault mode. LSTM/Transformer
-cần một giả thuyết về biểu diễn thời gian và comparison cùng protocol với
-baseline hiện tại. Cluster/streaming cần workload và ngân sách tài nguyên cụ
-thể. Cost-aware maintenance chưa được đặt thành kết quả tiếp theo khi thiếu
-cost, downtime và intervention. Do đó, phiên hiện tại ưu tiên hoàn thiện
-evidence và giới hạn diễn giải; chưa triển khai thêm các mở rộng này.
+Các bộ FD002--FD004, mô hình LSTM/Transformer và hệ thống cluster/streaming chỉ
+nên được xem xét khi câu hỏi nghiên cứu, workload và chi phí đánh giá được xác
+định rõ. Khi thiếu cost, downtime và intervention, chưa thể chuyển kết quả RUL
+thành chính sách bảo trì.

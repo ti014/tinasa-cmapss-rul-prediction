@@ -36,14 +36,14 @@ Lịch sử test bị cắt trước khi hỏng nên không được lấy cycle
 
 \subsection{Mục tiêu và câu hỏi nghiên cứu}
 Mục tiêu tổng quát là xây dựng và kiểm chứng một quy trình tái lập để chuyển dữ
-liệu cảm biến FD001 thành artifact phân tích và kết quả đánh giá RUL có thể truy
+liệu cảm biến FD001 thành dữ liệu phân tích và kết quả đánh giá RUL có thể truy
 ngược về nguồn dữ liệu. Mục tiêu cụ thể gồm:
 \begin{enumerate}
 \item kiểm tra data contract và mô tả cấu trúc, chất lượng của FD001;
 \item xây dựng ETL cùng trailing features mà không làm rò rỉ thông tin từ
       cycle tương lai;
 \item so sánh một số mô hình hồi quy bằng GroupKFold theo engine và đánh giá
-      mô hình được chọn trên test set theo protocol đã chốt;
+      mô hình được chọn trên test set theo cùng evaluation protocol;
 \item mô tả thay đổi của sensor giữa đầu và cuối vòng đời, đồng thời khảo sát
       Health Index bằng PCA--ARIMA như một phân tích phụ.
 \item chuyển OOF prediction thành cảnh báo RUL thấp theo engine với ngưỡng được
@@ -61,9 +61,9 @@ trước.
 \subsection{Đóng góp và phạm vi của báo cáo}
 Đóng góp chính của báo cáo là một quy trình có ranh giới dữ liệu rõ ràng: raw
 được giữ bất biến, các bước train-only được tách khỏi đánh giá test, và nhãn
-test chỉ được ghép sau khi đã ghi final predictions. Báo cáo cũng cung cấp
-artifact, kiểm tra validation và lệnh tái lập để người đọc đối chiếu từng kết
-quả với nguồn tương ứng. Các đóng góp này nhằm bảo đảm tính minh bạch của quy
+test chỉ được ghép sau khi đã ghi final predictions. Báo cáo mô tả rõ các bước
+kiểm tra và điều kiện tái lập để người đọc đối chiếu từng kết quả với nguồn
+tương ứng. Các đóng góp này nhằm bảo đảm tính minh bạch của quy
 trình; chúng không được diễn giải thành bằng chứng rằng mô hình đã sẵn sàng
 triển khai ngoài môi trường mô phỏng.
 
@@ -126,8 +126,8 @@ bắt đầu từ 1 và liên tục trong từng engine. & Trục thời gian r�
 tạo RUL train, window 30 cycles và phân tích đầu/cuối vòng đời.\\[0.35em]
 \texttt{setting\_1}--\texttt{setting\_3} & Ba operational settings ảnh hưởng
 đến điều kiện vận hành. & \texttt{float64}; trên train, \texttt{setting\_3}
-hằng ở 100. & Biến bối cảnh vận hành; không thuộc họ 21 sensor trong kiểm định
-M2.\\[0.35em]
+hằng ở 100. & Biến bối cảnh vận hành; không thuộc nhóm sensor được phân tích
+thống kê.\\[0.35em]
 \texttt{sensor\_1}--\texttt{sensor\_21} & Hai mươi mốt phép đo sensor trong
 mỗi cycle. & \texttt{float64} hữu hạn; không có missing trong train. & Nguồn
 tín hiệu chính cho EDA, paired analysis và feature engineering.\\[0.35em]
@@ -188,7 +188,7 @@ Sensor & Số giá trị khác nhau & Min--max & Ghi chú\\
 \texttt{sensor\_1} & 1 & 518,67--518,67 & Hằng toàn train.\\
 \texttt{sensor\_2} & 310 & 641,21--644,53 & Biến thiên trên train.\\
 \texttt{sensor\_3} & 3.012 & 1.571,04--1.616,91 & Biến thiên trên train.\\
-\texttt{sensor\_4} & 4.051 & 1.382,25--1.441,49 & Biến thiên trên train; có chênh lệch đầu/cuối lớn trong M2.3a.\\
+\texttt{sensor\_4} & 4.051 & 1.382,25--1.441,49 & Biến thiên trên train; có chênh lệch đầu/cuối lớn.\\
 \texttt{sensor\_5} & 1 & 14,62--14,62 & Hằng toàn train.\\
 \texttt{sensor\_6} & 2 & 21,60--21,61 & Biến thiên toàn train nhưng hằng trong 38/100 engine.\\
 \texttt{sensor\_7} & 513 & 549,85--556,06 & Biến thiên trên train.\\
@@ -228,8 +228,8 @@ và cách xử lý trong báo cáo.
 \label{tab:data-quality-actions}
 \begin{tabularx}{\linewidth}{L{3.4cm}L{4.4cm}X}
 \toprule Đặc điểm & Ý nghĩa & Cách xử lý trong báo cáo\\\midrule
-Không có missing và khóa hợp lệ & Dữ liệu đủ sạch để tạo EDA, ETL và feature
-artifact mà không cần impute. & Không tự điền dữ liệu; validator dừng khi schema,
+Không có missing và khóa hợp lệ & Dữ liệu đủ sạch để tạo EDA, ETL và đặc trưng
+mà không cần impute. & Không tự điền dữ liệu; validator dừng khi schema,
 khóa hoặc cycle continuity sai.\\
 Độ dài chuỗi khác nhau giữa engine & Engine sống lâu tạo nhiều observations và
 nhiều rolling windows hơn. & Báo cáo tách thống kê theo observation và theo

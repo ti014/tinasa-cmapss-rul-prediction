@@ -142,7 +142,7 @@ deviation, slope, không dùng tương lai và không nối hai engine.
 \subsection{Mô hình RUL và đánh giá cuối}
 Pipeline modeling so sánh ba ứng viên trên 5 folds theo engine. Bảng
 \ref{tab:model-cv} trình bày metric trung bình qua các fold. Theo tiêu chí
-mean engine-level MAE đã chốt trước, HistGradientBoostingRegressor được chọn vì
+mean engine-level MAE xác định trước, HistGradientBoostingRegressor được chọn vì
 đạt giá trị thấp nhất trong ba ứng viên.
 
 \begin{table}[H]
@@ -164,8 +164,7 @@ cycle cuối cho mỗi trong 100 test engines. Nhãn NASA chỉ được ghép s
 metric cuối được trình bày trong Bảng~\ref{tab:final-model-metrics}.
 
 Độ lệch chuẩn giữa các fold của mean engine MAE lần lượt là 0,1193 cho median
-baseline, 0,9479 cho Ridge và 0,9821 cho HistGradientBoosting, theo
-\filepath{outputs/modeling/tables/model_metrics.csv}. Mỗi fold có 20 engine,
+baseline, 0,9479 cho Ridge và 0,9821 cho HistGradientBoosting. Mỗi fold có 20 engine,
 nên mean MAE qua fold cũng bằng mean MAE qua 100 engine OOF trong lần chạy này.
 RMSE là row-level trong từng fold rồi lấy trung bình; nó không phải RMSE của
 toàn bộ OOF gộp lại. Không so trực tiếp các con số này với metric tại một điểm
@@ -246,7 +245,7 @@ báo, không chứng minh mọi cảnh báo đều đáp ứng thời gian chu�
 \begin{table}[H]
 \centering
 \caption{Phân phối lead time tại cảnh báo đầu tiên trên 100 engine OOF train,
-đơn vị cycles; nguồn: \texttt{warning\_summary.json}.}
+đơn vị cycles.}
 \begin{tabular}{rrrrrr}
 \toprule Nhỏ nhất & Q1 & Trung vị & Trung bình & Q3 & Lớn nhất\\\midrule
 19 & 26 & 30 & 31,22 & 35 & 55\\\bottomrule
@@ -254,8 +253,8 @@ báo, không chứng minh mọi cảnh báo đều đáp ứng thời gian chu�
 \end{table}
 
 Ví dụ, train engine 1 cảnh báo tại cycle 162 và kết thúc tại cycle 192, nên
-lead time là 30 cycles, đúng thời điểm RUL thật chạm ngưỡng. Các mốc này lấy
-từ \filepath{outputs/modeling/tables/warning_events.csv}. OOF giữ engine được
+lead time là 30 cycles, đúng thời điểm RUL thật chạm ngưỡng. Các cycle này được
+tính từ trajectory OOF. OOF giữ engine được
 dự đoán ngoài training fold, nhưng cũng đã được dùng để chọn model; kết quả
 cảnh báo vì vậy chỉ là đánh giá nội bộ có điều kiện trên lựa chọn đó.
 
@@ -271,7 +270,7 @@ nhất, không theo chất lượng prediction.}
 
 \subsection{Phân tích PCA--ARIMA trên Health Index}
 Phân tích phụ chỉ dùng 20.631 train observations. Danh sách 10 engine được
-chốt trước forecast, gồm hai engine ở mỗi fold GroupKFold theo các vị trí
+xác định trước khi forecast, gồm hai engine ở mỗi fold GroupKFold theo các vị trí
 lifetime cách đều. StandardScaler, PCA, hướng PC1 và tham số chuẩn hóa Health
 Index được fit trên 90 train engines còn lại; 10 engine được chọn chỉ được
 transform và dùng cho forecast. Mỗi chuỗi dùng 70\% đầu để fit ARIMA và 30\%
@@ -309,9 +308,8 @@ của toàn bộ các chuỗi không còn tự tương quan. Coverage thấp ở
 cho thấy prediction interval chưa được calibration đồng đều; kết quả này được
 giữ nguyên và không dùng để thay đổi danh sách engine.
 
-Để đặt kết quả ARIMA cạnh mốc đơn giản trên cùng horizon, pipeline cũng ghi
-baseline theo từng engine trong
-\texttt{outputs/timeseries/tables/baseline\_metrics.csv}. Trung bình theo 10
+Để so sánh kết quả ARIMA với đường cơ sở đơn giản trên cùng horizon, báo cáo
+tính baseline theo từng engine. Trung bình theo 10
 engine, ARIMA đạt MAE $0{,}4110$ và RMSE $0{,}5027$; baseline \texttt{drift}
 đạt lần lượt $0{,}7469$ và $0{,}9128$, còn \texttt{last\_value} đạt $0{,}9478$
 và $1{,}1553$. ARIMA có MAE thấp hơn \texttt{drift} trên 7/10 engine và thấp
@@ -329,7 +327,7 @@ ARIMA và prediction interval 95\% trên 30\% cuối mỗi chuỗi được ch�
 
 \subsection{ETL Silver/Gold và benchmark}
 Sau khi kiểm tra data contract, pipeline Pandas và PySpark ghi cùng một tập
-artifact. Silver gồm 33.727 observations train/test và 20.631 train targets.
+bảng dữ liệu. Silver gồm 33.727 observations train/test và 20.631 train targets.
 Gold gồm 200 dòng engine summary trong Parquet cùng bảng truy vấn tương ứng
 trong SQLite. Tất cả bảng đều được đọc lại sau khi ghi để kiểm tra round-trip.
 
@@ -358,7 +356,7 @@ gọi là cold/warm nhưng không có thao tác xóa cache hoặc khởi động
 nên bảng ghi là lần 1 và lần 2. Với hai lần đo mỗi scale, chưa thể ước lượng
 độ biến thiên runtime đáng tin cậy; cũng chưa có runtime PySpark để so tốc độ.
 
-\subsection{Dashboard đọc artifact}
+\subsection{Dashboard đọc kết quả}
 
 Dashboard Streamlit cung cấp một lớp quan sát read-only cho các kết quả đã ghi.
 Trang tổng quan hiển thị MAE, RMSE, NASA score, số engine test, Health Index và
@@ -366,5 +364,5 @@ forecast count; trang RUL cho phép chọn một test engine để xem giá tr�
 giá trị dự đoán và absolute error; trang Health Index/ARIMA cho phép chọn một
 validation engine để xem lịch sử, holdout forecast, khoảng dự đoán 95\% và
 diagnostics. Dashboard không fit model, không chạy lại ARIMA và không đọc nhãn
-test thô khi mở trang. Ví dụ, lựa chọn engine 39 chỉ truy vấn các dòng đã có
-trong \texttt{outputs/timeseries/predictions/arima\_forecasts.parquet}.
+test thô khi mở trang. Ví dụ, lựa chọn engine 39 chỉ truy vấn các dòng kết quả
+đã được tạo trước đó.

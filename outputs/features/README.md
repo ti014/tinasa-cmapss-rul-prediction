@@ -1,6 +1,6 @@
 # Rolling features FD001
 
-Mốc M3.2 tạo Gold rolling features từ Silver observations của M3.1. Artifact
+Pipeline tạo Gold rolling features từ Silver observations. Artifact
 này chuyển chuỗi cảm biến thành bảng đặc trưng deterministic cho các bước mô
 hình sau, nhưng chưa fit scaler, chưa chọn feature, chưa huấn luyện mô hình và
 chưa đọc nhãn test `RUL_FD001.txt`.
@@ -16,7 +16,7 @@ Từ thư mục gốc, sau khi đã có `outputs/etl/silver/observations.parquet
 ```
 
 Lệnh mặc định dùng chính hai đường dẫn trên. Nếu Silver observations chưa có,
-chạy ETL M3.1 trước bằng `python -m cmapss.etl`.
+chạy ETL trước bằng `python -m cmapss.etl`.
 
 ## Schema và artifact
 
@@ -69,4 +69,4 @@ row cycle 30.
 - `run_info.json` ghi `joins_test_labels=false` và `modeling.status=not_started`.
 
 Giới hạn: artifact này chưa có fold assignment, scaler, PCA, model predictions
-hoặc metric. Các bước đó thuộc mốc mô hình tiếp theo.
+hoặc metric. Các bước đó thuộc workflow modeling riêng.

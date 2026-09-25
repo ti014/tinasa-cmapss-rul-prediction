@@ -2,15 +2,16 @@
 
 [Bản PDF](main.pdf) được biên dịch từ [main.tex](main.tex), cập nhật ngày
 25/09/2026. Báo cáo trình bày các kết quả chính trên NASA C-MAPSS FD001 và ma
-trận chuyển miền bổ sung trên FD002--FD004. Kết quả RUL chính vẫn thuộc FD001.
+trận đánh giá bổ sung trên toàn bộ FD001--FD004. Kết quả RUL chi tiết vẫn thuộc
+FD001; FD002--FD004 dùng protocol window 10 cycles riêng để kiểm tra chuyển miền.
 Báo cáo được biên tập theo cấu trúc mục tiêu--phương pháp--kết quả--thảo luận:
 kiểm tra dữ liệu, EDA train-only, ETL Silver/Gold, đối chiếu Pandas--PySpark,
 rolling features 30 cycles, suy luận chênh lệch sensor đầu/cuối vòng đời,
 phân tích PCA--ARIMA train-only, đánh giá mô hình RUL, cảnh báo sớm OOF và phân
 tích lỗi theo engine.
 
-Báo cáo không đưa vào timeline, mã milestone, kế hoạch cá nhân, đường dẫn
-artifact nội bộ hoặc khai báo AI/LLM. Phần dữ liệu giải thích rõ nhãn kết cục, ý nghĩa cột,
+Báo cáo tập trung vào nội dung học thuật, kết quả đã kiểm chứng và giới hạn; không
+đưa đường dẫn artifact nội bộ hoặc khai báo AI/LLM vào PDF. Phần dữ liệu giải thích rõ nhãn kết cục, ý nghĩa cột,
 phân bố và cách xử lý; phần phương pháp giải thích lý do, đơn vị và nguồn của
 các công thức. Dashboard Streamlit đã được bổ sung như một consumer read-only
 của artifact; PCA--ARIMA vẫn được trình bày như phân tích phụ trên Health Index,

@@ -20,11 +20,11 @@ khi hỏng. Nhãn RUL được xác định bởi:
 \item $T_i$: cycle cuối của engine $i$ trong tập train, cũng tính bằng cycle.
 \item $y_{i,t}$: RUL của engine $i$ tại cycle $t$, tính bằng cycle.
 \end{itemize}
-Công thức~\ref{eq:rul} được dùng vì train FD001 là run-to-failure history:
+Công thức~\ref{eq:rul} được dùng vì train của các subset C-MAPSS là run-to-failure history:
 chuỗi train kết thúc tại thời điểm hỏng, còn mục tiêu của bộ dữ liệu là dự đoán
 số operational cycles còn lại trước khi hỏng~\cite{nasaCmapssDataset,saxena2008damage}.
 Đây là định nghĩa nhãn từ dữ liệu, không phải công thức dự đoán do mô hình học
-ra. Độ tin cậy của nhãn train phụ thuộc vào giả định của nguồn FD001 rằng train
+ra. Độ tin cậy của nhãn train phụ thuộc vào giả định của nguồn dữ liệu rằng train
 đã đi đến failure; vì vậy validator chỉ áp dụng công thức này cho train và
 không áp dụng cho test.
 
@@ -36,10 +36,11 @@ Lịch sử test bị cắt trước khi hỏng nên không được lấy cycle
 
 \subsection{Mục tiêu và câu hỏi nghiên cứu}
 Mục tiêu tổng quát là xây dựng và kiểm chứng một quy trình tái lập để chuyển dữ
-liệu cảm biến FD001 thành dữ liệu phân tích và kết quả đánh giá RUL có thể truy
-ngược về nguồn dữ liệu. Mục tiêu cụ thể gồm:
+liệu cảm biến NASA C-MAPSS, lấy FD001 làm subset chính và dùng FD002--FD004 cho
+đánh giá bổ sung, thành dữ liệu phân tích và kết quả RUL có thể truy ngược về
+nguồn dữ liệu. Mục tiêu cụ thể gồm:
 \begin{enumerate}
-\item kiểm tra data contract và mô tả cấu trúc, chất lượng của FD001;
+\item kiểm tra data contract và mô tả cấu trúc, chất lượng của FD001--FD004;
 \item xây dựng ETL cùng trailing features mà không làm rò rỉ thông tin từ
       cycle tương lai;
 \item so sánh một số mô hình hồi quy bằng GroupKFold theo engine và đánh giá
@@ -50,14 +51,14 @@ ngược về nguồn dữ liệu. Mục tiêu cụ thể gồm:
       khai báo trước, đồng thời ghi lead time và giới hạn diễn giải.
 \end{enumerate}
 
-Từ các mục tiêu trên, báo cáo trả lời năm câu hỏi: (i) dữ liệu có đáp ứng
+Từ các mục tiêu trên, báo cáo trả lời năm câu hỏi chính: (i) dữ liệu có đáp ứng
 contract để phân tích hay không; (ii) các sensor biến đổi như thế nào giữa hai
 đoạn đầu/cuối vòng đời; (iii) ETL Pandas và PySpark có cho kết quả tương đương
 trên cùng input hay không; và (iv) trailing window 30 cycles cùng mô hình được
 chọn cho kết quả RUL nào trong protocol đánh giá theo engine; (v) OOF prediction
 có thể tạo cảnh báo RUL thấp minh bạch đến mức nào khi ngưỡng được cố định
-trước. Thực nghiệm bổ sung dùng cùng protocol window 10 cycles để đánh giá
-riêng khả năng chuyển model FD001 sang các subset FD002--FD004.
+trước. Một câu hỏi bổ sung là model fit trên FD001 chuyển sang FD002--FD004
+như thế nào khi dùng protocol window 10 cycles chung.
 
 \subsection{Đóng góp và phạm vi của báo cáo}
 Đóng góp chính của báo cáo là một quy trình có ranh giới dữ liệu rõ ràng: raw
@@ -68,30 +69,31 @@ tương ứng. Các đóng góp này nhằm bảo đảm tính minh bạch của
 trình; chúng không được diễn giải thành bằng chứng rằng mô hình đã sẵn sàng
 triển khai ngoài môi trường mô phỏng.
 
-FD001 không cung cấp chi phí bảo trì, downtime hoặc lịch can thiệp. Vì vậy, RUL
+Các subset C-MAPSS không cung cấp chi phí bảo trì, downtime hoặc lịch can thiệp. Vì vậy, RUL
 chỉ là mục tiêu dự báo trong đơn vị cycle, chưa phải quyết định thời điểm bảo
 trì. Cycle cũng không được chuyển sang giờ hoặc ngày vì không có thông tin quy
 đổi tương ứng.
 
 \section{Dữ liệu và kiểm soát chất lượng}
 \subsection{Nguồn dữ liệu và lý do lựa chọn}
-NASA C-MAPSS mô phỏng các chuỗi vận hành đến khi hỏng của động cơ turbofan. Nguồn dữ liệu được ghi nhận tại NASA Open Data~\cite{nasaCmapssDataset}; tài liệu nền tảng đi kèm bộ dữ liệu là công trình của Saxena và cộng sự~\cite{saxena2008damage}. Mô tả đi kèm file raw xác định FD001 có một điều kiện vận hành và một dạng suy giảm High-Pressure Compressor (HPC, máy nén áp suất cao).
+NASA C-MAPSS mô phỏng các chuỗi vận hành đến khi hỏng của động cơ turbofan. Nguồn dữ liệu được ghi nhận tại NASA Open Data~\cite{nasaCmapssDataset}; tài liệu nền tảng đi kèm bộ dữ liệu là công trình của Saxena và cộng sự~\cite{saxena2008damage}. FD001 có một điều kiện vận hành và một dạng suy giảm High-Pressure Compressor (HPC, máy nén áp suất cao); FD002--FD004 mở rộng điều kiện vận hành và fault mode để kiểm tra dataset shift.
 
 FD001 được chọn làm tập chính vì có lịch sử train đầy đủ đến khi hỏng, test bị cắt và nhãn đánh giá tách riêng, phù hợp với cách xây dựng bài toán RUL. Tập trung vào một subset giúp kiểm soát phạm vi phân tích chính và làm rõ từng bước xử lý. FD002--FD004 được dùng riêng trong thực nghiệm bổ sung để kiểm tra khả năng chuyển miền của model FD001; cả bốn subset đều là dữ liệu mô phỏng, nên kết quả chưa cho phép khẳng định hiệu quả trên động cơ thực tế.
 
 \begin{table}[H]
 \centering
-\caption{Quy mô FD001 đã ghi nhận trong báo cáo validation.}
+\caption{Quy mô các subset C-MAPSS đã ghi nhận trong artifact validation.}
 \label{tab:data}
-\begin{tabularx}{\linewidth}{l r r X}
-\toprule Thành phần & Số dòng & Động cơ & Ý nghĩa\\\midrule
-Train & 20.631 & 100 & Lịch sử đến khi hỏng\\
-Test & 13.096 & 100 & Lịch sử bị cắt trước khi hỏng\\
-Test labels & 100 & 100 & RUL tại cycle cuối quan sát\\\bottomrule
+\begin{tabularx}{\linewidth}{l r r r r X}
+\toprule Subset & Train & Test & Train engines & Test engines & Test labels\\\midrule
+FD001 & 20.631 & 13.096 & 100 & 100 & 100\\
+FD002 & 53.759 & 33.991 & 260 & 259 & 259\\
+FD003 & 24.720 & 16.596 & 100 & 100 & 100\\
+FD004 & 61.249 & 41.214 & 249 & 248 & 248\\\bottomrule
 \end{tabularx}
 \end{table}
 
-Mỗi dòng raw có 26 trường: engine ID, cycle, 3 operational settings và 21 sensors. Reader bổ sung cột \texttt{split}, tạo bảng observations có 27 cột. Khóa là bộ ba \texttt{(split, engine\_id, cycle)}: train engine 1 và test engine 1 không phải cùng một thực thể. Nhãn test chỉ được kiểm tra cấu trúc riêng trong báo cáo integrity; việc này không phải đánh giá mô hình.
+Mỗi dòng raw của cả bốn subset có 26 trường: engine ID, cycle, 3 operational settings và 21 sensors. Reader bổ sung cột \texttt{split}, tạo bảng observations có 27 cột. Khóa là bộ ba \texttt{(split, engine\_id, cycle)}: train engine 1 và test engine 1 không phải cùng một thực thể. Nhãn test chỉ được kiểm tra cấu trúc riêng trong báo cáo integrity; việc này không phải đánh giá mô hình.
 
 \subsection{Từ điển dữ liệu và ý nghĩa cột}
 Dữ liệu train/test gốc không có header; tên cột trong báo cáo được đặt theo

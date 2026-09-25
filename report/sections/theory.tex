@@ -3,13 +3,13 @@
 
 \subsection{Prognostics và RUL}
 Prognostics nghiên cứu diễn biến suy giảm của một hệ thống và thời gian còn lại
-trước khi hệ thống đạt trạng thái hỏng. Trong C-MAPSS FD001, chuỗi train kết
+trước khi hệ thống đạt trạng thái hỏng. Trong C-MAPSS, chuỗi train của mỗi subset kết
 thúc tại failure nên có thể dùng để suy ra nhãn RUL; chuỗi test bị cắt trước
 failure và chỉ có nhãn đánh giá ở cycle cuối quan sát. Saxena và cộng sự mô tả
 cơ chế mô phỏng suy giảm và bài toán đánh giá prognostics~\cite{saxena2008damage}.
 Ramasso và Saxena chỉ ra rằng kết quả trên C-MAPSS phụ thuộc mạnh vào subset dữ
-liệu và evaluation protocol~\cite{ramasso2014review}; đây là lý do báo cáo ghi
-rõ ranh giới của FD001 thay vì suy rộng metric sang subset khác.
+liệu và evaluation protocol~\cite{ramasso2014review}; đây là lý do báo cáo giữ
+FD001 làm subset chính và đánh giá FD002--FD004 bằng một ma trận protocol riêng.
 
 \subsection{Định vị nghiên cứu}
 Các nghiên cứu về RUL thường sử dụng feature engineering, mô hình hồi quy hoặc
@@ -19,7 +19,8 @@ pipeline có thể kiểm tra ở từng ranh giới dữ liệu: contract đư�
 EDA, feature chỉ dùng lịch sử đến cycle hiện tại, và GroupKFold giữ toàn bộ
 window của một engine trong cùng một fold. Vì mục tiêu của môn học là phân tích
 dữ liệu lớn có khả năng tái lập, phần triển khai nhấn mạnh provenance và parity
-ETL; mô hình được dùng để đánh giá pipeline trên FD001, không phải để tuyên bố
+ETL; mô hình được dùng để đánh giá pipeline trên FD001 và kiểm tra chuyển miền,
+không phải để tuyên bố
 trạng thái tiên tiến của bài toán RUL.
 
 \begin{table}[H]
@@ -53,7 +54,7 @@ Metric và cách đánh giá & Cơ sở để phân biệt điểm cắt với t
 
 Một dự đoán tại cycle cuối của mỗi test engine chỉ đo chất lượng tại điểm cắt,
 không đại diện cho sai số trên toàn bộ trajectory~\cite{saxena2010metrics}.
-FD001 cũng không có chi phí can thiệp hoặc downtime, nên RUL không trực tiếp
+Các subset C-MAPSS cũng không có chi phí can thiệp hoặc downtime, nên RUL không trực tiếp
 xác định lịch bảo trì tối ưu.
 
 Điểm khác biệt trong thiết kế thực nghiệm ở đây là cách biểu diễn dữ liệu và

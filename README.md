@@ -4,7 +4,7 @@
 
 # NASA C-MAPSS RUL Prediction Pipeline
 
-A reproducible Big Data course project for analyzing multivariate turbofan sensor data and predicting Remaining Useful Life (RUL) on the NASA C-MAPSS FD001 dataset. The raw data directory now stores all four NASA C-MAPSS subsets, FD001--FD004; the primary report remains FD001-focused and includes a supplemental cross-dataset matrix. The project emphasizes data provenance, statistically sound analysis, leakage-safe evaluation, scalable ETL, and explainable visual reporting.
+A reproducible Big Data course project for analyzing multivariate turbofan sensor data and predicting Remaining Useful Life (RUL) on NASA C-MAPSS FD001--FD004. FD001 is the primary subset for detailed analysis; FD002--FD004 are evaluated in a supplemental cross-dataset matrix. The project emphasizes data provenance, statistically sound analysis, leakage-safe evaluation, scalable ETL, and explainable visual reporting.
 
 ## Project Status
 
@@ -18,27 +18,22 @@ Available now:
 - An [executed EDA notebook](notebooks/01_fd001_eda.ipynb), 12 CSV tables,
   11 figures, and [analysis notes and validation evidence](outputs/eda/README.md).
 - A curated bibliography and reading guide.
-- A [LaTeX report](report/README.md) with a [PDF](report/main.pdf) summarizing
-  the current validated results in a revised academic structure, with a data
-  dictionary, glossary of report terminology and abbreviations, decision
-  rationale, model configuration, error analysis, reproducibility appendix, and
-  validation/EDA/M2.3a--M2.4
-  interpretations.
-  EDA milestone 1, milestone 2 train-only statistics, M3.1 ETL parity, M3.2
-  rolling features, grouped RUL model evaluation, and the train-only PCA--ARIMA
-  analysis have passed independent validation; the artifact-driven dashboard,
-  presentation deck and handoff checklist are now available.
-- A cited theoretical background and a [milestone 2 statistical protocol](report/sections/statistical-protocol.tex).
+- A [LaTeX report](report/README.md) and [PDF](report/main.pdf) covering data
+  validation, EDA, train-only sensor inference, ETL parity, rolling features,
+  grouped RUL evaluation, PCA--ARIMA, early warning, and the supplemental
+  FD001--FD004 matrix. It includes a data dictionary, glossary, error analysis,
+  and reproducibility appendix.
+- A cited theoretical background and [statistical protocol](report/sections/statistical-protocol.tex).
   The paired comparison uses each sensor's mean over the first and last 30 cycles of every train engine.
-  The M2.0 statistical configuration was fixed before inference.
+  The inference configuration was fixed before execution.
 - A train-only `build_engine_sensor_pairs` helper that creates and validates one
   first/last 30-cycle pair for every engine and all 21 sensors.
-- M2.2 helpers for mean paired differences, percentile bootstrap confidence intervals,
-  Wilcoxon permutation, and Benjamini-Hochberg FDR under the fixed M2.0 configuration.
-- An [executed M2.3a inference notebook](notebooks/02_fd001_inference.ipynb),
+- Helpers for mean paired differences, percentile bootstrap confidence intervals,
+  Wilcoxon permutation, and Benjamini-Hochberg FDR under that configuration.
+- An [executed inference notebook](notebooks/02_fd001_inference.ipynb),
   two validated CSV tables, run metadata, and [validation notes](outputs/statistics/README.md).
   The outputs keep all 21 sensors and do not read test observations or test labels.
-- M2.3b figures generated from those artifacts:
+- Figures generated from those artifacts:
   [difference distributions](outputs/statistics/figures/difference_distributions.png)
   and [effect sizes with bootstrap CI](outputs/statistics/figures/effect_size_ci.png).
 - A Pandas ETL that writes typed Silver observations and train targets to
@@ -79,7 +74,7 @@ optional `dashboard` dependency group.
 
 ## Objectives
 
-The report addresses five questions:
+The report addresses five primary questions on FD001:
 
 1. How trustworthy and suitable is FD001 for an academic predictive-maintenance study?
 2. Which sensor signals exhibit measurable degradation across engine life cycles?
@@ -87,17 +82,22 @@ The report addresses five questions:
 4. How accurately can RUL be predicted from the most recent 30 operating cycles?
 5. How can model results be communicated as transparent, reproducible early-warning evidence?
 
+A supplemental question tests how a model fitted on FD001 transfers to FD002--FD004 under a common 10-cycle protocol.
+
 The primary objective is **RUL prediction**. Supervised regression is the modeling formulation because the target is a numeric number of remaining cycles; it is not the title or purpose of the project.
 
 ## Dataset
 
-The project uses **NASA C-MAPSS FD001**, a simulated run-to-failure turbofan dataset published by the NASA Ames Prognostics Center of Excellence.
+The repository uses the four simulated run-to-failure NASA C-MAPSS subsets. FD001 is the primary subset for detailed analysis; FD002--FD004 support the supplemental evaluation.
 
-| File | Purpose | Local size |
-| --- | --- | ---: |
-| `train_FD001.txt` | Complete run-to-failure histories for 100 engines | 20,631 rows |
-| `test_FD001.txt` | Truncated histories for 100 different engines | 13,096 rows |
-| `RUL_FD001.txt` | Ground-truth RUL at the final observed cycle of each test engine | 100 labels |
+| Subset | Train rows | Test rows | Train engines | Test engines and labels |
+| --- | ---: | ---: | ---: | ---: |
+| FD001 | 20,631 | 13,096 | 100 | 100 |
+| FD002 | 53,759 | 33,991 | 260 | 259 |
+| FD003 | 24,720 | 16,596 | 100 | 100 |
+| FD004 | 61,249 | 41,214 | 249 | 248 |
+
+Each subset has `train_FD00x.txt`, `test_FD00x.txt`, and `RUL_FD00x.txt` files. Train histories run to failure; test histories are truncated, with one separate RUL label per test engine at its final observed cycle. Counts come from the [dataset-aware ETL artifacts](outputs/cross_dataset/README.md).
 
 Each observation contains:
 
@@ -168,7 +168,7 @@ processing.
 
 ### Feature Engineering
 
-The implemented M3.2 representation uses a trailing window of 30 cycles. It keeps all 21 sensors in the feature artifact so that sensor selection is not performed on the full train set. For each sensor, the generated features are:
+The implemented feature representation uses a trailing window of 30 cycles. It keeps all 21 sensors in the feature artifact so that sensor selection is not performed on the full train set. For each sensor, the generated features are:
 
 - Latest value.
 - Mean and sample standard deviation (`ddof=1`).
@@ -264,13 +264,13 @@ No target score is declared in advance. A negative result remains valid if the p
 
 ## Visualizations
 
-- Engine-life distribution (completed in milestone 1).
-- Sensor variability and raw-cycle trajectories (completed in milestone 1).
-- Available: train-only Health Index trajectories and holdout forecasts for the
+- Engine-life distribution.
+- Sensor variability and raw-cycle trajectories.
+- Train-only Health Index trajectories and holdout forecasts for the
   selected engines in [the PCA--ARIMA artifacts](outputs/timeseries/README.md).
-- Available: final test-set true-versus-predicted RUL scatter and residuals by
+- Final test-set true-versus-predicted RUL scatter and residuals by
   RUL range in [the modeling artifacts](outputs/modeling/README.md).
-- Available: per-engine inspection through the Streamlit dashboard and persisted
+- Per-engine inspection through the Streamlit dashboard and persisted
   out-of-fold predictions for grouped validation analysis.
 - Scope note: normalized sensor trajectories and a dedicated validation scatter
   are not separate persisted figures in the current handoff.
@@ -279,7 +279,7 @@ An illustrative warning may be shown when predicted RUL is at most 30 cycles. Th
 
 ## Repository Structure
 
-Current and planned public project structure:
+Current repository structure:
 
 ```text
 .
@@ -292,7 +292,7 @@ Current and planned public project structure:
 ├── tests/                   # Data contract, CLI, EDA, statistics, ETL, features, modeling, timeseries, and reproducibility tests
 ├── outputs/validation/      # Data-validation reports
 ├── outputs/eda/             # EDA tables, figures, methods, and validation
-├── outputs/statistics/      # M2.3a--M2.4 inference artifacts and validation
+├── outputs/statistics/      # Train-only sensor inference artifacts and validation
 ├── outputs/etl/             # Silver/Gold Parquet, SQLite, metadata, benchmark
 ├── outputs/features/        # Gold rolling feature Parquet and metadata
 ├── outputs/modeling/        # Grouped CV, predictions, model artifact, final metrics
@@ -305,7 +305,7 @@ Current and planned public project structure:
 ├── requirements-etl.txt     # Optional PySpark ETL dependencies
 ├── requirements-dashboard.txt # Optional Streamlit dashboard dependencies
 ├── uv.lock                  # Locked dependency versions
-├── report/                  # Living LaTeX/PDF report, progress and evidence
+├── report/                  # LaTeX source, PDF, figures, and evidence
 ├── slides/                  # Beamer source/PDF and validated 15-slide deck
 │   └── archive/             # Superseded decks and builders
 ├── handoff/                 # Demo script and final handoff checklist
@@ -360,7 +360,7 @@ readers.py       Read source files into DataFrames
 validation.py    Validate schemas, keys, and cycles
 targets.py       Create and validate train RUL
 statistics/
-  config.py       Fixed M2.0 inference configuration
+  config.py       Fixed inference configuration
   pairs.py        Build and validate engine/sensor pairs
   inference.py    Bootstrap, Wilcoxon, FDR, and sensor summaries
   validation.py   Validate sensor inference tables
@@ -368,7 +368,7 @@ statistics/
   metadata.py     Run metadata and validation payloads
   artifacts.py    Write CSV/JSON artifacts and round-trip validation
   reproducibility.py
-                  M2.4 validation, runtime audit, and artifact comparison
+                  Repeated-run validation, runtime audit, and artifact comparison
 statistics_artifacts.py
                   Compatibility import for the artifact writer
 ```
@@ -379,10 +379,11 @@ for conditions and validation limits.
 
 ### Overall data pipeline
 
-The canonical overall diagram is rendered from the TikZ source used by the
-report. It keeps EDA, paired statistics, and PCA--ARIMA as independent
-train-only branches; the Silver/Gold path feeds rolling features and RUL
-modeling; each subset's RUL file is joined only during its final evaluation.
+The public draw.io diagram below shows the detailed FD001 path: EDA, paired
+statistics, and PCA--ARIMA read train data independently; Silver/Gold feeds
+rolling features and RUL modeling; test labels are joined only after final
+predictions. The [report pipeline figure](report/figures/pipeline.pdf) also
+marks the supplemental FD001--FD004 evaluation scope.
 
 ![FD001 overall data pipeline](assets/diagrams/fd001-pipeline.png)
 
@@ -399,12 +400,10 @@ After installing `requirements-dev.txt`, open the notebook from the repository r
 
 Select the `.venv` Python kernel and **Restart Kernel and Run All Cells**.
 This analyzes only train and recreates 12 CSV tables and 11 PNG figures.
-The validated runs used fresh kernels and produced identical artifacts in the
-same environment; the EDA checkpoint suite passed **69 tests**. The current
-repository-wide suite, including M2.3a artifact export tests, the M2.4 runtime
-audit, M3.1 ETL checks, M3.2 feature checks, grouped modeling checks and
-PCA--ARIMA and end-to-end reproducibility checks, passed **154 tests** after the
-engine-bootstrap, temporal-fit and warning-timing corrections.
+Validated fresh-kernel runs produced identical EDA artifacts in the same
+environment. The repository-wide test suite passed **154 tests**, including
+data, statistics, ETL, feature, modeling, PCA--ARIMA, cross-dataset, and
+end-to-end reproducibility checks.
 
 ![FD001 train EDA workflow](assets/diagrams/fd001-eda.svg)
 
@@ -437,23 +436,23 @@ protocol. These results are train-only and are not feature selection.
 
 For example, the 100 train engines have a median lifetime of 199 cycles.
 Six sensors are globally constant; `sensor_6` varies globally but is constant
-within 38 engines. The M2.3b figures show each sensor in its own panel so that
+within 38 engines. The inference figures show each sensor in its own panel so that
 different sensor scales are not ranked directly. `sensor_6` illustrates that a
 small mean difference can coexist with a small p-value, while `sensor_9`
 illustrates why the per-engine distribution should be read together with the
-mean and CI. These are train-only findings, not model feature selection. M2.4
-ran the notebook twice from fresh kernels; the two CSV files and two PNG files
+mean and CI. These are train-only findings, not model feature selection. A
+repeated-run check ran the notebook twice from fresh kernels; the two CSV files and two PNG files
 matched, and the runtime audit blocked probes that tried to open `test_FD001.txt`
 and `RUL_FD001.txt`.
 
-Run the complete M2.4 validation with:
+Run the repeated-run statistics validation with:
 
 ```powershell
 .venv\Scripts\python -m cmapss.statistics.reproducibility `
   --project-root . `
   --notebook notebooks/02_fd001_inference.ipynb `
   --output-dir outputs/statistics `
-  --work-dir tmp/statistics-reproducibility-m24 `
+  --work-dir tmp/statistics-reproducibility `
   --timeout 1800
 ```
 
@@ -489,7 +488,7 @@ counts, benchmark measurements, and the Pandas/PySpark parity result.
 
 ### Generate rolling features
 
-After ETL has written Silver observations, create the M3.2 Gold rolling features:
+After ETL has written Silver observations, create Gold rolling features:
 
 ```powershell
 .venv\Scripts\python -m cmapss.features `
@@ -613,22 +612,14 @@ Pytest clears its `--basetemp` directory on subsequent runs; reserve it for test
 
 </details>
 
-Pandas/PySpark Silver/Gold parity, benchmark artifacts, M3.2 rolling features,
-grouped RUL model evaluation, train-only PCA--ARIMA artifacts, the
-artifact-driven dashboard, end-to-end regeneration check, presentation deck and
-handoff checklist are available.
-M2.4 repeated-run validation has passed.
-The [report draft](report/main.pdf) is updated alongside
-verified work: its progress log records dates, rationale, artifacts, checks,
-and remaining work. See [report instructions](report/README.md) for source
-organization and PDF build commands. The current draft includes verified data
-validation, selected initial EDA observations, M3.1 ETL measurements, M3.2
-rolling-feature evidence, PCA--ARIMA diagnostics, and current RUL model metrics.
+The [report PDF](report/main.pdf) presents the verified FD001 analyses and the
+supplemental FD001--FD004 matrix. See [report instructions](report/README.md)
+for source organization and PDF build commands.
 
 ## Academic Context
 
 This repository supports a final report for the **Big Data Analysis** course.
-The report distinguishes observed results from proposed explanations. All
+The report distinguishes observed results from interpretations. All
 generated analysis, code, citations, and conclusions remain subject to human
 review and reproducibility checks.
 
@@ -637,7 +628,7 @@ review and reproducibility checks.
 - Saxena, A., Goebel, K., Simon, D., & Eklund, N. (2008). [Damage Propagation Modeling for Aircraft Engine Run-to-Failure Simulation](https://doi.org/10.1109/PHM.2008.4711414).
 - Ramasso, E., & Saxena, A. (2014). [Review and Analysis of Algorithmic Approaches Developed for Prognostics on CMAPSS Dataset](https://doi.org/10.36001/phmconf.2014.v6i1.2512).
 - Li, X., Ding, Q., & Sun, J.-Q. (2018). [Remaining Useful Life Estimation in Prognostics Using Deep Convolution Neural Networks](https://doi.org/10.1016/j.ress.2017.11.021).
-- See [`references/reading-guide.md`](references/reading-guide.md) for the complete reading plan.
+- See [`references/reading-guide.md`](references/reading-guide.md) for the reference guide.
 
 ## Limitations
 

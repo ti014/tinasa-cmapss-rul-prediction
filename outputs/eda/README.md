@@ -1,7 +1,7 @@
 # EDA FD001 trên tập train
 
-Mốc 1 đã hoàn thành: khảo sát 20.631 quan sát của 100 động cơ, xuất 12 bảng
-CSV và 11 hình PNG. Tuổi thọ quan sát có trung vị 199 cycles; sáu sensor hằng
+EDA đã được chạy trên 20.631 quan sát của 100 động cơ, xuất 12 bảng CSV và 11
+hình PNG. Tuổi thọ quan sát có trung vị 199 cycles; sáu sensor hằng
 trên toàn train. Đây là kết quả mô tả, chưa phải kiểm định giả thuyết hoặc
 bằng chứng về hiệu quả dự đoán RUL.
 
@@ -22,7 +22,7 @@ Sau khi tạo `.venv` với Python 3.12 theo README, chạy từ thư mục gố
 Chọn kernel Python của `.venv`, sau đó chọn **Restart Kernel and Run All Cells**.
 Notebook tìm thư mục gốc từ vị trí hiện tại, tạo lại bảng/hình tại `outputs/eda/`
 và ghi đè các tệp đầu ra cùng tên. Dữ liệu raw được giữ nguyên. Notebook không
-cần Spark, Java hoặc môi trường mô hình ở mốc này.
+cần Spark, Java hoặc môi trường modeling.
 
 ![Quy trình EDA FD001](../../assets/diagrams/fd001-eda.svg)
 
@@ -136,11 +136,10 @@ trống có số lượng `n=0` trên boxplot.
 
 Các quan sát liên tiếp phụ thuộc thời gian; correlation mô tả quan hệ đơn điệu,
 không chứng minh nhân quả. Các tứ phân vị giữa các động cơ không phải khoảng tin
-cậy. Mốc này không bao gồm p-value, bootstrap, lựa chọn đặc trưng hoặc mô hình.
+cậy. Phân tích EDA này không bao gồm p-value, bootstrap, lựa chọn đặc trưng hoặc mô hình.
 Việc chọn sensor, scaler hoặc mô hình sau này phải được học trong training folds.
 Dữ liệu mô phỏng FD001 không trực tiếp xác định lịch bảo trì thực tế.
 
-Mốc M2.3a đã thực hiện phân tích ghép cặp, tính chênh lệch cặp trung bình,
-bootstrap và hiệu chỉnh nhiều kiểm định trên train. M2.3b còn cần tạo hình phân
-phối, biểu đồ chênh lệch kèm khoảng tin cậy và bổ sung diễn giải sâu trong báo cáo. Các giả thuyết
-phát sinh từ EDA vẫn phải được ghi rõ là khám phá.
+Phân tích ghép cặp, bootstrap và hiệu chỉnh nhiều kiểm định được ghi riêng trong
+[`outputs/statistics`](../statistics/README.md). Các giả thuyết phát sinh từ EDA
+được giữ ở mức khám phá.

@@ -9,14 +9,14 @@
 \usepackage{caption}
 \usepackage{xurl}
 \usepackage[colorlinks=true,linkcolor=blue!45!black,citecolor=blue!45!black,urlcolor=blue!45!black]{hyperref}
-\hypersetup{pdftitle={Phân tích dữ liệu cảm biến, dự đoán RUL và cảnh báo sớm trên NASA C-MAPSS FD001},pdfauthor={}}
+\hypersetup{pdftitle={Phân tích dữ liệu cảm biến, dự đoán RUL và cảnh báo sớm trên NASA C-MAPSS FD001--FD004},pdfauthor={}}
 \renewcommand{\contentsname}{Mục lục}
 \renewcommand{\listfigurename}{Danh mục hình}
 \renewcommand{\listtablename}{Danh mục bảng}
 \renewcommand{\figurename}{Hình}
 \renewcommand{\tablename}{Bảng}
 \renewcommand{\refname}{Tài liệu tham khảo}
-\newcommand{\reportdate}{24/09/2026}
+\newcommand{\reportdate}{25/09/2026}
 \newcommand{\filepath}[1]{\nolinkurl{#1}}
 \newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
 \onehalfspacing
@@ -27,7 +27,7 @@
 \captionsetup{font=small,labelfont=bf}
 \pagestyle{fancy}
 \fancyhf{}
-\fancyhead[L]{\small NASA C-MAPSS FD001}
+\fancyhead[L]{\small NASA C-MAPSS FD001--FD004}
 \fancyhead[R]{\small Kết quả phân tích -- \reportdate}
 \fancyfoot[C]{\thepage}
 
@@ -43,7 +43,7 @@
 \vspace{1.5cm}
 {\LARGE\bfseries Phân tích dữ liệu cảm biến, dự đoán RUL và cảnh báo sớm\par}
 \vspace{0.6cm}
-{\Large NASA C-MAPSS FD001\par}
+{\Large NASA C-MAPSS FD001--FD004\par}
 \vspace{0.8cm}
 {\large Đề tài 8: Phân tích dữ liệu IoT và bảo trì dự đoán\par}
 \vspace{1.5cm}
@@ -60,12 +60,13 @@ Ngành: & Khoa học máy tính
 \section*{Tóm tắt}
 \addcontentsline{toc}{section}{Tóm tắt}
 Báo cáo nghiên cứu một pipeline phân tích dữ liệu cảm biến và ước lượng
-Remaining Useful Life (RUL, tuổi thọ hữu ích còn lại) cho bộ dữ liệu mô phỏng
-NASA C-MAPSS FD001. Mục tiêu là kiểm tra tính hợp lệ của dữ liệu, xây dựng biểu
-diễn trailing window, đánh giá mô hình hồi quy theo đơn vị động cơ và mô tả diễn
+Remaining Useful Life (RUL, tuổi thọ hữu ích còn lại) trên bộ dữ liệu mô phỏng
+NASA C-MAPSS FD001--FD004, trong đó FD001 là subset chính cho phân tích chi tiết.
+Mục tiêu là kiểm tra tính hợp lệ của dữ liệu, xây dựng biểu diễn trailing window,
+đánh giá mô hình hồi quy theo đơn vị động cơ và mô tả diễn
 biến cảm biến bằng phân tích thống kê cùng PCA--ARIMA. Phương pháp gồm kiểm tra
 data contract, ETL qua các lớp Silver/Gold, tạo đặc trưng từ window 30 cycles,
-GroupKFold theo engine và đánh giá cuối trên 100 test engines. Mô hình
+GroupKFold theo engine và đánh giá cuối trên 100 test engines của FD001. Mô hình
 HistGradientBoosting đạt mean engine-level MAE bằng 15,3490 cycles, RMSE bằng
 20,5413 cycles và NASA score bằng 1.513,2577 trong evaluation protocol được xác định trước. Phân tích
 PCA--ARIMA tạo 704 dự báo Health Index trên 10 engine train được chọn trước;
@@ -84,14 +85,15 @@ theo cùng protocol window 10, cho thấy khả năng chuyển miền của mode
 hạn chế. Metric bổ sung không được so trực tiếp với kết quả chính dùng window
 30 cycles.
 
-Kết quả cho thấy pipeline có thể tái lập từ raw FD001 và bảo toàn ranh giới
-train/test trong quá trình xử lý. Tuy nhiên, FD001 chỉ đại diện cho một điều
-kiện vận hành và một dạng suy giảm trong môi trường mô phỏng. Vì dữ liệu không
+Kết quả cho thấy pipeline có thể tái lập từ raw FD001 và ma trận bổ sung FD002--FD004
+giữ nguyên ranh giới train/test trong quá trình xử lý. Tuy nhiên, FD001 chỉ đại
+diện cho một điều kiện vận hành và một dạng suy giảm; kết quả transfer cho thấy
+khác biệt giữa các subset trong môi trường mô phỏng. Vì dữ liệu không
 cung cấp chi phí bảo trì, downtime hoặc quy đổi cycle sang thời gian lịch, các
 kết quả chưa đủ để suy ra chính sách bảo trì hoặc khả năng khái quát cho động cơ
 thực tế.
 
-\noindent\textbf{Từ khóa:} NASA C-MAPSS FD001; RUL; early warning; rolling window;
+\noindent\textbf{Từ khóa:} NASA C-MAPSS FD001--FD004; RUL; early warning; rolling window;
 GroupKFold; ETL; Health Index; PCA--ARIMA.
 \clearpage
 \begin{spacing}{1.1}

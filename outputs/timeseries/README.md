@@ -1,7 +1,7 @@
 # Phân tích PCA--ARIMA trên Health Index FD001
 
 Artifact này là phân tích chuỗi thời gian phụ, không phải mô hình dự đoán RUL.
-Pipeline đọc Silver observations và fold assignment của M3.3, lọc train, chọn
+Pipeline đọc Silver observations và fold assignment, lọc train, chọn
 10 engine trước forecast bằng quota cân bằng theo GroupKFold fold và vị trí
 lifetime cách đều trong từng fold. `StandardScaler`, PCA một thành phần, hướng
 PC1 và tham số chuẩn hóa Health Index được fit trên 90 train engines còn lại;

@@ -4,11 +4,11 @@
 
 # Pipeline dự đoán RUL trên NASA C-MAPSS
 
-Repository này phục vụ báo cáo cuối kỳ môn Phân tích dữ liệu lớn. Báo cáo xây dựng quy trình có khả năng tái lập để phân tích dữ liệu cảm biến đa biến và dự đoán Remaining Useful Life (RUL, tuổi thọ hữu ích còn lại) trên NASA C-MAPSS FD001. Kho raw hiện lưu đủ FD001--FD004; báo cáo có kết quả chính trên FD001 và ma trận đánh giá bổ sung trên cả bốn subset. Trọng tâm gồm nguồn gốc dữ liệu rõ ràng, phân tích thống kê phù hợp, đánh giá tránh data leakage (rò rỉ dữ liệu), ETL có khả năng mở rộng và trực quan hóa kết quả dễ diễn giải.
+Repository này phục vụ báo cáo cuối kỳ môn Phân tích dữ liệu lớn. Báo cáo xây dựng quy trình có khả năng tái lập để phân tích dữ liệu cảm biến đa biến và dự đoán Remaining Useful Life (RUL, tuổi thọ hữu ích còn lại) trên NASA C-MAPSS FD001--FD004. FD001 là subset chính cho phân tích chi tiết; FD002--FD004 được đánh giá trong ma trận chuyển miền bổ sung. Trọng tâm gồm nguồn gốc dữ liệu rõ ràng, phân tích thống kê phù hợp, đánh giá tránh data leakage (rò rỉ dữ liệu), ETL có khả năng mở rộng và trực quan hóa kết quả dễ diễn giải.
 
 ## Trạng thái
 
-Repository đã có **gói kiểm tra dữ liệu FD001, nhãn RUL train, notebook EDA chỉ dùng train đã hoàn thành ở mốc 1, các tệp suy luận sensor M2.3a--M2.4 chỉ dùng train ở mốc 2, ETL Silver/Gold bằng Pandas/PySpark kèm benchmark, parity ở mốc M3.1, rolling features 30 cycles ở mốc M3.2, đánh giá mô hình RUL tránh data leakage ở mốc M3.3 và phân tích PCA--ARIMA Health Index train-only ở mốc M3.4**.
+Repository đã có **kiểm tra dữ liệu FD001--FD004, nhãn RUL train, notebook EDA và suy luận sensor chỉ dùng train FD001, ETL Silver/Gold bằng Pandas/PySpark, rolling features 30 cycles, đánh giá RUL theo engine, phân tích PCA--ARIMA Health Index trên train và ma trận bổ sung window 10 cycles cho cả bốn subset**.
 
 Đã có:
 
@@ -18,25 +18,22 @@ Repository đã có **gói kiểm tra dữ liệu FD001, nhãn RUL train, notebo
 - [Notebook EDA đã chạy](notebooks/01_fd001_eda.ipynb), 12 bảng CSV,
   11 hình và [diễn giải kết quả, bằng chứng kiểm tra](outputs/eda/README.md).
 - Danh mục tài liệu tham khảo và hướng dẫn đọc.
-- [Báo cáo LaTeX tổng hợp kết quả hiện có](report/README.md) và [bản PDF](report/main.pdf),
-  được biên tập theo cấu trúc học thuật rõ hơn, có data dictionary (từ điển dữ liệu),
-  bảng thuật ngữ và chữ viết tắt, cấu hình mô hình, phân tích lỗi, phụ lục tái
-  lập, lý do lựa chọn và diễn giải kết quả validation/EDA/M2.3a--M2.4.
-  Mốc 1 EDA, mốc 2 thống kê train-only, parity ETL M3.1, rolling features
-  M3.2, đánh giá mô hình RUL theo group và phân tích PCA--ARIMA train-only
-  hiện tại đã được kiểm tra độc lập; dashboard đọc artifact, slide và checklist
-  bàn giao cuối đã có thể sử dụng.
-- Cơ sở lý thuyết có trích dẫn và [protocol thống kê mốc 2](report/sections/statistical-protocol.tex).
+- Báo cáo [LaTeX](report/README.md) và [PDF](report/main.pdf) trình bày kiểm tra
+  dữ liệu, EDA, suy luận sensor chỉ dùng train, parity ETL, rolling features,
+  đánh giá RUL theo engine, PCA--ARIMA, cảnh báo sớm và ma trận FD001--FD004.
+  Báo cáo có data dictionary (từ điển dữ liệu), bảng thuật ngữ, phân tích lỗi
+  và phụ lục tái lập.
+- Cơ sở lý thuyết có trích dẫn và [protocol thống kê](report/sections/statistical-protocol.tex).
   Đã chốt so sánh giá trị trung bình của 30 cycles đầu và 30 cycles cuối theo từng động cơ.
-  Cấu hình thống kê M2.0 đã được chốt trước suy luận; notebook M2.3a đã chạy bảng suy luận train-only.
+  Cấu hình thống kê đã được chốt trước khi chạy suy luận.
 - Helper `build_engine_sensor_pairs` chỉ nhận train, tạo và kiểm tra một cặp
   30 cycles đầu/cuối cho từng động cơ và đủ 21 sensor.
-- Helper M2.2 để tính chênh lệch cặp trung bình theo đơn vị gốc, percentile bootstrap CI, Wilcoxon
-  permutation và Benjamini-Hochberg FDR theo cấu hình M2.0 đã chốt.
-- [Notebook suy luận M2.3a đã chạy](notebooks/02_fd001_inference.ipynb), hai
+- Helper tính chênh lệch cặp trung bình theo đơn vị gốc, percentile bootstrap CI, Wilcoxon
+  permutation và Benjamini-Hochberg FDR theo cấu hình đã chốt.
+- [Notebook suy luận đã chạy](notebooks/02_fd001_inference.ipynb), hai
   bảng CSV, metadata (siêu dữ liệu lần chạy) và [ghi chú validation](outputs/statistics/README.md).
   Đầu ra giữ đủ 21 sensor và không đọc quan sát test hoặc nhãn test.
-- Hình M2.3b được tạo từ các artifact trên: [phân phối chênh lệch](outputs/statistics/figures/difference_distributions.png)
+- Hình được tạo từ các artifact trên: [phân phối chênh lệch](outputs/statistics/figures/difference_distributions.png)
   và [effect size kèm bootstrap CI](outputs/statistics/figures/effect_size_ci.png).
 - Pipeline ETL Pandas ghi observations và train targets đã gán kiểu vào Silver
   Parquet, ghi engine summary vào Gold Parquet/SQLite, lưu checksum raw và đo
@@ -71,7 +68,7 @@ modeling và PCA--ARIMA có ở phần Bắt đầu. Dashboard dùng dependency 
 
 ## Mục tiêu
 
-Báo cáo tập trung trả lời năm câu hỏi:
+Báo cáo tập trung trả lời năm câu hỏi chính trên FD001:
 
 1. FD001 đáng tin và phù hợp đến mức nào cho một nghiên cứu học thuật về predictive maintenance?
 2. Những tín hiệu cảm biến nào thể hiện sự suy giảm có thể đo lường theo vòng đời động cơ?
@@ -79,18 +76,22 @@ Báo cáo tập trung trả lời năm câu hỏi:
 4. Có thể dự đoán RUL chính xác đến mức nào từ 30 cycles vận hành gần nhất?
 5. Làm thế nào trình bày kết quả mô hình thành bằng chứng cảnh báo sớm minh bạch và tái lập được?
 
+Câu hỏi bổ sung là model fit trên FD001 chuyển sang FD002--FD004 như thế nào khi dùng chung protocol window 10 cycles.
+
 Mục tiêu chính là **dự đoán RUL**. Supervised regression (hồi quy có giám sát) là cách mô hình hóa phù hợp vì biến mục tiêu là số cycle còn lại; đây không phải tên hoặc mục tiêu của báo cáo.
 
 ## Dữ liệu
 
-Báo cáo sử dụng **NASA C-MAPSS FD001**, bộ dữ liệu mô phỏng quá trình động cơ turbofan vận hành đến khi hỏng do NASA Ames Prognostics Center of Excellence công bố.
+Báo cáo dùng bốn subset mô phỏng NASA C-MAPSS. FD001 là subset chính cho phân tích chi tiết; FD002--FD004 phục vụ đánh giá bổ sung.
 
-| File | Vai trò | Quy mô tệp |
-| --- | --- | ---: |
-| `train_FD001.txt` | Lịch sử đầy đủ đến khi hỏng của 100 động cơ | 20.631 dòng |
-| `test_FD001.txt` | Lịch sử bị cắt trước khi hỏng của 100 động cơ khác | 13.096 dòng |
-| `RUL_FD001.txt` | RUL thật tại cycle quan sát cuối của từng động cơ trong tập test | 100 nhãn |
-| `train_FD002.txt`–`train_FD004.txt`, `test_FD002.txt`–`test_FD004.txt`, `RUL_FD002.txt`–`RUL_FD004.txt` | Ba subset bổ sung để đánh giá chuyển miền | Xem `outputs/cross_dataset` |
+| Subset | Dòng train | Dòng test | Engine train | Engine test và nhãn |
+| --- | ---: | ---: | ---: | ---: |
+| FD001 | 20.631 | 13.096 | 100 | 100 |
+| FD002 | 53.759 | 33.991 | 260 | 259 |
+| FD003 | 24.720 | 16.596 | 100 | 100 |
+| FD004 | 61.249 | 41.214 | 249 | 248 |
+
+Mỗi subset có các file `train_FD00x.txt`, `test_FD00x.txt` và `RUL_FD00x.txt`. Lịch sử train kết thúc khi hỏng; lịch sử test bị cắt, kèm một nhãn RUL riêng tại cycle quan sát cuối của mỗi engine. Quy mô được đối chiếu với [artifact ETL theo subset](outputs/cross_dataset/README.md).
 
 Mỗi quan sát gồm:
 
@@ -161,7 +162,7 @@ năng xử lý dữ liệu quy mô lớn.
 
 ### Xây dựng đặc trưng
 
-Biểu diễn M3.2 đã triển khai sử dụng trailing window dài 30 cycles. Artifact giữ đủ 21 sensors để chưa thực hiện feature selection trên toàn bộ train. Với mỗi sensor, các đặc trưng đã tạo gồm:
+Biểu diễn đặc trưng đã triển khai sử dụng trailing window dài 30 cycles. Artifact giữ đủ 21 sensors để chưa thực hiện feature selection trên toàn bộ train. Với mỗi sensor, các đặc trưng đã tạo gồm:
 
 - Giá trị gần nhất.
 - Trung bình và sample standard deviation (`ddof=1`).
@@ -172,7 +173,7 @@ Mỗi window chỉ chứa dữ liệu của một động cơ và không sử d�
 
 ### Dự đoán RUL
 
-Mốc modeling đầu tiên đã so sánh:
+Pipeline modeling đã so sánh:
 
 1. Naive baseline theo trung vị RUL.
 2. Ridge regression làm baseline tuyến tính có regularization.
@@ -254,13 +255,13 @@ Báo cáo không đặt trước một mức điểm mục tiêu. Kết quả â
 
 ## Trực quan hóa
 
-- Phân phối vòng đời động cơ (đã có ở mốc 1).
-- Biến thiên và quỹ đạo sensor theo cycle gốc (đã có ở mốc 1).
-- Đã có: quỹ đạo Health Index train-only và forecast holdout của các engine đã
+- Phân phối vòng đời động cơ.
+- Biến thiên và quỹ đạo sensor theo cycle gốc.
+- Quỹ đạo Health Index train-only và forecast holdout của các engine đã
   chọn trong [artifact PCA--ARIMA](outputs/timeseries/README.md).
-- Đã có: biểu đồ RUL thật--dự đoán trên test và phần dư theo khoảng RUL trong
+- Biểu đồ RUL thật--dự đoán trên test và phần dư theo khoảng RUL trong
   [artifact modeling](outputs/modeling/README.md).
-- Đã có: xem từng engine qua dashboard Streamlit và out-of-fold predictions cho
+- Xem từng engine qua dashboard Streamlit và out-of-fold predictions cho
   phân tích validation theo group.
 - Phạm vi hiện tại: chưa lưu riêng hình quỹ đạo sensor chuẩn hóa và biểu đồ
   validation chuyên dụng trong gói bàn giao.
@@ -269,7 +270,7 @@ Dashboard có thể minh họa cảnh báo khi RUL dự đoán không quá 30 cy
 
 ## Cấu trúc repository
 
-Cấu trúc hiện có và dự kiến của repository:
+Cấu trúc repository hiện tại:
 
 ```text
 .
@@ -282,7 +283,7 @@ Cấu trúc hiện có và dự kiến của repository:
 ├── tests/                   # Kiểm thử data contract, CLI, EDA, thống kê, ETL, features, modeling, timeseries và tái lập
 ├── outputs/validation/      # Báo cáo kiểm tra dữ liệu hiện có
 ├── outputs/eda/             # Bảng, hình, phương pháp và kiểm tra EDA
-├── outputs/statistics/      # Artifact suy luận M2.3a--M2.4 và validation
+├── outputs/statistics/      # Artifact suy luận sensor chỉ dùng train và validation
 ├── outputs/etl/             # Parquet/SQLite Silver/Gold, metadata và benchmark
 ├── outputs/features/        # Parquet Gold rolling features và metadata
 ├── outputs/modeling/        # Grouped CV, prediction, model artifact và final metrics
@@ -349,7 +350,7 @@ readers.py       Đọc file thành DataFrame
 validation.py    Kiểm tra schema, khóa và cycle
 targets.py       Tạo và kiểm tra train RUL
 statistics/
-  config.py       Cấu hình suy luận M2.0 đã chốt
+  config.py       Cấu hình suy luận đã chốt
   pairs.py        Tạo và kiểm tra cặp engine/sensor
   inference.py    Bootstrap, Wilcoxon, FDR và tóm tắt theo sensor
   validation.py   Kiểm tra bảng suy luận sensor
@@ -357,7 +358,7 @@ statistics/
   metadata.py     Metadata lần chạy và validation payload
   artifacts.py    Ghi CSV/JSON và kiểm tra round-trip
   reproducibility.py
-                  Validation M2.4, runtime audit và so sánh artifact
+                  Validation chạy lặp, runtime audit và so sánh artifact
 statistics_artifacts.py
                   Compatibility import cho bộ ghi artifact
 ```
@@ -368,10 +369,11 @@ Hàm tạo nhãn từ chối quan sát test. Xem [data contract](data/CONTRACTS.
 
 ### Pipeline dữ liệu tổng thể
 
-Sơ đồ tổng thể dùng cùng nguồn TikZ với báo cáo. EDA, paired analysis và
-PCA--ARIMA được thể hiện là các nhánh train-only độc lập; nhánh Silver/Gold
-đi vào rolling features và modeling RUL; `RUL_FD001.txt` chỉ được ghép ở bước
-đánh giá cuối.
+Sơ đồ draw.io công khai dưới đây mô tả luồng FD001 chi tiết: EDA, paired analysis
+và PCA--ARIMA là các nhánh chỉ đọc train độc lập; Silver/Gold đi vào rolling
+features và modeling RUL; nhãn test chỉ được ghép sau khi ghi final predictions.
+[Sơ đồ trong báo cáo](report/figures/pipeline.pdf) cũng đánh dấu phạm vi đánh giá
+bổ sung FD001--FD004.
 
 ![Pipeline dữ liệu tổng thể FD001](assets/diagrams/fd001-pipeline.png)
 
@@ -388,12 +390,9 @@ Sau khi cài `requirements-dev.txt`, mở notebook từ thư mục gốc:
 
 Chọn kernel Python của `.venv` và **Restart Kernel and Run All Cells**.
 Notebook chỉ phân tích train và tạo lại 12 bảng CSV, 11 hình PNG.
-Các lần kiểm tra dùng kernel mới đã tạo tệp đầu ra giống nhau trong cùng môi
-trường; bộ kiểm thử tại mốc nghiệm thu EDA đạt **69 tests**. Toàn bộ bộ kiểm
-thử hiện tại, gồm kiểm thử xuất tệp đầu ra M2.3a, runtime audit M2.4 và kiểm
-tra ETL M3.1, kiểm tra features M3.2, modeling theo group, PCA--ARIMA và tái
-lập end-to-end, đạt **154 tests** sau khi sửa bootstrap theo engine, ranh giới
-fit temporal của PCA--ARIMA và kiểm tra warning timing.
+Các lần kiểm tra với kernel mới tạo tệp EDA giống nhau trong cùng môi trường.
+Bộ kiểm thử toàn repository đạt **154 tests**, gồm kiểm tra dữ liệu, thống kê,
+ETL, đặc trưng, modeling, PCA--ARIMA, đánh giá liên subset và tái lập end-to-end.
 
 ![Quy trình EDA train FD001](assets/diagrams/fd001-eda.svg)
 
@@ -425,21 +424,21 @@ không phải lựa chọn đặc trưng (feature selection).
 
 Ví dụ: trung vị tuổi thọ của 100 động cơ train là 199 cycles. Sáu sensor hằng
 trên toàn train; `sensor_6` biến thiên trên toàn tập nhưng hằng trong 38 động cơ.
-Hai hình M2.3b dùng panel riêng cho từng sensor vì các sensor khác thang đo.
+Hai hình suy luận dùng panel riêng cho từng sensor vì các sensor khác thang đo.
 `sensor_6` cho thấy p-value nhỏ không đồng nghĩa với thay đổi lớn theo đơn vị
 đo; `sensor_9` cho thấy cần đọc phân phối theo engine cùng mean và CI. Đây là
-kết quả train-only, chưa phải lựa chọn đặc trưng cho mô hình. M2.4 đã chạy
-notebook hai lần từ fresh kernel; hai CSV và hai PNG giống nhau, còn runtime
+kết quả train-only, chưa phải lựa chọn đặc trưng cho mô hình. Kiểm tra chạy lặp
+notebook hai lần từ fresh kernel cho hai CSV và hai PNG giống nhau; runtime
 audit đã chặn thử nghiệm mở `test_FD001.txt` và `RUL_FD001.txt`.
 
-Có thể chạy lại toàn bộ validation M2.4 bằng:
+Có thể chạy lại kiểm tra thống kê bằng:
 
 ```powershell
 .venv\Scripts\python -m cmapss.statistics.reproducibility `
   --project-root . `
   --notebook notebooks/02_fd001_inference.ipynb `
   --output-dir outputs/statistics `
-  --work-dir tmp/statistics-reproducibility-m24 `
+  --work-dir tmp/statistics-reproducibility `
   --timeout 1800
 ```
 
@@ -474,7 +473,7 @@ dòng, thời gian benchmark và kết quả parity Pandas/PySpark.
 
 ### Tạo rolling features
 
-Sau khi ETL đã ghi Silver observations, tạo Gold rolling features M3.2:
+Sau khi ETL đã ghi Silver observations, tạo Gold rolling features:
 
 ```powershell
 .venv\Scripts\python -m cmapss.features `
@@ -595,15 +594,9 @@ Pytest dọn thư mục `--basetemp` khi chạy lại; chỉ dành thư mục đ
 
 </details>
 
-ETL Silver/Gold bằng Pandas/PySpark parity, benchmark, rolling features M3.2,
-đánh giá mô hình RUL theo group, phân tích PCA--ARIMA train-only, dashboard đọc
-artifact, kiểm tra tái tạo end-to-end, slide và checklist bàn giao đã có.
-Validation tái lập M2.4 đã đạt.
-[Báo cáo kết quả hiện có](report/main.pdf) được cập nhật cùng các kết quả đã
-kiểm chứng và diễn giải trong phạm vi FD001.
-Xem [hướng dẫn báo cáo](report/README.md) để biết cấu trúc nguồn và lệnh build
-PDF. Bản hiện tại có kết quả validation, EDA, ETL M3.1, rolling features M3.2
-metric đánh giá mô hình RUL hiện tại và chẩn đoán PCA--ARIMA.
+[Báo cáo PDF](report/main.pdf) trình bày các phân tích FD001 đã kiểm chứng và ma
+trận bổ sung FD001--FD004. Xem [hướng dẫn báo cáo](report/README.md) để biết
+cấu trúc nguồn và lệnh build PDF.
 
 ## Bối cảnh học thuật
 
@@ -616,7 +609,7 @@ với dữ liệu và quy trình tái lập tương ứng.
 - Saxena, A., Goebel, K., Simon, D., & Eklund, N. (2008). [Damage Propagation Modeling for Aircraft Engine Run-to-Failure Simulation](https://doi.org/10.1109/PHM.2008.4711414).
 - Ramasso, E., & Saxena, A. (2014). [Review and Analysis of Algorithmic Approaches Developed for Prognostics on CMAPSS Dataset](https://doi.org/10.36001/phmconf.2014.v6i1.2512).
 - Li, X., Ding, Q., & Sun, J.-Q. (2018). [Remaining Useful Life Estimation in Prognostics Using Deep Convolution Neural Networks](https://doi.org/10.1016/j.ress.2017.11.021).
-- Xem [`references/reading-guide.md`](references/reading-guide.md) để biết kế hoạch đọc đầy đủ.
+- Xem [`references/reading-guide.md`](references/reading-guide.md) để biết hướng dẫn tài liệu tham khảo.
 
 ## Giới hạn
 

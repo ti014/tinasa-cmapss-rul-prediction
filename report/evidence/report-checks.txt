@@ -400,6 +400,25 @@ clipping, overlapping nodes, unreadable labels or disconnected test-label edge.
 LIMIT: The local Tectonic environment still emits the known Fontconfig and
 absolute Windows font warnings; the build and rendered visual check succeeded.
 
+Cross-dataset report wording synchronization: 2026-09-25
+SCOPE: report wording, dataset-size table, glossary, pipeline TikZ source/PDF and
+root/report README synchronization; no raw data, code or evaluation artifact changes.
+PASS: report title, abstract, scope, data section and conclusion now distinguish
+FD001 as the detailed primary subset from the supplemental FD001--FD004 matrix.
+PASS: the report data table records observed train/test rows and engine counts
+for all four subsets; values were checked against `outputs/cross_dataset/*/etl/run_info.json`.
+PASS: Tectonic 0.17.0 rebuilt `report/figures/pipeline.pdf` and `report/main.pdf`
+with exit code 0. `pdfinfo` reports 47 A4 pages; targeted logs contain no
+overfull/underfull boxes, missing files, undefined citations/references,
+duplicate labels, emergency stop or fatal error.
+PASS: rendered the expanded dataset table and pipeline diagram; no clipping,
+overlap or unreadable labels observed. `git diff --check` passed.
+LIMIT: detailed EDA, paired inference, Health Index and 30-cycle RUL metrics
+remain intentionally scoped to FD001; the 10-cycle FD001--FD004 matrix is not
+directly comparable to the primary 30-cycle result.
+ENVIRONMENT LIMIT: Tectonic continues to emit the known Fontconfig diagnostic
+and absolute Windows font warnings; PDF build and visual review succeeded.
+
 PCA--ARIMA Health Index update: 2026-09-23
 SCOPE: train-only Health Index PCA, representative-engine selection, ARIMA
 forecast, diagnostics, dependency manifests, report synchronization and
@@ -613,3 +632,16 @@ WP2 protocol and baseline update (2026-09-23)
   undefined-reference, undefined-citation, overfull or underfull matches.
   Rendered protocol figure, discussion and appendix pages were checked without
   visible clipping or overlap.
+
+README status cleanup: 2026-09-25
+SCOPE: root README files and public output README descriptions; no code, raw data,
+model artifact or metric changes.
+PASS: removed milestone identifiers and plan-oriented wording from `README.md`,
+`README.vi.md`, `report/README.md` and the public output READMEs. Replaced them
+with current capabilities, dataset scope, commands, artifacts and limitations.
+PASS: both root README files now document all four subset sizes and distinguish
+FD001 primary analysis from the FD001--FD004 supplemental matrix.
+PASS: search across public README files found no remaining implementation
+milestone or roadmap markers; citation keys in `references/README.md` remain
+unchanged because they identify bibliography entries, not project stages.
+PASS: `git diff --check` passed.

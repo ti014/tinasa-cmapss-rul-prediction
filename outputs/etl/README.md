@@ -1,6 +1,6 @@
 # ETL Silver/Gold FD001
 
-Mốc M3.1 đã hiện thực hóa pipeline Pandas cho Bronze → Silver → Gold và chạy
+Pipeline Pandas cho Bronze → Silver → Gold đã được chạy và
 PySpark parity trên hai file observations FD001. Pipeline đọc raw qua
 reader/validator hiện có, giữ checksum input, ghi observations typed vào Silver
 Parquet, tạo train RUL trong Silver và tổng hợp một dòng cho mỗi

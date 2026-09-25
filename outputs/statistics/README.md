@@ -1,12 +1,12 @@
 # Thống kê suy luận FD001 train
 
-Mốc M2.3a--M2.3b đã xuất các tệp đầu ra thống kê suy luận từ
+Artifact đã xuất các tệp thống kê suy luận từ
 `data/raw/train_FD001.txt`. Phân tích so sánh giá trị trung bình của 30 cycles
 đầu và 30 cycles cuối trong cùng một động cơ train, cho từng sensor. Đây là
 bằng chứng thống kê trên train, không phải lựa chọn đặc trưng (feature selection)
-và không đọc `test_FD001.txt` hoặc `RUL_FD001.txt`. M2.3b bổ sung hai hình:
+và không đọc `test_FD001.txt` hoặc `RUL_FD001.txt`. Artifact gồm hai hình:
 phân phối `difference` theo engine và mean paired difference kèm bootstrap CI
-95%. M2.4 đã kiểm tra lại toàn bộ notebook từ hai fresh kernels và chạy
+95%. Validation chạy lại notebook từ hai fresh kernels và chạy
 train-only runtime audit có negative proof cho cả hai file test.
 
 ![Quy trình thống kê FD001](../../assets/diagrams/fd001-statistics.svg)
@@ -43,7 +43,7 @@ Có thể chạy cùng logic không qua giao diện notebook:
 Lệnh này mất vài phút vì cấu hình chính thức dùng Wilcoxon permutation 100.000
 resamples cho mỗi sensor kiểm định được.
 
-Để chạy toàn bộ validation M2.4 (focused tests, full suite, hai lần notebook,
+Để chạy validation (focused tests, full suite, hai lần notebook,
 so sánh hash của CSV/PNG và audit chặn mở file test), dùng từ thư mục gốc:
 
 ```powershell
@@ -51,7 +51,7 @@ so sánh hash của CSV/PNG và audit chặn mở file test), dùng từ thư m�
   --project-root . `
   --notebook notebooks/02_fd001_inference.ipynb `
   --output-dir outputs/statistics `
-  --work-dir tmp/statistics-reproducibility-m24 `
+  --work-dir tmp/statistics-reproducibility `
   --timeout 1800
 ```
 
@@ -74,8 +74,8 @@ outputs/statistics/
 ├── tables/
 │   ├── engine_sensor_pairs.csv   # 2.100 dòng: 100 động cơ × 21 sensor
 │   └── sensor_inference.csv      # 21 dòng: một dòng cho mỗi sensor
-├── run_info.json                 # Input hash, phiên bản, seed và cấu hình M2.0
-├── validation.json               # M2.3a + M2.4 validation, hash và reproducibility
+├── run_info.json                 # Input hash, phiên bản, seed và cấu hình suy luận
+├── validation.json               # Validation, hash và reproducibility
 └── README.md                     # File này
 ```
 
@@ -146,7 +146,7 @@ trên train FD001, các sensor này có chênh lệch có hệ thống giữa đ
 trung bình và CI mới cho biết độ lớn theo đơn vị gốc của từng sensor. Không so
 sánh trực tiếp độ lớn chênh lệch trung bình giữa hai sensor khác thang đo.
 
-Hai hình M2.3b làm rõ điểm này. `sensor_6` có 47 chênh lệch dương và 53 chênh
+Hai hình suy luận làm rõ điểm này. `sensor_6` có 47 chênh lệch dương và 53 chênh
 lệch bằng 0, nhưng mean difference chỉ khoảng `0,00045`. `sensor_9` có 71 chênh
 lệch dương và 29 chênh lệch âm, cho thấy mean difference cần được đọc cùng phân
 phối theo engine thay vì chỉ đọc một số tổng hợp.

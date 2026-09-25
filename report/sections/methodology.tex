@@ -2,7 +2,9 @@
 \label{sec:method}
 
 \subsection{Luồng xử lý}
-Hình~\ref{fig:pipeline} mô tả pipeline từ raw FD001 đến các kết quả đầu ra. Sau
+Hình~\ref{fig:pipeline} mô tả pipeline từ raw FD001--FD004 đến các kết quả đầu ra.
+Nhánh phân tích chi tiết và kết quả chính dùng FD001; ma trận transfer dùng cả bốn
+subset theo protocol riêng. Sau
 khi reader và validator kiểm tra dữ liệu, pipeline tách thành hai nhánh. Nhánh
 chính thực hiện ETL, xây dựng rolling features, huấn luyện và đánh giá RUL.
 Nhánh phụ gồm EDA, suy luận thống kê đầu/cuối và PCA--ARIMA trên Health Index;
@@ -13,7 +15,7 @@ Việc tách nhánh làm rõ dependency dữ liệu và ngăn kết quả mô t�
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.98\linewidth]{figures/pipeline.pdf}
-\caption[Luồng xử lý dữ liệu đã thực hiện]{Luồng xử lý từ dữ liệu FD001 đến
+\caption[Luồng xử lý dữ liệu đã thực hiện]{Luồng xử lý từ dữ liệu FD001--FD004 đến
 EDA, suy luận thống kê, ETL, rolling features, PCA--ARIMA train-only và đánh giá
 RUL. Lane train-only không đi vào RUL modeling; nhãn test chỉ được ghép sau
 khi final predictions đã được ghi.}
@@ -47,8 +49,9 @@ summary trên dữ liệu nhân bản, vì vậy không tạo thêm engine độ
 được dùng để kết luận về scalability của hệ thống phân tán.
 
 \subsection{Vai trò của thành phần Big Data}
-FD001 chỉ có 33.727 observations sau khi ghép train và test, nên chưa phải
-workload đủ lớn để kết luận về throughput của cluster. Thành phần Big Data của
+FD001 có 33.727 observations sau khi ghép train và test; toàn bộ bốn subset có
+265.256 observations trong các file observations. Đây vẫn chưa phải workload đủ
+lớn để kết luận về throughput của cluster. Thành phần Big Data của
 báo cáo được thể hiện ở ba lớp. Thứ nhất, data contract và validation kiểm soát
 veracity trước khi dữ liệu đi vào phân tích. Thứ hai, ETL tổ chức dữ liệu qua
 Bronze, Silver và Gold; Parquet giữ bảng phân tích còn SQLite cung cấp truy vấn

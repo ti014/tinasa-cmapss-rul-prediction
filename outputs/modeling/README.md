@@ -1,13 +1,13 @@
 # RUL modeling FD001
 
-Mốc modeling huấn luyện và đánh giá ba ứng viên dự đoán RUL từ artifact rolling
-features M3.2. Pipeline dùng 5-fold GroupKFold theo `engine_id`, chọn model theo
+Pipeline modeling huấn luyện và đánh giá ba ứng viên dự đoán RUL từ artifact rolling
+features. Pipeline dùng 5-fold GroupKFold theo `engine_id`, chọn model theo
 mean engine-level MAE trên out-of-fold validation và chỉ đọc `RUL_FD001.txt` sau
 khi đã ghi `final_predictions.parquet`.
 
 ## Cách chạy
 
-Từ thư mục gốc, sau khi đã có ETL M3.1 và rolling features M3.2:
+Từ thư mục gốc, sau khi đã có ETL và rolling features:
 
 ```powershell
 .venv\Scripts\python -m cmapss.modeling `

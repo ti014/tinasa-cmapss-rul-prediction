@@ -1,4 +1,4 @@
-"""Pipeline Pandas tham chiếu cho ETL Silver/Gold FD001.
+"""Pipeline Pandas tham chiếu cho ETL Silver/Gold C-MAPSS.
 
 Mốc ETL chỉ chuẩn hóa observations, tạo train targets và tổng hợp catalog
 engine. Rolling features, predictions và metrics sẽ dùng catalog này ở các
@@ -18,6 +18,7 @@ from typing import Any
 import pandas as pd
 
 from cmapss.data.contracts import (
+    DATASET_IDS,
     KEY,
     OBSERVATION_COLUMNS,
     TRAIN_TARGET_COLUMNS,
@@ -25,7 +26,7 @@ from cmapss.data.contracts import (
 )
 from cmapss.data.readers import read_observations
 from cmapss.data.targets import make_train_targets, validate_train_targets
-from cmapss.data.validation import validate_fd001_profile, validate_observations
+from cmapss.data.validation import validate_dataset_profile, validate_observations
 from cmapss.etl.contracts import (
     ETL_SCHEMA_VERSION,
     GOLD_ENGINE_COLUMNS,
@@ -43,6 +44,7 @@ class PandasETLResult:
     train_targets: pd.DataFrame
     engine_summary: pd.DataFrame
     input_sha256: dict[str, str]
+    dataset_id: str = "FD001"
 
     @property
     def row_counts(self) -> dict[str, int]:
@@ -70,11 +72,12 @@ def _canonical_observations(frames: list[pd.DataFrame]) -> pd.DataFrame:
     )
 
 
-def load_fd001(raw_dir: str | Path) -> tuple[pd.DataFrame, pd.DataFrame, dict[str, str]]:
-    """Đọc và kiểm tra train/test FD001 trước khi tạo artifact Silver.
+def load_dataset(raw_dir: str | Path, dataset_id: str = "FD001") -> tuple[pd.DataFrame, pd.DataFrame, dict[str, str]]:
+    """Đọc và kiểm tra train/test một subset C-MAPSS trước khi tạo Silver.
 
     Args:
-        raw_dir: Thư mục chứa `train_FD001.txt` và `test_FD001.txt`.
+        raw_dir: Thư mục chứa file `train_<dataset_id>.txt` và `test_<dataset_id>.txt`.
+        dataset_id: Một trong `FD001` đến `FD004`.
 
     Returns:
         Tuple gồm observations canonical, train targets và SHA-256 input.
@@ -88,13 +91,16 @@ def load_fd001(raw_dir: str | Path) -> tuple[pd.DataFrame, pd.DataFrame, dict[st
         >>> len(targets) == len(observations.query("split == 'train'"))
         True
     """
+    dataset_id = dataset_id.upper()
+    if dataset_id not in DATASET_IDS:
+        raise ContractError("DATASET_ID", dataset_id, f"dataset_id phải thuộc {DATASET_IDS}")
     raw_path = Path(raw_dir)
     frames: list[pd.DataFrame] = []
     input_sha256: dict[str, str] = {}
     for split in ("train", "test"):
-        path = raw_path / f"{split}_FD001.txt"
+        path = raw_path / f"{split}_{dataset_id}.txt"
         frame = read_observations(path, split=split)
-        validate_fd001_profile(frame, split=split)
+        validate_dataset_profile(frame, dataset_id=dataset_id, split=split)
         frames.append(frame)
         input_sha256[path.name] = _sha256(path)
 
@@ -104,6 +110,11 @@ def load_fd001(raw_dir: str | Path) -> tuple[pd.DataFrame, pd.DataFrame, dict[st
     validate_train_targets(train_observations, train_targets)
     train_targets = train_targets.loc[:, list(SILVER_TARGET_COLUMNS)].reset_index(drop=True)
     return observations, train_targets, input_sha256
+
+
+def load_fd001(raw_dir: str | Path) -> tuple[pd.DataFrame, pd.DataFrame, dict[str, str]]:
+    """Tương thích ngược cho loader FD001 cũ."""
+    return load_dataset(raw_dir, "FD001")
 
 
 def build_engine_summary(observations: pd.DataFrame) -> pd.DataFrame:
@@ -145,15 +156,16 @@ def build_engine_summary(observations: pd.DataFrame) -> pd.DataFrame:
     return summary.reset_index(drop=True)
 
 
-def run_pandas_etl(raw_dir: str | Path) -> PandasETLResult:
+def run_pandas_etl(raw_dir: str | Path, dataset_id: str = "FD001") -> PandasETLResult:
     """Chạy toàn bộ ETL Pandas trong bộ nhớ."""
-    observations, train_targets, input_sha256 = load_fd001(raw_dir)
+    observations, train_targets, input_sha256 = load_dataset(raw_dir, dataset_id)
     engine_summary = build_engine_summary(observations)
     return PandasETLResult(
         observations=observations,
         train_targets=train_targets,
         engine_summary=engine_summary,
         input_sha256=input_sha256,
+        dataset_id=dataset_id.upper(),
     )
 
 
@@ -234,6 +246,7 @@ def write_pandas_artifacts(result: PandasETLResult, output_dir: str | Path) -> d
     payload: dict[str, Any] = {
         "schema_version": ETL_SCHEMA_VERSION,
         "pipeline": "pandas",
+        "dataset_id": result.dataset_id,
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
         "input_sha256": result.input_sha256,
         "row_counts": result.row_counts,

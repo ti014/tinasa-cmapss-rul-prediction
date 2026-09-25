@@ -4,15 +4,15 @@
 
 # NASA C-MAPSS RUL Prediction Pipeline
 
-A reproducible Big Data course project for analyzing multivariate turbofan sensor data and predicting Remaining Useful Life (RUL) on the NASA C-MAPSS FD001 dataset. The project emphasizes data provenance, statistically sound analysis, leakage-safe evaluation, scalable ETL, and explainable visual reporting.
+A reproducible Big Data course project for analyzing multivariate turbofan sensor data and predicting Remaining Useful Life (RUL) on the NASA C-MAPSS FD001 dataset. The raw data directory now stores all four NASA C-MAPSS subsets, FD001--FD004; the primary report remains FD001-focused and includes a supplemental cross-dataset matrix. The project emphasizes data provenance, statistically sound analysis, leakage-safe evaluation, scalable ETL, and explainable visual reporting.
 
 ## Project Status
 
-This repository now provides **FD001 data validation, train RUL targets, a completed train-only EDA notebook (milestone 1), persisted M2.3a--M2.4 train-only sensor inference artifacts (milestone 2), Pandas/PySpark Silver/Gold ETL with benchmark and parity artifacts (M3.1), deterministic 30-cycle rolling features (M3.2), leakage-safe RUL model evaluation (M3.3), and train-only PCA--ARIMA Health Index analysis (M3.4)**.
+This repository provides **FD001 data validation, train RUL targets, an executed train-only EDA notebook, sensor inference artifacts, Pandas/PySpark Silver/Gold ETL, 30-cycle rolling features, grouped RUL evaluation, train-only PCA--ARIMA Health Index analysis, and a supplemental 10-cycle evaluation matrix for FD001--FD004**.
 
 Available now:
 
-- The original NASA C-MAPSS FD001 files and source documentation.
+- The original NASA C-MAPSS FD001--FD004 files and source documentation; the primary report uses FD001 and the supplemental matrix uses all four subsets.
 - Readers, validators, and tests for row counts, engines, schema, keys, cycles, and train RUL.
 - A [data contract](data/CONTRACTS.md), JSON validation CLI, and dependency lockfile.
 - An [executed EDA notebook](notebooks/01_fd001_eda.ipynb), 12 CSV tables,
@@ -68,8 +68,10 @@ Available now:
 
 Final handoff:
 
-- [Presentation deck](slides/cmapss_fd001_presentation.pptx) and
-  [handoff checklist](handoff/FINAL_HANDOFF.md) are available.
+- The [15-slide presentation deck](slides/cmapss_fd001_presentation.pptx) now
+  explains the problem, data, evaluation protocol, RUL results, Health Index,
+  OOF warning evidence, transfer evaluation, reproducibility, and limitations. The [handoff
+  checklist](handoff/FINAL_HANDOFF.md) lists validation.
 
 Installation, data validation, notebook, ETL, feature-generation, modeling and
 time-series instructions are available below. The dashboard requires the
@@ -104,7 +106,7 @@ Each observation contains:
 - Three operational settings.
 - Twenty-one sensor measurements.
 
-FD001 represents one operating condition and one High-Pressure Compressor degradation mode. The signals contain simulated sensor noise.
+FD001 represents one operating condition and one High-Pressure Compressor degradation mode. FD002--FD004 add operating conditions and fault modes. The signals contain simulated sensor noise. Supplemental FD002--FD004 metrics are recorded in `outputs/cross_dataset`.
 
 ### Provenance and Integrity
 
@@ -189,6 +191,18 @@ written. HistGradientBoostingRegressor is currently selected. Final test metrics
 are mean engine-level MAE 15.3490, RMSE 20.5413, and NASA score 1513.2577, with
 bootstrap confidence intervals recorded in `outputs/modeling/tables/final_metrics.json`.
 
+### FD002--FD004 Evaluation
+
+The raw archive now contains FD001--FD004. The additional matrix uses the same
+pipeline with a 10-cycle window because the shortest FD004 test engine has 19
+cycles; it does not replace the published FD001 result that uses a 30-cycle
+window. Within-subset MAE is 21.9258 on FD001, 22.3556 on FD002, 28.3255 on
+FD003, and 27.2218 on FD004. Keeping the model fit on FD001 frozen and
+transferring it to other subsets gives MAE 60.3215 on FD002, 47.3949 on FD003,
+and 58.5731 on FD004. The FD001 model should therefore not be applied directly
+to another subset without retraining or domain adaptation. See the [transfer
+evaluation artifact](outputs/cross_dataset/README.md).
+
 ### ARIMA Analysis
 
 ARIMA is a secondary time-series analysis, not the primary RUL model. The
@@ -270,9 +284,9 @@ Current and planned public project structure:
 ```text
 .
 ├── data/
-│   ├── raw/                 # Original FD001 files and provenance notes
+│   ├── raw/                 # Original FD001--FD004 files and provenance notes
 │   └── archive/             # Data retained for comparison, not active modeling
-├── references/              # Bibliography, reading guide, and available papers
+├── references/              # Bibliography, reading guide, papers, assignment context
 ├── notebooks/               # Executed FD001 train EDA and statistics notebooks
 ├── src/cmapss/              # data/, statistics/, etl/, features/, modeling/, timeseries/, eda.py, validate.py
 ├── tests/                   # Data contract, CLI, EDA, statistics, ETL, features, modeling, timeseries, and reproducibility tests
@@ -283,6 +297,7 @@ Current and planned public project structure:
 ├── outputs/features/        # Gold rolling feature Parquet and metadata
 ├── outputs/modeling/        # Grouped CV, predictions, model artifact, final metrics
 ├── outputs/timeseries/      # Train-only PCA--ARIMA Health Index artifacts
+├── outputs/cross_dataset/   # FD001--FD004 ETL, features, and transfer results
 ├── assets/diagrams/         # Editable draw.io sources, SVG previews, URL handles
 ├── pyproject.toml           # Package and direct dependencies
 ├── requirements.txt         # Pip installation: local package and runtime libraries
@@ -291,8 +306,10 @@ Current and planned public project structure:
 ├── requirements-dashboard.txt # Optional Streamlit dashboard dependencies
 ├── uv.lock                  # Locked dependency versions
 ├── report/                  # Living LaTeX/PDF report, progress and evidence
-├── slides/                  # Validated 10-slide presentation deck
+├── slides/                  # Beamer source/PDF and validated 15-slide deck
+│   └── archive/             # Superseded decks and builders
 ├── handoff/                 # Demo script and final handoff checklist
+│   └── archive/             # Legacy speech source
 ├── app.py                   # Streamlit dashboard entry point
 ├── README.md                # English documentation
 └── README.vi.md             # Vietnamese documentation
@@ -365,7 +382,7 @@ for conditions and validation limits.
 The canonical overall diagram is rendered from the TikZ source used by the
 report. It keeps EDA, paired statistics, and PCA--ARIMA as independent
 train-only branches; the Silver/Gold path feeds rolling features and RUL
-modeling; `RUL_FD001.txt` is joined only during final evaluation.
+modeling; each subset's RUL file is joined only during its final evaluation.
 
 ![FD001 overall data pipeline](assets/diagrams/fd001-pipeline.png)
 
@@ -386,7 +403,7 @@ The validated runs used fresh kernels and produced identical artifacts in the
 same environment; the EDA checkpoint suite passed **69 tests**. The current
 repository-wide suite, including M2.3a artifact export tests, the M2.4 runtime
 audit, M3.1 ETL checks, M3.2 feature checks, grouped modeling checks and
-PCA--ARIMA and end-to-end reproducibility checks, passed **151 tests** after the
+PCA--ARIMA and end-to-end reproducibility checks, passed **154 tests** after the
 engine-bootstrap, temporal-fit and warning-timing corrections.
 
 ![FD001 train EDA workflow](assets/diagrams/fd001-eda.svg)
@@ -501,6 +518,22 @@ The current run selects `hist_gradient_boosting` with final mean engine-level
 MAE 15.3490, RMSE 20.5413, and NASA score 1513.2577 on 100 test engines.
 See [modeling artifacts and validation](outputs/modeling/README.md) for fold
 metrics, final predictions, final evaluation, figures, and limitations.
+
+### Run FD001--FD004 evaluation
+
+To reproduce the within-subset and transfer matrix, run:
+
+```powershell
+.venv\Scripts\python -m cmapss.cross_dataset `
+  --raw-dir data/raw `
+  --output-root outputs/cross_dataset `
+  --window-cycles 10
+```
+
+The command creates four within-subset evaluations and three FD001 transfer
+evaluations. See the [cross-dataset artifact](outputs/cross_dataset/README.md).
+The matrix uses a 10-cycle window because FD004 has a 19-cycle test engine; it
+does not replace the published FD001 30-cycle result.
 
 ### Run the PCA--ARIMA analysis
 

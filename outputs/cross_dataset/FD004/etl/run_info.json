@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "pipeline": "pandas",
+  "dataset_id": "FD004",
+  "generated_at_utc": "2026-09-24T23:36:22.131691+00:00",
+  "input_sha256": {
+    "train_FD004.txt": "27ef6160b6a1dcb2613a88de9c239f763b223f02cdc41dc5cdedc5dc189b6218",
+    "test_FD004.txt": "1dc675fff0624bac10786927c6715b37d1297657137400d2b1a3138d777a3ba5"
+  },
+  "row_counts": {
+    "observations": 102463,
+    "train_targets": 61249,
+    "engine_summary": 497
+  },
+  "engine_counts": {
+    "train": 249,
+    "test": 248
+  },
+  "schemas": {
+    "silver_observations": [
+      "split",
+      "engine_id",
+      "cycle",
+      "setting_1",
+      "setting_2",
+      "setting_3",
+      "sensor_1",
+      "sensor_2",
+      "sensor_3",
+      "sensor_4",
+      "sensor_5",
+      "sensor_6",
+      "sensor_7",
+      "sensor_8",
+      "sensor_9",
+      "sensor_10",
+      "sensor_11",
+      "sensor_12",
+      "sensor_13",
+      "sensor_14",
+      "sensor_15",
+      "sensor_16",
+      "sensor_17",
+      "sensor_18",
+      "sensor_19",
+      "sensor_20",
+      "sensor_21"
+    ],
+    "silver_train_targets": [
+      "split",
+      "engine_id",
+      "cycle",
+      "rul"
+    ],
+    "gold_engine_summary": [
+      "split",
+      "engine_id",
+      "n_cycles",
+      "first_cycle",
+      "last_cycle"
+    ]
+  },
+  "outputs": {
+    "silver_observations": "silver\\observations.parquet",
+    "silver_train_targets": "silver\\train_targets.parquet",
+    "gold_engine_summary": "gold\\engine_summary.parquet",
+    "gold_sqlite": "gold\\etl.sqlite"
+  },
+  "rolling_features": {
+    "status": "separate_artifact",
+    "reason": "M3.1 ETL chỉ tạo engine summary; M3.2 ghi rolling features riêng tại outputs/features."
+  }
+}

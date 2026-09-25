@@ -56,7 +56,8 @@ contract để phân tích hay không; (ii) các sensor biến đổi như thế
 trên cùng input hay không; và (iv) trailing window 30 cycles cùng mô hình được
 chọn cho kết quả RUL nào trong protocol đánh giá theo engine; (v) OOF prediction
 có thể tạo cảnh báo RUL thấp minh bạch đến mức nào khi ngưỡng được cố định
-trước.
+trước. Thực nghiệm bổ sung dùng cùng protocol window 10 cycles để đánh giá
+riêng khả năng chuyển model FD001 sang các subset FD002--FD004.
 
 \subsection{Đóng góp và phạm vi của báo cáo}
 Đóng góp chính của báo cáo là một quy trình có ranh giới dữ liệu rõ ràng: raw
@@ -76,7 +77,7 @@ trì. Cycle cũng không được chuyển sang giờ hoặc ngày vì không c�
 \subsection{Nguồn dữ liệu và lý do lựa chọn}
 NASA C-MAPSS mô phỏng các chuỗi vận hành đến khi hỏng của động cơ turbofan. Nguồn dữ liệu được ghi nhận tại NASA Open Data~\cite{nasaCmapssDataset}; tài liệu nền tảng đi kèm bộ dữ liệu là công trình của Saxena và cộng sự~\cite{saxena2008damage}. Mô tả đi kèm file raw xác định FD001 có một điều kiện vận hành và một dạng suy giảm High-Pressure Compressor (HPC, máy nén áp suất cao).
 
-FD001 được chọn vì có lịch sử train đầy đủ đến khi hỏng, test bị cắt và nhãn đánh giá tách riêng, phù hợp với cách xây dựng bài toán RUL. Chỉ sử dụng một tập con giúp kiểm soát phạm vi thực nghiệm và làm rõ từng bước xử lý. Đổi lại, bằng chứng chỉ áp dụng trong điều kiện mô phỏng đang xét; không đủ để khẳng định khả năng khái quát trên động cơ thực tế hoặc điều kiện vận hành khác.
+FD001 được chọn làm tập chính vì có lịch sử train đầy đủ đến khi hỏng, test bị cắt và nhãn đánh giá tách riêng, phù hợp với cách xây dựng bài toán RUL. Tập trung vào một subset giúp kiểm soát phạm vi phân tích chính và làm rõ từng bước xử lý. FD002--FD004 được dùng riêng trong thực nghiệm bổ sung để kiểm tra khả năng chuyển miền của model FD001; cả bốn subset đều là dữ liệu mô phỏng, nên kết quả chưa cho phép khẳng định hiệu quả trên động cơ thực tế.
 
 \begin{table}[H]
 \centering

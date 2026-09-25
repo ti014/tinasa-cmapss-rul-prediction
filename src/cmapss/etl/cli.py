@@ -31,9 +31,9 @@ def _parse_scales(value: str) -> tuple[int, ...]:
     return scales
 
 
-def _run_parity(result: Any, raw_dir: Path, output_dir: Path) -> dict[str, Any]:
+def _run_parity(result: Any, raw_dir: Path, output_dir: Path, dataset_id: str) -> dict[str, Any]:
     """Collect Spark boundary và so sánh với Pandas."""
-    spark_result = run_spark_etl(raw_dir)
+    spark_result = run_spark_etl(raw_dir, dataset_id=dataset_id)
     try:
         spark_observations, spark_targets, spark_summary = spark_result.to_pandas()
         checks = [
@@ -71,7 +71,8 @@ def main(argv: list[str] | None = None) -> int:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
         sys.stderr.reconfigure(encoding="utf-8", errors="replace")
-    parser = argparse.ArgumentParser(description="ETL Silver/Gold FD001 bằng Pandas và PySpark.")
+    parser = argparse.ArgumentParser(description="ETL Silver/Gold C-MAPSS bằng Pandas và PySpark.")
+    parser.add_argument("--dataset-id", choices=("FD001", "FD002", "FD003", "FD004"), default="FD001")
     parser.add_argument("--raw-dir", type=Path, default=Path("data/raw"))
     parser.add_argument("--output-dir", type=Path, default=Path("outputs/etl"))
     parser.add_argument("--with-spark", action="store_true", help="Chạy PySpark và parity.")
@@ -79,7 +80,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--benchmark-repetitions", type=int, default=2)
     args = parser.parse_args(argv)
     try:
-        result = run_pandas_etl(args.raw_dir)
+        result = run_pandas_etl(args.raw_dir, args.dataset_id)
         write_pandas_artifacts(result, args.output_dir)
         benchmark = benchmark_pandas(
             result.observations,
@@ -90,7 +91,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         _write_json(args.output_dir / "benchmark.json", benchmark)
         if args.with_spark:
-            _run_parity(result, args.raw_dir, args.output_dir)
+            _run_parity(result, args.raw_dir, args.output_dir, args.dataset_id)
         print(f"ETL Pandas hoàn tất: {args.output_dir}")
         return 0
     except (OSError, ValueError, RuntimeError, ParityError, SparkRuntimeUnavailable) as error:

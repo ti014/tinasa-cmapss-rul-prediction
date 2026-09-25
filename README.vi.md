@@ -4,7 +4,7 @@
 
 # Pipeline dự đoán RUL trên NASA C-MAPSS
 
-Repository này phục vụ báo cáo cuối kỳ môn Phân tích dữ liệu lớn. Báo cáo xây dựng quy trình có khả năng tái lập để phân tích dữ liệu cảm biến đa biến và dự đoán Remaining Useful Life (RUL, tuổi thọ hữu ích còn lại) trên NASA C-MAPSS FD001. Trọng tâm gồm nguồn gốc dữ liệu rõ ràng, phân tích thống kê phù hợp, đánh giá tránh data leakage (rò rỉ dữ liệu), ETL có khả năng mở rộng và trực quan hóa kết quả dễ diễn giải.
+Repository này phục vụ báo cáo cuối kỳ môn Phân tích dữ liệu lớn. Báo cáo xây dựng quy trình có khả năng tái lập để phân tích dữ liệu cảm biến đa biến và dự đoán Remaining Useful Life (RUL, tuổi thọ hữu ích còn lại) trên NASA C-MAPSS FD001. Kho raw hiện lưu đủ FD001--FD004; báo cáo có kết quả chính trên FD001 và ma trận đánh giá bổ sung trên cả bốn subset. Trọng tâm gồm nguồn gốc dữ liệu rõ ràng, phân tích thống kê phù hợp, đánh giá tránh data leakage (rò rỉ dữ liệu), ETL có khả năng mở rộng và trực quan hóa kết quả dễ diễn giải.
 
 ## Trạng thái
 
@@ -12,7 +12,7 @@ Repository đã có **gói kiểm tra dữ liệu FD001, nhãn RUL train, notebo
 
 Đã có:
 
-- Các file NASA C-MAPSS FD001 nguyên bản và tài liệu mô tả nguồn.
+- Các file NASA C-MAPSS FD001--FD004 nguyên bản và tài liệu mô tả nguồn; kết quả chính dùng FD001, ma trận bổ sung đánh giá cả bốn subset.
 - Trình đọc (reader), bộ kiểm tra (validator) và kiểm thử số dòng, số động cơ, schema, khóa, cycle và nhãn RUL train.
 - [Data contract (đặc tả dữ liệu)](data/CONTRACTS.md), CLI xuất báo cáo JSON và tệp khóa phiên bản dependency.
 - [Notebook EDA đã chạy](notebooks/01_fd001_eda.ipynb), 12 bảng CSV,
@@ -60,8 +60,10 @@ Repository đã có **gói kiểm tra dữ liệu FD001, nhãn RUL train, notebo
 
 Gói bàn giao cuối:
 
-- Đã có [slide trình bày](slides/cmapss_fd001_presentation.pptx) và
-  [checklist bàn giao](handoff/FINAL_HANDOFF.md).
+- Đã có [slide trình bày](slides/cmapss_fd001_presentation.pptx) gồm 15 trang,
+  giải thích từ bài toán, dữ liệu và protocol đến kết quả RUL, Health Index,
+  cảnh báo OOF, giới hạn và ma trận transfer FD001--FD004;
+  [checklist bàn giao](handoff/FINAL_HANDOFF.md) ghi nguồn kiểm tra.
 
 Lệnh cài đặt, kiểm tra dữ liệu, mở notebook, chạy ETL, tạo rolling features,
 modeling và PCA--ARIMA có ở phần Bắt đầu. Dashboard dùng dependency tùy chọn
@@ -88,6 +90,7 @@ Báo cáo sử dụng **NASA C-MAPSS FD001**, bộ dữ liệu mô phỏng quá 
 | `train_FD001.txt` | Lịch sử đầy đủ đến khi hỏng của 100 động cơ | 20.631 dòng |
 | `test_FD001.txt` | Lịch sử bị cắt trước khi hỏng của 100 động cơ khác | 13.096 dòng |
 | `RUL_FD001.txt` | RUL thật tại cycle quan sát cuối của từng động cơ trong tập test | 100 nhãn |
+| `train_FD002.txt`–`train_FD004.txt`, `test_FD002.txt`–`test_FD004.txt`, `RUL_FD002.txt`–`RUL_FD004.txt` | Ba subset bổ sung để đánh giá chuyển miền | Xem `outputs/cross_dataset` |
 
 Mỗi quan sát gồm:
 
@@ -96,7 +99,7 @@ Mỗi quan sát gồm:
 - Ba thông số vận hành (operational settings).
 - Giá trị của 21 cảm biến (sensor measurements).
 
-FD001 đại diện cho một điều kiện vận hành và một dạng suy giảm High-Pressure Compressor. Tín hiệu chứa nhiễu cảm biến mô phỏng.
+FD001 đại diện cho một điều kiện vận hành và một dạng suy giảm High-Pressure Compressor. FD002--FD004 mở rộng số điều kiện vận hành và fault mode. Tín hiệu chứa nhiễu cảm biến mô phỏng. Ma trận metric bổ sung cho FD002--FD004 nằm trong `outputs/cross_dataset`.
 
 ### Nguồn gốc và tính toàn vẹn
 
@@ -181,6 +184,17 @@ HistGradientBoostingRegressor đang là model được chọn. Metric test cuố
 mean engine-level MAE 15,3490, RMSE 20,5413 và NASA score 1.513,2577; khoảng tin
 cậy bootstrap được lưu trong `outputs/modeling/tables/final_metrics.json`.
 
+### Đánh giá FD002--FD004
+
+Kho raw đã có đủ FD001--FD004. Ma trận bổ sung dùng cùng pipeline với window 10
+cycles vì test FD004 có engine ngắn nhất 19 cycles; kết quả này không thay thế
+metric chính FD001 dùng window 30. Evaluation nội bộ đạt MAE 21,9258 trên FD001,
+22,3556 trên FD002, 28,3255 trên FD003 và 27,2218 trên FD004. Khi giữ nguyên
+model fit trên FD001 rồi transfer sang dataset khác, MAE là 60,3215 trên FD002,
+47,3949 trên FD003 và 58,5731 trên FD004. Kết quả cho thấy model FD001 không nên
+được dùng trực tiếp cho subset khác nếu chưa retraining hoặc domain adaptation.
+Xem [artifact ma trận transfer](outputs/cross_dataset/README.md).
+
 ### Phân tích ARIMA
 
 ARIMA là phân tích chuỗi thời gian phụ, không phải mô hình RUL chính. Pipeline
@@ -260,9 +274,9 @@ Cấu trúc hiện có và dự kiến của repository:
 ```text
 .
 ├── data/
-│   ├── raw/                 # FD001 nguyên bản và ghi chú nguồn
+│   ├── raw/                 # FD001--FD004 nguyên bản và ghi chú nguồn
 │   └── archive/             # Dữ liệu lưu để đối chiếu, không dùng cho mô hình chính
-├── references/              # Danh mục tài liệu, hướng dẫn đọc và các bài báo hiện có
+├── references/              # Tài liệu tham khảo và bối cảnh assignment
 ├── notebooks/               # Notebook EDA và thống kê train FD001 đã chạy
 ├── src/cmapss/              # data/, statistics/, etl/, features/, modeling/, timeseries/, eda.py, validate.py
 ├── tests/                   # Kiểm thử data contract, CLI, EDA, thống kê, ETL, features, modeling, timeseries và tái lập
@@ -273,6 +287,7 @@ Cấu trúc hiện có và dự kiến của repository:
 ├── outputs/features/        # Parquet Gold rolling features và metadata
 ├── outputs/modeling/        # Grouped CV, prediction, model artifact và final metrics
 ├── outputs/timeseries/      # Artifact Health Index và PCA--ARIMA train-only
+├── outputs/cross_dataset/   # ETL, features và kết quả transfer FD001--FD004
 ├── assets/diagrams/         # Nguồn draw.io, bản xem trước SVG và file URL
 ├── pyproject.toml           # Thông tin package và dependency trực tiếp
 ├── requirements.txt         # Cài bằng pip: package và thư viện chạy chương trình
@@ -281,8 +296,10 @@ Cấu trúc hiện có và dự kiến của repository:
 ├── requirements-dashboard.txt # Dependency Streamlit tùy chọn cho dashboard
 ├── uv.lock                  # Phiên bản dependencies đã khóa
 ├── report/                  # Nguồn LaTeX/PDF và hình của báo cáo
-├── slides/                  # Slide trình bày 10 trang đã kiểm tra
+├── slides/                  # Source và PDF Beamer, deck PowerPoint 15 slide
+│   └── archive/             # Deck/script cũ để đối chiếu
 ├── handoff/                 # Kịch bản demo và checklist bàn giao cuối
+│   └── archive/             # Kịch bản Markdown cũ
 ├── app.py                   # Entry point Streamlit
 ├── README.md                # Tài liệu tiếng Anh
 └── README.vi.md             # Tài liệu tiếng Việt
@@ -375,7 +392,7 @@ Các lần kiểm tra dùng kernel mới đã tạo tệp đầu ra giống nhau
 trường; bộ kiểm thử tại mốc nghiệm thu EDA đạt **69 tests**. Toàn bộ bộ kiểm
 thử hiện tại, gồm kiểm thử xuất tệp đầu ra M2.3a, runtime audit M2.4 và kiểm
 tra ETL M3.1, kiểm tra features M3.2, modeling theo group, PCA--ARIMA và tái
-lập end-to-end, đạt **151 tests** sau khi sửa bootstrap theo engine, ranh giới
+lập end-to-end, đạt **154 tests** sau khi sửa bootstrap theo engine, ranh giới
 fit temporal của PCA--ARIMA và kiểm tra warning timing.
 
 ![Quy trình EDA train FD001](assets/diagrams/fd001-eda.svg)
@@ -486,6 +503,21 @@ Lần chạy hiện tại chọn `hist_gradient_boosting`, đạt mean engine-le
 15,3490, RMSE 20,5413 và NASA score 1.513,2577 trên 100 test engines.
 Xem [artifact và validation modeling](outputs/modeling/README.md) để biết fold
 metrics, final predictions, final evaluation, hình và giới hạn.
+
+### Chạy evaluation FD001--FD004
+
+Sau khi muốn tái tạo ma trận within-subset và transfer, chạy:
+
+```powershell
+.venv\Scripts\python -m cmapss.cross_dataset `
+  --raw-dir data/raw `
+  --output-root outputs/cross_dataset `
+  --window-cycles 10
+```
+
+Lệnh tạo bốn evaluation nội bộ và ba evaluation transfer từ FD001. Xem [artifact
+ma trận](outputs/cross_dataset/README.md). Kết quả dùng window 10 vì FD004 có
+test engine ngắn nhất 19 cycles; không thay thế kết quả FD001 window 30.
 
 ### Chạy phân tích PCA--ARIMA
 

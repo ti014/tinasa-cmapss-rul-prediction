@@ -38,6 +38,7 @@ class RollingFeatureResult:
     features: pd.DataFrame
     input_sha256: dict[str, str]
     source_path: str | None = None
+    window_cycles: int = ROLLING_WINDOW_CYCLES
 
     @property
     def row_counts(self) -> dict[str, int]:
@@ -220,15 +221,20 @@ def read_silver_observations(path: str | Path) -> pd.DataFrame:
     return observations
 
 
-def run_rolling_feature_pipeline(silver_observations: str | Path) -> RollingFeatureResult:
+def run_rolling_feature_pipeline(
+    silver_observations: str | Path,
+    *,
+    window_cycles: int = ROLLING_WINDOW_CYCLES,
+) -> RollingFeatureResult:
     """Đọc Silver observations và tạo rolling features trong bộ nhớ."""
     input_path = Path(silver_observations)
     observations = read_silver_observations(input_path)
-    features = build_rolling_features(observations)
+    features = build_rolling_features(observations, window_cycles=window_cycles)
     return RollingFeatureResult(
         features=features,
         input_sha256={input_path.name: _sha256(input_path)},
         source_path=str(input_path),
+        window_cycles=window_cycles,
     )
 
 
@@ -272,7 +278,7 @@ def write_rolling_feature_artifacts(
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
         "source_path": result.source_path,
         "input_sha256": result.input_sha256,
-        "window_cycles": ROLLING_WINDOW_CYCLES,
+        "window_cycles": result.window_cycles,
         "row_counts": result.row_counts,
         "engine_counts": {
             split: int(result.features.loc[result.features["split"].eq(split), "engine_id"].nunique())
@@ -285,7 +291,7 @@ def write_rolling_feature_artifacts(
             "feature_column_count": len(feature_columns),
             "feature_column_pattern": "<sensor>__<stat>",
             "std_ddof": ROLLING_FEATURE_STD_DDOF,
-            "slope_positions": "1..30 within each trailing window",
+            "slope_positions": f"1..{result.window_cycles} within each trailing window",
             "requires_full_window": True,
             "uses_future_observations": False,
             "joins_test_labels": False,

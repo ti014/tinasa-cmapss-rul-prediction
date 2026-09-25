@@ -76,6 +76,14 @@ sau ngưỡng. Lead time có trung vị 30 cycles và miền 19--55. Cùng OOF �
 để chọn model, nên đây là mô tả nội bộ, không phải đánh giá độc lập về hiệu
 quả cảnh báo hoặc lịch bảo trì tối ưu.
 
+Thực nghiệm bổ sung dùng cùng window 10 cycles cho FD001--FD004 để giữ đủ các
+test engines. Với model train trên FD001 và áp dụng trực tiếp sang dataset khác,
+mean engine MAE lần lượt là 60,3215 cycles trên FD002, 47,3949 trên FD003 và
+58,5731 trên FD004. Các giá trị này cao hơn evaluation nội bộ trên từng subset
+theo cùng protocol window 10, cho thấy khả năng chuyển miền của model FD001 còn
+hạn chế. Metric bổ sung không được so trực tiếp với kết quả chính dùng window
+30 cycles.
+
 Kết quả cho thấy pipeline có thể tái lập từ raw FD001 và bảo toàn ranh giới
 train/test trong quá trình xử lý. Tuy nhiên, FD001 chỉ đại diện cho một điều
 kiện vận hành và một dạng suy giảm trong môi trường mô phỏng. Vì dữ liệu không

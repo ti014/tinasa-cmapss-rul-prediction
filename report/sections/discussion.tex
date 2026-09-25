@@ -50,8 +50,11 @@ riêng; 100\% từng phát cảnh báo không thay thế được đánh giá n�
 
 \subsection{Giới hạn phương pháp}
 Thứ nhất, FD001 chỉ gồm một điều kiện vận hành và một dạng suy giảm mô phỏng.
-Không có đánh giá trên tập dữ liệu độc lập hoặc fault mode khác, nên chưa thể
-khẳng định khả năng khái quát của metric. Thứ hai, test evaluation chỉ có một
+Ma trận bổ sung với window 10 cycles cho thấy MAE transfer từ FD001 tăng lên
+60,3215 cycles trên FD002, 47,3949 trên FD003 và 58,5731 trên FD004, trong khi
+evaluation nội bộ của các subset nằm khoảng 21,9258--28,3255 cycles. Kết quả này
+cho thấy dataset shift có ảnh hưởng đáng kể trong protocol đang xét; nó không
+cho phép suy ra một metric chung cho mọi điều kiện. Thứ hai, test evaluation chỉ có một
 điểm cắt cho mỗi engine; cách đánh giá này không mô tả sai số khi mô hình được
 gọi lặp lại ở nhiều cycle. Thứ ba, runtime benchmark hiện chỉ đo Pandas trên
 dữ liệu nhân bản trong bộ nhớ, với hai lần đo mỗi scale. PySpark mới được
@@ -67,7 +70,9 @@ Khả năng khái quát có thể được khảo sát thêm bằng cách thay �
 quy trình chọn model. Với Health Index, cần fit transformer ngoài các engine
 được forecast và báo cáo đồng thời failure rate, coverage và horizon.
 
-Các bộ FD002--FD004, mô hình LSTM/Transformer và hệ thống cluster/streaming chỉ
-nên được xem xét khi câu hỏi nghiên cứu, workload và chi phí đánh giá được xác
-định rõ. Khi thiếu cost, downtime và intervention, chưa thể chuyển kết quả RUL
+Kết quả FD002--FD004 hiện đã cung cấp một phép kiểm tra chuyển miền đầu tiên.
+Các bước tiếp theo có thể đánh giá retraining trên từng subset, chuẩn hóa theo
+operating condition hoặc domain adaptation. Mô hình LSTM/Transformer cần một
+giả thuyết về biểu diễn thời gian và comparison cùng protocol với baseline hiện
+tại. Khi thiếu cost, downtime và intervention, chưa thể chuyển kết quả RUL
 thành chính sách bảo trì.

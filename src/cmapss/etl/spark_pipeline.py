@@ -89,16 +89,20 @@ def _read_raw(spark: Any, path: Path, split: str) -> Any:
 def run_spark_etl(
     raw_dir: str | Path,
     *,
+    dataset_id: str = "FD001",
     spark: Any | None = None,
 ) -> SparkETLResult:
     """Chạy transform tương đương Pandas bằng Spark DataFrame."""
     _, F, _ = _spark_modules()
     owns_session = spark is None
     session = spark or create_spark_session()
+    dataset_id = dataset_id.upper()
+    if dataset_id not in {"FD001", "FD002", "FD003", "FD004"}:
+        raise ValueError(f"dataset_id không hợp lệ: {dataset_id}")
     raw_path = Path(raw_dir)
     try:
-        train = _read_raw(session, raw_path / "train_FD001.txt", "train")
-        test = _read_raw(session, raw_path / "test_FD001.txt", "test")
+        train = _read_raw(session, raw_path / f"train_{dataset_id}.txt", "train")
+        test = _read_raw(session, raw_path / f"test_{dataset_id}.txt", "test")
         observations = train.unionByName(test).orderBy(*KEY)
         max_cycles = train.groupBy("engine_id").agg(F.max("cycle").alias("max_cycle"))
         train_targets = (

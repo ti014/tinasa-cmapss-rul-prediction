@@ -8,6 +8,7 @@ from cmapss.etl.contracts import (
 from cmapss.etl.pandas_pipeline import (
     PandasETLResult,
     build_engine_summary,
+    load_dataset,
     load_fd001,
     run_pandas_etl,
     write_pandas_artifacts,
@@ -19,6 +20,7 @@ __all__ = [
     "SILVER_OBSERVATION_COLUMNS",
     "SILVER_TARGET_COLUMNS",
     "build_engine_summary",
+    "load_dataset",
     "load_fd001",
     "run_pandas_etl",
     "write_pandas_artifacts",

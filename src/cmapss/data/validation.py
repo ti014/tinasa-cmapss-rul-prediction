@@ -1,12 +1,12 @@
-"""Validator cho observations, nhãn test và profile FD001 đầy đủ."""
+"""Validator cho observations, nhãn test và profile C-MAPSS."""
 
 import numpy as np
 import pandas as pd
 from pandas.api.types import is_float_dtype, is_integer_dtype
 
 from cmapss.data.contracts import (
-    FD001_ENGINE_COUNT,
-    FD001_ROWS,
+    DATASET_IDS,
+    DATASET_PROFILES,
     KEY,
     MEASUREMENTS,
     OBSERVATION_COLUMNS,
@@ -64,19 +64,36 @@ def validate_observations(frame: pd.DataFrame, *, source: str = "observations") 
         raise ContractError("CYCLE_CONTINUITY", source, f"cycle không liên tục tại {key}")
 
 
-def validate_fd001_profile(frame: pd.DataFrame, *, split: Split) -> None:
-    """Đối chiếu file FD001 đầy đủ với số dòng, engine ID và cycle đầu."""
-    validate_observations(frame, source=f"FD001/{split}")
+def validate_dataset_profile(
+    frame: pd.DataFrame,
+    *,
+    dataset_id: str,
+    split: Split,
+    profile_rule: str = "DATASET_PROFILE",
+) -> None:
+    """Đối chiếu một file C-MAPSS đầy đủ với profile subset đã biết."""
+    dataset_id = dataset_id.upper()
+    if dataset_id not in DATASET_IDS:
+        raise ContractError("DATASET_ID", dataset_id, f"dataset_id phải thuộc {DATASET_IDS}")
+    validate_observations(frame, source=f"{dataset_id}/{split}")
     if split not in SPLITS or not frame["split"].eq(split).all():
-        raise ContractError("SPLIT", "FD001", f"cần một split duy nhất: {split}")
-    if len(frame) != FD001_ROWS[split]:
-        raise ContractError("FD001_PROFILE", split, f"cần {FD001_ROWS[split]} dòng, nhận {len(frame)}")
-    expected_ids = set(range(1, FD001_ENGINE_COUNT + 1))
+        raise ContractError("SPLIT", dataset_id, f"cần một split duy nhất: {split}")
+    profile = DATASET_PROFILES[dataset_id]
+    expected_rows = profile[f"{split}_rows"]
+    expected_engine_count = profile[f"{split}_engines"]
+    if len(frame) != expected_rows:
+        raise ContractError(profile_rule, f"{dataset_id}/{split}", f"cần {expected_rows} dòng, nhận {len(frame)}")
+    expected_ids = set(range(1, expected_engine_count + 1))
     if set(frame["engine_id"]) != expected_ids:
-        raise ContractError("FD001_PROFILE", split, "cần đúng engine ID 1–100")
+        raise ContractError(profile_rule, f"{dataset_id}/{split}", f"cần đúng engine ID 1–{expected_engine_count}")
     starts = frame.groupby("engine_id")["cycle"].min()
     if not starts.eq(1).all():
-        raise ContractError("FD001_PROFILE", split, "mỗi engine trong file đầy đủ phải bắt đầu tại cycle 1")
+        raise ContractError(profile_rule, f"{dataset_id}/{split}", "mỗi engine trong file đầy đủ phải bắt đầu tại cycle 1")
+
+
+def validate_fd001_profile(frame: pd.DataFrame, *, split: Split) -> None:
+    """Tương thích ngược cho validator FD001 cũ."""
+    validate_dataset_profile(frame, dataset_id="FD001", split=split, profile_rule="FD001_PROFILE")
 
 
 def validate_test_labels(
@@ -95,5 +112,5 @@ def validate_test_labels(
         raise ContractError("UNIQUE_KEY", source, "trùng khóa (split, engine_id)")
     if set(frame["engine_id"]) != set(range(1, len(frame) + 1)):
         raise ContractError("LABEL_MAPPING", source, "engine ID phải tương ứng các dòng 1–N của file nhãn")
-    if fd001 and len(frame) != FD001_ENGINE_COUNT:
+    if fd001 and len(frame) != DATASET_PROFILES["FD001"]["test_engines"]:
         raise ContractError("FD001_PROFILE", source, f"cần 100 nhãn, nhận {len(frame)}")

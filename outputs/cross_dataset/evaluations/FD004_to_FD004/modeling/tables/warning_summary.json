@@ -1,0 +1,34 @@
+{
+  "schema_version": 2,
+  "model_name": "hist_gradient_boosting",
+  "rul_threshold": 30,
+  "split": "train_oof",
+  "n_engines": 249,
+  "n_warning": 249,
+  "n_missed_warning": 0,
+  "n_warning_before_actual_threshold": 108,
+  "n_false_alarm": 0,
+  "n_negative_engines": 0,
+  "false_alarm_rate": null,
+  "timing_counts": {
+    "before_threshold": 108,
+    "at_threshold": 2,
+    "after_threshold": 139,
+    "at_failure": 0,
+    "no_warning": 0
+  },
+  "lead_time_distribution": {
+    "n": 249,
+    "min": 8.0,
+    "q25": 21.0,
+    "median": 28.0,
+    "q75": 40.0,
+    "max": 218.0
+  },
+  "warning_rate": 1.0,
+  "mean_lead_time_cycles": 33.208835341365464,
+  "false_alarm_definition": "predicted low-RUL warning without an observed low-RUL event; complete train runs make denominator zero",
+  "timing_definition": "relative to first actual RUL <= threshold; not a minimum maintenance lead-time requirement",
+  "missed_warning_definition": "no predicted RUL <= threshold anywhere in the observed trajectory, including the failure cycle",
+  "evaluation_limit": "OOF predictions exclude each engine from fitting, but the same OOF was used for model selection; descriptive internal evaluation only"
+}

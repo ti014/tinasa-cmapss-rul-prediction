@@ -1,0 +1,38 @@
+{
+  "schema_version": 3,
+  "evaluated_at_utc": "2026-09-24T23:42:00.358826+00:00",
+  "test_label_sha256": "c851dd96a6ea6998d3c4a8f834d3c8013aa90e93a6ed950dc826ad0655b2906b",
+  "metrics": {
+    "n_rows": 259,
+    "n_engines": 259,
+    "mean_window_mae": 60.321502473649105,
+    "mean_engine_mae": 60.321502473649105,
+    "rmse": 70.46034435273901,
+    "nasa_score": 14193434.084231107
+  },
+  "bootstrap": {
+    "resamples": 10000,
+    "seed": 42,
+    "method": "engine_cluster_resampling_with_replacement; mean_engine_mae preserves duplicate engine draws",
+    "intervals": {
+      "mean_engine_mae": {
+        "ci_lower": 56.047821330911255,
+        "ci_upper": 64.79655438545595
+      },
+      "rmse": {
+        "ci_lower": 66.27926322268712,
+        "ci_upper": 74.72039724294552
+      },
+      "nasa_score": {
+        "ci_lower": 7710357.358698049,
+        "ci_upper": 22106631.167967804
+      }
+    }
+  },
+  "outputs": {
+    "final_evaluation": "predictions\\final_evaluation.parquet",
+    "final_metrics": "tables\\final_metrics.json",
+    "final_true_vs_predicted": "figures\\final_true_vs_predicted.png",
+    "final_residuals_by_rul": "figures\\final_residuals_by_rul.png"
+  }
+}

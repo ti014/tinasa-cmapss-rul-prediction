@@ -31,8 +31,10 @@ MAE thấp hơn drift ở 7/10 engine, và coverage thay đổi từ 21,43\% đ�
 Kết quả này hỗ trợ phân tích Health Index, không thay thế dự đoán RUL.
 
 Đóng góp của báo cáo là một pipeline có thể tái lập, các phép so sánh được mô tả
-theo cùng evaluation protocol và các giới hạn được công bố. Phạm vi dữ liệu
-hiện tại chưa cho phép kết luận về lịch bảo trì tối ưu hoặc khả năng khái quát
-ra ngoài FD001. Những mở rộng như độ nhạy window, đánh giá temporal, outer
-evaluation hoặc dataset khác chỉ có ý nghĩa khi gắn với một câu hỏi nghiên cứu
-cụ thể.
+theo cùng evaluation protocol và các giới hạn được công bố. Ma trận bổ sung với
+window 10 cycles cho thấy model train trên FD001 có MAE 60,3215 trên FD002,
+47,3949 trên FD003 và 58,5731 trên FD004, cao hơn evaluation nội bộ của các
+subset. Vì vậy, kết luận chính được giữ ở phạm vi FD001; các subset khác cho
+thấy cần retraining hoặc phương pháp xử lý dataset shift trước khi áp dụng.
+Phạm vi dữ liệu hiện tại chưa cho phép kết luận về lịch bảo trì tối ưu hoặc hiệu
+quả triển khai thực tế.

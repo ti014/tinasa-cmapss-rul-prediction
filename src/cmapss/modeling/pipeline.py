@@ -401,7 +401,7 @@ def run_modeling_pipeline(
     *,
     config: ModelingConfig | None = None,
 ) -> ModelingResult:
-    """Chạy CV, chọn model và tạo 100 final predictions chưa join test labels."""
+    """Chạy CV, chọn model và tạo final prediction cho từng test engine."""
     run_config = config or ModelingConfig()
     feature_path = Path(rolling_features_path)
     target_path = Path(train_targets_path)
@@ -542,8 +542,13 @@ def evaluate_final_predictions(
     if not joined["_merge"].eq("both").all():
         key = joined.loc[joined["_merge"].ne("both"), ["split", "engine_id"]].iloc[0].to_dict()
         raise ContractError("FINAL_LABEL_JOIN", "final evaluation", f"thiếu test label cho {key}")
-    if len(joined) != 100 and test_labels["engine_id"].nunique() == 100:
-        raise ContractError("FINAL_PREDICTION_COUNT", "final predictions", "cần đúng 100 test engines")
+    expected_engines = int(test_labels["engine_id"].nunique())
+    if len(joined) != expected_engines:
+        raise ContractError(
+            "FINAL_PREDICTION_COUNT",
+            "final predictions",
+            f"cần đúng {expected_engines} test engines theo nhãn đầu vào",
+        )
     evaluation = joined.rename(columns={"rul": "y_true", "rul_pred": "y_pred"}).drop(columns=["_merge"])
     evaluation = add_prediction_errors(evaluation)
     return evaluation.loc[:, list(FINAL_EVALUATION_COLUMNS)].reset_index(drop=True)

@@ -1,0 +1,36 @@
+{
+  "source_dataset": "FD003",
+  "target_dataset": "FD003",
+  "evaluation_type": "within_subset",
+  "source_train_features": "outputs\\cross_dataset\\FD003\\features\\gold\\rolling_features.parquet",
+  "target_test_features": "outputs\\cross_dataset\\FD003\\features\\gold\\rolling_features.parquet",
+  "target_labels": "data\\raw\\RUL_FD003.txt",
+  "selected_model": "hist_gradient_boosting",
+  "metrics": {
+    "n_rows": 100,
+    "n_engines": 100,
+    "mean_window_mae": 28.32546490864543,
+    "mean_engine_mae": 28.32546490864543,
+    "rmse": 41.760638074745266,
+    "nasa_score": 4109107.7035579206
+  },
+  "bootstrap": {
+    "resamples": 10000,
+    "seed": 42,
+    "method": "engine_cluster_resampling_with_replacement; mean_engine_mae preserves duplicate engine draws",
+    "intervals": {
+      "mean_engine_mae": {
+        "ci_lower": 22.473594535124935,
+        "ci_upper": 34.55367019826809
+      },
+      "rmse": {
+        "ci_lower": 33.331896219702095,
+        "ci_upper": 49.954757314800595
+      },
+      "nasa_score": {
+        "ci_lower": 74199.95990103677,
+        "ci_upper": 11359738.093586795
+      }
+    }
+  }
+}

@@ -40,9 +40,11 @@ EDA, paired analysis và PCA--ARIMA trên train; thực hiện grouped
 cross-validation; ghi final predictions rồi mới ghép test labels. Kết quả được
 đối chiếu lại theo schema, khóa, số dòng và giá trị số sau mỗi bước ghi dữ liệu.
 
-Quy trình này chứng minh khả năng tái lập của lần chạy trên FD001 với cấu hình
-đã nêu. Nó không chứng minh scalability trên cluster, khả năng khái quát sang
-điều kiện vận hành khác hoặc tính phù hợp của metric cho quyết định bảo trì.
+Quy trình này kiểm tra khả năng tái lập của lần chạy chính trên FD001 với cấu
+hình đã nêu. Ma trận bổ sung trong \filepath{outputs/cross\_dataset/matrix.json}
+kiểm tra riêng transfer từ FD001 sang FD002--FD004 với window 10 cycles. Kết quả
+không chứng minh scalability trên cluster, khả năng khái quát tới động cơ thực
+tế hoặc tính phù hợp của metric cho quyết định bảo trì.
 
 \subsection{Nguồn đối chiếu kết quả}
 

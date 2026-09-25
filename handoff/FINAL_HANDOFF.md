@@ -1,27 +1,44 @@
-# Gói bàn giao cuối — NASA C-MAPSS FD001
+# Gói bàn giao cuối — NASA C-MAPSS FD001--FD004
 
 ## Phạm vi
 
-Repository hiện có pipeline Pandas từ raw FD001 đến artifact ETL, rolling
+Repository hiện có pipeline Pandas từ raw FD001--FD004 đến artifact ETL, rolling
 features, grouped RUL modeling, PCA--ARIMA Health Index và dashboard
 read-only. Bộ slide trình bày nằm tại
 `slides/cmapss_fd001_presentation.pptx`.
 
-Kết quả chỉ được diễn giải trong phạm vi FD001: 100 train engines, 100 test
-engines, một điều kiện vận hành và một dạng lỗi. Health Index forecast là phân
-tích phụ, không phải dự báo RUL.
+Deck 15 slide được cập nhật ngày 25/09/2026 theo mạch bài thuyết trình học
+thuật, gồm bài toán, dữ liệu, protocol, phương pháp, kết quả RUL, phân tích lỗi,
+Health Index, cảnh báo sớm, tái lập, giới hạn và ma trận transfer FD001--FD004.
+Finalizer đạt package integrity, layout, font và import; 15 slide đã được render
+để kiểm tra nội dung và bố cục.
+Bản 10 slide trước redesign được giữ tại
+`slides/archive/decks/cmapss_fd001_presentation_before_academic_redesign.pptx`.
+
+Kết quả RUL chính vẫn được diễn giải trong phạm vi FD001: 100 train engines, 100
+test engines, một điều kiện vận hành và một dạng lỗi. Ma trận bổ sung dùng
+window 10 cycles để kiểm tra bốn subset; Health Index forecast là phân tích phụ,
+không phải dự báo RUL.
 
 ## Cấu trúc bàn giao
 
 ```text
 slides/
 ├── cmapss_fd001_presentation.pptx
+├── archive/decks/                 # Bản deck cũ để đối chiếu
+├── cmapss_fd001_presentation.tex
+└── cmapss_fd001_presentation.pdf
+├── build_academic_presentation.mjs
+├── finalize_academic_presentation.mjs
+├── archive/builders/              # Script build cũ
 └── README.md
 handoff/
 ├── FINAL_HANDOFF.md
 └── DEMO_SCRIPT.md
 report/main.pdf
-outputs/{etl,features,modeling,timeseries}/
+handoff/SPEECH_SCRIPT_VI.tex
+handoff/SPEECH_SCRIPT_VI.pdf
+outputs/{etl,features,modeling,timeseries,cross_dataset}/
 src/cmapss/{etl,features,modeling,timeseries,reproducibility.py}
 tests/
 ```
@@ -49,7 +66,7 @@ uv lock --check
 
 Mốc end-to-end ngày 2026-09-24 đã đối chiếu 18 bảng, metrics, năm hình
 byte-identical, raw hashes và dashboard loader. Lượt nghiệm thu timing tiếp
-theo tại `tmp/e2e-review-20260924` cũng đạt; full suite cuối đạt 151 tests.
+theo tại `tmp/e2e-review-20260924` cũng đạt; full suite hiện tại đạt 154 tests.
 
 Kiểm tra ngày 2026-09-24 gồm loader và trang Cảnh báo sớm trên browser thật
 ở localhost:8517; đã quan sát bảng timing và phân phối lead time. Không gọi
@@ -91,7 +108,8 @@ rate cấp engine là null theo định nghĩa event toàn trajectory, không ph
 4. **ARIMA có dự báo RUL không?** Không. ARIMA chỉ forecast Health Index và
    được trình bày như phân tích time-series phụ.
 5. **Kết quả có áp dụng cho động cơ thực tế không?** Chưa thể kết luận. FD001
-   chỉ đại diện một điều kiện vận hành và một dạng lỗi mô phỏng.
+   chỉ đại diện một điều kiện vận hành và một dạng lỗi mô phỏng; transfer sang
+   FD002--FD004 có MAE 47,3949--60,3215 cycles trong matrix window 10.
 6. **PySpark có thay thế Pandas trong modeling không?** PySpark được dùng cho
    parity ETL; runtime benchmark chỉ đo Pandas. Modeling vẫn chạy bằng Pandas và
    scikit-learn.
@@ -102,7 +120,8 @@ rate cấp engine là null theo định nghĩa event toàn trajectory, không ph
 ## Giới hạn còn lại
 
 - Chưa có serving API.
-- Chưa đánh giá trên bộ dữ liệu độc lập hoặc nhiều fault mode.
+- Chưa có telemetry thực tế; transfer C-MAPSS đã được đánh giá trong
+  `outputs/cross_dataset/` nhưng vẫn là dữ liệu mô phỏng.
 - PySpark parity và notebook reproducibility là các kiểm tra riêng với lệnh
   end-to-end Pandas.
 - Dashboard đọc artifact đã sinh; không tự huấn luyện lại model.

@@ -3,6 +3,8 @@
 from typing import Literal
 
 Split = Literal["train", "test"]
+DatasetId = Literal["FD001", "FD002", "FD003", "FD004"]
+DATASET_IDS: tuple[str, ...] = ("FD001", "FD002", "FD003", "FD004")
 SPLITS = ("train", "test")
 SETTINGS = tuple(f"setting_{i}" for i in range(1, 4))
 SENSORS = tuple(f"sensor_{i}" for i in range(1, 22))
@@ -52,6 +54,12 @@ SENSOR_INFERENCE_COLUMNS = (
 )
 FD001_ROWS = {"train": 20_631, "test": 13_096}
 FD001_ENGINE_COUNT = 100
+DATASET_PROFILES: dict[str, dict[str, int]] = {
+    "FD001": {"train_rows": 20_631, "test_rows": 13_096, "train_engines": 100, "test_engines": 100},
+    "FD002": {"train_rows": 53_759, "test_rows": 33_991, "train_engines": 260, "test_engines": 259},
+    "FD003": {"train_rows": 24_720, "test_rows": 16_596, "train_engines": 100, "test_engines": 100},
+    "FD004": {"train_rows": 61_249, "test_rows": 41_214, "train_engines": 249, "test_engines": 248},
+}
 RAW_DTYPES = {
     "engine_id": "int64",
     "cycle": "int64",

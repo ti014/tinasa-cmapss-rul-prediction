@@ -125,6 +125,18 @@ model selection trên train; final evaluation dùng 100 test engines sau khi
 model đã được chọn; forecast Health Index là phân tích trajectory phụ trên 10
 train engines và không được dùng để xếp hạng model RUL.
 
+\subsection{Protocol đánh giá chuyển miền bổ sung}
+Ma trận bổ sung dùng cùng trailing window 10 cycles cho FD001--FD004, bởi test
+FD004 có engine ngắn nhất 19 cycles. Với mỗi subset, pipeline tạo train targets
+chỉ từ lịch sử train, chọn model bằng GroupKFold theo engine, refit và đánh giá
+một dự đoán tại cycle cuối của mỗi test engine. Trong phép transfer, model đã
+chọn và fit trên toàn bộ train FD001 được giữ cố định khi dự đoán test
+FD002--FD004; không fit lại trên target dataset. Test labels của từng target
+chỉ được đọc sau khi final predictions đã được ghi. Mean engine MAE, RMSE và
+NASA score được tính trên cùng tập test của mỗi target, kèm bootstrap CI theo
+engine. Vì window 10 khác window 30 của kết quả FD001 chính, hai nhóm metric
+được trình bày riêng.
+
 Đầu ra hỗ trợ quyết định được giới hạn ở một cảnh báo minh họa: với model được
 chọn, mỗi engine train được tổng hợp từ OOF predictions và phát cảnh báo đầu
 tiên khi predicted RUL $\leq 30$ cycles. Ngưỡng được khai báo trước, không tối

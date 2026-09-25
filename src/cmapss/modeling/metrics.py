@@ -68,6 +68,24 @@ def bootstrap_metric_intervals(
     engine_ids = np.asarray(list(engine_groups), dtype="int64")
     engine_mae = rows.groupby("engine_id", sort=True)["absolute_error"].mean()
     n_engines = len(engine_ids)
+    if len(rows) == n_engines:
+        ordered = rows.sort_values("engine_id", kind="mergesort").reset_index(drop=True)
+        indices = rng.integers(0, n_engines, size=(n_resamples, n_engines))
+        absolute_errors = ordered["absolute_error"].to_numpy(dtype="float64")
+        squared_errors = ordered["squared_error"].to_numpy(dtype="float64")
+        score_components = ordered["nasa_score_component"].to_numpy(dtype="float64")
+        fast_values = {
+            "mean_engine_mae": absolute_errors[indices].mean(axis=1),
+            "rmse": np.sqrt(squared_errors[indices].mean(axis=1)),
+            "nasa_score": score_components[indices].sum(axis=1),
+        }
+        return {
+            name: {
+                "ci_lower": float(np.quantile(metric_values, 0.025)),
+                "ci_upper": float(np.quantile(metric_values, 0.975)),
+            }
+            for name, metric_values in fast_values.items()
+        }
     values = {
         "mean_engine_mae": np.empty(n_resamples, dtype="float64"),
         "rmse": np.empty(n_resamples, dtype="float64"),

@@ -204,8 +204,44 @@ Sai số tuyệt đối trung bình của nhóm RUL thật 0--30 cycles là 4,38
 ba nhóm còn lại (31--60, 61--90 và trên 90 cycles). Mười sai số lớn nhất đều là
 trường hợp dự đoán cao hơn nhãn thật, với độ lệch khoảng 37,6--57,5 cycles;
 những trường hợp này đóng góp đáng kể vào NASA score. Đây là kết quả trên FD001
-mô phỏng và chưa cung cấp bằng chứng về khả năng khái quát sang fault mode hoặc
-điều kiện vận hành khác.
+mô phỏng; riêng metric FD001 này chưa cung cấp bằng chứng về khả năng khái quát
+sang fault mode hoặc điều kiện vận hành khác.
+
+\subsection{Đánh giá bổ sung trên FD002--FD004}
+Để kiểm tra khả năng chuyển miền, repository đã bổ sung đủ raw data FD001--FD004
+và chạy lại cùng pipeline với trailing window 10 cycles. Window này được chọn
+cho ma trận bổ sung vì test FD004 có engine ngắn nhất chỉ 19 cycles; kết quả không
+được so trực tiếp với metric chính của FD001 dùng window 30 cycles.
+
+Mỗi subset có một evaluation nội bộ, trong đó train và test thuộc cùng subset.
+Ngoài ra, model được fit trên toàn bộ train FD001 rồi áp dụng trực tiếp lên test
+FD002, FD003 và FD004. Test labels chỉ được ghép sau khi final predictions đã
+được ghi. Bảng dưới lấy từ \filepath{outputs/cross\_dataset/matrix.json}; bootstrap
+dùng 10.000 engine resamples với seed 42.
+
+\begin{table}[H]
+\centering
+\caption[Đánh giá nội bộ và transfer trên C-MAPSS]{Mean engine MAE, RMSE và NASA
+score trong ma trận bổ sung với window 10 cycles.}
+\label{tab:cross-dataset}
+\begin{tabular}{llrrrr}
+\toprule
+Train & Test & Loại & MAE & RMSE & NASA score\\\midrule
+FD001 & FD001 & Nội bộ & 21,9258 & 29,5936 & 8.103,0148\\
+FD002 & FD002 & Nội bộ & 22,3556 & 31,3077 & 34.004,9782\\
+FD003 & FD003 & Nội bộ & 28,3255 & 41,7606 & 4.109.107,7036\\
+FD004 & FD004 & Nội bộ & 27,2218 & 36,9311 & 492.703,0709\\
+FD001 & FD002 & Transfer & 60,3215 & 70,4603 & 14.193.434,0842\\
+FD001 & FD003 & Transfer & 47,3949 & 59,2140 & 59.380.624,2646\\
+FD001 & FD004 & Transfer & 58,5731 & 69,8148 & 14.691.764,3175\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Kết quả transfer có MAE cao hơn evaluation nội bộ trên target subset. FD001 sang
+FD002 tăng lên 60,3215 cycles; FD001 sang FD003 đạt 47,3949 cycles; FD001 sang
+FD004 đạt 58,5731 cycles. Model fit trên FD001 vì vậy không được diễn giải là
+model dùng trực tiếp cho FD002--FD004.
 
 \subsubsection{Phân tích lỗi theo engine}
 Trên 100 test engines, absolute error có trung vị 13,3654 cycles, tứ phân vị

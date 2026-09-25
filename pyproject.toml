@@ -25,6 +25,7 @@ cmapss-validate = "cmapss.validate:main"
 cmapss-etl = "cmapss.etl.cli:main"
 cmapss-features = "cmapss.features.cli:main"
 cmapss-modeling = "cmapss.modeling.cli:main"
+cmapss-cross-dataset = "cmapss.cross_dataset:main"
 
 [project.optional-dependencies]
 etl = [

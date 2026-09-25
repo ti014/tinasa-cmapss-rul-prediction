@@ -1,4 +1,4 @@
-"""Đọc FD001 thành DataFrame; giữ observations và test labels riêng biệt."""
+"""Đọc C-MAPSS observations; giữ observations và test labels riêng biệt."""
 
 from pathlib import Path
 

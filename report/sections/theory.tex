@@ -18,7 +18,7 @@ deep learning để ánh xạ lịch sử cảm biến thành thời gian còn l
 pipeline có thể kiểm tra ở từng ranh giới dữ liệu: contract được kiểm tra trước
 EDA, feature chỉ dùng lịch sử đến cycle hiện tại, và GroupKFold giữ toàn bộ
 window của một engine trong cùng một fold. Vì mục tiêu của môn học là phân tích
-dữ liệu lớn có khả năng tái lập, phần triển khai nhấn mạnh provenance và parity
+dữ liệu lớn có khả năng tái lập, phần triển khai nhấn mạnh nguồn gốc dữ liệu và đối chiếu kết quả
 ETL; mô hình được dùng để đánh giá pipeline trên FD001 và kiểm tra chuyển miền,
 không phải để tuyên bố
 trạng thái tiên tiến của bài toán RUL.
@@ -134,7 +134,7 @@ Slope trong Công thức~\ref{eq:slope} là hệ số hồi quy tuyến tính m�
 ordinary least squares (OLS, bình phương tối thiểu thông thường) của sensor trên
 vị trí cycle trong window~\cite{hyndman2021fpp3}. Đặc trưng này bổ sung hướng
 thay đổi cục bộ mà giá trị cuối và mean không thể hiện đầy đủ. Tuy nhiên, một
-slope có thể tái lập không đồng nghĩa với utility dự đoán; utility chỉ được
+slope có thể tái lập không đồng nghĩa với giá trị dự đoán; giá trị này chỉ được
 đánh giá gián tiếp qua cross-validation của mô hình.
 
 \subsection{Paired analysis, bootstrap và nhiều kiểm định}
@@ -183,6 +183,6 @@ bình trượt, $d$ là bậc sai phân, còn $\varepsilon_t$ là phần dư~\ci
 order bằng AIC trên 70\% đầu chuỗi của từng engine, rồi đánh giá 30\% còn lại;
 không dùng kết quả holdout để chọn order hoặc engine. ADF được ghi để chẩn đoán
 tính dừng~\cite{statsmodelsADF} và Ljung--Box để kiểm tra tự tương quan phần dư. Các chẩn đoán này
-chỉ mô tả độ phù hợp của forecast Health Index trong FD001; chúng không chứng
+chỉ mô tả độ phù hợp của dự báo Health Index trong FD001; chúng không chứng
 minh quan hệ nhân quả, không thay thế GroupKFold RUL model và không xác định
 lịch bảo trì.

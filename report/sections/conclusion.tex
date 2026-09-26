@@ -22,13 +22,13 @@ Thứ năm, ngưỡng cảnh báo minh họa 30 cycles tạo ít nhất một ev
 engine OOF train, nhưng chỉ 44 engine cảnh báo trước ngưỡng và 7 đúng ngưỡng;
 49 engine cảnh báo sau ngưỡng. Lead time có trung vị 30 cycles, khoảng tứ
 phân vị 26--35 và miền 19--55. Vì OOF cũng dùng để chọn model, đây là đánh giá
-nội bộ, chưa chứng minh chất lượng cảnh báo độc lập hay utility bảo trì.
+nội bộ, chưa chứng minh chất lượng cảnh báo độc lập hay giá trị sử dụng cho bảo trì.
 Ví dụ engine 1 cảnh báo tại cycle 162, trước failure proxy cycle 192 đúng
 30 cycles; điều đó chưa quy định cần can thiệp khi nào.
 
 Nhánh phụ PCA--ARIMA có MAE trung bình 0,4110, thấp hơn drift 0,7469 và
-last-value 0,9478 trên cùng 10 holdout trajectories. Tuy nhiên, ARIMA chỉ có
-MAE thấp hơn drift ở 7/10 engine, và coverage thay đổi từ 21,43\% đến 97,03\%.
+last-value 0,9478 trên cùng 10 chuỗi giữ lại để kiểm tra. Tuy nhiên, ARIMA chỉ có
+MAE thấp hơn drift ở 7/10 engine, và tỷ lệ bao phủ thay đổi từ 21,43\% đến 97,03\%.
 Kết quả này hỗ trợ phân tích Health Index, không thay thế dự đoán RUL.
 
 Đóng góp của báo cáo là một pipeline có thể tái lập, các phép so sánh được mô tả
@@ -36,6 +36,6 @@ theo cùng evaluation protocol và các giới hạn được công bố. Ma tr�
 window 10 cycles cho thấy model train trên FD001 có MAE 60,3215 trên FD002,
 47,3949 trên FD003 và 58,5731 trên FD004, cao hơn evaluation nội bộ của các
 subset. Vì vậy, kết luận chính được giữ ở phạm vi FD001; các subset khác cho
-thấy cần retraining hoặc phương pháp xử lý dataset shift trước khi áp dụng.
+thấy cần huấn luyện lại hoặc xử lý khác biệt giữa các subset trước khi áp dụng.
 Phạm vi dữ liệu hiện tại chưa cho phép kết luận về lịch bảo trì tối ưu hoặc hiệu
 quả triển khai thực tế.

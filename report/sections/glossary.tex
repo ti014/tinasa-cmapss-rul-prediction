@@ -32,9 +32,15 @@ Feature & Biến được tạo từ observations; mỗi sensor có last, mean, 
 Metric & Đại lượng định lượng dùng để đánh giá hoặc so sánh kết quả, chẳng hạn MAE, RMSE và NASA score.\\
 Artifact & Tệp kết quả có schema và metadata được ghi ra để đọc lại, kiểm tra hoặc tái lập.\\
 Provenance & Thông tin truy nguyên nguồn input, cấu hình, phiên bản và trạng thái tạo artifact.\\
+Parity & Đối chiếu hai implementation trên cùng input để kiểm tra schema, số dòng và giá trị kết quả.\\
+Dataset shift & Khác biệt phân bố giữa các subset hoặc điều kiện dữ liệu; trong báo cáo được kiểm tra qua đánh giá transfer.\\
+Estimand & Đại lượng cần ước lượng trong một phép đánh giá; cần tách rõ đơn vị phân tích, split và metric.\\
+Outer evaluation & Đánh giá vòng ngoài dùng để ước lượng cả quy trình chọn model, không chỉ model sau khi đã chọn.\\
+Domain adaptation & Điều chỉnh mô hình hoặc biểu diễn để xử lý khác biệt giữa dữ liệu nguồn và dữ liệu đích.\\
+Lead time & Số cycle báo trước theo định nghĩa cảnh báo; không tự động là thời gian bảo trì.\\
+Out-of-fold (OOF) & Dự đoán của một engine được tạo khi engine đó không nằm trong phần dữ liệu dùng để huấn luyện.\\
 Model selection & Quy trình chọn mô hình dựa trên metric của validation; trong báo cáo dùng mean engine-level MAE.\\
 Holdout & Đoạn dữ liệu được giữ lại để đánh giá sau khi fit; PCA--ARIMA dùng 30\% cuối chuỗi làm holdout.\\
-Parity & Đối chiếu schema, khóa, số dòng và giá trị giữa hai implementation trên cùng input.\\
 Trajectory & Toàn bộ chuỗi diễn biến của một engine theo cycle; metric cuối chỉ đánh giá tại một điểm cắt.\\
 Paired analysis & Ghép hai phép đo của cùng một engine; protocol dùng 30 cycles đầu và 30 cycles cuối.\\
 Bootstrap & Lấy mẫu lại có hoàn lại để ước lượng độ bất định; engine là đơn vị lấy mẫu.\\
@@ -45,7 +51,7 @@ Spark / PySpark & Framework xử lý dữ liệu phân tán và API Python dùng
 Health Index & Điểm tổng hợp PC1 sau chuẩn hóa 21 sensor; dùng để mô tả diễn biến sensor và không phải RUL.\\
 Principal Component Analysis (PCA) & Phương pháp giảm chiều tuyến tính; báo cáo dùng PC1 để tạo Health Index từ train sensor.\\
 ARIMA & Mô hình chuỗi thời gian tự hồi quy tích hợp trung bình trượt, dùng như phân tích phụ trên Health Index.\\
-Augmented Dickey--Fuller (ADF) & Kiểm định nghiệm đơn vị, được dùng để đánh giá bằng chứng về tính dừng của fit segment Health Index.\\
+Augmented Dickey--Fuller (ADF) & Kiểm định nghiệm đơn vị, được dùng để đánh giá bằng chứng về tính dừng của đoạn huấn luyện Health Index.\\
 Ljung--Box & Kiểm định chẩn đoán tự tương quan của residual sau khi fit ARIMA.\\
 
 \end{longtable}

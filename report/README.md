@@ -11,11 +11,10 @@ phân tích PCA--ARIMA train-only, đánh giá mô hình RUL, cảnh báo sớm 
 tích lỗi theo engine.
 
 Báo cáo tập trung vào nội dung học thuật, kết quả đã kiểm chứng và giới hạn; không
-đưa đường dẫn artifact nội bộ hoặc khai báo AI/LLM vào PDF. Phần dữ liệu giải thích rõ nhãn kết cục, ý nghĩa cột,
+đưa timeline hoặc kế hoạch cá nhân vào PDF. Phần dữ liệu giải thích rõ nhãn kết cục, ý nghĩa cột,
 phân bố và cách xử lý; phần phương pháp giải thích lý do, đơn vị và nguồn của
-các công thức. Dashboard Streamlit đã được bổ sung như một consumer read-only
-của artifact; PCA--ARIMA vẫn được trình bày như phân tích phụ trên Health Index,
-không phải RUL model. Lệnh tái lập end-to-end đã chạy lại pipeline Pandas từ
+các công thức. Dashboard Streamlit chỉ đọc các tệp kết quả; PCA--ARIMA vẫn được
+trình bày như phân tích phụ trên Health Index, không phải mô hình RUL. Lệnh tái lập end-to-end đã chạy lại pipeline Pandas từ
 raw và đối chiếu artifact cuối.
 Checklist bàn giao nằm tại `handoff/FINAL_HANDOFF.md` đã đồng bộ với báo cáo.
 Deck 15 slide tại `slides/` đã được cập nhật theo mạch học thuật: bài toán,
@@ -78,6 +77,6 @@ Push-Location report
 Pop-Location
 ```
 
-Lần build ngày 25/09/2026 tạo PDF 46 trang, không có lỗi biên dịch, citation
+Lần build ngày 25/09/2026 tạo PDF 47 trang, không có lỗi biên dịch, citation
 undefined, reference undefined hoặc overfull/underfull box. Tectonic vẫn ghi
 cảnh báo môi trường về Fontconfig và font Windows; đây không phải lỗi nội dung.

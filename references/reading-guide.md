@@ -133,7 +133,7 @@ Các mục áp dụng đề xuất ở R1–R8 là hướng dẫn đọc ban đ�
 là baseline, Ridge, HistGradientBoosting, batch ETL Pandas/PySpark và ARIMA
 phụ. Chưa mở thêm CNN, LSTM hoặc streaming.
 
-### Đọc trước mốc 2: M1–M6
+### Nguồn cho phần thống kê: M1–M6
 
 - Đọc M4 trước để phân biệt Wilcoxon với kiểm định trung bình, kiểm tra giả
   định đối xứng và ảnh hưởng của ties/zeros. M1 là nguồn gốc phương pháp,
@@ -148,7 +148,7 @@ phụ. Chưa mở thêm CNN, LSTM hoặc streaming.
 - Đầu ra cần viết: estimand (đại lượng cần ước lượng), giả thuyết, đơn vị mẫu,
   họ kiểm định, cấu hình và xử lý trường hợp suy biến. Xem
   [protocol](../report/sections/statistical-protocol.tex): ranh giới mean 30
-  cycles đầu/cuối và cấu hình M2.0 đã được người dùng chốt trước khi chạy suy luận.
+  cycles đầu/cuối và cấu hình thống kê đã được chốt trước khi chạy suy luận.
 
 Ví dụ: engine kết thúc ở cycle 200 dùng 1–30 và 171–200 để phân tích hồi cứu.
 Hai số trung bình tạo một cặp, không tạo 60 quan sát độc lập. Chênh lệch cuối

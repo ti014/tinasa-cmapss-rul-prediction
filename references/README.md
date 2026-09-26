@@ -6,8 +6,8 @@ kiểm chứng nền tảng ngày **20/09/2026**, bổ sung nguồn phương ph�
 **22/09/2026**.
 
 Nên đọc **R1 → R3 → R4 → R5** cho FD001 và đánh giá; R2 hỗ trợ tổng quan nhưng
-chưa đọc toàn văn. Tiếp theo đọc các nguồn thống kê M1–M6 bên dưới để chuẩn bị
-mốc 2. R8 phục vụ phần Spark đã nằm trong phạm vi; R6 và R7 là đọc thêm về
+chưa đọc toàn văn. Các nguồn thống kê M1–M6 bên dưới cung cấp cơ sở cho phần
+thống kê. R8 phục vụ phần Spark đã nằm trong phạm vi; R6 và R7 là đọc thêm về
 LSTM/streaming. Đây là tuyển chọn theo phương pháp sử dụng, không phải tổng
 quan toàn bộ nghiên cứu mới nhất.
 
@@ -61,7 +61,7 @@ soát. Các bài gốc M1–M3 cung cấp attribution; phần thao tác và gi�
 đối chiếu với tài liệu chính thức đã đọc, không tuyên bố đã đọc chứng minh gốc.
 
 Báo cáo có [cơ sở lý thuyết](../report/sections/theory.tex) và
-[protocol mốc 2](../report/sections/statistical-protocol.tex). Chỉ tài liệu
+[protocol thống kê](../report/sections/statistical-protocol.tex). Chỉ tài liệu
 được trích trong thân báo cáo xuất hiện trong bibliography của PDF; danh mục
 đọc rộng hơn không đồng nghĩa tất cả nguồn đã được sử dụng hoặc đọc toàn văn.
 

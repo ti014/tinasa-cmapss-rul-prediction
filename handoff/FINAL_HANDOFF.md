@@ -64,7 +64,7 @@ Kiểm tra test và cú pháp:
 uv lock --check
 ```
 
-Mốc end-to-end ngày 2026-09-24 đã đối chiếu 18 bảng, metrics, năm hình
+Lần kiểm tra end-to-end ngày 2026-09-24 đã đối chiếu 18 bảng, metrics, năm hình
 byte-identical, raw hashes và dashboard loader. Lượt nghiệm thu timing tiếp
 theo tại `tmp/e2e-review-20260924` cũng đạt; full suite hiện tại đạt 154 tests.
 

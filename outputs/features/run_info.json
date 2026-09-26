@@ -66,6 +66,6 @@
   },
   "modeling": {
     "status": "not_started",
-    "reason": "M3.2 chỉ tạo deterministic rolling features; scaler, feature selection và model fit thuộc mốc sau."
+    "reason": "Artifact này chỉ tạo rolling features; scaler, feature selection và huấn luyện model thuộc workflow modeling riêng."
   }
 }

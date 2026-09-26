@@ -76,7 +76,7 @@ trì. Cycle cũng không được chuyển sang giờ hoặc ngày vì không c�
 
 \section{Dữ liệu và kiểm soát chất lượng}
 \subsection{Nguồn dữ liệu và lý do lựa chọn}
-NASA C-MAPSS mô phỏng các chuỗi vận hành đến khi hỏng của động cơ turbofan. Nguồn dữ liệu được ghi nhận tại NASA Open Data~\cite{nasaCmapssDataset}; tài liệu nền tảng đi kèm bộ dữ liệu là công trình của Saxena và cộng sự~\cite{saxena2008damage}. FD001 có một điều kiện vận hành và một dạng suy giảm High-Pressure Compressor (HPC, máy nén áp suất cao); FD002--FD004 mở rộng điều kiện vận hành và fault mode để kiểm tra dataset shift.
+NASA C-MAPSS mô phỏng các chuỗi vận hành đến khi hỏng của động cơ turbofan. Nguồn dữ liệu được ghi nhận tại NASA Open Data~\cite{nasaCmapssDataset}; tài liệu nền tảng đi kèm bộ dữ liệu là công trình của Saxena và cộng sự~\cite{saxena2008damage}. FD001 có một điều kiện vận hành và một dạng suy giảm High-Pressure Compressor (HPC, máy nén áp suất cao); FD002--FD004 mở rộng điều kiện vận hành và dạng lỗi để kiểm tra khác biệt phân bố giữa các subset.
 
 FD001 được chọn làm tập chính vì có lịch sử train đầy đủ đến khi hỏng, test bị cắt và nhãn đánh giá tách riêng, phù hợp với cách xây dựng bài toán RUL. Tập trung vào một subset giúp kiểm soát phạm vi phân tích chính và làm rõ từng bước xử lý. FD002--FD004 được dùng riêng trong thực nghiệm bổ sung để kiểm tra khả năng chuyển miền của model FD001; cả bốn subset đều là dữ liệu mô phỏng, nên kết quả chưa cho phép khẳng định hiệu quả trên động cơ thực tế.
 

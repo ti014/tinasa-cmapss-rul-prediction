@@ -30,14 +30,14 @@ Kiểm tra trên Windows/Python 3.12.14:
   kiểm tra riêng đều đạt; `pip check` không có dependency hỏng.
 - Toàn bộ suite đạt **69 passed in 6.15s** với pytest 9.0.3.
 - Chạy notebook bằng kernel mới, chỉ có train input; 12 CSV và 11 PNG giống
-  từng byte với artifact mốc 1. Ba raw checksums không đổi. Runtime audit
+  từng byte với artifact EDA trước khi nâng dependency. Ba raw checksums không đổi. Runtime audit
   kiểm tra không đọc test observations hoặc labels vẫn đạt.
 - JupyterLab trả HTTP 200, instance kiểm tra đã dừng. nbconvert xuất HTML
   thành công; có cảnh báo accessibility về 11 hình thiếu alternative text,
   không phải lỗi bảo mật hoặc lỗi export. Chưa kiểm tra export PDF trong lượt này.
 
 Notebook và `outputs/eda/validation.json` được giữ nguyên như bằng chứng của
-mốc 1. Kết quả kiểm tra sau nâng dependency được lưu riêng ở biên bản trên.
+lần chạy EDA trước đó. Kết quả kiểm tra sau nâng dependency được lưu riêng ở biên bản trên.
 Sơ đồ và data contract không cần sửa vì data flow, schema và RUL không đổi.
 Không thêm CI, hook hoặc dismiss cảnh báo. Dependabot phải quét commit trên
 default branch để cập nhật trạng thái phía GitHub.

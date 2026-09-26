@@ -32,39 +32,39 @@ này giúp kiểm tra việc mất hoặc nhân bản dòng và ngăn test label
 selection.
 
 PCA--ARIMA đọc cùng Silver observations nhưng chỉ giữ train. Pipeline chọn 10
-engine theo fold và vị trí lifetime cách đều trước khi xem forecast. Để giữ ranh
-giới temporal holdout, StandardScaler, PCA một thành phần, hướng PC1 theo tương
+engine theo fold và vị trí lifetime cách đều trước khi xem dự báo. Để giữ ranh
+giới đánh giá theo thời gian, StandardScaler, PCA một thành phần, hướng PC1 theo tương
 quan với cycle và tham số chuẩn hóa Health Index được fit trên 90 train engines
 còn lại; 10 engine được chọn chỉ được transform. Mỗi chuỗi được chia theo thứ
-tự cycle: 70\% đầu dùng để fit ARIMA và 30\% cuối dùng để đánh giá. ARIMA order
-được chọn bằng grid AIC trên fit segment của từng engine; output gồm MAE, RMSE,
-coverage của prediction interval 95\%, ADF và Ljung--Box với bậc tự do điều
-chỉnh theo $p+q$. Health Index forecast chỉ mô tả diễn biến cảm biến trong train
+tự cycle: 70\% đầu dùng để huấn luyện ARIMA và 30\% cuối dùng để đánh giá. Bậc ARIMA
+được chọn bằng grid AIC trên đoạn huấn luyện của từng engine; đầu ra gồm MAE, RMSE,
+tỷ lệ bao phủ của khoảng dự đoán 95\%, ADF và Ljung--Box với bậc tự do điều
+chỉnh theo $p+q$. Dự báo Health Index chỉ mô tả diễn biến cảm biến trong train
 và không đọc test labels.
 
-Pandas là reference implementation. PySpark tái hiện ba boundary và parity
-checker đối chiếu schema, khóa, số dòng và giá trị số; sai khác tuyệt đối lớn
+Pandas là implementation tham chiếu. PySpark tái hiện ba boundary và bộ đối chiếu
+schema, khóa, số dòng và giá trị số; sai khác tuyệt đối lớn
 nhất bằng 0 trong lần chạy local có JRE. Benchmark chỉ đo chi phí tạo engine
 summary trên dữ liệu nhân bản, vì vậy không tạo thêm engine độc lập và không
-được dùng để kết luận về scalability của hệ thống phân tán.
+được dùng để kết luận về khả năng mở rộng của hệ thống phân tán.
 
 \subsection{Vai trò của thành phần Big Data}
 FD001 có 33.727 observations sau khi ghép train và test; toàn bộ bốn subset có
-265.256 observations trong các file observations. Đây vẫn chưa phải workload đủ
-lớn để kết luận về throughput của cluster. Thành phần Big Data của
+265.256 observations trong các file observations. Đây vẫn chưa phải khối lượng dữ liệu đủ
+lớn để kết luận về tốc độ xử lý trên cụm máy. Thành phần Big Data của
 báo cáo được thể hiện ở ba lớp. Thứ nhất, data contract và validation kiểm soát
-veracity trước khi dữ liệu đi vào phân tích. Thứ hai, ETL tổ chức dữ liệu qua
+độ tin cậy của dữ liệu trước khi dữ liệu đi vào phân tích. Thứ hai, ETL tổ chức dữ liệu qua
 Bronze, Silver và Gold; Parquet giữ bảng phân tích còn SQLite cung cấp truy vấn
-local. Thứ ba, PySpark tái hiện các boundary ETL và parity checker đối chiếu
+local. Thứ ba, PySpark tái hiện các boundary ETL và bộ đối chiếu
 kết quả với Pandas. Benchmark 1$\times$, 10$\times$ và 100$\times$ chỉ là phép
 đo cục bộ trên dữ liệu nhân bản; nó minh họa cách kiểm tra chi phí theo quy mô,
-không thay thế scalability benchmark trên cluster hoặc dữ liệu streaming.
+không thay thế thử nghiệm khả năng mở rộng trên cụm máy hoặc dữ liệu streaming.
 
 Dashboard Streamlit chỉ đọc các kết quả modeling và
 PCA--ARIMA đã ghi. Loader kiểm tra sự tồn tại và schema của file trước khi dựng
-view; dashboard không fit lại model, không chạy lại forecast và không mở
+view; dashboard không huấn luyện lại model, không chạy lại dự báo và không mở
 \texttt{RUL\_FD001.txt}. Các view gồm metric final evaluation, chi tiết một test
-engine, Health Index/ARIMA của một validation engine và provenance của hai lần
+engine, Health Index/ARIMA của một validation engine và nguồn gốc của hai lần
 chạy. Đây là lớp trình bày kết quả, không phải một bước mới trong evaluation
 protocol.
 
@@ -122,10 +122,10 @@ toàn bộ train windows và ghi đúng một dự đoán tại cycle cuối c�
 engine. File nhãn \texttt{RUL\_FD001.txt} chỉ được đọc trong bước final
 evaluation sau khi final predictions đã được ghi.
 
-Để tránh trộn các estimand, kết quả được báo cáo tách theo đơn vị phân tích,
+Để tránh trộn các đại lượng cần ước lượng, kết quả được báo cáo tách theo đơn vị phân tích,
 group key, split, metric và vai trò của từng phép đo. OOF dùng cho
 model selection trên train; final evaluation dùng 100 test engines sau khi
-model đã được chọn; forecast Health Index là phân tích trajectory phụ trên 10
+model đã được chọn; dự báo Health Index là phân tích chuỗi phụ trên 10
 train engines và không được dùng để xếp hạng model RUL.
 
 \subsection{Protocol đánh giá chuyển miền bổ sung}
@@ -188,10 +188,10 @@ Các giá trị trong Bảng~\ref{tab:model-config} mô tả cấu hình đã ch
 phải một tuyên bố rằng đây là cấu hình tối ưu cho các subset C-MAPSS khác.
 
 Với nhánh Health Index, cùng prefix 70\% và suffix 30\% được dùng cho ARIMA và
-hai point-forecast baseline. Baseline \texttt{last\_value} giữ giá trị cuối
+hai baseline dự báo từng điểm. Baseline \texttt{last\_value} giữ giá trị cuối
 prefix; baseline \texttt{drift} ngoại suy mức thay đổi trung bình từ giá trị
-đầu đến cuối prefix. Hai baseline không có prediction interval, nên chỉ được
-so sánh bằng MAE và RMSE; coverage 95\% chỉ thuộc về ARIMA.
+đầu đến cuối prefix. Hai baseline không có khoảng dự đoán, nên chỉ được
+so sánh bằng MAE và RMSE; tỷ lệ bao phủ 95\% chỉ thuộc về ARIMA.
 
 \subsection{Suy luận thống kê}
 Phân tích suy luận so sánh mean của 30 cycles đầu và 30 cycles cuối trong cùng
@@ -200,4 +200,4 @@ bảng suy luận gồm một dòng cho mỗi sensor. Protocol giữ đủ 21 se
 paired difference, bootstrap percentile 95\%, Wilcoxon permutation và
 Benjamini--Hochberg FDR. Hình phân phối và effect size được đọc cùng khoảng tin
 cậy và số dấu của từng sensor; kết quả này mô tả thay đổi trong protocol đầu/cuối,
-không phải bằng chứng chọn feature hoặc utility dự đoán RUL ngoài mẫu.
+không phải bằng chứng chọn feature hoặc giá trị dự đoán RUL ngoài mẫu.

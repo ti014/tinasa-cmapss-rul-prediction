@@ -10,6 +10,12 @@ Repository này phục vụ báo cáo cuối kỳ môn Phân tích dữ liệu l
 
 Repository đã có **kiểm tra dữ liệu FD001--FD004, nhãn RUL train, notebook EDA và suy luận sensor chỉ dùng train FD001, ETL Silver/Gold bằng Pandas/PySpark, rolling features 30 cycles, đánh giá RUL theo engine, phân tích PCA--ARIMA Health Index trên train và ma trận bổ sung window 10 cycles cho cả bốn subset**.
 
+**Kế hoạch cải thiện (26/09/2026):** so sánh window 10/20/30 cycles,
+chỉnh tham số HistGradientBoosting và thử tăng trọng số cho mẫu RUL thấp.
+Phép đánh giá dự kiến tách việc chọn mô hình khỏi đánh giá theo engine,
+đồng thời đo thời điểm cảnh báo và mức báo sớm khi RUL còn cao. Đợt thử nghiệm
+này chưa chạy; các metric công bố vẫn là kết quả mô hình hiện tại.
+
 Đã có:
 
 - Các file NASA C-MAPSS FD001--FD004 nguyên bản và tài liệu mô tả nguồn; kết quả chính dùng FD001, ma trận bổ sung đánh giá cả bốn subset.
@@ -23,7 +29,7 @@ Repository đã có **kiểm tra dữ liệu FD001--FD004, nhãn RUL train, note
   đánh giá RUL theo engine, PCA--ARIMA, cảnh báo sớm và ma trận FD001--FD004.
   Báo cáo có data dictionary (từ điển dữ liệu), bảng thuật ngữ, phân tích lỗi
   và phụ lục tái lập.
-- Cơ sở lý thuyết có trích dẫn và [protocol thống kê](report/sections/statistical-protocol.tex).
+- Cơ sở lý thuyết có trích dẫn và [quy trình thống kê](report/sections/statistical-protocol.tex).
   Đã chốt so sánh giá trị trung bình của 30 cycles đầu và 30 cycles cuối theo từng động cơ.
   Cấu hình thống kê đã được chốt trước khi chạy suy luận.
 - Helper `build_engine_sensor_pairs` chỉ nhận train, tạo và kiểm tra một cặp
@@ -38,7 +44,7 @@ Repository đã có **kiểm tra dữ liệu FD001--FD004, nhãn RUL train, note
 - Pipeline ETL Pandas ghi observations và train targets đã gán kiểu vào Silver
   Parquet, ghi engine summary vào Gold Parquet/SQLite, lưu checksum raw và đo
   benchmark cô lập ở scale 1x/10x/100x trong [outputs/etl](outputs/etl/README.md).
-- Adapter PySpark lazy import và parity checker cho cùng các boundary Silver/Gold
+- Adapter PySpark lazy import và bộ đối chiếu cho cùng các boundary Silver/Gold
   đã có. Lần chạy local hiện tại dùng JRE portable và ghi `outputs/etl/parity.json`;
   cả ba boundary Pandas/PySpark khớp với `max_abs_diff=0.0`.
 - Pipeline rolling features deterministic trong [outputs/features](outputs/features/README.md).
@@ -49,10 +55,10 @@ Repository đã có **kiểm tra dữ liệu FD001--FD004, nhãn RUL train, note
   GroupKFold theo engine, ghi out-of-fold predictions, ghi đúng 100 test
   predictions trước khi đọc nhãn và đánh giá model được chọn bằng nhãn NASA.
 - Phân tích [PCA--ARIMA trên Health Index](outputs/timeseries/README.md) chỉ
-  dùng train: 10 engine validation đại diện, chia 70/30, 704 forecast, khoảng
+  dùng train: 10 engine validation đại diện, chia 70/30, 704 điểm dự báo, khoảng
   dự đoán 95%, ADF và Ljung--Box; không đọc nhãn test.
 - [Dashboard Streamlit đọc artifact](app.py) để xem metric RUL cuối, từng test
-  engine, Health Index/ARIMA và provenance của lần chạy. Dashboard không fit
+  engine, Health Index/ARIMA và nguồn gốc của lần chạy. Dashboard không fit
   lại model và không đọc nhãn test thô khi mở trang.
 
 Gói bàn giao cuối:
@@ -100,7 +106,7 @@ Mỗi quan sát gồm:
 - Ba thông số vận hành (operational settings).
 - Giá trị của 21 cảm biến (sensor measurements).
 
-FD001 đại diện cho một điều kiện vận hành và một dạng suy giảm High-Pressure Compressor. FD002--FD004 mở rộng số điều kiện vận hành và fault mode. Tín hiệu chứa nhiễu cảm biến mô phỏng. Ma trận metric bổ sung cho FD002--FD004 nằm trong `outputs/cross_dataset`.
+FD001 đại diện cho một điều kiện vận hành và một dạng suy giảm High-Pressure Compressor. FD002--FD004 mở rộng số điều kiện vận hành và dạng lỗi. Tín hiệu chứa nhiễu cảm biến mô phỏng. Ma trận metric bổ sung cho FD002--FD004 nằm trong `outputs/cross_dataset`.
 
 ### Nguồn gốc và tính toàn vẹn
 
@@ -109,7 +115,9 @@ FD001 đại diện cho một điều kiện vận hành và một dạng suy gi
 - Checksum ZIP đã ghi nhận: `MD5 79a22f36e80606c69d0e9e4da5bb2b7a`
 - Ghi chú nguồn trong repository: [`data/raw/DATA_SOURCE.md`](data/raw/DATA_SOURCE.md)
 
-Đây là dữ liệu mô phỏng, không phải telemetry thu trực tiếp ngoài thực địa. Vì vậy, kết quả hỗ trợ so sánh học thuật tái lập trên FD001 nhưng chưa chứng minh hiệu quả khi triển khai thực tế.
+Đây là dữ liệu mô phỏng, không phải telemetry thu trực tiếp ngoài thực địa. Kết
+quả phục vụ so sánh học thuật tái lập, trong đó FD001 là subset chính và
+FD002--FD004 là các đánh giá bổ sung; kết quả chưa chứng minh hiệu quả khi triển khai thực tế.
 
 ## Kiến trúc dữ liệu
 
@@ -137,7 +145,7 @@ Phân tích thống kê      Mô hình dự đoán RUL
 ```
 
 Pandas đã được dùng trong notebook EDA, làm reference cho ETL, thống kê và
-chuẩn bị dữ liệu mô hình. PySpark tái hiện các boundary ETL để kiểm tra parity;
+chuẩn bị dữ liệu mô hình. PySpark tái hiện các boundary ETL để đối chiếu kết quả;
 runtime benchmark hiện chỉ đo Pandas. Bộ dữ liệu gốc chỉ có dung
 lượng vài MB, vì vậy repository không tuyên bố FD001 tự thân chứng minh khả
 năng xử lý dữ liệu quy mô lớn.
@@ -192,14 +200,15 @@ cycles vì test FD004 có engine ngắn nhất 19 cycles; kết quả này khôn
 metric chính FD001 dùng window 30. Evaluation nội bộ đạt MAE 21,9258 trên FD001,
 22,3556 trên FD002, 28,3255 trên FD003 và 27,2218 trên FD004. Khi giữ nguyên
 model fit trên FD001 rồi transfer sang dataset khác, MAE là 60,3215 trên FD002,
-47,3949 trên FD003 và 58,5731 trên FD004. Kết quả cho thấy model FD001 không nên
-được dùng trực tiếp cho subset khác nếu chưa retraining hoặc domain adaptation.
+47,3949 trên FD003 và 58,5731 trên FD004. Kết quả cho thấy không nên dùng trực
+tiếp model FD001 cho subset khác nếu chưa huấn luyện lại hoặc điều chỉnh theo
+dữ liệu của subset đó.
 Xem [artifact ma trận transfer](outputs/cross_dataset/README.md).
 
 ### Phân tích ARIMA
 
 ARIMA là phân tích chuỗi thời gian phụ, không phải mô hình RUL chính. Pipeline
-đã triển khai chọn 10 engine validation trước forecast, fit StandardScaler và
+đã triển khai chọn 10 engine validation trước khi dự báo, huấn luyện StandardScaler và
 PCA trên 90 engine train còn lại rồi transform các engine được chọn, sau đó dùng 70% đầu chuỗi để fit và
 30% cuối để đánh giá:
 
@@ -209,17 +218,17 @@ PCA trên 90 engine train còn lại rồi transform các engine được chọn
 - Chẩn đoán tự tương quan phần dư Ljung-Box.
 
 Lần chạy hiện tại fit hội tụ cả 10 engine; MAE nằm trong khoảng 0,1515--1,0372
-và coverage khoảng dự đoán 95% nằm trong khoảng 21,43%--97,03%. ADF không bác
-bỏ tính không dừng trên các fit segment. Sau khi điều chỉnh Ljung--Box theo
+và tỷ lệ bao phủ khoảng dự đoán 95% nằm trong khoảng 21,43%--97,03%. ADF không bác
+bỏ tính không dừng trên các đoạn huấn luyện. Sau khi điều chỉnh Ljung--Box theo
 `p+q`, engine 69 và 70 có p-value dưới 0,05. ARIMA không được áp dụng trực tiếp lên
-nhãn RUL train; Health Index forecast không phải RUL.
-Trên cùng holdout, MAE trung bình của ARIMA là 0,4110, của `drift` là 0,7469 và
+nhãn RUL train; dự báo Health Index không phải RUL.
+Trên cùng đoạn dữ liệu giữ lại để kiểm tra, MAE trung bình của ARIMA là 0,4110, của `drift` là 0,7469 và
 của `last_value` là 0,9478; đây là so sánh mô tả, chưa phải bằng chứng ưu thế
 thống kê. Warning OOF dùng ngưỡng 30 cycles: 44 engine cảnh báo trước ngưỡng,
 7 đúng ngưỡng và 49 sau ngưỡng; lead time có median 30 cycles. OOF đã được dùng
 để chọn model nên đây là phân tích nội bộ, không phải đánh giá độc lập.
 
-Ma trận estimand, đơn vị phân tích, split/horizon, metric và vai trò báo cáo
+Ma trận đại lượng cần ước lượng, đơn vị phân tích, cách chia dữ liệu/khoảng dự báo, metric và vai trò báo cáo
 được lưu trong
 [`outputs/modeling/tables/evaluation_protocol.csv`](outputs/modeling/tables/evaluation_protocol.csv).
 Phân tích cảnh báo sớm dùng OOF train của model được chọn với ngưỡng cố định
@@ -257,7 +266,7 @@ Báo cáo không đặt trước một mức điểm mục tiêu. Kết quả â
 
 - Phân phối vòng đời động cơ.
 - Biến thiên và quỹ đạo sensor theo cycle gốc.
-- Quỹ đạo Health Index train-only và forecast holdout của các engine đã
+- Quỹ đạo Health Index chỉ dùng train và dự báo trên đoạn giữ lại để kiểm tra của các engine đã
   chọn trong [artifact PCA--ARIMA](outputs/timeseries/README.md).
 - Biểu đồ RUL thật--dự đoán trên test và phần dư theo khoảng RUL trong
   [artifact modeling](outputs/modeling/README.md).
@@ -316,7 +325,7 @@ Repository cung cấp một quy trình được ghi chép rõ từ dữ liệu n
 - Cố định phiên bản các dependency Python.
 - Ghi lại số dòng và kết quả validation.
 - Lưu cấu hình mô hình và kết quả đánh giá.
-- Tách dữ liệu khoa học khỏi dữ liệu tổng hợp dùng kiểm tra scalability.
+- Tách dữ liệu khoa học khỏi dữ liệu tổng hợp dùng kiểm tra khả năng mở rộng.
 - Kiểm tra tự động schema, data leakage, ranh giới window và số lượng dự đoán.
 
 ## Bắt đầu
@@ -458,7 +467,7 @@ artifact Silver/Gold và đo benchmark 1x/10x/100x:
   --benchmark-repetitions 2
 ```
 
-Cài extra PySpark và cung cấp Java/JAVA_HOME trước khi yêu cầu parity:
+Cài extra PySpark và cung cấp Java/JAVA_HOME trước khi yêu cầu đối chiếu kết quả:
 
 ```powershell
 uv sync --frozen --extra etl
@@ -469,7 +478,7 @@ uv sync --frozen --extra etl
 ```
 
 Xem [artifact và validation ETL](outputs/etl/README.md) để biết schema, số
-dòng, thời gian benchmark và kết quả parity Pandas/PySpark.
+dòng, thời gian benchmark và kết quả đối chiếu Pandas/PySpark.
 
 ### Tạo rolling features
 
@@ -503,7 +512,7 @@ Lần chạy hiện tại chọn `hist_gradient_boosting`, đạt mean engine-le
 Xem [artifact và validation modeling](outputs/modeling/README.md) để biết fold
 metrics, final predictions, final evaluation, hình và giới hạn.
 
-### Chạy evaluation FD001--FD004
+### Chạy đánh giá FD001--FD004
 
 Sau khi muốn tái tạo ma trận within-subset và transfer, chạy:
 
@@ -514,7 +523,7 @@ Sau khi muốn tái tạo ma trận within-subset và transfer, chạy:
   --window-cycles 10
 ```
 
-Lệnh tạo bốn evaluation nội bộ và ba evaluation transfer từ FD001. Xem [artifact
+Lệnh tạo bốn lần đánh giá nội bộ và ba lần đánh giá chuyển subset từ FD001. Xem [artifact
 ma trận](outputs/cross_dataset/README.md). Kết quả dùng window 10 vì FD004 có
 test engine ngắn nhất 19 cycles; không thay thế kết quả FD001 window 30.
 
@@ -529,7 +538,7 @@ Sau khi ETL và modeling đã ghi artifact, chạy phân tích Health Index ph�
   --output-dir outputs/timeseries
 ```
 
-Artifact hiện có 20.631 dòng Health Index train và 704 forecast holdout trên
+Artifact hiện có 20.631 dòng Health Index train và 704 điểm dự báo trên đoạn giữ lại để kiểm tra của
 10 engine. Xem [artifact và validation PCA--ARIMA](outputs/timeseries/README.md)
 để biết quy tắc chọn engine, metric, hình và giới hạn.
 
@@ -544,8 +553,8 @@ uv run --extra dashboard streamlit run app.py
 ```
 
 Dashboard đọc `outputs/modeling` và `outputs/timeseries`, sau đó hiển thị so
-sánh model, metric RUL cuối, evaluation của một test engine, forecast Health
-Index, coverage của khoảng dự đoán, diagnostics và provenance. Giao diện light
+sánh model, metric RUL cuối, đánh giá một test engine, dự báo Health
+Index, tỷ lệ bao phủ của khoảng dự đoán, kiểm tra chẩn đoán và nguồn gốc. Giao diện light
 theme có năm view, gồm Cảnh báo sớm. Dashboard không huấn luyện lại model và không
 đọc `data/raw/RUL_FD001.txt`.
 

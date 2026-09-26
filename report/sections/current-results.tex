@@ -119,8 +119,10 @@ khi sensor 7 giảm khoảng 1,91 đơn vị; hai giá trị này không đượ
 tiếp vì sensor có thang đo khác nhau. Sensor 6 có 47 chênh lệch dương và 53
 chênh lệch bằng 0, nhưng mean difference chỉ khoảng 0,00045. Trường hợp này
 minh họa rằng p-value nhỏ không tự cho biết độ lớn thực tiễn của thay đổi. Phân
-tích đầu/cuối vì vậy không được dùng như bằng chứng chọn feature hoặc utility
-dự đoán RUL ngoài mẫu.\subsection{Rolling features}
+tích đầu/cuối vì vậy không được dùng như bằng chứng chọn đặc trưng hoặc giá trị sử dụng
+dự đoán RUL ngoài mẫu.
+
+\subsection{Rolling features}
 Rolling features dài 30 cycles gồm 17.731 train windows và 10.196 test windows,
 tổng cộng 27.927 dòng. Mỗi dòng có khóa \texttt{(split, engine\_id, cycle)} và
 126 feature columns cho 21 sensor, gồm \texttt{last}, \texttt{mean}, sample
@@ -209,7 +211,7 @@ ba nhóm còn lại (31--60, 61--90 và trên 90 cycles). Mười sai số lớn
 trường hợp dự đoán cao hơn nhãn thật, với độ lệch khoảng 37,6--57,5 cycles;
 những trường hợp này đóng góp đáng kể vào NASA score. Đây là kết quả trên FD001
 mô phỏng; riêng metric FD001 này chưa cung cấp bằng chứng về khả năng khái quát
-sang fault mode hoặc điều kiện vận hành khác.
+sang dạng lỗi hoặc điều kiện vận hành khác.
 
 \subsection{Đánh giá bổ sung trên FD002--FD004}
 Để kiểm tra khả năng chuyển miền, repository đã bổ sung đủ raw data FD001--FD004
@@ -310,15 +312,15 @@ nhất, không theo chất lượng prediction.}
 
 \subsection{Phân tích PCA--ARIMA trên Health Index}
 Phân tích phụ chỉ dùng 20.631 train observations. Danh sách 10 engine được
-xác định trước khi forecast, gồm hai engine ở mỗi fold GroupKFold theo các vị trí
+xác định trước khi dự báo, gồm hai engine ở mỗi fold GroupKFold theo các vị trí
 lifetime cách đều. StandardScaler, PCA, hướng PC1 và tham số chuẩn hóa Health
 Index được fit trên 90 train engines còn lại; 10 engine được chọn chỉ được
-transform và dùng cho forecast. Mỗi chuỗi dùng 70\% đầu để fit ARIMA và 30\%
+transform và dùng cho dự báo. Mỗi chuỗi dùng 70\% đầu để huấn luyện ARIMA và 30\%
 cuối để đánh giá; không có test observation hoặc test label trong bước này.
 
 \begin{table}[H]
 \centering
-\caption[Kết quả forecast Health Index theo engine]{Metric forecast 30\% cuối
+\caption[Kết quả dự báo Health Index theo engine]{Chỉ số dự báo trên 30\% cuối
 chuỗi Health Index trên 10 engine validation được chọn trước.}
 \label{tab:arima-results}
 \begin{tabular}{rrrrrr}
@@ -339,16 +341,16 @@ Engine & Fold & Order & MAE & RMSE & Coverage 95\%\\\midrule
 \end{table}
 
 Cả 10 engine đều có trạng thái fit hội tụ. MAE nằm trong khoảng 0,1515--1,0372
-và coverage 95\% nằm trong khoảng 21,43\%--97,03\%. Với p-value từ 0,8606 đến
-0,9990, ADF không bác bỏ giả thuyết gốc về nghiệm đơn vị trên các fit segment;
+và tỷ lệ bao phủ 95\% nằm trong khoảng 21,43\%--97,03\%. Với p-value từ 0,8606 đến
+0,9990, ADF không bác bỏ giả thuyết gốc về nghiệm đơn vị trên các đoạn huấn luyện;
 do đó, chưa có bằng chứng đủ mạnh để kết luận các chuỗi là dừng theo kiểm định
 này. Ljung--Box được tính với bậc tự do điều chỉnh theo $p+q$; hai trong mười
 chuỗi (engine 69 và 70) có p-value dưới 0,05, nên không thể kết luận residual
 của toàn bộ các chuỗi không còn tự tương quan. Coverage thấp ở một số engine
-cho thấy prediction interval chưa được calibration đồng đều; kết quả này được
+cho thấy khoảng dự đoán chưa được hiệu chỉnh đồng đều; kết quả này được
 giữ nguyên và không dùng để thay đổi danh sách engine.
 
-Để so sánh kết quả ARIMA với đường cơ sở đơn giản trên cùng horizon, báo cáo
+Để so sánh kết quả ARIMA với đường cơ sở đơn giản trên cùng khoảng dự báo, báo cáo
 tính baseline theo từng engine. Trung bình theo 10
 engine, ARIMA đạt MAE $0{,}4110$ và RMSE $0{,}5027$; baseline \texttt{drift}
 đạt lần lượt $0{,}7469$ và $0{,}9128$, còn \texttt{last\_value} đạt $0{,}9478$
@@ -360,8 +362,8 @@ Index thành RUL.
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.92\linewidth]{../outputs/timeseries/figures/arima_forecasts.png}
-\caption[Forecast Health Index trên 10 engine]{Actual Health Index, forecast
-ARIMA và prediction interval 95\% trên 30\% cuối mỗi chuỗi được chọn.}
+\caption[Dự báo Health Index trên 10 engine]{Health Index thực tế, dự báo
+ARIMA và khoảng dự đoán 95\% trên 30\% cuối mỗi chuỗi được chọn.}
 \label{fig:arima-forecast}
 \end{figure}
 
@@ -400,9 +402,9 @@ nên bảng ghi là lần 1 và lần 2. Với hai lần đo mỗi scale, chưa 
 
 Dashboard Streamlit cung cấp một lớp quan sát read-only cho các kết quả đã ghi.
 Trang tổng quan hiển thị MAE, RMSE, NASA score, số engine test, Health Index và
-forecast count; trang RUL cho phép chọn một test engine để xem giá trị thật,
+đếm số điểm dự báo; trang RUL cho phép chọn một test engine để xem giá trị thật,
 giá trị dự đoán và absolute error; trang Health Index/ARIMA cho phép chọn một
-validation engine để xem lịch sử, holdout forecast, khoảng dự đoán 95\% và
+validation engine để xem lịch sử, dự báo trên đoạn giữ lại để kiểm tra, khoảng dự đoán 95\% và
 diagnostics. Dashboard không fit model, không chạy lại ARIMA và không đọc nhãn
 test thô khi mở trang. Ví dụ, lựa chọn engine 39 chỉ truy vấn các dòng kết quả
 đã được tạo trước đó.

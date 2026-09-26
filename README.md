@@ -10,6 +10,12 @@ A reproducible Big Data course project for analyzing multivariate turbofan senso
 
 This repository provides **FD001 data validation, train RUL targets, an executed train-only EDA notebook, sensor inference artifacts, Pandas/PySpark Silver/Gold ETL, 30-cycle rolling features, grouped RUL evaluation, train-only PCA--ARIMA Health Index analysis, and a supplemental 10-cycle evaluation matrix for FD001--FD004**.
 
+**Planned improvement (26 September 2026):** compare 10/20/30-cycle windows,
+tune HistGradientBoosting, and test additional weighting for low-RUL samples.
+The planned evaluation separates model selection from assessment by engine
+and measures both warning timing and premature alarm burden. This experiment
+has not run yet; published metrics still describe the current model.
+
 Available now:
 
 - The original NASA C-MAPSS FD001--FD004 files and source documentation; the primary report uses FD001 and the supplemental matrix uses all four subsets.
@@ -115,7 +121,9 @@ FD001 represents one operating condition and one High-Pressure Compressor degrad
 - Recorded ZIP checksum: `MD5 79a22f36e80606c69d0e9e4da5bb2b7a`
 - Local provenance notes: [`data/raw/DATA_SOURCE.md`](data/raw/DATA_SOURCE.md)
 
-The data is simulated, not field telemetry. Results therefore support reproducible academic comparison on FD001, but do not by themselves establish real-world deployment performance.
+The data is simulated, not field telemetry. Results support reproducible academic
+comparison with FD001 as the primary subset and FD002--FD004 as supplemental
+evaluations; they do not establish real-world deployment performance.
 
 ## Data Architecture
 

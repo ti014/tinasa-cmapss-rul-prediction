@@ -29,7 +29,7 @@ Bootstrap cuối lấy mẫu lại engine có hoàn lại và giữ số lần x
 engine khi tính mean engine-level MAE. Wilcoxon dùng 100.000 permutation
 resamples với Benjamini--Hochberg trên 21 sensors. Nhánh PCA--ARIMA fit
 transformer trên 90 engine train và chỉ transform 10 engine được đánh giá; mỗi
-chuỗi dùng 70\% đầu để fit và 30\% cuối để forecast. Các giá trị này mô tả đúng
+chuỗi dùng 70\% đầu để huấn luyện và 30\% cuối để dự báo. Các giá trị này mô tả đúng
 cấu hình đã chạy, không phải mặc định tối ưu cho mọi subset C-MAPSS.
 
 \subsection{Nguyên tắc tái lập}
@@ -43,7 +43,7 @@ cross-validation; ghi final predictions rồi mới ghép test labels. Kết qu�
 Quy trình này kiểm tra khả năng tái lập của lần chạy chính trên FD001 với cấu
 hình đã nêu. Ma trận bổ sung trong \filepath{outputs/cross\_dataset/matrix.json}
 kiểm tra riêng transfer từ FD001 sang FD002--FD004 với window 10 cycles. Kết quả
-không chứng minh scalability trên cluster, khả năng khái quát tới động cơ thực
+không chứng minh khả năng mở rộng trên cụm máy, khả năng khái quát tới động cơ thực
 tế hoặc tính phù hợp của metric cho quyết định bảo trì.
 
 \subsection{Nguồn đối chiếu kết quả}
@@ -60,7 +60,7 @@ Chất lượng dữ liệu & Schema, khóa và độ liên tục của cycle & 
 Rolling features & Đặc trưng từ 30 cycles gần nhất & Đủ window, cùng engine và không dùng tương lai \\
 Model RUL & Cross-validation và metric test & GroupKFold, sample weighting và test-label join sau prediction \\
 Suy luận sensor & Chênh lệch đầu/cuối vòng đời & Cặp một--một, bootstrap, Wilcoxon và FDR \\
-Health Index & PCA--ARIMA và baseline cùng horizon & Temporal holdout, convergence, residual diagnostics và coverage \\
+Health Index & PCA--ARIMA và baseline cùng khoảng dự báo & Đánh giá theo thời gian, hội tụ, chẩn đoán phần dư và tỷ lệ bao phủ \\
 \bottomrule
 \end{tabular}
 \end{table}

@@ -645,3 +645,17 @@ PASS: search across public README files found no remaining implementation
 milestone or roadmap markers; citation keys in `references/README.md` remain
 unchanged because they identify bibliography entries, not project stages.
 PASS: `git diff --check` passed.
+
+Unified wording and scope audit: 2026-09-25
+SCOPE: README files, report source, glossary and public handoff/reference notes;
+no code, raw data, model artifact or metric changes.
+PASS: aligned the FD001 primary scope with the FD002--FD004 supplemental
+evaluation in both root READMEs and the report README; corrected the PDF page
+count to 47 pages.
+PASS: replaced remaining personal-plan and milestone wording, and explained
+common technical terms in simpler Vietnamese or in the report glossary.
+PASS: local links across root, report and output READMEs found no missing target.
+PASS: full suite `uv run --frozen python -m pytest -q --basetemp=tmp/pytest-audit`
+passed 154 tests with 14 dependency warnings; Tectonic build passed and the
+LaTeX log had no targeted fatal, undefined-reference, overfull or underfull
+matches. Glossary pages were rendered and checked for clipping.

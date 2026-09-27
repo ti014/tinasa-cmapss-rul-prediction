@@ -107,13 +107,20 @@ feature engineering hoặc model selection.
 \slide{4}{Quy trình xử lý dữ liệu}{45 giây}
 \cue{Đọc sơ đồ pipeline từ trái sang phải.}
 Raw files được đọc và kiểm tra schema, kiểu dữ liệu, khóa duy nhất và cycle
-continuity. ETL tạo các bảng Silver và Gold. Từ observations, pipeline tạo
-trailing features theo từng engine.
+continuity. Trong từng subset, reader đọc train và test, thêm cột \texttt{split}
+rồi union theo dòng. ETL tạo observations typed ở Silver Parquet; SQLite chỉ
+chứa engine summary và train targets. Từ observations, pipeline tạo trailing
+features theo từng engine.
 
 Nhánh modeling dùng GroupKFold để chọn model, sau đó refit trên toàn bộ train và
 tạo final predictions. Nhánh Health Index dùng PCA--ARIMA là phân tích phụ.
 Cuối cùng, các artifact được dùng cho metric, hình minh họa, dashboard và báo
 cáo.
+
+Khóa của một observation là \texttt{(split, engine\_id, cycle)}. FD001--FD004
+được xử lý riêng vì khóa hiện tại chưa có \texttt{dataset\_id}. Đây là batch
+ETL có PySpark parity local; benchmark hiện chỉ đo Pandas, chưa phải benchmark
+cluster.
 
 \slide{5}{Sensor thay đổi theo vòng đời}{45 giây}
 \cue{Nêu rõ đây là phân tích train-only, không phải feature selection.}
@@ -137,6 +144,10 @@ deviation, min, max và linear slope. Như vậy có 126 feature columns. Window
 không đi qua engine khác, không dùng test labels và không padding engine ngắn.
 
 Artifact FD001 chính có 17.731 train windows và 10.196 test windows.
+
+Khi ghép với RUL train, modeling dùng đầy đủ ba cột khóa và kiểm tra one-to-one.
+Ba operational settings không nằm trong $X$ của model RUL hiện tại. Tạo 126
+cột là feature engineering, chưa phải feature selection.
 
 \slide{7}{Đánh giá theo engine}{50 giây}
 \cue{Nhấn mạnh lý do dùng GroupKFold.}

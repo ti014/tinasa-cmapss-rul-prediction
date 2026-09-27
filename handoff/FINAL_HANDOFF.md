@@ -7,7 +7,7 @@ features, grouped RUL modeling, PCA--ARIMA Health Index và dashboard
 read-only. Bộ slide trình bày nằm tại
 `slides/cmapss_fd001_presentation.pptx`.
 
-Deck 18 slide được cập nhật ngày 27/09/2026 theo mạch bài thuyết trình học
+Deck 18 slide được cập nhật ngày 28/09/2026 theo mạch bài thuyết trình học
 thuật, gồm bài toán, dữ liệu, protocol, phương pháp, kết quả RUL, phân tích lỗi,
 Health Index, cảnh báo sớm, tái lập, giới hạn và ma trận transfer FD001--FD004.
 Finalizer đạt package integrity, layout, font và import; 18 slide đã được render
@@ -21,6 +21,11 @@ window 10 cycles để kiểm tra bốn subset; Health Index forecast là phân 
 không phải dự báo RUL.
 
 ## Cấu trúc bàn giao
+
+Walkthrough hỏi đáp về gom file, truy vấn, transform, feature columns và quan hệ
+dữ liệu nằm tại [`DATA_WALKTHROUGH.md`](DATA_WALKTHROUGH.md). Sơ đồ có nguồn
+chỉnh sửa tại [`assets/diagrams/data-relations.drawio`](../assets/diagrams/data-relations.drawio)
+và bản xem trước SVG/PNG.
 
 ```text
 slides/
@@ -141,7 +146,8 @@ Bằng chứng: `outputs/experiments/rul_improvement/20260927_full/validation.js
 đối chiếu 511 fit records, split, source/input hashes, baseline không đổi và
 predictions của model đã lưu. Run đầy đủ mất 78,61 phút, thêm một fit cuối.
 Lệnh kiểm tra: `uv run --frozen python scripts/verify_rul_improvement.py`.
-Full suite đạt 175 tests. Báo cáo 53 trang; PPTX/Beamer 18 slide. AppTest kiểm
+Full suite đạt 175 tests. Báo cáo hiện 49 trang, dưới giới hạn 50 trang; PPTX/Beamer
+18 slide, dưới giới hạn 20 slide. AppTest kiểm
 tra trang **Thử nghiệm cải thiện** và chọn engine 98; đây là kiểm tra giao diện
 bằng Streamlit testing API, không phải browser rehearsal của toàn dashboard.
 

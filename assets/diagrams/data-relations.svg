@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="620" viewBox="0 0 1400 620">
+<rect width="1400" height="620" fill="#ffffff"/>
+<style>text{font-family:Arial,sans-serif;fill:#16202a} .box{stroke-width:3} .label{font-size:20px;font-weight:bold}.small{font-size:17px}.edge{stroke:#52606d;stroke-width:3;fill:none;marker-end:url(#arrow)} .dash{stroke-dasharray:10 8}</style>
+<defs><marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#52606d"/></marker></defs>
+<rect class="box" x="35" y="120" width="255" height="130" rx="12" fill="#fff3e0" stroke="#ef6c00"/><text class="label" x="162" y="155" text-anchor="middle">Engine summary</text><text class="small" x="55" y="188">split, engine_id</text><text class="small" x="55" y="214">n_cycles, first/last_cycle</text>
+<rect class="box" x="365" y="105" width="290" height="160" rx="12" fill="#e8f5e9" stroke="#43a047"/><text class="label" x="510" y="140" text-anchor="middle">Observations (Silver)</text><text class="small" x="388" y="175">split, engine_id, cycle</text><text class="small" x="388" y="201">3 settings + 21 sensors</text><text class="small" x="388" y="227">33,727 rows</text>
+<rect class="box" x="730" y="105" width="290" height="160" rx="12" fill="#e1f5fe" stroke="#0277bd"/><text class="label" x="875" y="140" text-anchor="middle">Rolling features (Gold)</text><text class="small" x="752" y="175">30-cycle trailing window</text><text class="small" x="752" y="201">126 feature columns</text><text class="small" x="752" y="227">27,927 rows</text>
+<rect class="box" x="730" y="360" width="290" height="125" rx="12" fill="#e1f5fe" stroke="#0277bd"/><text class="label" x="875" y="395" text-anchor="middle">Train targets</text><text class="small" x="752" y="430">rul = max_cycle − cycle</text><text class="small" x="752" y="456">20,631 rows</text>
+<rect class="box" x="1090" y="105" width="250" height="120" rx="12" fill="#fce4ec" stroke="#e91e63"/><text class="label" x="1215" y="145" text-anchor="middle">Final predictions</text><text class="small" x="1112" y="181">one row / test engine</text>
+<rect class="box" x="1090" y="360" width="250" height="125" rx="12" fill="#fce4ec" stroke="#e91e63"/><text class="label" x="1215" y="395" text-anchor="middle">Test labels</text><text class="small" x="1112" y="430">read after prediction</text><text class="small" x="1112" y="456">final evaluation</text>
+<path class="edge" d="M290 185 H365"/><text class="small" x="305" y="170">1:N engine → cycles</text>
+<path class="edge" d="M655 165 H730"/><text class="small" x="665" y="150">1:0..1, đủ window</text>
+<path class="edge" d="M510 265 V422 H730"/><text class="small" x="525" y="405">1:1 cùng key</text>
+<path class="edge" d="M875 265 V360"/><text class="small" x="890" y="320">1:1 model join</text>
+<path class="edge dash" d="M1215 225 V360"/><text class="small" x="1230" y="300">late 1:1 join</text>
+<text class="small" x="35" y="555">Khóa trong một subset: (split, engine_id, cycle). Không có many-to-many join được triển khai.</text>
+</svg>

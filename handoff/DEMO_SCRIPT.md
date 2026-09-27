@@ -30,6 +30,29 @@ Nếu browser hoặc mạng trình chiếu gặp sự cố, dùng
 `/_stcore/health` chỉ chứng minh server sẵn sàng; cần mở các view cần trình bày để xác
 nhận flow demo.
 
+## Câu hỏi về dữ liệu và Big Data
+
+Nếu cô hỏi trước khi xem dashboard, trả lời theo luồng đã triển khai:
+
+- **Nhiều file gom thế nào?** Trong từng subset, reader đọc train/test cùng
+  schema, thêm `split` rồi concat/`unionByName`. FD001--FD004 được xử lý riêng;
+  không gộp toàn bộ vì khóa hiện tại chưa có `dataset_id`.
+- **Truy vấn ở đâu?** SQLite truy vấn `engine_summary` và `train_targets`.
+  Sensor observations được lọc từ Silver Parquet bằng Pandas. Project chưa có
+  query engine SQL trên Parquet hoặc partition pruning.
+- **Transform là gì?** Đổi text thành typed observations, tạo RUL train,
+  engine summary, rồi rolling features 30 cycles. Đây là data transformation,
+  không phải Transformer model.
+- **Lấy feature nào?** Model dùng 126 cột từ 21 sensors, mỗi sensor có
+  `last`, `mean`, `std`, `min`, `max`, `slope`. Ba settings không nằm trong X
+  hiện tại. Đây là feature engineering, chưa phải feature selection.
+- **Có quan hệ nhiều-nhiều không?** Không có many-to-many join được triển khai.
+  Quan hệ chính là engine--observations 1:N; feature--target và prediction--label
+  là 1:1 theo khóa. Join thiếu `cycle` sẽ làm nhân dòng.
+- **Big Data nằm ở đâu?** Ở batch ETL nhiều file, Parquet Silver/Gold và
+  PySpark parity local. Benchmark 100× chỉ đo Pandas in-memory; không nói là
+  cluster benchmark, Airflow hoặc Power BI.
+
 ## Phần bổ sung về cải thiện mô hình (60 giây)
 
 Mở **Thử nghiệm cải thiện**. Đọc bảng vòng ngoài: low-RUL MAE 3,6676 → 3,6730

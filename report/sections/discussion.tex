@@ -45,8 +45,8 @@ nhưng không được thay thế âm thầm đại lượng cần ước lượ
 Kết quả warning còn chịu ảnh hưởng của model selection: cùng tập OOF đã dùng
 để chọn HistGradientBoosting rồi mô tả event. Dự đoán mỗi engine không dùng
 engine đó trong fit, nhưng toàn bộ phân tích chưa độc lập với lựa chọn model.
-Đợt bổ sung ở Mục~\ref{sec:rul-improvement-results} đã đánh giá cả quy trình
-lựa chọn bằng vòng ngoài riêng. Kết quả chưa cải thiện: cảnh báo trễ tăng từ
+Đợt bổ sung nested GroupKFold đã đánh giá cả quy trình lựa chọn bằng vòng ngoài
+riêng. Kết quả chưa cải thiện: cảnh báo trễ tăng từ
 49 lên 53 engines. Tỷ lệ 100\% từng phát cảnh báo không thay thế được phép
 đánh giá về thời điểm cảnh báo này.
 

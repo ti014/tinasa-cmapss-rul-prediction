@@ -151,6 +151,27 @@ Statistical analysis   RUL prediction models
         and final LaTeX report
 ```
 
+
+### Data relationships and tool boundaries
+
+Each row is identified by `(split, engine_id, cycle)`. An engine has many cycles;
+each cycle contains 3 operational settings, 21 sensors, and a train RUL label.
+For an engine ending at cycle 200, the observation at cycle 170 has RUL = 30.
+The rolling window at cycle 170 uses cycles 141--170 from the same engine to
+create 126 features (six summaries for each of 21 sensors).
+
+| Step | Tools | Main output |
+| --- | --- | --- |
+| Read and validate | Python, Pandas | Schema, keys, cycle continuity, train RUL |
+| ETL | Pandas, PySpark, Parquet, SQLite | Silver/Gold and parity |
+| Features | Pandas, NumPy | 30-cycle window, 126 features |
+| Modeling | scikit-learn | GroupKFold and HistGradientBoostingRegressor |
+| Evaluation | scikit-learn, SciPy | MAE, RMSE, NASA score, bootstrap CI |
+| Visualization | Matplotlib, Seaborn, Streamlit | Figures, dashboard, results |
+
+FD001 is not large enough to claim Big Data by volume alone. The report shows
+scalability through Bronze/Silver/Gold ETL, Parquet, PySpark parity, and 1x/10x/100x benchmarks.
+
 Pandas is used in the EDA notebook, ETL reference path, statistics and model
 preparation. PySpark reproduces the ETL boundaries for parity; recorded runtime
 benchmarks measure Pandas only. The original dataset is only a few megabytes, so the

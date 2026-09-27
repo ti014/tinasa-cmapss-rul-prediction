@@ -1,0 +1,12 @@
+{
+  "status": "passed",
+  "baseline_unchanged": true,
+  "source_and_inputs_match": true,
+  "outer_engines": 100,
+  "rows_per_stage": 17731,
+  "stages": 4,
+  "validated_fit_records": 511,
+  "paired_ci_recomputed": true,
+  "saved_model_predictions_match": true,
+  "test_predictions": 100
+}

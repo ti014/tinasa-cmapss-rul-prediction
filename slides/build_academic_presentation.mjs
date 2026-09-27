@@ -3,7 +3,7 @@ import path from "node:path";
 import { Presentation, PresentationFile } from "@oai/artifact-tool";
 
 const root = "D:/IUH/BigData/Final_Project";
-const build = path.join(root, "tmp", "slides-transfer-20260925");
+const build = path.join(root, "tmp", "slides-rul-20260927");
 const candidate = path.join(build, "candidate.pptx");
 const preview = path.join(build, "renders");
 await fs.mkdir(preview, { recursive: true });
@@ -154,23 +154,43 @@ function table(slide, values, x, y, w, h, font = 19) {
 
 // 13. ETL, parity and reproducibility.
 {
-  const s = base("ETL và khả năng tái lập", "Đối chiếu kết quả xử lý; đo runtime cục bộ bằng Pandas", 13, "outputs/etl/parity.json; outputs/etl/benchmark.json; tmp/e2e-review-20260924/validation.json", "Pandas/PySpark cho cùng kết quả tại ba boundary Silver/Gold, max absolute difference 0.0. Benchmark chỉ đo build_engine_summary in-memory bằng Pandas. Scale 100x có 3.372.700 rows, hai lần 1,6752 và 1,6732 giây; không bao gồm I/O và không có PySpark timing. Fresh E2E đối chiếu 18 bảng, 5 hình và raw hash; 151 tests pass.");
+  const s = base("ETL và khả năng tái lập", "Đối chiếu kết quả xử lý; đo runtime cục bộ bằng Pandas", 13, "outputs/etl/parity.json; outputs/etl/benchmark.json; tmp/e2e-review-20260924/validation.json", "Pandas/PySpark cho cùng kết quả tại ba boundary Silver/Gold, max absolute difference 0.0. Benchmark chỉ đo build_engine_summary in-memory bằng Pandas. Scale 100x có 3.372.700 rows, hai lần 1,6752 và 1,6732 giây; không bao gồm I/O và không có PySpark timing. Fresh E2E đối chiếu 18 bảng, 5 hình và raw hash; 175 tests pass.");
   block(s, "Độ đúng của ETL", "Pandas và PySpark khớp schema, khóa, số dòng và giá trị ở ba bảng Silver/Gold.", 75, 170, 1100, 100);
   block(s, "Thử nghiệm quy mô", "Pandas tổng hợp 3.372.700 dòng nhân bản trong bộ nhớ: 1,6752 và 1,6732 giây.", 75, 320, 1100, 105);
-  block(s, "Tái lập", "Chạy lại từ raw: 18 bảng khớp nội dung, 5 hình byte-identical, raw hash không đổi; 151 tests pass.", 75, 475, 1100, 120);
+  block(s, "Tái lập", "Chạy lại từ raw: 18 bảng khớp nội dung, 5 hình byte-identical, raw hash không đổi; 175 tests pass.", 75, 475, 1100, 120);
 }
 
-// 14. Conclusion and limits.
+// 14-16. Completed nested RUL improvement study.
 {
-  const s = base("Kết luận và giới hạn", "Kết quả chính trên FD001 và bằng chứng chuyển miền trong C-MAPSS", 14, "report/sections/conclusion.tex; outputs/cross_dataset/matrix.json", "Kết luận: HistGradientBoosting được chọn theo GroupKFold, final MAE 15,3490 cycles với window 30 trên FD001. Ma trận bổ sung dùng window 10 cho bốn subset. Transfer từ FD001 sang FD002–FD004 có MAE 60,3215; 47,3949; 58,5731 cycles. Cảnh báo OOF vẫn là mô tả nội bộ. Health Index forecast là phân tích phụ.");
+  const s = base("Thiết kế thử nghiệm cải thiện RUL", "100 train engines, cùng 17.731 khóa từ cycle 30", 14, "experiments/README.md; 20260927_full/search_manifest.json", "Outer 5-fold được giữ từ baseline. Trong mỗi outer train, inner 3-fold chọn window, tham số và trọng số. Chỉ chấm outer validation sau khi chọn xong. Test đã được xem trước đợt này, không dùng để chọn lại cấu hình.");
+  block(s, "Phạm vi đã chạy", "Window 10 / 20 / 30, 24 cấu hình HistGradientBoosting và 3 phương án trọng số RUL.", 75, 170, 1100, 90);
+  block(s, "Tách lựa chọn và đánh giá", "5 outer folds đánh giá trên engine được giữ riêng. Mỗi outer train dùng 3 inner folds để chọn cấu hình.", 75, 315, 1100, 110);
+  block(s, "Tiêu chí đã chốt", "Ưu tiên MAE khi RUL ≤ 30. MAE toàn bộ, tỷ lệ cảnh báo trễ và thời gian báo sớm phải không tăng.", 75, 490, 1100, 110);
+}
+{
+  const s = base("Kết quả chưa đạt tiêu chí cải thiện", "Outer evaluation của cả quy trình chọn cấu hình", 15, "20260927_full/ablation_metrics.csv; paired_comparison.csv", "Các stage dùng cùng 100 train engines. Window 30 được chọn ở cả 5 vòng. Hai vòng chọn cấu hình HGB khác, ba vòng giữ baseline. Không vòng nào chọn thêm trọng số. Chênh lệch MAE RUL thấp +0,0054 cycles, CI [-0,0506;0,0639]. Tỷ lệ cảnh báo trễ tăng 4 điểm phần trăm, CI [1;8]. Các CI điều kiện trên predictions đã fit.");
+  table(s, [["Phương án", "MAE toàn bộ", "MAE RUL ≤ 30", "Trễ / bỏ lỡ"], ["Baseline", "20,2143", "3,6676", "49 / 100"], ["Chọn window", "20,2143", "3,6676", "49 / 100"], ["Chỉnh tham số", "20,2459", "3,6730", "53 / 100"], ["Chọn trọng số", "20,2459", "3,6730", "53 / 100"]], 70, 170, 1140, 270, 21);
+  text(s, "MAE RUL thấp thay đổi +0,0054 cycles, CI 95% [−0,0506; 0,0639].", 75, 485, 1110, 55, 23, C.navy, true);
+  text(s, "Cấu hình cuối trùng baseline. Test MAE giữ nguyên 15,3490 cycles.", 75, 560, 1110, 60, 24, C.ink);
+}
+{
+  const s = base("Giảm sai số có thể đi kèm đánh đổi", "Ví dụ trong inner CV trên toàn train, phục vụ chọn cấu hình", 16, "20260927_full/final_selection_metrics.csv", "Đây là ví dụ từ inner selection, không phải outer evaluation độc lập của ứng viên hgb_08. hgb_08 giảm MAE RUL thấp khoảng 9,75% nhưng MAE toàn bộ tăng 0,3233 cycles. Strong weights giảm low-RUL MAE và cảnh báo trễ nhưng tăng MAE toàn bộ và alarm burden. Luật đã chốt không cho phép tăng chỉ số kiểm soát. Không tuning tiếp theo test.");
+  table(s, [["Ứng viên", "MAE RUL ≤ 30", "MAE toàn bộ", "Trễ / bỏ lỡ"], ["Baseline", "3,6148", "20,3613", "50 / 100"], ["hgb_08", "3,2625", "20,6846", "49 / 100"], ["Ưu tiên RUL thấp cao", "3,3901", "20,4072", "47 / 100"]], 70, 170, 1140, 230, 21);
+  block(s, "Lý do chưa thay model", "hgb_08 giảm sai số RUL thấp khoảng 9,75% nhưng tăng MAE toàn bộ. Phương án trọng số cao còn tăng thời gian báo sớm.", 75, 450, 1100, 120);
+  text(s, "Đợt tiếp theo cần chốt mức đánh đổi chấp nhận được trước khi thử lại.", 75, 605, 1110, 35, 21, C.navy, true);
+}
+
+// 17. Conclusion and limits.
+{
+  const s = base("Kết luận và giới hạn", "Kết quả chính trên FD001 và bằng chứng chuyển miền trong C-MAPSS", 17, "report/sections/conclusion.tex; outputs/cross_dataset/matrix.json", "Kết luận: HistGradientBoosting được chọn theo GroupKFold, final MAE 15,3490 cycles với window 30 trên FD001. Ma trận bổ sung dùng window 10 cho bốn subset. Transfer từ FD001 sang FD002–FD004 có MAE 60,3215; 47,3949; 58,5731 cycles. Cảnh báo OOF vẫn là mô tả nội bộ. Health Index forecast là phân tích phụ.");
   block(s, "Kết quả chính", "HistGradientBoosting đạt MAE 15,3490 cycles trên 100 test engines; CI 95% [12,7286; 18,0866].", 75, 170, 1100, 100);
-  block(s, "Giới hạn cần nhớ", "Kết quả chính FD001 dùng window 30; ma trận transfer dùng window 10. Test chỉ đánh giá một điểm cắt mỗi engine. Cảnh báo OOF chưa độc lập với model selection.", 75, 330, 1100, 125);
-  block(s, "Bước nghiên cứu tiếp", "Retrain hoặc domain adaptation cho subset mới; sau đó kiểm tra cảnh báo bằng outer split theo engine.", 75, 515, 1100, 95);
+  block(s, "Giới hạn cần nhớ", "Kết quả chính FD001 dùng window 30; ma trận transfer dùng window 10. Test chỉ đánh giá một điểm cắt mỗi engine. Đợt nested CV bổ sung chưa cải thiện các tiêu chí đã chốt.", 75, 330, 1100, 125);
+  block(s, "Bước nghiên cứu tiếp", "Chốt mức đánh đổi cho vùng RUL thấp, thử đặc trưng mới trong training fold, rồi đánh giá bằng protocol mới đã công bố trước.", 75, 515, 1100, 95);
 }
 
-// 15. Cross-dataset transfer matrix.
+// 18. Cross-dataset transfer matrix.
 {
-  const s = base("Transfer giữa các subset C-MAPSS", "Window 10 cho phép giữ đủ test engines trong FD001–FD004", 15, "outputs/cross_dataset/matrix.json; outputs/cross_dataset/README.md", "Ma trận bổ sung chạy bốn evaluation nội bộ và ba phép transfer. Nội bộ: train và test cùng subset. Transfer: model fit trên toàn bộ train FD001 được giữ cố định khi dự đoán test subset khác. Window 10 khác window 30 của metric chính FD001, nên hai nhóm kết quả được trình bày riêng. Kết luận: dataset shift làm MAE tăng rõ rệt khi chuyển khỏi FD001.");
+  const s = base("Transfer giữa các subset C-MAPSS", "Window 10 cho phép giữ đủ test engines trong FD001–FD004", 18, "outputs/cross_dataset/matrix.json; outputs/cross_dataset/README.md", "Ma trận bổ sung chạy bốn evaluation nội bộ và ba phép transfer. Nội bộ: train và test cùng subset. Transfer: model fit trên toàn bộ train FD001 được giữ cố định khi dự đoán test subset khác. Window 10 khác window 30 của metric chính FD001, nên hai nhóm kết quả được trình bày riêng. Kết luận: dataset shift làm MAE tăng rõ rệt khi chuyển khỏi FD001.");
   table(s, [["Train → Test", "Loại", "MAE (cycles)", "RMSE (cycles)"], ["FD001 → FD001", "Nội bộ", "21,9258", "29,5936"], ["FD002 → FD002", "Nội bộ", "22,3556", "31,3077"], ["FD003 → FD003", "Nội bộ", "28,3255", "41,7606"], ["FD004 → FD004", "Nội bộ", "27,2218", "36,9311"], ["FD001 → FD002", "Transfer", "60,3215", "70,4603"], ["FD001 → FD003", "Transfer", "47,3949", "59,2140"], ["FD001 → FD004", "Transfer", "58,5731", "69,8148"]], 70, 145, 1140, 385, 16);
   text(s, "Model fit riêng trên FD001 không nên dùng trực tiếp cho subset khác nếu chưa retraining hoặc domain adaptation.", 75, 565, 1120, 60, 24, C.navy, true);
   text(s, "Các metric này dùng window 10; metric chính FD001 trên slide 9 dùng window 30.", 75, 625, 1120, 32, 17, C.muted);

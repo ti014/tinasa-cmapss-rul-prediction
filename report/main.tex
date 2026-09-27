@@ -16,7 +16,7 @@
 \renewcommand{\figurename}{Hình}
 \renewcommand{\tablename}{Bảng}
 \renewcommand{\refname}{Tài liệu tham khảo}
-\newcommand{\reportdate}{25/09/2026}
+\newcommand{\reportdate}{27/09/2026}
 \newcommand{\filepath}[1]{\nolinkurl{#1}}
 \newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
 \onehalfspacing
@@ -92,6 +92,13 @@ khác biệt giữa các subset trong môi trường mô phỏng. Vì dữ liệ
 cung cấp chi phí bảo trì, downtime hoặc quy đổi cycle sang thời gian lịch, các
 kết quả chưa đủ để suy ra chính sách bảo trì hoặc khả năng khái quát cho động cơ
 thực tế.
+
+Thực nghiệm cải thiện bổ sung dùng nested GroupKFold để so sánh window
+10/20/30, 24 cấu hình HGB và ba phương án trọng số. MAE RUL thấp trên vòng
+đánh giá ngoài chưa giảm (3,6676 so với 3,6730 cycles), còn số cảnh báo trễ
+tăng từ 49 lên 53 engines. Cấu hình được chọn cuối trùng baseline, nên kết
+quả test giữ nguyên. Báo cáo trình bày các đánh đổi quan sát được và giữ
+model hiện tại theo tiêu chí đã xác định trước.
 
 \noindent\textbf{Từ khóa:} NASA C-MAPSS FD001--FD004; RUL; early warning; rolling window;
 GroupKFold; ETL; Health Index; PCA--ARIMA.

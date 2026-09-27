@@ -45,8 +45,10 @@ nhưng không được thay thế âm thầm đại lượng cần ước lượ
 Kết quả warning còn chịu ảnh hưởng của model selection: cùng tập OOF đã dùng
 để chọn HistGradientBoosting rồi mô tả event. Dự đoán mỗi engine không dùng
 engine đó trong fit, nhưng toàn bộ phân tích chưa độc lập với lựa chọn model.
-Muốn ước lượng hiệu quả của cả quy trình lựa chọn cần một đánh giá vòng ngoài
-riêng; 100\% từng phát cảnh báo không thay thế được đánh giá này.
+Đợt bổ sung ở Mục~\ref{sec:rul-improvement-results} đã đánh giá cả quy trình
+lựa chọn bằng vòng ngoài riêng. Kết quả chưa cải thiện: cảnh báo trễ tăng từ
+49 lên 53 engines. Tỷ lệ 100\% từng phát cảnh báo không thay thế được phép
+đánh giá về thời điểm cảnh báo này.
 
 \subsection{Giới hạn phương pháp}
 Thứ nhất, FD001 chỉ gồm một điều kiện vận hành và một dạng suy giảm mô phỏng.
@@ -65,9 +67,11 @@ sang thời gian lịch; vì vậy báo cáo chưa thể chuyển metric RUL th�
 bảo trì.
 
 \subsection{Hướng nghiên cứu tiếp theo}
-Khả năng khái quát có thể được khảo sát thêm bằng cách thay đổi độ dài window,
-chia dữ liệu theo thời gian trên nhiều engine và dùng đánh giá vòng ngoài cho
-quy trình chọn model. Với Health Index, cần huấn luyện transformer ngoài các engine
+Đợt thử window 10/20/30, 24 cấu hình HGB và ba phương án trọng số đã hoàn tất
+đánh giá vòng ngoài, nhưng chưa đạt các tiêu chí đã chốt. Một số cấu hình giảm
+MAE RUL thấp trong inner CV và làm tăng chỉ số khác. Đợt tiếp theo cần xác định
+trước mức đánh đổi có thể chấp nhận, hoặc thử biểu diễn đặc trưng khác trong
+training fold. Không suy ra từ kết quả này rằng mô hình không thể cải thiện. Với Health Index, cần huấn luyện transformer ngoài các engine
 được dự báo và báo cáo đồng thời tỷ lệ phát hiện lỗi, tỷ lệ bao phủ và khoảng thời gian dự báo.
 
 Kết quả FD002--FD004 hiện đã cung cấp một phép kiểm tra chuyển sang subset khác.

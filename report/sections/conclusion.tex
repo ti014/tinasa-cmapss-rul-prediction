@@ -39,3 +39,11 @@ subset. Vì vậy, kết luận chính được giữ ở phạm vi FD001; các 
 thấy cần huấn luyện lại hoặc xử lý khác biệt giữa các subset trước khi áp dụng.
 Phạm vi dữ liệu hiện tại chưa cho phép kết luận về lịch bảo trì tối ưu hoặc hiệu
 quả triển khai thực tế.
+
+Đợt cải thiện bổ sung dùng nested GroupKFold đã kiểm tra window 10/20/30,
+24 cấu hình HGB và ba phương án trọng số. Trên outer predictions, MAE RUL
+thấp thay đổi từ 3,6676 thành 3,6730 cycles; cảnh báo trễ tăng từ 49 lên 53
+engines. Cấu hình cuối được chọn lại là baseline, nên MAE test giữ nguyên
+15,3490 cycles. Kết quả này chưa đáp ứng tiêu chí cải thiện đã chốt. Các
+đánh đổi quan sát được trong inner CV là căn cứ cho thử nghiệm tiếp theo,
+không phải bằng chứng rằng dự đoán RUL không thể tốt hơn.

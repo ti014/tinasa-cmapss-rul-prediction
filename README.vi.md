@@ -10,11 +10,12 @@ Repository này phục vụ báo cáo cuối kỳ môn Phân tích dữ liệu l
 
 Repository đã có **kiểm tra dữ liệu FD001--FD004, nhãn RUL train, notebook EDA và suy luận sensor chỉ dùng train FD001, ETL Silver/Gold bằng Pandas/PySpark, rolling features 30 cycles, đánh giá RUL theo engine, phân tích PCA--ARIMA Health Index trên train và ma trận bổ sung window 10 cycles cho cả bốn subset**.
 
-**Kế hoạch cải thiện (26/09/2026):** so sánh window 10/20/30 cycles,
-chỉnh tham số HistGradientBoosting và thử tăng trọng số cho mẫu RUL thấp.
-Phép đánh giá dự kiến tách việc chọn mô hình khỏi đánh giá theo engine,
-đồng thời đo thời điểm cảnh báo và mức báo sớm khi RUL còn cao. Đợt thử nghiệm
-này chưa chạy; các metric công bố vẫn là kết quả mô hình hiện tại.
+**Đã hoàn tất thử nghiệm cải thiện (27/09/2026):** nested GroupKFold 5×3
+so sánh window 10/20/30, 24 cấu hình HistGradientBoosting và ba phương án trọng số.
+MAE RUL thấp ở vòng ngoài thay đổi từ 3,6676 thành 3,6730 cycles; số cảnh báo
+trễ tăng từ 49 lên 53/100 engines. Cấu hình cuối được chọn lại là baseline,
+nên MAE test vẫn là 15,3490. Một số ứng viên giảm sai số RUL thấp trong inner CV
+nhưng làm tăng chỉ số khác. Xem [kết quả và cách chạy lại](experiments/README.md).
 
 Đã có:
 
@@ -306,7 +307,7 @@ Cấu trúc repository hiện tại:
 ├── requirements-dashboard.txt # Dependency Streamlit tùy chọn cho dashboard
 ├── uv.lock                  # Phiên bản dependencies đã khóa
 ├── report/                  # Nguồn LaTeX/PDF và hình của báo cáo
-├── slides/                  # Source và PDF Beamer, deck PowerPoint 15 slide
+├── slides/                  # Source và PDF Beamer, deck PowerPoint 18 slide
 │   └── archive/             # Deck/script cũ để đối chiếu
 ├── handoff/                 # Kịch bản demo và checklist bàn giao cuối
 │   └── archive/             # Kịch bản Markdown cũ
@@ -400,7 +401,7 @@ Sau khi cài `requirements-dev.txt`, mở notebook từ thư mục gốc:
 Chọn kernel Python của `.venv` và **Restart Kernel and Run All Cells**.
 Notebook chỉ phân tích train và tạo lại 12 bảng CSV, 11 hình PNG.
 Các lần kiểm tra với kernel mới tạo tệp EDA giống nhau trong cùng môi trường.
-Bộ kiểm thử toàn repository đạt **154 tests**, gồm kiểm tra dữ liệu, thống kê,
+Bộ kiểm thử toàn repository đạt **175 tests**, gồm kiểm tra dữ liệu, thống kê,
 ETL, đặc trưng, modeling, PCA--ARIMA, đánh giá liên subset và tái lập end-to-end.
 
 ![Quy trình EDA train FD001](assets/diagrams/fd001-eda.svg)

@@ -1,0 +1,12 @@
+diff --git a/pyproject.toml b/pyproject.toml
+index 2e07ef1..253615b 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -26,6 +26,7 @@ cmapss-etl = "cmapss.etl.cli:main"
+ cmapss-features = "cmapss.features.cli:main"
+ cmapss-modeling = "cmapss.modeling.cli:main"
+ cmapss-cross-dataset = "cmapss.cross_dataset:main"
++cmapss-model-improvement = "cmapss.modeling.improvement_cli:main"
+ 
+ [project.optional-dependencies]
+ etl = [

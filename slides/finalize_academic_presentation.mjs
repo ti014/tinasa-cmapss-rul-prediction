@@ -3,10 +3,11 @@ import fs from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 
 const workspaceDir = "D:/IUH/BigData/Final_Project";
-const skillDir = "C:/Users/timewo/.codex/plugins/cache/openai-primary-runtime/presentations/26.923.10815/skills/presentations";
-const candidatePath = path.join(workspaceDir, "tmp", "slides-transfer-20260925", "candidate.pptx");
-const finalPath = path.join(workspaceDir, "slides", "cmapss_fd001_presentation.pptx");
-const stagingDir = path.join(workspaceDir, "tmp", "slides-transfer-20260925", "finalizer");
+const skillDir = "C:/Users/timewo/.codex/plugins/cache/openai-primary-runtime/presentations/26.909.12148/skills/presentations";
+const candidatePath = path.join(workspaceDir, "tmp", "slides-rul-20260927", "candidate.pptx");
+const finalPath = path.join(workspaceDir, "tmp", "slides-rul-20260927", "final", "cmapss_fd001_presentation.pptx");
+await fs.mkdir(path.dirname(finalPath), { recursive: true });
+const stagingDir = path.join(workspaceDir, "tmp", "slides-rul-20260927", "finalizer");
 await fs.mkdir(stagingDir, { recursive: true });
 const { finalizePresentation } = await import(pathToFileURL(path.join(skillDir, "container_tools", "artifact_tool_utils.mjs")).href);
 
@@ -21,9 +22,9 @@ const result = await finalizePresentation({
     "--expected-slide-size-emu", "12192000,6858000",
     "--validate-bullet-geometry",
     "--validate-heading-fit",
-    ...[3, 6, 7, 8, 11, 15].flatMap((n) => ["--require-native-table-slide", String(n)]),
+    ...[3, 6, 7, 8, 11, 15, 16, 18].flatMap((n) => ["--require-native-table-slide", String(n)]),
   ],
-  requiredNativeTableOwnerSlides: [3, 6, 7, 8, 11, 15],
+  requiredNativeTableOwnerSlides: [3, 6, 7, 8, 11, 15, 16, 18],
   sourceTemplatePath: path.join(workspaceDir, "slides", "archive", "decks", "cmapss_fd001_presentation_before_refresh.pptx"),
   fontPolicy: {
     basis: "reference",

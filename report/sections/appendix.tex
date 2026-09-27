@@ -64,3 +64,15 @@ Health Index & PCA--ARIMA và baseline cùng khoảng dự báo & Đánh giá th
 \bottomrule
 \end{tabular}
 \end{table}
+
+\subsection{Tái lập thực nghiệm cải thiện}
+Lệnh \texttt{uv run --frozen cmapss-model-improvement} chạy đúng ngân sách
+5 outer folds, 3 inner folds, 24 cấu hình và seed 42. Hướng dẫn đầy đủ tại
+\filepath{experiments/README.md}. Đợt đã nghiệm thu lưu tại
+\filepath{outputs/experiments/rul\_improvement/20260927\_full/}.
+Các bảng chính gồm ablation metrics, paired comparison, test comparison
+và final selection metrics; tên file CSV tương ứng được liệt kê trong hướng
+dẫn thực nghiệm. File \texttt{validation.json}
+ghi kết quả kiểm tra engine separation, cùng khóa đánh giá, baseline không
+đổi, paired CI và prediction từ model đã lưu. Cache từng fit chỉ giữ local;
+người tái lập có thể chạy một output directory mới theo cùng cấu hình.

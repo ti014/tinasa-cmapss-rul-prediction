@@ -10,11 +10,12 @@ A reproducible Big Data course project for analyzing multivariate turbofan senso
 
 This repository provides **FD001 data validation, train RUL targets, an executed train-only EDA notebook, sensor inference artifacts, Pandas/PySpark Silver/Gold ETL, 30-cycle rolling features, grouped RUL evaluation, train-only PCA--ARIMA Health Index analysis, and a supplemental 10-cycle evaluation matrix for FD001--FD004**.
 
-**Planned improvement (26 September 2026):** compare 10/20/30-cycle windows,
-tune HistGradientBoosting, and test additional weighting for low-RUL samples.
-The planned evaluation separates model selection from assessment by engine
-and measures both warning timing and premature alarm burden. This experiment
-has not run yet; published metrics still describe the current model.
+**Improvement study completed (27 September 2026):** nested 5×3 GroupKFold
+compared windows 10/20/30, 24 HistGradientBoosting configurations and three weight
+schemes. Outer low-RUL MAE changed from 3.6676 to 3.6730 cycles; late warnings
+increased from 49 to 53/100 engines. The final selection retained the baseline,
+so test MAE remains 15.3490. Some inner-CV candidates improved low-RUL error at
+the cost of other metrics. See [results and reproduction](experiments/README.md).
 
 Available now:
 
@@ -69,7 +70,7 @@ Available now:
 
 Final handoff:
 
-- The [15-slide presentation deck](slides/cmapss_fd001_presentation.pptx) now
+- The [18-slide presentation deck](slides/cmapss_fd001_presentation.pptx) now
   explains the problem, data, evaluation protocol, RUL results, Health Index,
   OOF warning evidence, transfer evaluation, reproducibility, and limitations. The [handoff
   checklist](handoff/FINAL_HANDOFF.md) lists validation.
@@ -314,7 +315,7 @@ Current repository structure:
 ├── requirements-dashboard.txt # Optional Streamlit dashboard dependencies
 ├── uv.lock                  # Locked dependency versions
 ├── report/                  # LaTeX source, PDF, figures, and evidence
-├── slides/                  # Beamer source/PDF and validated 15-slide deck
+├── slides/                  # Beamer source/PDF and validated 18-slide deck
 │   └── archive/             # Superseded decks and builders
 ├── handoff/                 # Demo script and final handoff checklist
 │   └── archive/             # Legacy speech source
@@ -409,7 +410,7 @@ After installing `requirements-dev.txt`, open the notebook from the repository r
 Select the `.venv` Python kernel and **Restart Kernel and Run All Cells**.
 This analyzes only train and recreates 12 CSV tables and 11 PNG figures.
 Validated fresh-kernel runs produced identical EDA artifacts in the same
-environment. The repository-wide test suite passed **154 tests**, including
+environment. The repository-wide test suite passed **175 tests**, including
 data, statistics, ETL, feature, modeling, PCA--ARIMA, cross-dataset, and
 end-to-end reproducibility checks.
 

@@ -145,6 +145,27 @@ Phân tích thống kê      Mô hình dự đoán RUL
        và báo cáo LaTeX cuối kỳ
 ```
 
+
+### Quan hệ dữ liệu và công cụ
+
+Mỗi dòng được định danh bởi `(split, engine_id, cycle)`. Một engine có nhiều
+cycle; tại mỗi cycle có 3 operational settings, 21 sensors và nhãn RUL của
+train. Với engine kết thúc ở cycle 200, observation tại cycle 170 có RUL = 30.
+Rolling window tại cycle 170 lấy cycles 141--170 của cùng engine để tạo 126
+features (6 phép tóm tắt cho mỗi 21 sensor).
+
+| Bước | Công cụ | Đầu ra chính |
+| --- | --- | --- |
+| Đọc và kiểm tra | Python, Pandas | Schema, khóa, cycle continuity, train RUL |
+| ETL | Pandas, PySpark, Parquet, SQLite | Silver/Gold và parity |
+| Features | Pandas, NumPy | Window 30 cycles, 126 features |
+| Modeling | scikit-learn | GroupKFold và HistGradientBoostingRegressor |
+| Đánh giá | scikit-learn, SciPy | MAE, RMSE, NASA score, bootstrap CI |
+| Trực quan hóa | Matplotlib, Seaborn, Streamlit | Hình, dashboard và kết quả |
+
+FD001 hiện chưa đủ lớn để tự gọi là Big Data. Báo cáo thể hiện khả năng mở
+rộng qua ETL Bronze/Silver/Gold, Parquet, PySpark parity và benchmark 1x/10x/100x.
+
 Pandas đã được dùng trong notebook EDA, làm reference cho ETL, thống kê và
 chuẩn bị dữ liệu mô hình. PySpark tái hiện các boundary ETL để đối chiếu kết quả;
 runtime benchmark hiện chỉ đo Pandas. Bộ dữ liệu gốc chỉ có dung

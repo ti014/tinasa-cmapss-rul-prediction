@@ -79,3 +79,12 @@ dài 30 cycles để dự đoán nhãn này. Đây là ví dụ về cách xây 
 phải kết quả của mô hình.
 
 PDF để đọc offline được tập hợp trong [papers/](papers/README.md). Bảng này ghi rõ file đã có, nguồn tải và bài chưa tải được. R1 được sao chép từ PDF gốc trong `data/raw/`; file dữ liệu gốc được giữ nguyên. `references/` không bị loại trừ bởi `.gitignore` hiện tại.
+
+## Nguồn bổ sung ngày 27/09/2026
+
+- `sklearnNestedCV2026`: [Nested versus non-nested cross-validation](https://scikit-learn.org/stable/auto_examples/model_selection/plot_nested_cross_validation_iris.html). Cơ sở tách lựa chọn cấu hình khỏi đánh giá vòng ngoài.
+- `sklearnHGBAPI2026`: [HistGradientBoostingRegressor API](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.HistGradientBoostingRegressor.html). Đối chiếu tham số và `early_stopping=False` với môi trường cài scikit-learn 1.9.1.
+
+Hai nguồn giải thích phương pháp. Kết quả định lượng lấy từ artifact của
+repository, không lấy từ ví dụ của scikit-learn. Ví dụ low-RUL MAE 3,6730 cycles
+là kết quả thực nghiệm FD001 của đợt này.

@@ -1,0 +1,29 @@
+\documentclass[tikz,border=15pt]{standalone}
+\usepackage{fontspec}
+\setsansfont{Arial}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,backgrounds}
+\definecolor{greenFill}{HTML}{E8F5E9}
+\definecolor{greenStroke}{HTML}{43A047}
+\definecolor{coreFill}{HTML}{E1F5FE}
+\definecolor{coreStroke}{HTML}{0277BD}
+\begin{document}
+\begin{tikzpicture}[
+ font=\sffamily\small,>=Stealth,
+ base/.style={rectangle,rounded corners=3pt,align=center,text width=11cm,minimum height=1.2cm,inner sep=8pt},
+ dataNode/.style={base,draw=greenStroke,fill=greenFill,thick},
+ opNode/.style={base,draw=coreStroke,fill=coreFill,thick},
+ edge/.style={->,thick,draw=gray!80}]
+\node[dataNode] (input) at (0,0) {100 train engines, khóa từ cycle 30\\Lưu baseline, cố định 5 outer folds theo engine};
+\node[opNode] (select) at (0,-2) {Trong mỗi outer fold: chỉ dùng outer train\\Inner 3-fold chọn window 10/20/30, rồi 24 cấu hình HGB, rồi 3 phương án trọng số};
+\node[opNode] (evaluate) at (0,-4) {Outer validation: engine không tham gia chọn hoặc fit\\Lưu baseline và phương án sau mỗi giai đoạn trên cùng khóa};
+\node[dataNode] (compare) at (0,-6) {Gộp predictions của 5 outer folds\\So sánh theo engine; paired bootstrap 10.000 lần};
+\node[opNode] (final) at (0,-8) {Chọn cấu hình cuối bằng inner 3-fold trên toàn train\\Fit toàn bộ train; ghi 100 test predictions};
+\node[dataNode] (test) at (0,-10) {Sau khi ghi predictions mới ghép nhãn test\\Đánh giá tại điểm cuối; không quay lại tuning};
+\draw[edge] (input.south) -- (select.north);
+\draw[edge] (select.south) -- (evaluate.north);
+\draw[edge] (evaluate.south) -- (compare.north);
+\draw[edge] (compare.south) -- (final.north);
+\draw[edge] (final.south) -- (test.north);
+\end{tikzpicture}
+\end{document}

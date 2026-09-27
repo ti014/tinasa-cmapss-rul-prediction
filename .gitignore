@@ -42,6 +42,8 @@ dist/
 *.log
 logs/
 tmp/
+# Rebuildable per-fit predictions; keep summary artifacts and manifests in Git.
+outputs/experiments/rul_improvement/*/fit_cache/
 temp/
 *.tmp
 *.bak

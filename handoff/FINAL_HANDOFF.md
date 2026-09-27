@@ -7,10 +7,10 @@ features, grouped RUL modeling, PCA--ARIMA Health Index và dashboard
 read-only. Bộ slide trình bày nằm tại
 `slides/cmapss_fd001_presentation.pptx`.
 
-Deck 15 slide được cập nhật ngày 25/09/2026 theo mạch bài thuyết trình học
+Deck 18 slide được cập nhật ngày 27/09/2026 theo mạch bài thuyết trình học
 thuật, gồm bài toán, dữ liệu, protocol, phương pháp, kết quả RUL, phân tích lỗi,
 Health Index, cảnh báo sớm, tái lập, giới hạn và ma trận transfer FD001--FD004.
-Finalizer đạt package integrity, layout, font và import; 15 slide đã được render
+Finalizer đạt package integrity, layout, font và import; 18 slide đã được render
 để kiểm tra nội dung và bố cục.
 Bản 10 slide trước redesign được giữ tại
 `slides/archive/decks/cmapss_fd001_presentation_before_academic_redesign.pptx`.
@@ -38,7 +38,7 @@ handoff/
 report/main.pdf
 handoff/SPEECH_SCRIPT_VI.tex
 handoff/SPEECH_SCRIPT_VI.pdf
-outputs/{etl,features,modeling,timeseries,cross_dataset}/
+outputs/{etl,features,modeling,timeseries,cross_dataset,experiments}/
 src/cmapss/{etl,features,modeling,timeseries,reproducibility.py}
 tests/
 ```
@@ -66,7 +66,7 @@ uv lock --check
 
 Lần kiểm tra end-to-end ngày 2026-09-24 đã đối chiếu 18 bảng, metrics, năm hình
 byte-identical, raw hashes và dashboard loader. Lượt nghiệm thu timing tiếp
-theo tại `tmp/e2e-review-20260924` cũng đạt; full suite hiện tại đạt 154 tests.
+theo tại `tmp/e2e-review-20260924` cũng đạt; full suite ngày 27/09/2026 đạt 175 tests.
 
 Kiểm tra ngày 2026-09-24 gồm loader và trang Cảnh báo sớm trên browser thật
 ở localhost:8517; đã quan sát bảng timing và phân phối lead time. Không gọi
@@ -125,3 +125,26 @@ rate cấp engine là null theo định nghĩa event toàn trajectory, không ph
 - PySpark parity và notebook reproducibility là các kiểm tra riêng với lệnh
   end-to-end Pandas.
 - Dashboard đọc artifact đã sinh; không tự huấn luyện lại model.
+
+## Thực nghiệm cải thiện đã hoàn tất
+
+Nested GroupKFold 5×3 thử window 10/20/30, 24 cấu hình HGB và ba cách đặt
+trọng số. Kết quả outer trên cùng 17.731 dòng của 100 train engines: MAE RUL
+thấp 3,6676 → 3,6730 cycles; cảnh báo trễ/bỏ lỡ 49 → 53 engines. Giữ baseline.
+Cấu hình cuối trên toàn train trùng baseline, nên test MAE vẫn 15,3490 cycles.
+
+Ví dụ `hgb_08` giảm low-RUL MAE khoảng 9,75% trong inner CV nhưng tăng MAE toàn
+bộ 0,32 cycles. Đây là đánh đổi cần xác định mục tiêu trước đợt tiếp theo;
+không gọi nó là kết quả ngoài mẫu độc lập hoặc mô hình đã được thay thế.
+
+Bằng chứng: `outputs/experiments/rul_improvement/20260927_full/validation.json`
+đối chiếu 511 fit records, split, source/input hashes, baseline không đổi và
+predictions của model đã lưu. Run đầy đủ mất 78,61 phút, thêm một fit cuối.
+Lệnh kiểm tra: `uv run --frozen python scripts/verify_rul_improvement.py`.
+Full suite đạt 175 tests. Báo cáo 53 trang; PPTX/Beamer 18 slide. AppTest kiểm
+tra trang **Thử nghiệm cải thiện** và chọn engine 98; đây là kiểm tra giao diện
+bằng Streamlit testing API, không phải browser rehearsal của toàn dashboard.
+
+Không chạy lại ETL/reproducibility cũ trong lượt này vì không sửa ETL hoặc
+thay artifact `outputs/modeling`. Kiểm tra mới xác nhận baseline giữ nguyên.
+Các kiểm tra end-to-end cũ ở trên được giữ rõ ngày thực hiện.

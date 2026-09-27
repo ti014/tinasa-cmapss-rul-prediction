@@ -124,6 +124,22 @@ def format_metric(value: float | int, decimals: int = 4) -> str:
     return f"{float(value):,.{decimals}f}"
 
 
+def load_improvement_data(repo_root: str | Path = ".") -> dict[str, Any]:
+    """Read the completed, explicitly named nested experiment shared with report."""
+    root = Path(repo_root).resolve() / "outputs/experiments/rul_improvement/20260927_full"
+    info = _read_json(root / "run_info.json")
+    if not info.get("test_label_joined"):
+        raise DashboardDataError("Thực nghiệm chưa hoàn tất đánh giá cuối.")
+    ablation = _read_table(root / "ablation_metrics.csv")
+    _require_columns(ablation, {"stage", "mean_engine_mae", "low_rul_engine_mae", "late_or_missed_count", "early_alarm_burden"}, "ablation_metrics.csv")
+    return {"root": root, "run_info": info, "ablation": ablation,
+            "paired": _read_table(root / "paired_comparison.csv"),
+            "test": _read_table(root / "test_comparison.csv"),
+            "selection": _read_table(root / "final_selection_metrics.csv"),
+            "predictions": _read_table(root / "outer_predictions.parquet", parquet=True),
+            "decision": _read_json(root / "decision.json")}
+
+
 def selected_engine_ids(data: DashboardData) -> list[int]:
     """Return deterministic engine choices available in persisted artifacts."""
 
@@ -203,7 +219,7 @@ def _render_dashboard() -> None:
         unsafe_allow_html=True,
     )
 
-    pages = ["Tổng quan", "Đánh giá RUL", "Cảnh báo sớm", "Health Index / ARIMA", "Provenance"]
+    pages = ["Tổng quan", "Đánh giá RUL", "Cảnh báo sớm", "Thử nghiệm cải thiện", "Health Index / ARIMA", "Provenance"]
     st.sidebar.markdown("### Điều hướng")
     page = st.sidebar.radio("Trang", pages, label_visibility="collapsed")
     st.sidebar.divider()
@@ -213,6 +229,47 @@ def _render_dashboard() -> None:
     st.sidebar.metric("RUL engines", f"{len(data.model_evaluation):,}")
 
     metrics = data.model_metrics.get("metrics", {})
+    if page == "Thử nghiệm cải thiện":
+        st.header("So sánh quy trình chọn model với baseline")
+        try:
+            experiment = load_improvement_data(Path(__file__).resolve().parent)
+        except DashboardDataError as exc:
+            st.info(str(exc))
+            return
+        st.write("Mỗi động cơ ở vòng đánh giá ngoài được giữ riêng khỏi cả huấn luyện và chọn cấu hình. Các phương án dùng cùng cycle từ 30 trở đi.")
+        labels = {"baseline": "Baseline", "windows": "Sau chọn window", "parameters": "Sau chỉnh tham số", "weights": "Sau chọn trọng số"}
+        table = experiment["ablation"][["stage", "mean_engine_mae", "low_rul_engine_mae", "late_or_missed_count", "early_alarm_burden"]].copy()
+        table["stage"] = table.stage.map(labels)
+        st.subheader("Đánh giá toàn bộ trajectory của 100 train engines")
+        st.dataframe(table.rename(columns={"stage": "Phương án", "mean_engine_mae": "MAE toàn bộ", "low_rul_engine_mae": "MAE khi RUL ≤ 30", "late_or_missed_count": "Cảnh báo trễ hoặc bỏ lỡ", "early_alarm_burden": "Tỷ lệ thời gian báo sớm"}), hide_index=True, width="stretch")
+        st.caption("Tỷ lệ thời gian báo sớm: tỷ lệ cycle có cảnh báo khi RUL thật còn trên 30, tính riêng từng engine rồi lấy trung bình. Ngưỡng nghiên cứu là 30 cycles.")
+        st.subheader("Chênh lệch và khoảng tin cậy 95%")
+        st.dataframe(experiment["paired"].loc[experiment["paired"].stage.eq("weights")], hide_index=True, width="stretch")
+        st.caption("Chênh lệch = quy trình chọn model − baseline. Giá trị âm là giảm. Bootstrap lấy lại cùng engine cho hai phương án; khoảng tin cậy chưa bao gồm biến thiên do huấn luyện lại.")
+        if not experiment["decision"]["observed_improvement_meets_plan"]:
+            st.info("Chưa đạt đầy đủ tiêu chí cải thiện đã chốt. Model mặc định vẫn là baseline.")
+        st.subheader("RUL theo từng cycle")
+        predictions = experiment["predictions"]
+        engine = st.selectbox("Chọn train engine", sorted(predictions.engine_id.unique()), key="improvement_engine")
+        fig, ax = plt.subplots(figsize=(9, 4))
+        for stage in ("baseline", "weights"):
+            frame = predictions.loc[predictions.stage.eq(stage) & predictions.engine_id.eq(engine)].sort_values("cycle")
+            ax.plot(frame.cycle, frame.y_pred, label=labels[stage])
+        ax.plot(frame.cycle, frame.y_true, "k--", label="RUL thật")
+        ax.axhline(30, color="gray", linestyle=":")
+        ax.set(xlabel="Cycle", ylabel="RUL (cycles)")
+        ax.legend(); st.pyplot(fig); plt.close(fig)
+        st.subheader("Đánh giá tại điểm cuối của 100 test engines")
+        st.dataframe(experiment["test"], hide_index=True, width="stretch")
+        st.caption("Test FD001 đã được xem trong phân tích trước đợt này. Không dùng kết quả test để chọn lại cấu hình. MAE tại một điểm cuối khác MAE trên toàn trajectory.")
+        st.subheader("Các đánh đổi khi chọn cấu hình")
+        selection = experiment["selection"]
+        examples = selection.loc[(selection.stage.eq("parameters") & selection.candidate_id.isin(["baseline", "hgb_08"])) | (selection.stage.eq("weights") & selection.candidate_id.eq("strong_low_rul"))]
+        st.dataframe(examples[["stage", "candidate_id", "low_rul_engine_mae", "mean_engine_mae", "late_or_missed_rate", "early_alarm_burden", "selected"]], hide_index=True, width="stretch")
+        st.caption("Ví dụ trong inner CV trên toàn train. Một cấu hình có thể giảm sai số RUL thấp nhưng tăng chỉ số khác. Đây là kết quả dùng để chọn cấu hình, chưa phải đánh giá ngoài độc lập của các ứng viên này.")
+        with st.expander("Cấu hình cuối"):
+            st.json(experiment["run_info"]["selected_final"])
+        return
     if page == "Tổng quan":
         st.markdown('<div class="section-kicker">Tổng quan</div>', unsafe_allow_html=True)
         st.header("Kết quả modeling cuối")
@@ -346,7 +403,7 @@ def _render_dashboard() -> None:
 
     st.markdown('<div class="section-kicker">Traceability</div>', unsafe_allow_html=True)
     st.header("Provenance và data contract")
-    st.markdown('<div class="insight"><b>Read-only contract</b><br>Dashboard chỉ đọc artifact trong outputs/modeling và outputs/timeseries. Nó không mở raw test labels và không huấn luyện lại model.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="insight"><b>Read-only contract</b><br>Dashboard đọc kết quả modeling, timeseries và đợt thử nghiệm cải thiện đã hoàn tất. Nó không mở raw test labels và không huấn luyện lại model.</div>', unsafe_allow_html=True)
     validation = st.columns(4)
     validation[0].metric("Evaluation rows", f"{len(data.model_evaluation):,}")
     validation[1].metric("Forecast rows", f"{len(data.forecasts):,}")

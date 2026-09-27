@@ -29,3 +29,16 @@ Nếu browser hoặc mạng trình chiếu gặp sự cố, dùng
 `report/main.pdf`; slide cũ cần đối chiếu lại trước khi dùng. Lệnh
 `/_stcore/health` chỉ chứng minh server sẵn sàng; cần mở các view cần trình bày để xác
 nhận flow demo.
+
+## Phần bổ sung về cải thiện mô hình (60 giây)
+
+Mở **Thử nghiệm cải thiện**. Đọc bảng vòng ngoài: low-RUL MAE 3,6676 → 3,6730
+cycles, cảnh báo trễ 49 → 53/100. Chọn train engine 98 để xem trường hợp sai số
+tăng. Sau đó đọc bảng đánh đổi: `hgb_08` giảm low-RUL MAE khoảng 9,75% trong
+inner CV nhưng tăng MAE toàn bộ khoảng 0,32 cycles. Nhấn mạnh hai bảng dùng
+hai cấp đánh giá khác nhau. Kết luận: đã thử cải thiện, chưa đạt điều kiện thay
+mô hình; baseline vẫn dự đoán RUL với test MAE 15,3490 cycles.
+
+Dùng slide 14–16 của deck hiện hành hoặc phần thực nghiệm trong báo cáo làm
+phương án dự phòng. Có AppTest cho trang mới; vẫn nên mở trực tiếp trang này
+trên máy trình chiếu trước buổi báo cáo.

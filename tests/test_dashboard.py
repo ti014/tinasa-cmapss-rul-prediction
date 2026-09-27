@@ -4,6 +4,7 @@ import pandas as pd
 import pytest
 
 from app import DashboardDataError, _require_columns, format_metric, load_dashboard_data
+from app import load_improvement_data
 
 
 def test_format_metric_is_stable() -> None:
@@ -31,3 +32,11 @@ def test_dashboard_loader_rejects_missing_columns(tmp_path: Path) -> None:
     del tmp_path
     with pytest.raises(DashboardDataError, match="final_predictions.parquet is missing columns"):
         _require_columns(pd.DataFrame({"engine_id": [1]}), {"engine_id", "cycle"}, "final_predictions.parquet")
+
+
+def test_improvement_dashboard_refuses_unfinished_run(tmp_path: Path) -> None:
+    target = tmp_path / "outputs/experiments/rul_improvement/20260927_full"
+    target.mkdir(parents=True)
+    (target / "run_info.json").write_text('{"test_label_joined": false}', encoding="utf-8")
+    with pytest.raises(DashboardDataError, match="chưa hoàn tất"):
+        load_improvement_data(tmp_path)

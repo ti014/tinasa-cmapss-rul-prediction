@@ -26,6 +26,7 @@ cmapss-etl = "cmapss.etl.cli:main"
 cmapss-features = "cmapss.features.cli:main"
 cmapss-modeling = "cmapss.modeling.cli:main"
 cmapss-cross-dataset = "cmapss.cross_dataset:main"
+cmapss-model-improvement = "cmapss.modeling.improvement_cli:main"
 
 [project.optional-dependencies]
 etl = [

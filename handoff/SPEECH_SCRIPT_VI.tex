@@ -60,11 +60,11 @@ Ngành: & Khoa học máy tính
 
 \section*{Hướng dẫn sử dụng}
 \addcontentsline{toc}{section}{Hướng dẫn sử dụng}
-Tài liệu này bám theo deck 15 slide tại
+Tài liệu này bám theo deck 18 slide tại
 \filepath{slides/cmapss_fd001_presentation.pptx}. Phần trình bày chính dùng
-FD001 với trailing window 30 cycles. Slide 15 trình bày ma trận bổ sung dùng
+FD001 với trailing window 30 cycles. Slide 18 trình bày ma trận bổ sung dùng
 window 10 cycles cho FD001--FD004; hai nhóm metric phải được nói tách biệt.
-Tổng thời lượng mục tiêu khoảng 10--12 phút, chưa tính phần hỏi đáp.
+Tổng thời lượng mục tiêu khoảng 13--15 phút, chưa tính phần hỏi đáp.
 
 \slide{1}{Bìa}{20 giây}
 \cue{Mở deck ở slide 1.}
@@ -171,7 +171,7 @@ Trên 100 FD001 test engines, mean engine MAE là 15,3490 cycles, RMSE là
 20,5413 cycles và NASA score là 1.513,2577. Bootstrap theo engine với 10.000
 lần resampling cho khoảng tin cậy 95% của MAE là [12,7286; 18,0866].
 
-Đây là kết quả chính của báo cáo với window 30 cycles. Slide 15 dùng window 10
+Đây là kết quả chính của báo cáo với window 30 cycles. Slide 18 dùng window 10
 cho một câu hỏi khác, nên hai con số đó không được so trực tiếp.
 
 \slide{10}{Phân tích lỗi}{45 giây}
@@ -211,11 +211,34 @@ Pandas và PySpark cho kết quả khớp tại ba boundary Silver/Gold, với s
 tuyệt đối lớn nhất bằng 0 trong phép parity đã chạy. Benchmark runtime hiện chỉ
 đo Pandas in-memory trên dữ liệu nhân bản, không phải benchmark cluster.
 
-Pipeline được kiểm tra lại bằng full test suite. Lần chạy hiện tại đạt 154 tests.
+Pipeline được kiểm tra lại bằng full test suite. Lần chạy hiện tại đạt 175 tests.
 Raw files, config, metric và provenance được lưu thành artifact để người đọc có
 thể truy vết kết quả.
 
-\slide{14}{Kết luận và giới hạn}{45 giây}
+\slide{14}{Quy trình thử nghiệm cải thiện}{45 giây}
+\cue{Chỉ rõ nhóm động cơ được giữ riêng để đánh giá.}
+Đợt này thử window 10, 20 và 30 cycles, 24 cấu hình HistGradientBoosting
+và ba mức trọng số. Mỗi vòng ngoài giữ riêng một nhóm động cơ; phần còn lại
+được chia thành ba nhóm để chọn cấu hình. Có năm vòng ngoài, cùng 17.731
+điểm đánh giá của 100 train engines. Test không dùng để chọn cấu hình.
+
+\slide{15}{Kết quả cải thiện}{45 giây}
+\cue{Đọc bảng vòng ngoài và nêu quyết định giữ baseline.}
+MAE khi RUL không quá 30 thay đổi từ 3,6676 thành 3,6730 cycles, còn số cảnh
+báo trễ tăng từ 49 lên 53 engines. Kết quả chưa đạt tiêu chí đã chốt.
+Cấu hình chọn cuối cùng trên toàn train trùng baseline. MAE test giữ nguyên
+15,3490 cycles. Mô hình có dự đoán; thí nghiệm này chưa tạo được phương án
+đáp ứng đầy đủ điều kiện thay mô hình hiện tại.
+
+\slide{16}{Đánh đổi giữa các chỉ số}{45 giây}
+\cue{Nêu rõ đây là inner CV dùng để lựa chọn.}
+Trong inner CV, hgb\_08 giảm sai số RUL thấp khoảng 9,75\%, nhưng tăng MAE toàn
+bộ khoảng 0,32 cycles. Tiêu chí ban đầu không chấp nhận mức tăng đó. Vì vậy,
+không kết luận rằng mọi cấu hình đều không thể cải thiện. Đợt tiếp theo cần
+chốt mức đánh đổi chấp nhận được trước khi đánh giá. Đây chưa phải bằng chứng
+ngoài mẫu độc lập cho ứng viên hgb\_08.
+
+\slide{17}{Kết luận và giới hạn}{45 giây}
 \cue{Tóm tắt trước khi chuyển sang slide transfer.}
 Kết luận chính là HistGradientBoosting dự đoán RUL trên FD001 trong protocol
 window 30 với MAE 15,3490 cycles. Pipeline kiểm soát data leakage bằng group
@@ -225,7 +248,7 @@ Giới hạn gồm dữ liệu mô phỏng, một điểm cắt cho mỗi test e
 downtime hoặc intervention records, và warning OOF chưa độc lập với model
 selection.
 
-\slide{15}{Transfer giữa các subset C-MAPSS}{80 giây}
+\slide{18}{Transfer giữa các subset C-MAPSS}{80 giây}
 \cue{Đây là phần bổ sung mới. Chỉ rõ window 10 trước khi đọc bảng.}
 Để kiểm tra khả năng chuyển miền, em chạy cùng pipeline với window 10 cycles cho
 cả FD001, FD002, FD003 và FD004. Window 10 được chọn vì test FD004 có engine
@@ -267,5 +290,6 @@ hỏi phản biện.
 \answer{6. Kết quả có áp dụng cho động cơ thực tế không?}{Chưa thể kết luận. C-MAPSS là dữ liệu mô phỏng và không có chi phí bảo trì, downtime hoặc intervention records. Cần dữ liệu thực tế và evaluation ngoài miền trước khi triển khai.}
 
 \answer{7. Big Data nằm ở đâu khi dữ liệu gốc nhỏ?}{Đóng góp Big Data nằm ở ETL, Parquet, parity Pandas/PySpark, provenance và thử nghiệm scale nhân tạo. Repository không tuyên bố FD001 tự thân là workload production-scale.}
+
 
 \end{document}

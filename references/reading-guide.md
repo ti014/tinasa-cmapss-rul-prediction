@@ -181,3 +181,15 @@ chứng minh chuỗi dừng. M13 bổ sung DataFrame/Spark SQL cho nền tảng 
 Đầu ra: protocol forecast theo thời gian và thiết kế benchmark có parity,
 cấu hình máy, chế độ cache và thời gian đo rõ ràng. Chưa có bằng chứng để
 tuyên bố Spark nhanh hơn hoặc PCA–ARIMA dự đoán được RUL.
+
+## Đọc kết quả cải thiện ngày 27/09/2026
+
+Đọc mục Nested CV trong tài liệu scikit-learn (`sklearnNestedCV2026`) để phân
+biệt vòng chọn cấu hình và vòng đánh giá. Sau đó đọc API
+HistGradientBoostingRegressor (`sklearnHGBAPI2026`) để hiểu các tham số trong
+manifest. Hai URL chính thức nằm trong README cùng thư mục.
+
+Đối chiếu với `experiments/README.md`: giảm 9,75% low-RUL MAE của `hgb_08`
+thuộc inner CV, còn so sánh 3,6676 → 3,6730 cycles thuộc outer evaluation của
+cả quy trình lựa chọn. Không ghép hai kết quả này thành kết luận model đã tốt
+hơn. Các nguồn được truy cập ngày 27/09/2026; không tải thêm paper trong đợt này.

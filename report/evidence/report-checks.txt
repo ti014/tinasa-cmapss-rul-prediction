@@ -659,3 +659,18 @@ PASS: full suite `uv run --frozen python -m pytest -q --basetemp=tmp/pytest-audi
 passed 154 tests with 14 dependency warnings; Tectonic build passed and the
 LaTeX log had no targeted fatal, undefined-reference, overfull or underfull
 matches. Glossary pages were rendered and checked for clipping.
+
+RUL improvement completion: 2026-09-27
+PASS: full nested 5x3 run completed; 511 distinct cached fits plus final fit.
+PASS: 175 tests; experiment validation verifies isolation, input/source hashes,
+unchanged baseline, 4 stages with common 17731 keys, paired CI and saved model.
+PASS: Streamlit AppTest new page, 4 tables, engine 98, no exception.
+PASS: report 53 pages, Beamer/PPTX 18 slides, speech script 22 pages compiled.
+PASS: rendered changed report pages, protocol figure and slide 14-18 reviewed;
+no clipped labels or tables. LaTeX logs contain no undefined/overfull/underfull.
+LIMITATION: Tectonic emits environment Fontconfig/Windows font warnings.
+PASS: finalizer package, layout, fonts and import validation; receipt at
+ tmp/slides-rul-20260927/finalizer/cmapss_fd001_presentation.pptx.validation.json.
+PASS: 7 README local-link checks and git diff --check.
+RESULT: no improvement satisfying prespecified controls; retain baseline.
+Inner-CV hgb_08 low-RUL gain 9.75% is a tradeoff, not independent outer proof.

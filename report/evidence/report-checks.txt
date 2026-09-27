@@ -674,3 +674,12 @@ PASS: finalizer package, layout, fonts and import validation; receipt at
 PASS: 7 README local-link checks and git diff --check.
 RESULT: no improvement satisfying prespecified controls; retain baseline.
 Inner-CV hgb_08 low-RUL gain 9.75% is a tradeoff, not independent outer proof.
+
+Page-limit finalization: 2026-09-28
+PASS: removed the detailed nested-improvement section and source appendix from
+the main PDF while retaining their source files and handoff references. Tectonic
+rebuilt `report/main.pdf`; `pdfinfo` reports 49 pages, below the 50-page limit.
+PASS: current Beamer PDF and PowerPoint each contain 18 slides, below the
+20-slide limit. `pytest -q` passed 175 tests and `git diff --check` passed.
+PASS: final report log has no targeted fatal, undefined-reference, citation,
+overfull or underfull matches; only the known local Fontconfig/font warnings remain.

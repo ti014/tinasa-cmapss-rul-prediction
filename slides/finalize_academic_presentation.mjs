@@ -3,9 +3,9 @@ import fs from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 
 const workspaceDir = "D:/IUH/BigData/Final_Project";
-const skillDir = "C:/Users/timewo/.codex/plugins/cache/openai-primary-runtime/presentations/26.909.12148/skills/presentations";
+const skillDir = "C:/Users/timewo/.codex/plugins/cache/openai-primary-runtime/presentations/26.921.10847/skills/presentations";
 const candidatePath = path.join(workspaceDir, "tmp", "slides-rul-20260927", "candidate.pptx");
-const finalPath = path.join(workspaceDir, "tmp", "slides-rul-20260927", "final", "cmapss_fd001_presentation.pptx");
+const finalPath = path.join(workspaceDir, "tmp", "slides-rul-20260927", "final", "cmapss_fd001_presentation_data_walkthrough.pptx");
 await fs.mkdir(path.dirname(finalPath), { recursive: true });
 const stagingDir = path.join(workspaceDir, "tmp", "slides-rul-20260927", "finalizer");
 await fs.mkdir(stagingDir, { recursive: true });
@@ -33,6 +33,6 @@ const result = await finalizePresentation({
     referenceSha256: "191a2f4ee9be11d896ea557babbd8c388056352c128529e3c0dad8b89e83d22b",
   },
   verifyArtifactToolImport: true,
-  receiptPath: path.join(stagingDir, "cmapss_fd001_presentation.pptx.validation.json"),
+  receiptPath: path.join(stagingDir, "cmapss_fd001_presentation_data_walkthrough.pptx.validation.json"),
 });
 console.log(JSON.stringify(result, null, 2));

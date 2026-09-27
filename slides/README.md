@@ -47,7 +47,13 @@ clipping, wrapping, hình, bảng và số trang. Biên bản finalizer ở
 Bản cũ trước redesign được giữ trong `archive/decks/` để đối chiếu hoặc khôi
 phục khi cần.
 
-## Cập nhật ngày 27/09/2026
+## Cập nhật ngày 28/09/2026
+
+Slide 4 bổ sung boundary đọc file, `union`, Silver Parquet và SQLite. Slide 6
+ghi rõ one-to-one join bằng ba cột khóa, 126 feature columns và việc ba
+operational settings chưa nằm trong `X`. Nội dung này khớp với
+[`handoff/DATA_WALKTHROUGH.md`](../handoff/DATA_WALKTHROUGH.md). Finalizer mới
+pass package integrity, layout, font và import cho 18 slide.
 
 Slide 14–16 trình bày protocol cải thiện, kết quả vòng ngoài và đánh đổi trong
 inner CV. Slide 17 là kết luận, slide 18 là ma trận transfer. Nguồn số liệu mới:

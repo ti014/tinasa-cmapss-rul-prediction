@@ -29,7 +29,7 @@ nhưng làm tăng chỉ số khác. Xem [kết quả và cách chạy lại](exp
   dữ liệu, EDA, suy luận sensor chỉ dùng train, parity ETL, rolling features,
   đánh giá RUL theo engine, PCA--ARIMA, cảnh báo sớm và ma trận FD001--FD004.
   Báo cáo có data dictionary (từ điển dữ liệu), bảng thuật ngữ, phân tích lỗi
-  và phụ lục tái lập.
+  và ghi chú tái lập; PDF đã biên dịch có 49 trang.
 - Cơ sở lý thuyết có trích dẫn và [quy trình thống kê](report/sections/statistical-protocol.tex).
   Đã chốt so sánh giá trị trung bình của 30 cycles đầu và 30 cycles cuối theo từng động cơ.
   Cấu hình thống kê đã được chốt trước khi chạy suy luận.
@@ -171,6 +171,26 @@ chuẩn bị dữ liệu mô hình. PySpark tái hiện các boundary ETL để 
 runtime benchmark hiện chỉ đo Pandas. Bộ dữ liệu gốc chỉ có dung
 lượng vài MB, vì vậy repository không tuyên bố FD001 tự thân chứng minh khả
 năng xử lý dữ liệu quy mô lớn.
+
+### Cách đọc, truy vấn và biến đổi dữ liệu
+
+Tài liệu [walkthrough xử lý dữ liệu](handoff/DATA_WALKTHROUGH.md) giải thích
+theo đúng artifact hiện có cách đọc hai file observations, `union` train/test,
+giữ `split`, tạo RUL train, tạo rolling window, chọn 126 feature columns và
+join theo `(split, engine_id, cycle)`. Tài liệu cũng nêu rõ SQLite chỉ chứa
+`engine_summary` và `train_targets`; observations được đọc từ Silver Parquet.
+
+FD001--FD004 được xử lý riêng trong các thư mục subset. Không union bốn subset
+thành một bảng chung vì khóa hiện tại chưa có `dataset_id`. Quan hệ chính là
+engine--observations một-nhiều; join feature với target và prediction với test
+label là một-một. Project chưa triển khai quan hệ nhiều-nhiều, Airflow hoặc
+Power BI. [Sơ đồ quan hệ có thể chỉnh sửa](assets/diagrams/data-relations.drawio)
+và [bản SVG](assets/diagrams/data-relations.svg) thể hiện các boundary này.
+
+Trong ETL, “chuẩn hóa” nghĩa là kiểm tra schema và chuyển kiểu dữ liệu. Scaling
+giá trị sensor là bước riêng: Ridge dùng `StandardScaler` trong từng training
+fold, còn Health Index dùng `StandardScaler` trước PCA. HGB dùng feature theo
+thang gốc; rolling feature pipeline không fit một scaler chung.
 
 ## Phương pháp
 

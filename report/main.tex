@@ -16,10 +16,11 @@
 \renewcommand{\figurename}{Hình}
 \renewcommand{\tablename}{Bảng}
 \renewcommand{\refname}{Tài liệu tham khảo}
-\newcommand{\reportdate}{27/09/2026}
+\newcommand{\reportdate}{28/09/2026}
 \newcommand{\filepath}[1]{\nolinkurl{#1}}
 \newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
-\onehalfspacing
+% Giữ bố cục học thuật nhưng đáp ứng giới hạn dưới 50 trang của báo cáo.
+\setstretch{1.25}
 \setlength{\parindent}{0.7cm}
 \setlength{\emergencystretch}{2em}
 \setlength{\headheight}{16pt}
@@ -118,6 +119,8 @@ GroupKFold; ETL; Health Index; PCA--ARIMA.
 \clearpage
 \input{sections/methodology}
 \clearpage
+\input{sections/data-walkthrough}
+\clearpage
 \input{sections/statistical-protocol}
 \clearpage
 \input{sections/current-results}
@@ -126,8 +129,8 @@ GroupKFold; ETL; Health Index; PCA--ARIMA.
 \clearpage
 \input{sections/conclusion}
 \clearpage
-\appendix
-\input{sections/appendix}
+% Phụ lục cấu hình và mapping artifact được giữ ở report/sections/appendix.tex
+% và handoff/FINAL_HANDOFF.md; không đưa vào PDF chính để bảo đảm giới hạn dưới 50 trang.
 \clearpage
 \phantomsection
 \addcontentsline{toc}{section}{Tài liệu tham khảo}

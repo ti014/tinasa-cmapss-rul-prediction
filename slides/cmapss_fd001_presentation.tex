@@ -118,10 +118,14 @@ Test labels của từng subset chỉ được đọc sau khi final predictions 
 
 \begin{frame}{Quy trình xử lý dữ liệu}
 \centering
-\includegraphics[width=0.96\textwidth,height=0.63\textheight,keepaspectratio]{../assets/diagrams/fd001-pipeline.png}
+\includegraphics[width=0.96\textwidth,height=0.55\textheight,keepaspectratio]{../assets/diagrams/fd001-pipeline.png}
 
 \vspace{0.15cm}
-\textcolor{navy}{\bfseries Raw validation $\rightarrow$ Silver/Gold ETL $\rightarrow$ rolling features $\rightarrow$ GroupKFold $\rightarrow$ final evaluation}
+\textcolor{navy}{\bfseries Reader train/test + split + union $\rightarrow$ Silver Parquet $\rightarrow$ Gold features $\rightarrow$ GroupKFold $\rightarrow$ final evaluation}
+\vspace{0.12cm}
+
+\small FD001 có 33.727 observations. SQLite chỉ chứa \texttt{engine\_summary} và
+\texttt{train\_targets}; sensor observations được đọc từ Silver Parquet.
 \source{assets/diagrams/fd001-pipeline.png; outputs/modeling/tables/evaluation_protocol.csv}
 \end{frame}
 
@@ -167,7 +171,10 @@ Min, max, linear slope & Biên và xu hướng tăng/giảm\\
 \centering
 \textcolor{teal}{\Large\bfseries 21 sensor $\times$ 6 phép tóm tắt = 126 feature columns}
 
-\source{outputs/features/run_info.json; report/sections/methodology.tex}
+\small Join với train RUL theo $(split, engine\_id, cycle)$ là one-to-one.
+Ba operational settings không nằm trong $X$ của model RUL hiện tại.
+
+\source{outputs/features/run_info.json; handoff/DATA_WALKTHROUGH.md}
 \end{frame}
 
 \begin{frame}{Đánh giá theo engine}

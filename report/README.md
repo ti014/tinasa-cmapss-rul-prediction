@@ -1,7 +1,7 @@
 # Báo cáo cuối kỳ
 
 [Bản PDF](main.pdf) được biên dịch từ [main.tex](main.tex), cập nhật ngày
-27/09/2026. Báo cáo trình bày các kết quả chính trên NASA C-MAPSS FD001 và ma
+28/09/2026. Báo cáo trình bày các kết quả chính trên NASA C-MAPSS FD001 và ma
 trận đánh giá bổ sung trên toàn bộ FD001--FD004. Kết quả RUL chi tiết vẫn thuộc
 FD001; FD002--FD004 dùng protocol window 10 cycles riêng để kiểm tra chuyển miền.
 Báo cáo được biên tập theo cấu trúc mục tiêu--phương pháp--kết quả--thảo luận:
@@ -16,11 +16,14 @@ phân bố và cách xử lý; phần phương pháp giải thích lý do, đơn
 các công thức. Dashboard Streamlit chỉ đọc các tệp kết quả; PCA--ARIMA vẫn được
 trình bày như phân tích phụ trên Health Index, không phải mô hình RUL. Lệnh tái lập end-to-end đã chạy lại pipeline Pandas từ
 raw và đối chiếu artifact cuối.
+Phần [Đọc, truy vấn và biến đổi dữ liệu](sections/data-walkthrough.tex) đối chiếu
+trực tiếp cách gom file, boundary Parquet/SQLite, time window, feature columns,
+join key và phạm vi Big Data đã thực sự triển khai.
 Checklist bàn giao nằm tại `handoff/FINAL_HANDOFF.md` đã đồng bộ với báo cáo.
-Deck 18 slide tại `slides/` đã được cập nhật theo mạch học thuật: bài toán,
+Deck 18 slide tại `slides/` đã được cập nhật ngày 28/09/2026 theo mạch học thuật: bài toán,
 dữ liệu, protocol, phương pháp, kết quả, phân tích lỗi, Health Index, cảnh báo
 sớm, tái lập và giới hạn. Bản cập nhật dùng các metric đã nghiệm thu và được
-render, finalizer kiểm tra ngày 27/09/2026.
+render, finalizer kiểm tra ngày 28/09/2026.
 
 ## Cấu trúc
 
@@ -39,7 +42,7 @@ report/
 │   ├── rul-improvement-results.tex # Kết quả và đánh đổi đã quan sát
 │   ├── discussion.tex           # Thảo luận, giới hạn và hướng phát triển
 │   ├── conclusion.tex           # Kết luận và phạm vi khái quát hóa
-│   └── appendix.tex             # Cấu hình, lệnh tái lập và mapping artifact
+│   └── appendix.tex             # Phụ lục nguồn; giữ ngoài PDF chính để giới hạn trang
 └── figures/
     ├── pipeline.tex             # Bản TeX giữ cho report PDF hiện tại
     ├── pipeline.pdf             # Hình pipeline dùng trong báo cáo
@@ -83,8 +86,10 @@ Push-Location report
 Pop-Location
 ```
 
-Lần build ngày 27/09/2026 tạo PDF 53 trang, không có lỗi biên dịch, citation
-undefined, reference undefined hoặc overfull/underfull box. Tectonic vẫn ghi
+Lần build ngày 28/09/2026 tạo PDF 49 trang (dưới giới hạn 50 trang), không có lỗi
+biên dịch, citation undefined, reference undefined hoặc overfull/underfull box.
+Phần nested improvement và phụ lục cấu hình chi tiết vẫn được giữ trong source,
+`experiments/` và handoff để không làm phình PDF chính. Tectonic vẫn ghi
 cảnh báo môi trường về Fontconfig và font Windows; đây không phải lỗi nội dung.
 
 ## Thực nghiệm cải thiện RUL

@@ -29,7 +29,7 @@ Available now:
   validation, EDA, train-only sensor inference, ETL parity, rolling features,
   grouped RUL evaluation, PCA--ARIMA, early warning, and the supplemental
   FD001--FD004 matrix. It includes a data dictionary, glossary, error analysis,
-  and reproducibility appendix.
+  and reproducibility notes; the built PDF is 49 pages.
 - A cited theoretical background and [statistical protocol](report/sections/statistical-protocol.tex).
   The paired comparison uses each sensor's mean over the first and last 30 cycles of every train engine.
   The inference configuration was fixed before execution.
@@ -177,6 +177,29 @@ preparation. PySpark reproduces the ETL boundaries for parity; recorded runtime
 benchmarks measure Pandas only. The original dataset is only a few megabytes, so the
 repository will not claim that FD001 itself demonstrates large-scale data
 processing.
+
+### Data access and transformations
+
+The [data-processing walkthrough](handoff/DATA_WALKTHROUGH.md) documents the
+implemented behavior: reading the two observation files, unioning train/test
+rows while retaining `split`, creating train RUL, building rolling windows,
+selecting 126 feature columns, and joining on `(split, engine_id, cycle)`. It
+also records the actual query boundary: SQLite contains only `engine_summary`
+and `train_targets`; observations are read from Silver Parquet.
+
+FD001--FD004 are processed in separate subset directories. The repository does
+not union all four subsets into one table because the current key has no
+`dataset_id`. The implemented relationships are one-to-many from an engine to
+its observations and one-to-one joins for features/targets and final
+predictions/test labels. No many-to-many relationship, Airflow DAG, or Power BI
+artifact is implemented. See the [editable relationship diagram](assets/diagrams/data-relations.drawio)
+and [SVG preview](assets/diagrams/data-relations.svg).
+
+In the ETL, “normalization” means schema and datatype validation. Numeric
+scaling is a separate step: Ridge uses `StandardScaler` inside each training
+fold, while the Health Index uses `StandardScaler` before PCA. HGB consumes
+features on their original scale; rolling feature generation does not fit one
+global scaler.
 
 ## Methodology
 

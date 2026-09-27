@@ -79,9 +79,9 @@ function table(slide, values, x, y, w, h, font = 19) {
 
 // 4. Data flow.
 {
-  const s = base("Quy trình xử lý dữ liệu", "Mỗi bước ghi artifact để có thể kiểm tra và chạy lại", 4, "assets/diagrams/fd001-pipeline.png; outputs/modeling/tables/evaluation_protocol.csv", "Đọc sơ đồ từ trái sang phải. Raw được kiểm tra schema và khóa, ETL ghi Silver/Gold, rolling features dùng lịch sử của từng engine, GroupKFold chọn model, final evaluation ghép nhãn test ở bước cuối. Nhánh Health Index là phân tích phụ. Nguồn hình: assets/diagrams/fd001-pipeline.png.");
+  const s = base("Quy trình xử lý dữ liệu", "Mỗi bước ghi artifact để có thể kiểm tra và chạy lại", 4, "assets/diagrams/fd001-pipeline.png; handoff/DATA_WALKTHROUGH.md", "Đọc sơ đồ từ trái sang phải. Trong một subset, reader đọc train/test cùng schema, thêm split rồi union theo dòng. Silver giữ observations typed trong Parquet; SQLite chỉ có engine_summary và train_targets. Rolling features dùng lịch sử của từng engine, GroupKFold chọn model, final evaluation ghép nhãn test ở bước cuối. PySpark hiện tái hiện ETL local để parity; chưa có query engine trên Parquet, Airflow hoặc Power BI.");
   await picture(s, "assets/diagrams/fd001-pipeline.png", "Sơ đồ pipeline FD001", 58, 150, 1165, 390);
-  text(s, "Điểm kiểm soát quan trọng: nhãn test chỉ xuất hiện sau khi model đã tạo dự đoán cuối.", 75, 550, 1110, 74, 23, C.navy, true);
+  text(s, "FD001: 33.727 observations → Silver Parquet → Gold summary/features. Nhãn test chỉ xuất hiện sau khi model đã tạo dự đoán cuối.", 75, 550, 1110, 74, 23, C.navy, true);
 }
 
 // 5. Statistical sensor analysis.
@@ -95,7 +95,7 @@ function table(slide, values, x, y, w, h, font = 19) {
 
 // 6. Feature representation.
 {
-  const s = base("Từ chuỗi sensor đến đặc trưng", "Một dự đoán dùng 30 cycle gần nhất của chính engine đó", 6, "outputs/features/run_info.json; report/sections/theory.tex", "Window dài 30. Ví dụ tại cycle 170 dùng 141–170, không dùng 171. Với mỗi trong 21 sensor, tính last, mean, standard deviation, min, max, slope. Tổng 126 đặc trưng. Artifact hiện có 27.927 window. Không nối window qua hai engine.");
+  const s = base("Từ chuỗi sensor đến đặc trưng", "Một dự đoán dùng 30 cycle gần nhất của chính engine đó", 6, "outputs/features/run_info.json; handoff/DATA_WALKTHROUGH.md", "Window dài 30. Ví dụ tại cycle 170 dùng 141–170, không dùng 171. Với mỗi trong 21 sensor, tính last, mean, standard deviation, min, max, slope. Tổng 126 đặc trưng. Artifact hiện có 27.927 window. Observation và feature dùng cùng khóa; modeling join feature với train target one-to-one. Ba setting không đưa vào X của model RUL. Không nối window qua hai engine.");
   text(s, "Ví dụ tại cycle 170: chỉ đọc cycles 141–170", 77, 175, 1100, 58, 30, C.navy, true);
   table(s, [["Mỗi sensor", "Ý nghĩa ngắn"], ["Giá trị cuối", "Trạng thái tại cycle hiện tại"], ["Mean, độ lệch chuẩn", "Mức và biến thiên trong window"], ["Min, max, slope", "Biên và xu hướng tăng/giảm"]], 78, 270, 1110, 255, 19);
   text(s, "21 sensor × 6 phép tóm tắt = 126 đặc trưng; tạo 27.927 window hợp lệ.", 78, 560, 1110, 58, 25, C.teal, true);

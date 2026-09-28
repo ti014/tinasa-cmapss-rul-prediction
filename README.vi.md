@@ -22,6 +22,10 @@ nhưng làm tăng chỉ số khác. Xem [kết quả và cách chạy lại](exp
 - Các file NASA C-MAPSS FD001--FD004 nguyên bản và tài liệu mô tả nguồn; kết quả chính dùng FD001, ma trận bổ sung đánh giá cả bốn subset.
 - Trình đọc (reader), bộ kiểm tra (validator) và kiểm thử số dòng, số động cơ, schema, khóa, cycle và nhãn RUL train.
 - [Data contract (đặc tả dữ liệu)](data/CONTRACTS.md), CLI xuất báo cáo JSON và tệp khóa phiên bản dependency.
+- [Notebook walkthrough xử lý dữ liệu đã chạy](notebooks/00_data_pipeline_walkthrough.ipynb):
+  chạy từng bước trên FD001 để thấy cách gom file, lưu trữ, truy vấn (SQL trên
+  SQLite, Spark SQL và Pandas trên Parquet), biến đổi thành 126 đặc trưng và join;
+  đồng thời kiểm tra mọi quan hệ giữa các bảng trên dữ liệu.
 - [Notebook EDA đã chạy](notebooks/01_fd001_eda.ipynb), 12 bảng CSV,
   11 hình và [diễn giải kết quả, bằng chứng kiểm tra](outputs/eda/README.md).
 - Danh mục tài liệu tham khảo và hướng dẫn đọc.
@@ -30,7 +34,7 @@ nhưng làm tăng chỉ số khác. Xem [kết quả và cách chạy lại](exp
   đánh giá RUL theo engine, PCA--ARIMA, cảnh báo sớm và ma trận FD001--FD004.
   Báo cáo có data dictionary (từ điển dữ liệu), bảng thuật ngữ, phân tích lỗi
   và ghi chú tái lập; PDF đã biên dịch có 49 trang.
-- Cơ sở lý thuyết có trích dẫn và [quy trình thống kê](report/sections/statistical-protocol.tex).
+- Cơ sở lý thuyết có trích dẫn và [quy trình thống kê](report/sections/methodology.tex) (Mục 4.6).
   Đã chốt so sánh giá trị trung bình của 30 cycles đầu và 30 cycles cuối theo từng động cơ.
   Cấu hình thống kê đã được chốt trước khi chạy suy luận.
 - Helper `build_engine_sensor_pairs` chỉ nhận train, tạo và kiểm tra một cặp
@@ -58,15 +62,25 @@ nhưng làm tăng chỉ số khác. Xem [kết quả và cách chạy lại](exp
 - Phân tích [PCA--ARIMA trên Health Index](outputs/timeseries/README.md) chỉ
   dùng train: 10 engine validation đại diện, chia 70/30, 704 điểm dự báo, khoảng
   dự đoán 95%, ADF và Ljung--Box; không đọc nhãn test.
-- [Dashboard Streamlit đọc artifact](app.py) để xem metric RUL cuối, từng test
-  engine, Health Index/ARIMA và nguồn gốc của lần chạy. Dashboard không fit
-  lại model và không đọc nhãn test thô khi mở trang.
+- [Dashboard Streamlit đọc artifact](app.py) gồm tám trang: tổng quan, dữ liệu và
+  EDA, đánh giá RUL (test engine và quỹ đạo OOF), cảnh báo sớm, cross-dataset,
+  thử nghiệm cải thiện, Health Index/ARIMA và provenance. Biểu đồ Altair tương
+  tác được. Dashboard không fit lại model và không đọc nhãn test thô khi mở trang.
+- Ba notebook rà soát kết quả đã chạy:
+  [modeling và cảnh báo sớm](notebooks/03_fd001_modeling_evaluation.ipynb),
+  [Health Index/ARIMA](notebooks/04_fd001_health_index_arima.ipynb) và
+  [cross-dataset cùng thử nghiệm cải thiện](notebooks/05_cross_dataset_and_improvement.ipynb).
+  Mỗi notebook tính lại metric từ prediction đã lưu bằng hàm của package, rồi dùng
+  `assert` để so với artifact; không fit model và không ghi vào `outputs/`.
 
 Gói bàn giao cuối:
 
-- Đã có [slide trình bày](slides/cmapss_fd001_presentation.pptx) gồm 15 trang,
-  giải thích từ bài toán, dữ liệu và protocol đến kết quả RUL, Health Index,
-  cảnh báo OOF, giới hạn và ma trận transfer FD001--FD004;
+- Đã có [slide trình bày](slides/cmapss_fd001_presentation.pptx)
+  ([PDF](slides/cmapss_fd001_presentation.pdf)) gồm 20 slide cho bài nói 30 phút,
+  chia năm phần: bài toán và dữ liệu, pipeline Big Data, phân tích chuỗi thời
+  gian, mô hình và đánh giá, mở rộng và kết luận. Số liệu trên slide được đọc từ
+  `outputs/` bằng [`slides/extract_slide_data.py`](slides/extract_slide_data.py);
+  [kịch bản nói](handoff/SPEECH_SCRIPT_VI.pdf) ghi thời lượng từng slide;
   [checklist bàn giao](handoff/FINAL_HANDOFF.md) ghi nguồn kiểm tra.
 
 Lệnh cài đặt, kiểm tra dữ liệu, mở notebook, chạy ETL, tạo rolling features,
@@ -329,8 +343,10 @@ Cấu trúc repository hiện tại:
 │   ├── raw/                 # FD001--FD004 nguyên bản và ghi chú nguồn
 │   └── archive/             # Dữ liệu lưu để đối chiếu, không dùng cho mô hình chính
 ├── references/              # Tài liệu tham khảo và bối cảnh assignment
-├── notebooks/               # Notebook EDA và thống kê train FD001 đã chạy
-├── src/cmapss/              # data/, statistics/, etl/, features/, modeling/, timeseries/, eda.py, validate.py
+├── notebooks/               # 00 walkthrough dữ liệu, 01 EDA, 02 thống kê, 03–05 rà soát kết quả (đã chạy)
+├── src/cmapss/              # data/, statistics/, etl/, features/, modeling/, timeseries/, eda.py, validate.py,
+│                            # dashboard.py (đọc artifact), dashboard_app.py (giao diện Streamlit)
+├── scripts/                 # Script sinh notebook, hình báo cáo và kiểm tra thử nghiệm cải thiện
 ├── tests/                   # Kiểm thử data contract, CLI, EDA, thống kê, ETL, features, modeling, timeseries và tái lập
 ├── outputs/validation/      # Báo cáo kiểm tra dữ liệu hiện có
 ├── outputs/eda/             # Bảng, hình, phương pháp và kiểm tra EDA
@@ -348,11 +364,11 @@ Cấu trúc repository hiện tại:
 ├── requirements-dashboard.txt # Dependency Streamlit tùy chọn cho dashboard
 ├── uv.lock                  # Phiên bản dependencies đã khóa
 ├── report/                  # Nguồn LaTeX/PDF và hình của báo cáo
-├── slides/                  # Source và PDF Beamer, deck PowerPoint 18 slide
+├── slides/                  # Deck 20 slide, bản PDF, script trích số liệu và builder
 │   └── archive/             # Deck/script cũ để đối chiếu
 ├── handoff/                 # Kịch bản demo và checklist bàn giao cuối
 │   └── archive/             # Kịch bản Markdown cũ
-├── app.py                   # Entry point Streamlit
+├── app.py                   # Entry point Streamlit (gọi cmapss.dashboard_app)
 ├── README.md                # Tài liệu tiếng Anh
 └── README.vi.md             # Tài liệu tiếng Việt
 ```
@@ -442,8 +458,9 @@ Sau khi cài `requirements-dev.txt`, mở notebook từ thư mục gốc:
 Chọn kernel Python của `.venv` và **Restart Kernel and Run All Cells**.
 Notebook chỉ phân tích train và tạo lại 12 bảng CSV, 11 hình PNG.
 Các lần kiểm tra với kernel mới tạo tệp EDA giống nhau trong cùng môi trường.
-Bộ kiểm thử toàn repository đạt **175 tests**, gồm kiểm tra dữ liệu, thống kê,
-ETL, đặc trưng, modeling, PCA--ARIMA, đánh giá liên subset và tái lập end-to-end.
+Bộ kiểm thử toàn repository đạt **188 tests** (lần chạy ngày 28/09/2026), gồm kiểm tra
+dữ liệu, thống kê, ETL, đặc trưng, modeling, PCA--ARIMA, đánh giá liên subset,
+dashboard và tái lập end-to-end.
 
 ![Quy trình EDA train FD001](assets/diagrams/fd001-eda.svg)
 
@@ -584,6 +601,25 @@ Artifact hiện có 20.631 dòng Health Index train và 704 điểm dự báo tr
 10 engine. Xem [artifact và validation PCA--ARIMA](outputs/timeseries/README.md)
 để biết quy tắc chọn engine, metric, hình và giới hạn.
 
+### Chạy notebook rà soát kết quả
+
+Notebook 03–05 chỉ đọc artifact đã có. Chúng tính lại metric bằng hàm của package
+và dùng `assert` để dừng nếu số liệu lệch với file trong `outputs/`:
+
+| Notebook | Nội dung | Đối chiếu với |
+|---|---|---|
+| `03_fd001_modeling_evaluation.ipynb` | MAE theo fold, metric test, bootstrap CI, sai số theo khoảng RUL, cảnh báo RUL ≤ 30 | `outputs/modeling/tables/*` |
+| `04_fd001_health_index_arima.ipynb` | Xu hướng Health Index, metric holdout ARIMA, naive baseline, ADF/Ljung–Box | `outputs/timeseries/tables/*` |
+| `05_cross_dataset_and_improvement.ipynb` | Ma trận FD001–FD004, ablation và paired CI của nested CV | `outputs/cross_dataset/matrix.json`, `outputs/experiments/rul_improvement/20260927_full/*` |
+
+Notebook được sinh và chạy lại từ fresh kernel bằng:
+
+```powershell
+.venv\Scripts\python scripts/build_results_notebooks.py --execute
+```
+
+Thêm `--only 04` để chỉ dựng lại một notebook.
+
 ### Chạy dashboard tái lập
 
 Cài dependency tùy chọn và khởi động Streamlit sau khi đã có artifact modeling
@@ -594,11 +630,26 @@ uv sync --extra dashboard
 uv run --extra dashboard streamlit run app.py
 ```
 
-Dashboard đọc `outputs/modeling` và `outputs/timeseries`, sau đó hiển thị so
-sánh model, metric RUL cuối, đánh giá một test engine, dự báo Health
-Index, tỷ lệ bao phủ của khoảng dự đoán, kiểm tra chẩn đoán và nguồn gốc. Giao diện light
-theme có năm view, gồm Cảnh báo sớm. Dashboard không huấn luyện lại model và không
-đọc `data/raw/RUL_FD001.txt`.
+Dashboard có tám trang. Có thể mở thẳng một trang bằng query string, ví dụ
+`http://localhost:8501/?page=Cảnh báo sớm`.
+
+| Trang | Artifact đọc | Nội dung |
+|---|---|---|
+| Tổng quan | `outputs/modeling` | Metric test và khoảng tin cậy, pipeline, so sánh model trong CV, gợi ý thứ tự demo |
+| Dữ liệu & EDA | `outputs/eda`, `outputs/features` | Phân phối tuổi thọ, Spearman sensor–RUL, quỹ đạo sensor của từng train engine |
+| Đánh giá RUL | `outputs/modeling/predictions` | Một test engine tại cycle cuối, scatter và residual; quỹ đạo OOF của train engine theo từng model |
+| Cảnh báo sớm | `outputs/modeling/tables` | Ngưỡng 30 cycles, phân loại thời điểm, trajectory có vạch cảnh báo đầu tiên |
+| Cross-dataset | `outputs/cross_dataset/matrix.json` | MAE và khoảng tin cậy của 4 evaluation nội bộ và 3 transfer |
+| Thử nghiệm cải thiện | `outputs/experiments/rul_improvement/20260927_full` | Ablation, paired CI, quỹ đạo baseline và quy trình chọn |
+| Health Index / ARIMA | `outputs/timeseries` | Forecast và khoảng dự đoán 95%, so sánh với naive baseline, diagnostics |
+| Provenance | `run_info.json` | Schema và isolation contract của lần chạy |
+
+Lớp đọc artifact nằm trong `src/cmapss/dashboard.py`; giao diện nằm trong
+`src/cmapss/dashboard_app.py`. `app.py` chỉ là entry point và vẫn export
+`load_dashboard_data`, vì `cmapss.reproducibility` import hàm này; do đó import
+`app` không cần Streamlit. Dashboard không huấn luyện lại model và không đọc
+`data/raw/RUL_FD001.txt`. Trang Dữ liệu & EDA dùng cột `sensor_*__last` và
+`sensor_*__mean` của Gold rolling features, nên quỹ đạo bắt đầu từ cycle 30.
 
 ### Kiểm tra pipeline end-to-end
 

@@ -1,263 +1,236 @@
-\section{Mở đầu: bài toán, mục tiêu và phạm vi}
-\subsection{Bài toán nghiên cứu}
-Báo cáo xem bài toán dự báo RUL là một bài toán supervised regression trên chuỗi
-cảm biến động cơ. Tại cycle $t$, mô hình chỉ được phép sử dụng các quan sát đã
-xuất hiện đến cycle đó; biến mục tiêu là số cycle còn lại trước khi động cơ hỏng.
-Phạm vi nghiên cứu gồm kiểm tra dữ liệu, exploratory data analysis (EDA), ETL,
-xây dựng rolling features, suy luận thống kê đầu/cuối vòng đời, phân tích
-PCA--ARIMA trên Health Index và đánh giá mô hình RUL.
+\section{Giới thiệu}
+\label{sec:intro}
 
-Đối với train, đặt $T_i$ là cycle cuối của động cơ $i$ trong lịch sử đầy đủ đến
-khi hỏng. Nhãn RUL được xác định bởi:
+\subsection{Bối cảnh và bài toán}
+Trong bảo trì dự đoán, một câu hỏi trung tâm là thiết bị còn vận hành được bao
+lâu trước khi hỏng. Với động cơ turbofan, đại lượng này được gọi là Remaining
+Useful Life (RUL). Nếu ước lượng được RUL từ dữ liệu cảm biến, đội vận hành có
+thể lên kế hoạch can thiệp trước khi sự cố xảy ra thay vì bảo trì theo lịch cố
+định hoặc sửa chữa sau khi hỏng.
+
+Báo cáo xem dự đoán RUL là bài toán hồi quy có giám sát trên chuỗi thời gian
+cảm biến. Tại cycle $t$, mô hình chỉ được dùng dữ liệu đã quan sát đến cycle
+$t$; biến mục tiêu là số cycle còn lại trước khi động cơ hỏng. Trong tập train,
+mỗi động cơ được theo dõi đến khi hỏng, nên nhãn RUL được tính trực tiếp:
 \begin{equation}
- y_{i,t}=T_i-t,\qquad 1\leq t\leq T_i.
+ y_{i,t}=T_i-t,\qquad 1\leq t\leq T_i,
  \label{eq:rul}
 \end{equation}
-\noindent Trong đó:
-\begin{itemize}[label={+},leftmargin=1.6em,itemsep=0.15em,topsep=0.25em]
-\item $i$: engine đang được xét; đây là đơn vị độc lập trong split train.
-\item $t$: cycle đang xét của engine $i$, tính theo số cycle vận hành rời rạc.
-\item $T_i$: cycle cuối của engine $i$ trong tập train, cũng tính bằng cycle.
-\item $y_{i,t}$: RUL của engine $i$ tại cycle $t$, tính bằng cycle.
-\end{itemize}
-Công thức~\ref{eq:rul} được dùng vì train của các subset C-MAPSS là run-to-failure history:
-chuỗi train kết thúc tại thời điểm hỏng, còn mục tiêu của bộ dữ liệu là dự đoán
-số operational cycles còn lại trước khi hỏng~\cite{nasaCmapssDataset,saxena2008damage}.
-Đây là định nghĩa nhãn từ dữ liệu, không phải công thức dự đoán do mô hình học
-ra. Độ tin cậy của nhãn train phụ thuộc vào giả định của nguồn dữ liệu rằng train
-đã đi đến failure; vì vậy validator chỉ áp dụng công thức này cho train và
-không áp dụng cho test.
+trong đó $T_i$ là cycle cuối cùng (cycle hỏng) của động cơ $i$ và $y_{i,t}$ là
+RUL tại cycle $t$. Ví dụ, một động cơ hỏng ở cycle 200 thì tại cycle 170 có
+RUL bằng 30. Công thức~\eqref{eq:rul} không cắt ngưỡng RUL, nên nhãn ở đầu vòng
+đời có thể lên tới hàng trăm cycles.
 
-Ví dụ, nếu lịch sử train của một động cơ kết thúc ở cycle 200 thì nhãn tại cycle
-170 là 30 cycles, còn nhãn tại cycle 200 là 0. Ví dụ này chỉ minh họa cách tạo
-nhãn từ lịch sử đã biết; nó không phải là một dự đoán của mô hình.
-
-Lịch sử test bị cắt trước khi hỏng nên không được lấy cycle cuối quan sát của test làm $T_i$. Mục tiêu đánh giá cuối là một dự đoán tại cycle cuối quan sát cho mỗi test engine. Bộ nhãn chính thức được tách khỏi quá trình lựa chọn mô hình.
+Tập test khác ở chỗ chuỗi bị cắt tại một thời điểm trước khi hỏng. NASA cung
+cấp riêng RUL thật tại cycle cuối được quan sát của mỗi động cơ test. Vì vậy,
+đánh giá cuối gồm đúng một dự đoán cho mỗi động cơ test, tại cycle cuối của nó.
 
 \subsection{Mục tiêu và câu hỏi nghiên cứu}
-Mục tiêu tổng quát là xây dựng và kiểm chứng một quy trình tái lập để chuyển dữ
-liệu cảm biến NASA C-MAPSS, lấy FD001 làm subset chính và dùng FD002--FD004 cho
-đánh giá bổ sung, thành dữ liệu phân tích và kết quả RUL có thể truy ngược về
-nguồn dữ liệu. Mục tiêu cụ thể gồm:
-\begin{enumerate}
-\item kiểm tra data contract và mô tả cấu trúc, chất lượng của FD001--FD004;
-\item xây dựng ETL cùng trailing features mà không làm rò rỉ thông tin từ
-      cycle tương lai;
-\item so sánh một số mô hình hồi quy bằng GroupKFold theo engine và đánh giá
-      mô hình được chọn trên test set theo cùng evaluation protocol;
-\item mô tả thay đổi của sensor giữa đầu và cuối vòng đời, đồng thời khảo sát
-      Health Index bằng PCA--ARIMA như một phân tích phụ.
-\item chuyển OOF prediction thành cảnh báo RUL thấp theo engine với ngưỡng được
-      khai báo trước, đồng thời ghi lead time và giới hạn diễn giải.
+Mục tiêu của báo cáo là xây dựng một pipeline tái lập được, đi từ dữ liệu thô
+đến dự đoán RUL, và đánh giá pipeline đó mà không để thông tin của tập test ảnh
+hưởng tới việc chọn mô hình. Báo cáo trả lời năm câu hỏi chính và một câu hỏi
+bổ sung:
+\begin{enumerate}[label=\textbf{Q\arabic*.},leftmargin=2.6em]
+\item Dữ liệu FD001 có đáp ứng các điều kiện hợp lệ về schema, khóa và tính liên
+      tục của cycle hay không?
+\item Giá trị sensor thay đổi như thế nào giữa đầu và cuối vòng đời động cơ?
+\item ETL bằng Pandas và PySpark có cho kết quả giống nhau trên cùng input hay
+      không?
+\item Mô hình dùng đặc trưng từ window 30 cycles đạt sai số bao nhiêu trên tập
+      test FD001?
+\item Dự đoán RUL có thể chuyển thành cảnh báo sớm cho từng động cơ với chất
+      lượng ra sao?
+\item \emph{(Bổ sung)} Mô hình huấn luyện trên FD001 hoạt động thế nào khi áp dụng
+      lên FD002--FD004?
 \end{enumerate}
 
-Từ các mục tiêu trên, báo cáo trả lời năm câu hỏi chính: (i) dữ liệu có đáp ứng
-contract để phân tích hay không; (ii) các sensor biến đổi như thế nào giữa hai
-đoạn đầu/cuối vòng đời; (iii) ETL Pandas và PySpark có cho kết quả tương đương
-trên cùng input hay không; và (iv) trailing window 30 cycles cùng mô hình được
-chọn cho kết quả RUL nào trong protocol đánh giá theo engine; (v) OOF prediction
-có thể tạo cảnh báo RUL thấp minh bạch đến mức nào khi ngưỡng được cố định
-trước. Một câu hỏi bổ sung là model fit trên FD001 chuyển sang FD002--FD004
-như thế nào khi dùng protocol window 10 cycles chung.
+\subsection{Phạm vi và cấu trúc báo cáo}
+C-MAPSS là dữ liệu mô phỏng, nên mọi kết luận chỉ áp dụng trong môi trường mô
+phỏng này. Dữ liệu cũng không có chi phí bảo trì, thời gian ngừng máy hay cách
+quy đổi cycle sang giờ; do đó báo cáo dừng ở mức dự đoán RUL và mô tả cảnh báo,
+không đề xuất lịch bảo trì.
 
-\subsection{Đóng góp và phạm vi của báo cáo}
-Đóng góp chính của báo cáo là một quy trình có ranh giới dữ liệu rõ ràng: raw
-được giữ bất biến, các bước train-only được tách khỏi đánh giá test, và nhãn
-test chỉ được ghép sau khi đã ghi final predictions. Báo cáo mô tả rõ các bước
-kiểm tra và điều kiện tái lập để người đọc đối chiếu từng kết quả với nguồn
-tương ứng. Các đóng góp này nhằm bảo đảm tính minh bạch của quy
-trình; chúng không được diễn giải thành bằng chứng rằng mô hình đã sẵn sàng
-triển khai ngoài môi trường mô phỏng.
+Phần còn lại được tổ chức như sau. Mục~\ref{sec:data} mô tả dữ liệu và kiểm
+tra chất lượng. Mục~\ref{sec:theory} trình bày cơ sở lý thuyết.
+Mục~\ref{sec:data-processing} mô tả cách gom, lưu trữ, truy vấn và biến đổi dữ
+liệu thành đặc trưng. Mục~\ref{sec:method} mô tả mô hình và các protocol đánh giá.
+Mục~\ref{sec:results} trình bày kết quả, Mục~\ref{sec:discussion} thảo luận và
+nêu giới hạn, Mục~\ref{sec:conclusion} kết luận.
 
-Các subset C-MAPSS không cung cấp chi phí bảo trì, downtime hoặc lịch can thiệp. Vì vậy, RUL
-chỉ là mục tiêu dự báo trong đơn vị cycle, chưa phải quyết định thời điểm bảo
-trì. Cycle cũng không được chuyển sang giờ hoặc ngày vì không có thông tin quy
-đổi tương ứng.
+\section{Dữ liệu}
+\label{sec:data}
 
-\section{Dữ liệu và kiểm soát chất lượng}
-\subsection{Nguồn dữ liệu và lý do lựa chọn}
-NASA C-MAPSS mô phỏng các chuỗi vận hành đến khi hỏng của động cơ turbofan. Nguồn dữ liệu được ghi nhận tại NASA Open Data~\cite{nasaCmapssDataset}; tài liệu nền tảng đi kèm bộ dữ liệu là công trình của Saxena và cộng sự~\cite{saxena2008damage}. FD001 có một điều kiện vận hành và một dạng suy giảm High-Pressure Compressor (HPC, máy nén áp suất cao); FD002--FD004 mở rộng điều kiện vận hành và dạng lỗi để kiểm tra khác biệt phân bố giữa các subset.
-
-FD001 được chọn làm tập chính vì có lịch sử train đầy đủ đến khi hỏng, test bị cắt và nhãn đánh giá tách riêng, phù hợp với cách xây dựng bài toán RUL. Tập trung vào một subset giúp kiểm soát phạm vi phân tích chính và làm rõ từng bước xử lý. FD002--FD004 được dùng riêng trong thực nghiệm bổ sung để kiểm tra khả năng chuyển miền của model FD001; cả bốn subset đều là dữ liệu mô phỏng, nên kết quả chưa cho phép khẳng định hiệu quả trên động cơ thực tế.
+\subsection{Nguồn dữ liệu}
+NASA C-MAPSS mô phỏng các chuỗi vận hành đến khi hỏng của một đội động cơ
+turbofan cùng loại~\cite{nasaCmapssDataset,saxena2008damage}. Mỗi động cơ bắt đầu
+với mức hao mòn ban đầu khác nhau, vận hành bình thường, rồi phát sinh lỗi và
+suy giảm dần đến khi hỏng. Bộ dữ liệu gồm bốn subset khác nhau về số điều kiện
+vận hành và số dạng lỗi (Bảng~\ref{tab:data}).
 
 \begin{table}[H]
 \centering
-\caption{Quy mô các subset C-MAPSS đã ghi nhận trong artifact validation.}
+\caption{Quy mô và đặc điểm của bốn subset C-MAPSS.}
 \label{tab:data}
-\begin{tabularx}{\linewidth}{l r r r r X}
-\toprule Subset & Train & Test & Train engines & Test engines & Test labels\\\midrule
-FD001 & 20.631 & 13.096 & 100 & 100 & 100\\
-FD002 & 53.759 & 33.991 & 260 & 259 & 259\\
-FD003 & 24.720 & 16.596 & 100 & 100 & 100\\
-FD004 & 61.249 & 41.214 & 249 & 248 & 248\\\bottomrule
-\end{tabularx}
+\small
+\begin{tabular}{l r r r r c c}
+\toprule
+Subset & Dòng train & Dòng test & Động cơ train & Động cơ test & Điều kiện & Dạng lỗi\\\midrule
+FD001 & 20.631 & 13.096 & 100 & 100 & 1 & 1 (HPC)\\
+FD002 & 53.759 & 33.991 & 260 & 259 & 6 & 1 (HPC)\\
+FD003 & 24.720 & 16.596 & 100 & 100 & 1 & 2 (HPC, fan)\\
+FD004 & 61.249 & 41.214 & 249\textsuperscript{a} & 248\textsuperscript{a} & 6 & 2 (HPC, fan)\\\bottomrule
+\end{tabular}
+
+\vspace{0.3em}
+\begin{minipage}{0.95\linewidth}\footnotesize
+HPC: High-Pressure Compressor (máy nén áp suất cao). \textsuperscript{a}Số động
+cơ đếm từ file dữ liệu; file \texttt{readme.txt} của NASA ghi ngược thành 248
+train và 249 test.
+\end{minipage}
 \end{table}
 
-Mỗi dòng raw của cả bốn subset có 26 trường: engine ID, cycle, 3 operational settings và 21 sensors. Reader bổ sung cột \texttt{split}, tạo bảng observations có 27 cột. Khóa là bộ ba \texttt{(split, engine\_id, cycle)}: train engine 1 và test engine 1 không phải cùng một thực thể. Nhãn test chỉ được kiểm tra cấu trúc riêng trong báo cáo integrity; việc này không phải đánh giá mô hình.
+FD001 được chọn làm subset chính vì chỉ có một điều kiện vận hành và một dạng
+lỗi. Khi các yếu tố này cố định, biến động của sensor chủ yếu phản ánh quá trình
+suy giảm, giúp việc diễn giải từng bước phân tích rõ ràng hơn. FD002--FD004 được
+dùng trong thí nghiệm bổ sung để kiểm tra mô hình FD001 khi điều kiện vận hành
+và dạng lỗi thay đổi.
 
-\subsection{Từ điển dữ liệu và ý nghĩa cột}
-Dữ liệu train/test gốc không có header; tên cột trong báo cáo được đặt theo
-contract của repository. Bảng~\ref{tab:data-dictionary} mô tả vai trò từng nhóm
-cột và cách sử dụng trong phân tích. Nguồn NASA chỉ mô tả các trường sensor là
-``sensor measurement'', không cung cấp tên vật lý, đơn vị đo hoặc mapping chi
-tiết cho từng sensor. Vì vậy, báo cáo giữ tên \texttt{sensor\_1} đến
-\texttt{sensor\_21}; không tự diễn giải một sensor cụ thể là nhiệt độ, áp suất
-hoặc tốc độ nếu chưa có nguồn xác nhận.
+\subsection{Cấu trúc và ý nghĩa các cột}
+Mỗi dòng trong file train và test là một cycle của một động cơ, gồm 26 giá trị
+cách nhau bởi khoảng trắng: mã động cơ, số thứ tự cycle, ba operational settings
+và 21 sensor. File gốc không có header; tên cột trong Bảng~\ref{tab:data-dictionary}
+do repository đặt. NASA chỉ gọi các cột sensor là ``sensor measurement'' mà
+không cho biết tên đại lượng vật lý hay đơn vị, vì vậy báo cáo giữ tên
+\texttt{sensor\_1} đến \texttt{sensor\_21} và không suy đoán sensor nào đo nhiệt
+độ hay áp suất.
 
 \begin{small}
 \setlength{\tabcolsep}{3pt}
-\begin{longtable}{@{}L{2.6cm}L{3.8cm}L{2.8cm}L{4.4cm}@{}}
-\caption{Data dictionary của FD001 trong repository.}\label{tab:data-dictionary}\\
+\begin{longtable}{@{}L{2.6cm}L{3.9cm}L{3.2cm}L{4.0cm}@{}}
+\caption{Từ điển dữ liệu của FD001.}\label{tab:data-dictionary}\\
 \toprule
-Cột hoặc nhóm cột & Ý nghĩa & Kiểu/miền đã kiểm tra & Vai trò trong báo cáo\\
+Cột & Ý nghĩa & Kiểu và miền giá trị & Cách sử dụng\\
 \midrule
 \endfirsthead
 \toprule
-Cột hoặc nhóm cột & Ý nghĩa & Kiểu/miền đã kiểm tra & Vai trò trong báo cáo\\
+Cột & Ý nghĩa & Kiểu và miền giá trị & Cách sử dụng\\
 \midrule
 \endhead
 \bottomrule
 \endlastfoot
-\texttt{split} & Cột do reader bổ sung để phân biệt nguồn dữ liệu. & Chuỗi
-\texttt{train} hoặc \texttt{test}. & Giữ ranh giới train/test trong khóa dữ liệu
-và validation; không có trong raw text gốc.\\[0.35em]
-\texttt{engine\_id} & Mã chuỗi động cơ trong từng split. & Số nguyên dương;
-FD001 có engine ID 1--100 ở cả train và test. & Đơn vị độc lập cho tuổi thọ,
-ghép cặp đầu/cuối, GroupKFold và đánh giá theo engine.\\[0.35em]
-\texttt{cycle} & Thứ tự vận hành rời rạc của một engine. & Số nguyên dương,
-bắt đầu từ 1 và liên tục trong từng engine. & Trục thời gian rời rạc; dùng để
-tạo RUL train, window 30 cycles và phân tích đầu/cuối vòng đời.\\[0.35em]
-\texttt{setting\_1}--\texttt{setting\_3} & Ba operational settings ảnh hưởng
-đến điều kiện vận hành. & \texttt{float64}; trên train, \texttt{setting\_3}
-hằng ở 100. & Biến bối cảnh vận hành; không thuộc nhóm sensor được phân tích
-thống kê.\\[0.35em]
-\texttt{sensor\_1}--\texttt{sensor\_21} & Hai mươi mốt phép đo sensor trong
-mỗi cycle. & \texttt{float64} hữu hạn; không có missing trong train. & Nguồn
-tín hiệu chính cho EDA, paired analysis và feature engineering.\\[0.35em]
-\texttt{rul} trong train targets & Nhãn RUL được suy ra từ lịch sử train đầy
-đủ đến khi hỏng. & Số nguyên không âm; trên train hiện có miền 0--361 cycles. &
-Biến mục tiêu cho supervised regression; không phải cột raw.\\[0.35em]
-\texttt{RUL\_FD001.txt} & Nhãn RUL chính thức tại cycle cuối quan sát của mỗi
-engine test. & 100 số nguyên không âm, ánh xạ dòng $i$ sang test engine $i$. &
-Chỉ được ghép sau khi đã tạo 100 dự đoán test cuối cùng; không dùng trong EDA
-hoặc model selection.\\
+\texttt{split} & Cột thêm khi đọc file, cho biết dòng thuộc train hay test. &
+\texttt{train} hoặc \texttt{test}. & Thành phần của khóa; giữ tách biệt hai
+tập.\\[0.35em]
+\texttt{engine\_id} & Mã động cơ trong từng tập. & Số nguyên 1--100 ở cả train
+và test. & Đơn vị chia fold, ghép cặp và tính metric.\\[0.35em]
+\texttt{cycle} & Thứ tự cycle của động cơ. & Số nguyên, bắt đầu từ 1, liên tục.
+& Trục thời gian; dùng để tạo nhãn và window.\\[0.35em]
+\texttt{setting\_1}--\texttt{setting\_3} & Ba operational settings. &
+\texttt{float64}; \texttt{setting\_3} hằng bằng 100 trên train. & Không đưa vào
+mô hình RUL hiện tại.\\[0.35em]
+\texttt{sensor\_1}--\texttt{sensor\_21} & Giá trị đo của 21 sensor trong cycle.
+& \texttt{float64}, không thiếu giá trị. & Nguồn tín hiệu cho EDA, phân tích
+ghép cặp và đặc trưng.\\[0.35em]
+\texttt{rul} & Nhãn RUL train tính theo Công thức~\eqref{eq:rul}. & Số nguyên
+0--361. & Biến mục tiêu; không có trong file gốc.\\[0.35em]
+\texttt{RUL\_FD001.txt} & RUL thật tại cycle cuối của mỗi động cơ test. & 100
+số nguyên; dòng $i$ ứng với động cơ test $i$. & Chỉ đọc ở bước đánh giá cuối.\\
 \end{longtable}
 \end{small}
 
-Nhãn kết cục của bài toán là RUL, tức số cycle còn lại trước khi engine hỏng.
-Trong train, nhãn được suy ra từ cycle cuối của từng chuỗi; trong test, nhãn
-chỉ có tại cycle cuối quan sát và nằm trong file riêng \texttt{RUL\_FD001.txt}.
-Do đó, mỗi dòng train có thể có một nhãn RUL, còn mỗi engine test chỉ có một
-nhãn đánh giá cuối. Báo cáo không chuyển RUL thành nhãn phân loại hỏng/không
-hỏng vì nguồn dữ liệu và protocol hiện tại đánh giá sai số theo số cycle.
+Ví dụ, dòng đầu tiên của \texttt{train\_FD001.txt} có \texttt{engine\_id=1},
+\texttt{cycle=1}, ba settings lần lượt là $-0{,}0007$, $-0{,}0004$ và
+$100{,}0$, tiếp theo là 21 giá trị sensor. Động cơ này hỏng ở cycle 192, nên
+dòng đầu có \texttt{rul=191}.
 
-Ví dụ đọc một dòng raw: dòng đầu tiên của \texttt{train\_FD001.txt} có
-\texttt{engine\_id=1}, \texttt{cycle=1}, ba settings lần lượt là
-$-0{,}0007$, $-0{,}0004$, $100{,}0$, sau đó là 21 giá trị sensor. Engine 1
-trong train kết thúc ở cycle 192, nên sau khi tạo nhãn, dòng này có
-\texttt{rul=191}. Đây là nhãn hồi cứu của train, không phải dự đoán của mô hình.
+Hai động cơ có cùng \texttt{engine\_id} ở train và test là hai động cơ khác
+nhau. Vì vậy, khóa của một dòng là bộ ba \texttt{(split, engine\_id, cycle)},
+không phải cặp \texttt{(engine\_id, cycle)}.
 
-\subsection{Hồ sơ cột trên tập train}
-Bảng~\ref{tab:column-profile} tóm tắt các nhóm cột sau khi ghép RUL train. Các
-thống kê dùng để mô tả cấu trúc dữ liệu trước khi xây feature, không phải bằng
-chứng về hiệu quả dự đoán.
+\subsection{Đặc điểm của tập train FD001}
+Bảng~\ref{tab:column-profile} tóm tắt tập train sau khi gắn nhãn RUL. Không có
+giá trị thiếu và không có khóa trùng. Điểm đáng chú ý là sáu sensor hằng số
+trên toàn bộ train, còn \texttt{sensor\_6} chỉ có hai giá trị và không đổi trong
+38/100 động cơ. Chi tiết từng sensor nằm ở Bảng~\ref{tab:sensor-profile}.
 
 \begin{table}[H]
 \centering
-\caption{Hồ sơ nhóm cột trên train FD001.}
+\caption{Tóm tắt các nhóm cột trên train FD001.}
 \label{tab:column-profile}
 \begin{tabularx}{\linewidth}{L{3.2cm}r r X}
-\toprule Nhóm cột & Số cột & Missing & Nhận xét chính\\\midrule
-Khóa \texttt{engine\_id}, \texttt{cycle} & 2 & 0 & 20.631 quan sát, 100 engine; không có khóa trùng, cycle liên tục trong từng engine.\\
-Operational settings & 3 & 0 & \texttt{setting\_1} có 158 giá trị khác nhau, \texttt{setting\_2} có 13 giá trị, \texttt{setting\_3} hằng bằng 100.\\
-Sensors & 21 & 0 & Sáu sensor hằng toàn train; \texttt{sensor\_6} chỉ có hai giá trị và hằng trong 38 engine.\\
-Nhãn \texttt{rul} train & 1 & 0 & Miền 0--361 cycles; trung vị theo observation là 103 cycles.\\\bottomrule
+\toprule Nhóm cột & Số cột & Thiếu & Nhận xét\\\midrule
+\texttt{engine\_id}, \texttt{cycle} & 2 & 0 & 20.631 dòng của 100 động cơ; khóa không trùng, cycle liên tục.\\
+Operational settings & 3 & 0 & \texttt{setting\_1} có 158 giá trị, \texttt{setting\_2} có 13 giá trị, \texttt{setting\_3} hằng bằng 100.\\
+Sensor & 21 & 0 & Sáu sensor hằng; \texttt{sensor\_6} hằng trong 38 động cơ.\\
+Nhãn \texttt{rul} & 1 & 0 & Từ 0 đến 361 cycles; trung vị theo dòng là 103 cycles.\\\bottomrule
 \end{tabularx}
 \end{table}
 
 \begin{small}
 \begin{longtable}{l r l L{6.5cm}}
-\caption{Profile 21 sensor trên train FD001.}\label{tab:sensor-profile}\\
+\caption{Số giá trị khác nhau và miền giá trị của 21 sensor trên train FD001.}\label{tab:sensor-profile}\\
 \toprule
-Sensor & Số giá trị khác nhau & Min--max & Ghi chú\\
+Sensor & Số giá trị & Min--max & Ghi chú\\
 \midrule
 \endfirsthead
 \toprule
-Sensor & Số giá trị khác nhau & Min--max & Ghi chú\\
+Sensor & Số giá trị & Min--max & Ghi chú\\
 \midrule
 \endhead
 \bottomrule
 \endlastfoot
-\texttt{sensor\_1} & 1 & 518,67--518,67 & Hằng toàn train.\\
-\texttt{sensor\_2} & 310 & 641,21--644,53 & Biến thiên trên train.\\
-\texttt{sensor\_3} & 3.012 & 1.571,04--1.616,91 & Biến thiên trên train.\\
-\texttt{sensor\_4} & 4.051 & 1.382,25--1.441,49 & Biến thiên trên train; có chênh lệch đầu/cuối lớn.\\
-\texttt{sensor\_5} & 1 & 14,62--14,62 & Hằng toàn train.\\
-\texttt{sensor\_6} & 2 & 21,60--21,61 & Biến thiên toàn train nhưng hằng trong 38/100 engine.\\
-\texttt{sensor\_7} & 513 & 549,85--556,06 & Biến thiên trên train.\\
-\texttt{sensor\_8} & 53 & 2.387,90--2.388,56 & Biến thiên thấp, nhưng không hằng.\\
-\texttt{sensor\_9} & 6.403 & 9.021,73--9.244,59 & Biến thiên mạnh; phân phối theo engine không đồng nhất hoàn toàn.\\
-\texttt{sensor\_10} & 1 & 1,30--1,30 & Hằng toàn train.\\
-\texttt{sensor\_11} & 159 & 46,85--48,53 & Biến thiên; Spearman median với RUL âm trong EDA.\\
-\texttt{sensor\_12} & 427 & 518,69--523,38 & Biến thiên; Spearman median với RUL dương trong EDA.\\
-\texttt{sensor\_13} & 56 & 2.387,88--2.388,56 & Biến thiên thấp, nhưng không hằng.\\
-\texttt{sensor\_14} & 6.078 & 8.099,94--8.293,72 & Biến thiên mạnh theo giá trị gốc.\\
-\texttt{sensor\_15} & 1.918 & 8,3249--8,5848 & Biến thiên trên train.\\
-\texttt{sensor\_16} & 1 & 0,03--0,03 & Hằng toàn train.\\
-\texttt{sensor\_17} & 13 & 388--400 & Biến thiên rời rạc trên train.\\
-\texttt{sensor\_18} & 1 & 2.388--2.388 & Hằng toàn train.\\
-\texttt{sensor\_19} & 1 & 100--100 & Hằng toàn train.\\
-\texttt{sensor\_20} & 120 & 38,14--39,43 & Biến thiên trên train.\\
-\texttt{sensor\_21} & 4.745 & 22,8942--23,6184 & Biến thiên trên train.\\
+\texttt{sensor\_1} & 1 & 518,67--518,67 & Hằng.\\
+\texttt{sensor\_2} & 310 & 641,21--644,53 & \\
+\texttt{sensor\_3} & 3.012 & 1.571,04--1.616,91 & \\
+\texttt{sensor\_4} & 4.051 & 1.382,25--1.441,49 & Tăng rõ ở cuối vòng đời.\\
+\texttt{sensor\_5} & 1 & 14,62--14,62 & Hằng.\\
+\texttt{sensor\_6} & 2 & 21,60--21,61 & Hằng trong 38/100 động cơ.\\
+\texttt{sensor\_7} & 513 & 549,85--556,06 & \\
+\texttt{sensor\_8} & 53 & 2.387,90--2.388,56 & Biến thiên hẹp.\\
+\texttt{sensor\_9} & 6.403 & 9.021,73--9.244,59 & Xu hướng khác nhau giữa các động cơ.\\
+\texttt{sensor\_10} & 1 & 1,30--1,30 & Hằng.\\
+\texttt{sensor\_11} & 159 & 46,85--48,53 & Tương quan Spearman âm mạnh với RUL.\\
+\texttt{sensor\_12} & 427 & 518,69--523,38 & Tương quan Spearman dương mạnh với RUL.\\
+\texttt{sensor\_13} & 56 & 2.387,88--2.388,56 & Biến thiên hẹp.\\
+\texttt{sensor\_14} & 6.078 & 8.099,94--8.293,72 & Xu hướng khác nhau giữa các động cơ.\\
+\texttt{sensor\_15} & 1.918 & 8,3249--8,5848 & \\
+\texttt{sensor\_16} & 1 & 0,03--0,03 & Hằng.\\
+\texttt{sensor\_17} & 13 & 388--400 & Giá trị rời rạc.\\
+\texttt{sensor\_18} & 1 & 2.388--2.388 & Hằng.\\
+\texttt{sensor\_19} & 1 & 100--100 & Hằng.\\
+\texttt{sensor\_20} & 120 & 38,14--39,43 & \\
+\texttt{sensor\_21} & 4.745 & 22,8942--23,6184 & \\
 \end{longtable}
 \end{small}
 
-Các cột hằng toàn train không có correlation Spearman xác định với RUL và không
-thể tạo chênh lệch đầu/cuối khác 0 trong paired analysis. Báo cáo vẫn giữ chúng
-trong bảng thống kê để thể hiện đầy đủ phạm vi 21 sensor.
+Sensor hằng không mang thông tin về suy giảm và không có hệ số tương quan xác
+định. Báo cáo vẫn giữ đủ 21 sensor trong các bảng thống kê để kết quả phản ánh
+toàn bộ dữ liệu, thay vì chỉ những sensor cho kết quả đẹp.
 
-\subsection{Đánh giá phân bố và cách xử lý dữ liệu}
-Dữ liệu FD001 tương đối sạch về mặt schema: không có missing trong các cột đã
-đọc, khóa \texttt{(split, engine\_id, cycle)} không trùng và cycle liên tục
-trong từng engine. Tuy nhiên, dữ liệu không hoàn toàn thuận lợi cho mọi phân
-tích: độ dài chuỗi giữa các engine khác nhau, sáu sensor hằng trên toàn train,
-một số sensor có rất ít mức giá trị, và tài liệu gốc không cung cấp đơn vị vật
-lý cho từng sensor. Bảng~\ref{tab:data-quality-actions} tóm tắt các điểm này
-và cách xử lý trong báo cáo.
+\subsection{Kiểm tra chất lượng và cách xử lý}
+Trước mọi phân tích, bộ đọc dữ liệu kiểm tra: mỗi dòng có đúng 26 trường, mọi
+giá trị là số hữu hạn, khóa không trùng, cycle bắt đầu từ 1 và liên tục trong
+từng động cơ. Với nhãn train, bộ kiểm tra đối chiếu lại Công thức~\eqref{eq:rul}.
+Khi phát hiện lỗi, chương trình dừng với \texttt{ContractError} thay vì tự điền
+hay xóa dòng. Các kiểm tra này quan trọng vì dữ liệu sai vẫn có thể cho ra thống
+kê trông hợp lý: chẳng hạn chuỗi cycle $1,2,4$ không được coi là ba bước liên
+tiếp khi tạo window. Mỗi lần chạy lưu mã băm SHA-256 của file đầu vào để nhận
+biết phiên bản dữ liệu đã dùng.
+
+Bảng~\ref{tab:data-quality-actions} tóm tắt các đặc điểm dữ liệu cần lưu ý và
+cách báo cáo xử lý.
 
 \begin{table}[H]
 \centering
-\caption{Đặc điểm phân bố dữ liệu và cách xử lý.}
+\caption{Đặc điểm dữ liệu và cách xử lý.}
 \label{tab:data-quality-actions}
-\begin{tabularx}{\linewidth}{L{3.4cm}L{4.4cm}X}
-\toprule Đặc điểm & Ý nghĩa & Cách xử lý trong báo cáo\\\midrule
-Không có missing và khóa hợp lệ & Dữ liệu đủ sạch để tạo EDA, ETL và đặc trưng
-mà không cần impute. & Không tự điền dữ liệu; validator dừng khi schema,
-khóa hoặc cycle continuity sai.\\
-Độ dài chuỗi khác nhau giữa engine & Engine sống lâu tạo nhiều observations và
-nhiều rolling windows hơn. & Báo cáo tách thống kê theo observation và theo
-engine; cross-validation và metric chính dùng engine làm đơn vị.\\
-Sensor hằng hoặc ít biến thiên & Một số correlation hoặc kiểm định không xác
-định; sensor hằng không tạo chênh lệch đầu/cuối. & Giữ đủ 21 sensor trong bảng,
-gắn trạng thái không xác định hoặc all-zero; không xóa sensor chỉ để làm kết quả
-đẹp hơn.\\
-Không có đơn vị vật lý cho sensor & Không thể diễn giải \texttt{sensor\_k} là
-nhiệt độ, áp suất hoặc tốc độ cụ thể. & Dùng tên ẩn danh \texttt{sensor\_1}--
-\texttt{sensor\_21}; mọi chênh lệch được hiểu theo đơn vị gốc của sensor đó.\\
-Test labels tách riêng & Nếu đọc nhãn test trước khi chọn mô hình sẽ gây data
-leakage. & Chỉ ghép \texttt{RUL\_FD001.txt} sau khi đã ghi final predictions.\\
+\begin{tabularx}{\linewidth}{L{3.6cm}L{4.4cm}X}
+\toprule Đặc điểm & Ảnh hưởng & Cách xử lý\\\midrule
+Không thiếu giá trị, khóa hợp lệ & Không cần điền dữ liệu. & Giữ nguyên dữ liệu; dừng nếu kiểm tra thất bại.\\
+Độ dài chuỗi khác nhau (128--362 cycles) & Động cơ sống lâu đóng góp nhiều window hơn. & Chia fold, gán trọng số và tính metric theo động cơ.\\
+Sensor hằng hoặc ít biến thiên & Tương quan và kiểm định không xác định. & Giữ trong bảng, đánh dấu ``không xác định''.\\
+Không có đơn vị vật lý & Không diễn giải được ý nghĩa vật lý của sensor. & Dùng tên ẩn danh; chênh lệch hiểu theo đơn vị gốc.\\
+Nhãn test tách riêng & Đọc sớm sẽ gây data leakage. & Chỉ đọc \texttt{RUL\_FD001.txt} sau khi đã ghi dự đoán test.\\
 \bottomrule
 \end{tabularx}
 \end{table}
-
-\subsection{Các kiểm tra đã triển khai và lý do}
-Reader và validator thực hiện kiểm tra số trường, schema, kiểu số hữu hạn, bảng không rỗng, split hợp lệ, khóa duy nhất và cycle liên tục trong từng động cơ. Profile FD001 đối chiếu thêm số dòng, ID động cơ và cycle bắt đầu. Với train targets, validator kiểm tra đủ khóa và đối chiếu Công thức~\ref{eq:rul}.
-
-Các kiểm tra được đặt trước EDA vì dữ liệu sai có thể tạo ra thống kê hợp lệ về mặt tính toán nhưng sai về ý nghĩa. Chẳng hạn, chuỗi cycle $1,2,4$ không được coi là ba bước liên tiếp khi xây window. Hai dòng cùng khóa cũng không được giữ lại như hai phép đo độc lập. Khi phát hiện lỗi, package báo \texttt{ContractError}; không tự điền dữ liệu, xóa dòng hoặc chỉnh raw để làm validation đạt.
-
-\subsection{Tính toàn vẹn và giới hạn của validation}
-Báo cáo JSON lưu SHA-256 của input để nhận biết phiên bản dữ liệu đã đọc. Dấu vân tay này chỉ hỗ trợ đối chiếu; tự tính checksum không chứng minh nguồn gốc file là chính xác. Việc kiểm tra row count và cycle continuity cũng không đủ phát hiện mọi thay đổi giá trị sensor.
-
-Đặc biệt, một chuỗi train bị cắt đuôi nhưng vẫn liên tục có thể tạo ra RUL sai
-nếu bị hiểu nhầm là lịch sử đầy đủ. Vì vậy, raw được giữ bất biến, nguồn dữ liệu
-được ghi nhận và test labels được tách khỏi các phân tích train.

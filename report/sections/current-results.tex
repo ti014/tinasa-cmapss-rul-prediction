@@ -1,25 +1,27 @@
-\section{Kết quả và diễn giải}
+\section{Kết quả}
+\label{sec:results}
 
-Các kết quả chi tiết trong phần này dùng FD001 làm subset chính. Đánh giá bổ
-sung trên FD002--FD004 được trình bày riêng ở cuối phần để không trộn metric
-window 10 cycles với kết quả chính window 30 cycles.
+Các mục từ~\ref{sec:res-data} đến~\ref{sec:res-nested} trình bày kết quả trên
+FD001. Mục~\ref{sec:res-transfer} trình bày ma trận chuyển miền dùng window 10
+cycles; các mục cuối trình bày Health Index--ARIMA và ETL.
 
-\subsection{Kiểm tra dữ liệu}
-Validation đạt đối với observations train, nhãn RUL train và observations test.
-Tập train có 20.631 dòng, tập test có 13.096 dòng; mỗi tập gồm 100 engine.
-Một trăm test labels hợp lệ về cấu trúc, nhưng được giữ tách khỏi EDA và các
-phân tích trên train. Các kiểm tra schema, khóa duy nhất, kiểu số hữu hạn và
-cycle liên tục đều đạt.
+\subsection{Kiểm tra dữ liệu và phân tích khám phá}
+\label{sec:res-data}
+Cả ba bảng (quan sát train, nhãn train, quan sát test) đều vượt qua mọi kiểm tra
+về schema, khóa, kiểu số và tính liên tục của cycle. Tập train có 20.631 dòng và
+tập test có 13.096 dòng, mỗi tập 100 động cơ; 100 nhãn test hợp lệ về cấu trúc.
 
-\subsection{Tuổi thọ động cơ trên train}
+Tuổi thọ của 100 động cơ train dao động từ 128 đến 362 cycles
+(Bảng~\ref{tab:lifetime}, Hình~\ref{fig:life}). Phân phối lệch phải: trung bình
+206,31 cycles lớn hơn trung vị 199 cycles do một số động cơ sống rất lâu.
+
 \begin{table}[H]
 \centering
-\caption[Thống kê tuổi thọ của 100 động cơ train]{Thống kê tuổi thọ, đơn vị
-cycle.}
+\caption{Thống kê tuổi thọ của 100 động cơ train FD001, đơn vị cycle.}
 \label{tab:lifetime}
 \begin{tabular}{lr@{\qquad}lr}
 \toprule Thống kê & Giá trị & Thống kê & Giá trị\\\midrule
-Trung bình & 206,31 & Độ lệch chuẩn mẫu & 46,34\\
+Trung bình & 206,31 & Độ lệch chuẩn & 46,34\\
 Nhỏ nhất & 128 & Lớn nhất & 362\\
 Tứ phân vị 25\% & 177 & Trung vị & 199\\
 Tứ phân vị 75\% & 229,25 & Số động cơ & 100\\\bottomrule
@@ -28,304 +30,310 @@ Tứ phân vị 75\% & 229,25 & Số động cơ & 100\\\bottomrule
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.9\linewidth]{../outputs/eda/figures/engine_lifetimes.png}
-\caption[Phân phối tuổi thọ động cơ trên train]{Phân phối tuổi thọ train; mỗi
-động cơ đóng góp một giá trị.}
+\includegraphics[width=0.62\linewidth]{../outputs/eda/figures/engine_lifetimes.png}
+\caption{Phân phối tuổi thọ của các động cơ train; mỗi động cơ đóng góp một giá trị.}
 \label{fig:life}
 \end{figure}
 
-Tuổi thọ dao động từ 128 đến 362 cycles; trung bình lớn hơn trung vị. Vì độ dài
-chuỗi khác nhau, báo cáo phân biệt rõ tổng hợp theo observation và theo engine.
-Các con số không được diễn giải thành tuổi thọ theo giờ hoặc ngày.
-
-\subsection{Sensor hằng và correlation theo engine}
-\begin{table}[H]
-\centering
-\caption[Correlation Spearman theo engine: các dòng minh họa]{Một số dòng minh
-họa; bảng này không dùng để chọn sensor.}
-\label{tab:correlation}
-\begin{tabular}{lrrr}
-\toprule Sensor & Động cơ xác định & Tương quan trung vị & Không xác định\\\midrule
-1 & 0 & Không xác định & 100\\
-6 & 62 & $-0{,}1264$ & 38\\
-11 & 100 & $-0{,}8190$ & 0\\
-12 & 100 & $0{,}8075$ & 0\\\bottomrule
-\end{tabular}
-\end{table}
-
-Sensor 1, 5, 10, 16, 18 và 19 hằng trên train. Sensor 6 hằng trong 38/100
-engine; correlation chỉ xác định trong 62 engine còn lại. Sensor 11 có tương
-quan trung vị âm, còn sensor 12 có tương quan trung vị dương với RUL. Đây là
-liên hệ mô tả trên train, không phải bằng chứng nhân quả hoặc hiệu quả ngoài mẫu.
+Tương quan Spearman giữa từng sensor và RUL được tính riêng trong mỗi động cơ,
+rồi tóm tắt qua 100 động cơ (Hình~\ref{fig:corr}). Cách tính này tránh để động
+cơ dài chi phối kết quả. Sáu sensor hằng (1, 5, 10, 16, 18, 19) không có tương
+quan xác định. Nhiều sensor có tương quan mạnh và nhất quán giữa các động cơ,
+ví dụ \texttt{sensor\_11} (trung vị $-0{,}8190$) và \texttt{sensor\_12} (trung vị
+$0{,}8075$), tức \texttt{sensor\_11} tăng và \texttt{sensor\_12} giảm khi động cơ
+tiến gần đến hỏng. Ngược lại, \texttt{sensor\_9} và \texttt{sensor\_14} có tương
+quan âm ở phần lớn động cơ nhưng dương ở một số động cơ khác. \texttt{sensor\_6}
+chỉ xác định được ở 62 động cơ, với trung vị yếu $-0{,}1264$.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\linewidth]{../outputs/eda/figures/sensor_rul_by_engine.png}
-\caption[Phân phối correlation Spearman sensor--RUL theo động cơ]{Phân phối
-correlation Spearman giữa các engine train. Sensor hằng được giữ là không xác
-định.}
+\includegraphics[width=0.74\linewidth]{../outputs/eda/figures/sensor_rul_by_engine.png}
+\caption{Phân phối hệ số tương quan Spearman sensor--RUL qua các động cơ train.}
 \label{fig:corr}
 \end{figure}
 
-\subsection{Suy luận đầu/cuối vòng đời trên train}
-Bảng cặp gồm 2.100 dòng, tương ứng 100 engine train nhân 21 sensor. Mỗi dòng
-dùng mean của 30 cycles đầu, mean của 30 cycles cuối và chênh lệch cuối trừ đầu.
-Bảng suy luận giữ đủ 21 sensor.
-
-Trong 21 sensor, sáu sensor có toàn bộ chênh lệch bằng 0:
-\texttt{sensor\_1}, \texttt{sensor\_5}, \texttt{sensor\_10},
-\texttt{sensor\_16}, \texttt{sensor\_18} và \texttt{sensor\_19}. Mười lăm
-sensor còn lại kiểm định được; với cấu hình Wilcoxon permutation và
-Benjamini--Hochberg trên họ 21 sensor, các p-value đã hiệu chỉnh đều xấp xỉ
-0,000028. Giá trị lặp lại này phản ánh độ phân giải hữu hạn của permutation
-100.000 lần và bước điều chỉnh BH; nó không có nghĩa là các sensor có cùng độ
-lớn hiệu ứng. Vì vậy, kết luận được đọc cùng mean difference, khoảng tin cậy và
-số dấu, thay vì dựa riêng vào p-value.
+\subsection{Thay đổi của sensor giữa đầu và cuối vòng đời}
+\label{sec:res-paired}
+Trong 21 sensor, sáu sensor hằng có toàn bộ chênh lệch bằng 0 và không kiểm định
+được. Với 15 sensor còn lại, kiểm định Wilcoxon bác bỏ giả thuyết không sau hiệu
+chỉnh Benjamini--Hochberg; p-value đã hiệu chỉnh của cả 15 sensor đều xấp xỉ
+0,000028. Giá trị giống nhau này là giới hạn độ phân giải của 100.000 hoán vị,
+không có nghĩa là các sensor thay đổi như nhau. Vì vậy, độ lớn thay đổi cần được
+đọc từ trung bình chênh lệch và khoảng tin cậy (Bảng~\ref{tab:sensor-inference},
+Hình~\ref{fig:statistics-effect-ci}).
 
 \begin{table}[H]
 \centering
-\caption[Ví dụ kết quả suy luận sensor đầu/cuối]{Một số kết quả tiêu biểu. Giá
-trị là chênh lệch cuối trừ đầu theo đơn vị gốc của từng sensor.}
+\caption{Một số kết quả tiêu biểu của phân tích ghép cặp; chênh lệch bằng trung
+bình 30 cycles cuối trừ trung bình 30 cycles đầu, theo đơn vị gốc của sensor.}
 \label{tab:sensor-inference}
 \begin{tabular}{lrrl}
-\toprule Sensor & Chênh lệch trung bình & Khoảng tin cậy bootstrap 95\% & Dấu chính\\\midrule
-\texttt{sensor\_4} & 20,128097 & [19,402735; 20,865606] & Tăng\\
-\texttt{sensor\_7} & -1,913527 & [-1,999307; -1,829684] & Giảm\\
-\texttt{sensor\_11} & 0,613257 & [0,589017; 0,637944] & Tăng\\
-\texttt{sensor\_12} & -1,627190 & [-1,704288; -1,552119] & Giảm\\
-\texttt{sensor\_20} & -0,377007 & [-0,391534; -0,363173] & Giảm\\\bottomrule
+\toprule Sensor & Trung bình chênh lệch & Khoảng tin cậy 95\% & Hướng\\\midrule
+\texttt{sensor\_4} & 20,128097 & [19,402735; 20,865606] & Tăng ở 100/100 động cơ\\
+\texttt{sensor\_7} & $-1{,}913527$ & [$-1{,}999307$; $-1{,}829684$] & Giảm ở 100/100 động cơ\\
+\texttt{sensor\_11} & 0,613257 & [0,589017; 0,637944] & Tăng ở 100/100 động cơ\\
+\texttt{sensor\_12} & $-1{,}627190$ & [$-1{,}704288$; $-1{,}552119$] & Giảm ở 100/100 động cơ\\
+\texttt{sensor\_20} & $-0{,}377007$ & [$-0{,}391534$; $-0{,}363173$] & Giảm ở 100/100 động cơ\\\bottomrule
 \end{tabular}
 \end{table}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.86\linewidth,height=0.78\textheight,keepaspectratio]{../outputs/statistics/figures/difference_distributions.png}
-\caption[Phân phối chênh lệch sensor đầu/cuối theo engine]{Phân phối chênh lệch
-cuối trừ đầu của 100 engine cho từng sensor.}
-\label{fig:statistics-distributions}
-\end{figure}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.86\linewidth,height=0.78\textheight,keepaspectratio]{../outputs/statistics/figures/effect_size_ci.png}
-\caption[Chênh lệch cặp trung bình và khoảng tin cậy bootstrap]{Mean paired
-difference và bootstrap CI 95\% theo từng sensor.}
+\includegraphics[width=0.7\linewidth,height=0.42\textheight,keepaspectratio]{../outputs/statistics/figures/effect_size_ci.png}
+\caption{Trung bình chênh lệch đầu/cuối vòng đời và khoảng tin cậy bootstrap 95\% của từng sensor.}
 \label{fig:statistics-effect-ci}
 \end{figure}
 
-Theo protocol đầu/cuối đã chọn, nhiều sensor có chênh lệch khác 0 một cách có hệ
-thống trên train FD001. Sensor 4 tăng trung bình khoảng 20,13 đơn vị gốc, trong
-khi sensor 7 giảm khoảng 1,91 đơn vị; hai giá trị này không được xếp hạng trực
-tiếp vì sensor có thang đo khác nhau. Sensor 6 có 47 chênh lệch dương và 53
-chênh lệch bằng 0, nhưng mean difference chỉ khoảng 0,00045. Trường hợp này
-minh họa rằng p-value nhỏ không tự cho biết độ lớn thực tiễn của thay đổi. Phân
-tích đầu/cuối vì vậy không được dùng như bằng chứng chọn đặc trưng hoặc giá trị sử dụng
-dự đoán RUL ngoài mẫu.
+Các sensor 4, 7, 11, 12 và 20 thay đổi cùng hướng ở tất cả 100 động cơ, cho thấy
+một xu hướng suy giảm rất nhất quán trong FD001. \texttt{sensor\_6} là trường hợp
+ngược lại: dù có ý nghĩa thống kê, 53/100 động cơ có chênh lệch bằng 0 và trung
+bình chênh lệch chỉ khoảng 0,00045. Đây là ví dụ cho thấy p-value nhỏ không đồng
+nghĩa với thay đổi lớn.
 
-\subsection{Rolling features}
-Rolling features dài 30 cycles gồm 17.731 train windows và 10.196 test windows,
-tổng cộng 27.927 dòng. Mỗi dòng có khóa \texttt{(split, engine\_id, cycle)} và
-126 feature columns cho 21 sensor, gồm \texttt{last}, \texttt{mean}, sample
-\texttt{std}, \texttt{min}, \texttt{max} và \texttt{slope}. Test labels không
-được ghép trong bước này.
+\subsection{Mô hình RUL}
+\label{sec:res-model}
+Bảng~\ref{tab:model-cv} so sánh ba mô hình trên 5 fold. HGB có MAE thấp nhất
+(20,2143 cycles), thấp hơn Ridge 3,78 cycles và thấp hơn median baseline hơn một
+nửa, nên được chọn. Độ lệch chuẩn MAE giữa các fold của HGB và Ridge đều dưới 1
+cycle, nhỏ hơn khoảng cách giữa hai mô hình.
 
 \begin{table}[H]
 \centering
-\caption[Rolling features theo split]{Số rolling windows theo split.}
-\label{tab:rolling-features}
-\begin{tabular}{lrr}
-\toprule Split & Engines & Rolling windows\\\midrule
-Train & 100 & 17.731\\
-Test & 100 & 10.196\\
-Tổng & 200 & 27.927\\\bottomrule
-\end{tabular}
-\end{table}
-
-Validator kiểm tra schema, khóa duy nhất, thứ tự canonical, số hữu hạn và đủ
-trailing window trong từng engine. Tests tính tay xác nhận sample standard
-deviation, slope, không dùng tương lai và không nối hai engine.
-
-\subsection{Mô hình RUL và đánh giá cuối}
-Pipeline modeling so sánh ba ứng viên trên 5 folds theo engine. Bảng
-\ref{tab:model-cv} trình bày metric trung bình qua các fold. Theo tiêu chí
-mean engine-level MAE xác định trước, HistGradientBoostingRegressor được chọn vì
-đạt giá trị thấp nhất trong ba ứng viên.
-
-\begin{table}[H]
-\centering
-\caption[Cross-validation mô hình RUL]{Kết quả grouped cross-validation trên
-17.731 train windows. MAE và RMSE tính bằng cycles; độ lệch chuẩn MAE được
-tính giữa 5 fold, không phải độ lệch chuẩn giữa 100 engine.}
+\caption{Kết quả GroupKFold 5 fold trên 17.731 window train. MAE và RMSE tính
+bằng cycles; độ lệch chuẩn tính giữa 5 fold.}
 \label{tab:model-cv}
-\begin{tabular}{lrrl}
-\toprule Model & Mean engine MAE & RMSE trung bình & Chọn\\\midrule
-\texttt{median\_baseline} & 46,9543 & 62,9006 & Không\\
-\texttt{ridge\_alpha\_1} & 23,9922 & 35,9467 & Không\\
-\texttt{hist\_gradient\_boosting} & 20,2143 & 33,5479 & Có\\\bottomrule
+\begin{tabular}{lrrrl}
+\toprule Mô hình & MAE theo động cơ & Độ lệch chuẩn MAE & RMSE & Được chọn\\\midrule
+Median baseline & 46,9543 & 0,1193 & 62,9006 & \\
+Ridge ($\alpha=1$) & 23,9922 & 0,9479 & 35,9467 & \\
+HistGradientBoosting & 20,2143 & 0,9821 & 33,5479 & \checkmark\\\bottomrule
 \end{tabular}
 \end{table}
 
-Sau khi refit trên toàn bộ train windows, pipeline ghi một final prediction tại
-cycle cuối cho mỗi trong 100 test engines. Nhãn NASA chỉ được ghép sau bước này;
-metric cuối được trình bày trong Bảng~\ref{tab:final-model-metrics}.
-
-Độ lệch chuẩn giữa các fold của mean engine MAE lần lượt là 0,1193 cho median
-baseline, 0,9479 cho Ridge và 0,9821 cho HistGradientBoosting. Mỗi fold có 20 engine,
-nên mean MAE qua fold cũng bằng mean MAE qua 100 engine OOF trong lần chạy này.
-RMSE là row-level trong từng fold rồi lấy trung bình; nó không phải RMSE của
-toàn bộ OOF gộp lại. Không so trực tiếp các con số này với metric tại một điểm
-cắt của mỗi test engine.
+Sau khi huấn luyện lại trên toàn bộ train, mô hình đạt MAE 15,3490 cycles trên
+100 động cơ test (Bảng~\ref{tab:final-model-metrics}). MAE test thấp hơn MAE
+cross-validation vì hai con số đo trên các tập điểm khác nhau: cross-validation
+tính trên mọi window từ cycle 30 đến khi hỏng, gồm cả các window đầu đời có RUL
+lớn và khó dự đoán; test chỉ có một điểm ở cuối mỗi chuỗi bị cắt, với RUL thật
+từ 7 đến 145 cycles.
 
 \begin{table}[H]
 \centering
-\caption[Metric cuối trên NASA test FD001]{Đánh giá model được chọn trên 100
-test engines; khoảng tin cậy bootstrap lấy mẫu lại engine có hoàn lại 10.000
-lần, seed 42. Mỗi lần lấy mẫu giữ đúng multiplicity của engine.}
+\caption{Metric của mô hình được chọn trên 100 động cơ test FD001; khoảng tin
+cậy bootstrap 95\% lấy mẫu lại động cơ 10.000 lần.}
 \label{tab:final-model-metrics}
 \begin{tabular}{lrl}
-\toprule Metric & Giá trị & Bootstrap CI 95\%\\\midrule
-Mean engine MAE & 15,3490 & [12,7286; 18,0866]\\
-RMSE & 20,5413 & [17,3442; 23,5850]\\
+\toprule Metric & Giá trị & Khoảng tin cậy 95\%\\\midrule
+MAE (cycles) & 15,3490 & [12,7286; 18,0866]\\
+RMSE (cycles) & 20,5413 & [17,3442; 23,5850]\\
 NASA score & 1.513,2577 & [743,4999; 2.476,2743]\\\bottomrule
 \end{tabular}
 \end{table}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.82\linewidth]{../outputs/modeling/figures/final_true_vs_predicted.png}
-\caption[RUL thật và RUL dự đoán trên test]{RUL thật và RUL dự đoán của 100 test
-engines. Đường chéo biểu diễn dự đoán hoàn hảo.}
+\includegraphics[width=0.56\linewidth]{../outputs/modeling/figures/final_true_vs_predicted.png}
+\caption{RUL thật và RUL dự đoán của 100 động cơ test. Đường chéo ứng với dự đoán hoàn hảo.}
 \label{fig:final-true-pred}
 \end{figure}
 
+\subsection{Phân tích lỗi}
+\label{sec:res-errors}
+Sai số tuyệt đối trên 100 động cơ test có trung vị 13,3654 cycles, tứ phân vị
+25\% là 3,5666 và 75\% là 22,3412. Sai số phụ thuộc rõ vào RUL thật
+(Hình~\ref{fig:final-residuals}): MAE là 4,3830 cycles với 25 động cơ có RUL
+thật từ 0 đến 30, 8,7734 cycles với nhóm 31--60, và khoảng 21,3--21,5 cycles với
+các nhóm trên 60. Nói cách khác, mô hình dự đoán tốt khi động cơ đã gần hỏng,
+tức đúng vùng quan trọng cho cảnh báo, và kém hơn khi động cơ còn khỏe.
+
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.82\linewidth]{../outputs/modeling/figures/final_residuals_by_rul.png}
-\caption[Sai số dự đoán theo RUL thật]{Sai số \texttt{prediction - true} theo RUL
-thật của 100 test engines.}
+\includegraphics[width=0.56\linewidth]{../outputs/modeling/figures/final_residuals_by_rul.png}
+\caption{Sai số (dự đoán trừ thật) theo RUL thật của 100 động cơ test.}
 \label{fig:final-residuals}
 \end{figure}
 
-Sai số tuyệt đối trung bình của nhóm RUL thật 0--30 cycles là 4,3830, thấp hơn
-ba nhóm còn lại (31--60, 61--90 và trên 90 cycles). Mười sai số lớn nhất đều là
-trường hợp dự đoán cao hơn nhãn thật, với độ lệch khoảng 37,6--57,5 cycles;
-những trường hợp này đóng góp đáng kể vào NASA score. Đây là kết quả trên FD001
-mô phỏng; riêng metric FD001 này chưa cung cấp bằng chứng về khả năng khái quát
-sang dạng lỗi hoặc điều kiện vận hành khác.
-
-\subsection{Đánh giá bổ sung trên FD002--FD004}
-Để kiểm tra khả năng chuyển miền, repository đã bổ sung đủ raw data FD001--FD004
-và chạy lại cùng pipeline với trailing window 10 cycles. Window này được chọn
-cho ma trận bổ sung vì test FD004 có engine ngắn nhất chỉ 19 cycles; kết quả không
-được so trực tiếp với metric chính của FD001 dùng window 30 cycles.
-
-Mỗi subset có một evaluation nội bộ, trong đó train và test thuộc cùng subset.
-Ngoài ra, model được fit trên toàn bộ train FD001 rồi áp dụng trực tiếp lên test
-FD002, FD003 và FD004. Test labels chỉ được ghép sau khi final predictions đã
-được ghi. Bảng dưới lấy từ \filepath{outputs/cross\_dataset/matrix.json}; bootstrap
-dùng 10.000 engine resamples với seed 42.
+Mô hình có xu hướng dự đoán cao: 74 dự đoán cao hơn RUL thật và 26 thấp hơn. Cả
+mười sai số lớn nhất đều là dự đoán cao, lệch 37,6--57,5 cycles, và tất cả rơi
+vào động cơ có RUL thật từ 77 đến 137 cycles (Bảng~\ref{tab:worst-errors}). Vì
+NASA score phạt dự đoán cao theo hàm mũ, riêng mười động cơ này chiếm khoảng
+75,5\% tổng NASA score.
 
 \begin{table}[H]
 \centering
-\caption[Đánh giá nội bộ và transfer trên C-MAPSS]{Mean engine MAE, RMSE và NASA
-score trong ma trận bổ sung với window 10 cycles.}
-\label{tab:cross-dataset}
-\begin{tabular}{llrrrr}
-\toprule
-Train & Test & Loại & MAE & RMSE & NASA score\\\midrule
-FD001 & FD001 & Nội bộ & 21,9258 & 29,5936 & 8.103,0148\\
-FD002 & FD002 & Nội bộ & 22,3556 & 31,3077 & 34.004,9782\\
-FD003 & FD003 & Nội bộ & 28,3255 & 41,7606 & 4.109.107,7036\\
-FD004 & FD004 & Nội bộ & 27,2218 & 36,9311 & 492.703,0709\\
-FD001 & FD002 & Transfer & 60,3215 & 70,4603 & 14.193.434,0842\\
-FD001 & FD003 & Transfer & 47,3949 & 59,2140 & 59.380.624,2646\\
-FD001 & FD004 & Transfer & 58,5731 & 69,8148 & 14.691.764,3175\\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Kết quả transfer có MAE cao hơn evaluation nội bộ trên target subset. FD001 sang
-FD002 tăng lên 60,3215 cycles; FD001 sang FD003 đạt 47,3949 cycles; FD001 sang
-FD004 đạt 58,5731 cycles. Model fit trên FD001 vì vậy không được diễn giải là
-model dùng trực tiếp cho FD002--FD004.
-
-\subsubsection{Phân tích lỗi theo engine}
-Trên 100 test engines, absolute error có trung vị 13,3654 cycles, tứ phân vị
-25\% bằng 3,5666 và tứ phân vị 75\% bằng 22,3412. Có 74 dự đoán cao hơn RUL
-thật và 26 dự đoán thấp hơn; không có trường hợp hai giá trị bằng nhau. Năm
-engine có absolute error lớn nhất được trình bày trong Bảng~\ref{tab:worst-errors}.
-Các dòng này được giữ lại để mô tả hành vi của mô hình, không bị loại khỏi
-metric cuối.
-
-\begin{table}[H]
-\centering
-\caption{Năm test engine có absolute error lớn nhất.}
+\caption{Năm động cơ test có sai số tuyệt đối lớn nhất.}
 \label{tab:worst-errors}
-\begin{tabular}{lrrrrl}
+\begin{tabular}{rrrr}
 \toprule
-Engine & RUL thật & RUL dự đoán & Absolute error & Sai số có dấu & Hướng \\\midrule
-23 & 113 & 170,4768 & 57,4768 & 57,4768 & Cao hơn \\
-67 & 77 & 131,2516 & 54,2516 & 54,2516 & Cao hơn \\
-73 & 131 & 184,2864 & 53,2864 & 53,2864 & Cao hơn \\
-83 & 137 & 181,6740 & 44,6740 & 44,6740 & Cao hơn \\
-22 & 111 & 153,5543 & 42,5543 & 42,5543 & Cao hơn \\
+Động cơ & RUL thật & RUL dự đoán & Sai số (dự đoán -- thật) \\\midrule
+23 & 113 & 170,4768 & 57,4768 \\
+67 & 77 & 131,2516 & 54,2516 \\
+73 & 131 & 184,2864 & 53,2864 \\
+83 & 137 & 181,6740 & 44,6740 \\
+22 & 111 & 153,5543 & 42,5543 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\subsection{Cảnh báo sớm minh họa từ OOF}
-Để tách cảnh báo khỏi final test evaluation, pipeline dùng OOF predictions của
-HistGradientBoosting trên train với ngưỡng định trước $\mathrm{RUL}\leq 30$
-cycles. Bảng cảnh báo có một dòng cho mỗi engine, ghi cycle phát cảnh báo đầu,
-RUL thật tại thời điểm đó, lead time đến failure proxy và trạng thái bỏ lỡ.
-Lần chạy hiện tại có ít nhất một cảnh báo trên 100/100 engine. Có 44 engine
-cảnh báo trước ngưỡng, 7 đúng ngưỡng và 49 sau ngưỡng nhưng trước failure;
-không có cảnh báo đầu tiên tại failure hoặc engine không từng cảnh báo.
-\texttt{missed\_warning=0} chỉ biểu thị không có engine hoàn toàn thiếu cảnh
-báo, không chứng minh mọi cảnh báo đều đáp ứng thời gian chuẩn bị bảo trì.
+\subsection{Cảnh báo sớm}
+\label{sec:res-warning}
+Với ngưỡng RUL dự đoán $\leq30$ cycles trên dự đoán OOF, cả 100 động cơ train
+đều được cảnh báo ít nhất một lần và không động cơ nào bị bỏ lỡ. Tuy nhiên, về
+thời điểm, 44 động cơ được cảnh báo trước khi RUL thật chạm 30, 7 động cơ đúng
+lúc và 49 động cơ cảnh báo trễ (nhưng vẫn trước khi hỏng). Lead time có trung vị
+30 cycles (Bảng~\ref{tab:lead-time}); trường hợp trễ nhất chỉ còn 19 cycles trước
+khi hỏng.
 
 \begin{table}[H]
 \centering
-\caption{Phân phối lead time tại cảnh báo đầu tiên trên 100 engine OOF train,
-đơn vị cycles.}
+\caption{Phân phối lead time tại cảnh báo đầu tiên trên 100 động cơ train, đơn vị cycle.}
+\label{tab:lead-time}
 \begin{tabular}{rrrrrr}
 \toprule Nhỏ nhất & Q1 & Trung vị & Trung bình & Q3 & Lớn nhất\\\midrule
 19 & 26 & 30 & 31,22 & 35 & 55\\\bottomrule
 \end{tabular}
 \end{table}
 
-Ví dụ, train engine 1 cảnh báo tại cycle 162 và kết thúc tại cycle 192, nên
-lead time là 30 cycles, đúng thời điểm RUL thật chạm ngưỡng. Các cycle này được
-tính từ trajectory OOF. OOF giữ engine được
-dự đoán ngoài training fold, nhưng cũng đã được dùng để chọn model; kết quả
-cảnh báo vì vậy chỉ là đánh giá nội bộ có điều kiện trên lựa chọn đó.
+Hình~\ref{fig:warning-trajectory} minh họa động cơ train 1, được chọn vì có mã
+nhỏ nhất. Động cơ này được cảnh báo ở cycle 162 và hỏng ở cycle 192, tức lead
+time đúng 30 cycles.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.84\linewidth]{../outputs/modeling/figures/warning_trajectory.png}
-\caption[Ví dụ cảnh báo sớm trên OOF train]{RUL thật, OOF prediction và ngưỡng
-cảnh báo 30 cycles trên engine 1. Đường thẳng đứng tím đánh dấu cảnh báo đầu
-tiên; đường thẳng đứng đen là failure proxy. Engine 1 được chọn theo ID nhỏ
-nhất, không theo chất lượng prediction.}
+\includegraphics[width=0.62\linewidth]{../outputs/modeling/figures/warning_trajectory.png}
+\caption{RUL thật, dự đoán OOF và ngưỡng 30 cycles của động cơ train 1. Đường
+đứng màu tím là cảnh báo đầu tiên; đường đứng màu đen là cycle hỏng.}
 \label{fig:warning-trajectory}
 \end{figure}
 
-\subsection{Phân tích PCA--ARIMA trên Health Index}
-Phân tích phụ chỉ dùng 20.631 train observations. Danh sách 10 engine được
-xác định trước khi dự báo, gồm hai engine ở mỗi fold GroupKFold theo các vị trí
-lifetime cách đều. StandardScaler, PCA, hướng PC1 và tham số chuẩn hóa Health
-Index được fit trên 90 train engines còn lại; 10 engine được chọn chỉ được
-transform và dùng cho dự báo. Mỗi chuỗi dùng 70\% đầu để huấn luyện ARIMA và 30\%
-cuối để đánh giá; không có test observation hoặc test label trong bước này.
+\subsection{Thử nghiệm cải thiện bằng nested cross-validation}
+\label{sec:res-nested}
+Thử nghiệm không tìm được cấu hình đáp ứng tiêu chí cải thiện. Ở giai đoạn chọn
+window, cả 5 vòng ngoài đều chọn lại window 30. Ở giai đoạn chỉnh siêu tham số,
+vòng ngoài 1 và 3 chọn một cấu hình khác (learning rate 0,03, 400 vòng boosting,
+31 lá, tối thiểu 10 mẫu mỗi lá, L2 bằng 0,01), ba vòng còn lại giữ cấu hình gốc.
+Không vòng nào chọn phương án tăng trọng số. Bảng~\ref{tab:rul-improvement-outer}
+cho thấy kết quả vòng ngoài sau từng giai đoạn.
+
+\begin{table}[H]
+\centering\small
+\caption{Kết quả vòng ngoài trên 100 động cơ train (17.731 dòng từ cycle 30).
+Mỗi dòng đánh giá cả quy trình chọn đến hết giai đoạn đó.}
+\label{tab:rul-improvement-outer}
+\begin{tabular}{lrrrr}
+\toprule
+Giai đoạn & MAE toàn bộ & MAE RUL $\leq30$ & Trễ/bỏ lỡ & Báo sớm (\%)\\
+\midrule
+Mô hình gốc & 20,2143 & 3,6676 & 49/100 & 1,2933\\
+Sau chọn window & 20,2143 & 3,6676 & 49/100 & 1,2933\\
+Sau chỉnh siêu tham số & 20,2459 & 3,6730 & 53/100 & 1,2580\\
+Sau chọn trọng số & 20,2459 & 3,6730 & 53/100 & 1,2580\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+So với mô hình gốc, MAE vùng RUL thấp tăng 0,0054 cycles (khoảng tin cậy 95\%
+$[-0{,}0506; 0{,}0639]$) và MAE toàn bộ tăng 0,0315 cycles ($[-0{,}1112;
+0{,}1737]$). Cả hai khoảng đều chứa 0, nên không có bằng chứng về thay đổi sai
+số. Số động cơ cảnh báo trễ tăng từ 49 lên 53 (khoảng tin cậy của mức tăng: 1--8
+điểm phần trăm), và trung vị lead time giảm từ 30 xuống 29 cycles. Kết quả theo
+từng động cơ khá phân tán (Hình~\ref{fig:rul-improvement-delta}): ví dụ động cơ 7
+giảm MAE vùng RUL thấp từ 4,1811 xuống 3,3209 cycles, còn động cơ 98 tăng từ
+3,9296 lên 5,2803 cycles.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.74\textwidth]{../outputs/experiments/rul_improvement/20260927_full/figures/engine_error_delta.png}
+\caption{Chênh lệch MAE vùng RUL thấp của từng động cơ (quy trình chọn trừ mô
+hình gốc), sắp theo độ lớn. Giá trị âm là giảm sai số.}
+\label{fig:rul-improvement-delta}
+\end{figure}
+
+Một số cấu hình có giảm sai số vùng RUL thấp nhưng phải đánh đổi ở chỉ số khác
+(Bảng~\ref{tab:rul-improvement-tradeoff}). Cấu hình \texttt{hgb\_08} giảm MAE
+vùng RUL thấp khoảng 9,75\% nhưng tăng MAE toàn bộ 0,3233 cycles; phương án trọng
+số $(1;2;3)$ giảm cả sai số vùng RUL thấp và số cảnh báo trễ nhưng tăng MAE toàn
+bộ và tỷ lệ báo sớm. Theo tiêu chí đã chốt, cả hai không được chọn. Các số này
+là kết quả inner CV dùng để chọn, không phải đánh giá độc lập.
+
+\begin{table}[H]
+\centering\small
+\caption{Ví dụ đánh đổi trong inner CV 3 fold trên toàn bộ train.}
+\label{tab:rul-improvement-tradeoff}
+\begin{tabular}{lrrrr}
+\toprule
+Cấu hình & MAE toàn bộ & MAE RUL $\leq30$ & Trễ/bỏ lỡ & Báo sớm (\%)\\
+\midrule
+Mô hình gốc & 20,3613 & 3,6148 & 50/100 & 1,2175\\
+\texttt{hgb\_08} & 20,6846 & 3,2625 & 49/100 & 1,0177\\
+Trọng số $(1;2;3)$ & 20,4072 & 3,3901 & 47/100 & 1,3752\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Khi chạy quy trình chọn trên toàn bộ train, cấu hình cuối trùng với mô hình gốc
+(window 30, cấu hình HGB gốc, trọng số đồng đều). Dự đoán test vì vậy không đổi:
+MAE 15,3490 cycles, RMSE 20,5413 cycles, và MAE 4,3830 cycles trên 25 động cơ
+test có RUL thật $\leq30$.
+
+\subsection{Chuyển miền sang FD002--FD004}
+\label{sec:res-transfer}
+Bảng~\ref{tab:cross-dataset} và Hình~\ref{fig:cross-dataset-mae} trình bày ma
+trận đánh giá với window 10 cycles.
+Khi mỗi subset tự huấn luyện và đánh giá, MAE nằm trong khoảng 21,93--28,33
+cycles. Khi mô hình FD001 được áp dụng trực tiếp, MAE tăng lên 60,32 cycles trên
+FD002, 47,39 trên FD003 và 58,57 trên FD004. Khoảng tin cậy của MAE chuyển miền
+và MAE nội bộ trên cùng subset không chồng nhau ở cả ba trường hợp.
 
 \begin{table}[H]
 \centering
-\caption[Kết quả dự báo Health Index theo engine]{Chỉ số dự báo trên 30\% cuối
-chuỗi Health Index trên 10 engine validation được chọn trước.}
+\caption{Ma trận đánh giá nội bộ và chuyển miền, window 10 cycles. Khoảng tin
+cậy 95\% của MAE lấy mẫu lại động cơ 10.000 lần.}
+\label{tab:cross-dataset}
+\small
+\begin{tabular}{llrlrr}
+\toprule
+Huấn luyện $\rightarrow$ Test & Loại & MAE & Khoảng tin cậy MAE & RMSE & NASA score\\\midrule
+FD001 $\rightarrow$ FD001 & Nội bộ & 21,9258 & [18,1054; 26,0412] & 29,5936 & 8.103,0148\\
+FD002 $\rightarrow$ FD002 & Nội bộ & 22,3556 & [19,7104; 25,0450] & 31,3077 & 34.004,9782\\
+FD003 $\rightarrow$ FD003 & Nội bộ & 28,3255 & [22,4736; 34,5537] & 41,7606 & 4.109.107,7036\\
+FD004 $\rightarrow$ FD004 & Nội bộ & 27,2218 & [24,1806; 30,3734] & 36,9311 & 492.703,0709\\
+FD001 $\rightarrow$ FD002 & Chuyển miền & 60,3215 & [56,0478; 64,7966] & 70,4603 & 14.193.434,0842\\
+FD001 $\rightarrow$ FD003 & Chuyển miền & 47,3949 & [40,6269; 54,3524] & 59,2140 & 59.380.624,2646\\
+FD001 $\rightarrow$ FD004 & Chuyển miền & 58,5731 & [53,9262; 63,3042] & 69,8148 & 14.691.764,3175\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\linewidth]{../outputs/diagnostics/figures/cross_dataset_mae.png}
+\caption{MAE và khoảng tin cậy 95\% của ma trận chuyển miền. Trên cả ba subset
+đích, khoảng tin cậy của mô hình FD001 (vuông cam) không chồng với khoảng tin cậy
+của mô hình huấn luyện nội bộ (tròn xanh).}
+\label{fig:cross-dataset-mae}
+\end{figure}
+
+MAE nội bộ của FD001 với window 10 (21,93 cycles) cao hơn MAE 15,35 cycles với
+window 30. Kết quả này phù hợp với nhận định rằng window dài hơn mang nhiều thông
+tin xu hướng hơn, nhưng hai cấu hình chưa được so sánh trong cùng một thí nghiệm
+có kiểm soát.
+
+\subsection{Health Index và dự báo ARIMA}
+\label{sec:res-arima}
+Cả 10 mô hình ARIMA đều hội tụ; tổng cộng có 704 điểm dự báo trên đoạn 30\%
+cuối. Bảng~\ref{tab:arima-results} cho thấy chất lượng dự báo khác nhau nhiều
+giữa các động cơ: MAE từ 0,1515 đến 1,0372 và tỷ lệ bao phủ của khoảng dự đoán
+95\% từ 21,43\% đến 97,03\%. Năm động cơ có tỷ lệ bao phủ dưới 51\%, tức khoảng
+dự đoán hẹp hơn nhiều so với biến động thực tế.
+
+\begin{table}[H]
+\centering
+\caption{Kết quả dự báo Health Index trên 30\% cuối chuỗi của 10 động cơ.}
 \label{tab:arima-results}
 \begin{tabular}{rrrrrr}
 \toprule
-Engine & Fold & Order & MAE & RMSE & Coverage 95\%\\\midrule
+Động cơ & Fold & Bậc & MAE & RMSE & Bao phủ 95\%\\\midrule
 39 & 1 & (0,1,1) & 0,8860 & 1,0788 & 35,90\%\\
 69 & 1 & (1,0,1) & 0,4585 & 0,5645 & 50,46\%\\
 24 & 2 & (1,0,1) & 0,1572 & 0,1897 & 95,56\%\\
@@ -340,46 +348,44 @@ Engine & Fold & Order & MAE & RMSE & Coverage 95\%\\\midrule
 \end{tabular}
 \end{table}
 
-Cả 10 engine đều có trạng thái fit hội tụ. MAE nằm trong khoảng 0,1515--1,0372
-và tỷ lệ bao phủ 95\% nằm trong khoảng 21,43\%--97,03\%. Với p-value từ 0,8606 đến
-0,9990, ADF không bác bỏ giả thuyết gốc về nghiệm đơn vị trên các đoạn huấn luyện;
-do đó, chưa có bằng chứng đủ mạnh để kết luận các chuỗi là dừng theo kiểm định
-này. Ljung--Box được tính với bậc tự do điều chỉnh theo $p+q$; hai trong mười
-chuỗi (engine 69 và 70) có p-value dưới 0,05, nên không thể kết luận residual
-của toàn bộ các chuỗi không còn tự tương quan. Coverage thấp ở một số engine
-cho thấy khoảng dự đoán chưa được hiệu chỉnh đồng đều; kết quả này được
-giữ nguyên và không dùng để thay đổi danh sách engine.
+Tính trung bình trên 10 động cơ, ARIMA có MAE 0,4110 và RMSE 0,5027, thấp hơn
+baseline \texttt{drift} (0,7469 và 0,9128) và \texttt{last\_value} (0,9478 và
+1,1553). Tuy vậy, ARIMA chỉ tốt hơn \texttt{drift} ở 7/10 động cơ và tốt hơn
+\texttt{last\_value} ở 8/10 động cơ. Với 10 động cơ, đây là so sánh mô tả, chưa
+đủ để kết luận ARIMA tốt hơn một cách tổng quát.
 
-Để so sánh kết quả ARIMA với đường cơ sở đơn giản trên cùng khoảng dự báo, báo cáo
-tính baseline theo từng engine. Trung bình theo 10
-engine, ARIMA đạt MAE $0{,}4110$ và RMSE $0{,}5027$; baseline \texttt{drift}
-đạt lần lượt $0{,}7469$ và $0{,}9128$, còn \texttt{last\_value} đạt $0{,}9478$
-và $1{,}1553$. ARIMA có MAE thấp hơn \texttt{drift} trên 7/10 engine và thấp
-hơn \texttt{last\_value} trên 8/10 engine. Đây là so sánh mô tả trong cùng
-protocol, không phải kiểm định statistical significance và không biến Health
-Index thành RUL.
+Về chẩn đoán, ADF không bác bỏ giả thuyết có nghiệm đơn vị ở cả 10 đoạn fit
+(p-value 0,8606--0,9990), tức không có bằng chứng các chuỗi là dừng. Ljung--Box
+có p-value dưới 0,05 ở động cơ 69 và 70, cho thấy phần dư của hai mô hình này
+vẫn còn tự tương quan. Hình~\ref{fig:arima-forecast} minh họa dự báo và khoảng
+dự đoán.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.92\linewidth]{../outputs/timeseries/figures/arima_forecasts.png}
-\caption[Dự báo Health Index trên 10 engine]{Health Index thực tế, dự báo
-ARIMA và khoảng dự đoán 95\% trên 30\% cuối mỗi chuỗi được chọn.}
+\includegraphics[width=0.78\linewidth]{../outputs/timeseries/figures/arima_forecasts.png}
+\caption{Health Index thực tế, dự báo ARIMA và khoảng dự đoán 95\% trên 30\% cuối
+chuỗi của 10 động cơ.}
 \label{fig:arima-forecast}
 \end{figure}
 
-\subsection{ETL Silver/Gold và benchmark}
-Sau khi kiểm tra data contract, pipeline Pandas và PySpark ghi cùng một tập
-bảng dữ liệu. Silver gồm 33.727 observations train/test và 20.631 train targets.
-Gold gồm 200 dòng engine summary trong Parquet cùng bảng truy vấn tương ứng
-trong SQLite. Tất cả bảng đều được đọc lại sau khi ghi để kiểm tra round-trip.
+\subsection{ETL, parity và benchmark}
+\label{sec:res-etl}
+ETL tạo lớp Silver gồm 33.727 quan sát train/test và 20.631 nhãn train, cùng lớp
+Gold gồm 200 dòng engine summary trong Parquet và SQLite. Mọi bảng được đọc lại
+sau khi ghi để kiểm tra. Trên cả ba bảng, kết quả PySpark khớp hoàn toàn với
+Pandas về schema, khóa, số dòng và giá trị; sai khác tuyệt đối lớn nhất bằng 0.
+
+Bảng~\ref{tab:etl-benchmark} cho thấy thời gian Pandas tạo engine summary tăng
+gần tuyến tính theo kích thước dữ liệu, từ khoảng 0,02 giây với 33.727 dòng đến
+khoảng 1,67 giây với 3.372.700 dòng. Mỗi mức chỉ được đo hai lần liên tiếp trong
+cùng tiến trình, nên chưa đủ để ước lượng độ biến thiên của thời gian chạy.
 
 \begin{table}[H]
 \centering
-\caption[Benchmark Pandas tạo engine summary]{Benchmark tạo engine summary trên
-observations nhân bản trong bộ nhớ; dữ liệu nhân bản không dùng để huấn luyện.}
+\caption{Thời gian Pandas tạo engine summary trên dữ liệu nhân bản trong bộ nhớ.}
 \label{tab:etl-benchmark}
 \begin{tabular}{rrrrr}
-\toprule Scale & Input rows & Engine rows & Lần 1 (s) & Lần 2 (s)\\\midrule
+\toprule Hệ số nhân & Dòng đầu vào & Dòng đầu ra & Lần 1 (s) & Lần 2 (s)\\\midrule
 1$\times$ & 33.727 & 200 & 0,0195 & 0,0196\\
 10$\times$ & 337.270 & 2.000 & 0,1589 & 0,1474\\
 100$\times$ & 3.372.700 & 20.000 & 1,6752 & 1,6732\\
@@ -387,27 +393,7 @@ observations nhân bản trong bộ nhớ; dữ liệu nhân bản không dùng 
 \end{tabular}
 \end{table}
 
-Benchmark chỉ đo chi phí của phép tổng hợp cục bộ, không phải năng lực xử lý
-phân tán. Trên ba bảng Silver/Gold, Pandas và PySpark khớp schema, khóa, số dòng
-và giá trị số; sai khác tuyệt đối lớn nhất bằng 0,0.
-
-Đồng hồ chỉ bao quanh \texttt{build\_engine\_summary}: dữ liệu đã ở trong bộ
-nhớ và Pandas thực thi phép tổng hợp ngay. Thời gian không bao gồm đọc raw,
-nhân bản dữ liệu, ghi Parquet hay SQLite. Hai lần lặp liên tiếp được metadata
-gọi là cold/warm nhưng không có thao tác xóa cache hoặc khởi động process mới,
-nên bảng ghi là lần 1 và lần 2. Với hai lần đo mỗi scale, chưa thể ước lượng
-độ biến thiên runtime đáng tin cậy; cũng chưa có runtime PySpark để so tốc độ.
-
-\subsection{Dashboard đọc kết quả}
-
-Dashboard Streamlit cung cấp một lớp quan sát read-only cho các kết quả đã ghi.
-Trang tổng quan hiển thị MAE, RMSE, NASA score, số engine test, Health Index và
-đếm số điểm dự báo; trang RUL cho phép chọn một test engine để xem giá trị thật,
-giá trị dự đoán và absolute error; trang Health Index/ARIMA cho phép chọn một
-validation engine để xem lịch sử, dự báo trên đoạn giữ lại để kiểm tra, khoảng dự đoán 95\% và
-diagnostics. Dashboard không fit model, không chạy lại ARIMA và không đọc nhãn
-test thô khi mở trang. Ví dụ, lựa chọn engine 39 chỉ truy vấn các dòng kết quả
-đã được tạo trước đó.
-
-% Chi tiết nested improvement experiment được giữ trong experiments/ và handoff;
-% báo cáo chính chỉ giữ kết quả tóm tắt trong phần thảo luận.
+Kết quả được trình bày thêm qua một dashboard Streamlit chỉ đọc các file đã ghi:
+người dùng có thể xem metric, chọn một động cơ test để so sánh RUL thật và dự
+đoán, hoặc chọn một trong 10 động cơ để xem dự báo Health Index. Dashboard không
+huấn luyện lại mô hình và không đọc file nhãn test gốc.

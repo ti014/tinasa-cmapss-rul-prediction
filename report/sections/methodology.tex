@@ -1,249 +1,207 @@
-\section{Thiết kế phương pháp và lý do lựa chọn}
+\section{Phương pháp}
 \label{sec:method}
 
-\subsection{Luồng xử lý}
-Hình~\ref{fig:pipeline} mô tả pipeline từ raw FD001--FD004 đến các kết quả đầu ra.
-Nhánh phân tích chi tiết và kết quả chính dùng FD001; ma trận transfer dùng cả bốn
-subset theo protocol riêng. Sau
-khi reader và validator kiểm tra dữ liệu, pipeline tách thành hai nhánh. Nhánh
-chính thực hiện ETL, xây dựng rolling features, huấn luyện và đánh giá RUL.
-Nhánh phụ gồm EDA, suy luận thống kê đầu/cuối và PCA--ARIMA trên Health Index;
-các phân tích này chỉ dùng train và không cung cấp feature cho mô hình RUL.
-Việc tách nhánh làm rõ dependency dữ liệu và ngăn kết quả mô tả bị hiểu nhầm là
-đầu vào của bước modeling.
+\subsection{Tổng quan pipeline}
+Hình~\ref{fig:pipeline} mô tả toàn bộ luồng xử lý. Sau khi đọc và kiểm tra, dữ
+liệu đi theo hai nhánh. Nhánh chính (bên trái) gồm ETL, tạo đặc trưng, huấn
+luyện và đánh giá mô hình RUL. Nhánh phụ (bên phải) gồm EDA, phân tích ghép cặp
+đầu/cuối vòng đời và Health Index--ARIMA. Nhánh phụ chỉ đọc tập train và không
+cung cấp đặc trưng cho mô hình RUL, nên kết quả của nó không ảnh hưởng tới đánh
+giá mô hình. Nhãn test chỉ được ghép ở bước cuối, sau khi dự đoán test đã được
+ghi ra file.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.98\linewidth]{figures/pipeline.pdf}
-\caption[Luồng xử lý dữ liệu đã thực hiện]{Luồng xử lý từ dữ liệu FD001--FD004 đến
-EDA, suy luận thống kê, ETL, rolling features, PCA--ARIMA train-only và đánh giá
-RUL. Lane train-only không đi vào RUL modeling; nhãn test chỉ được ghép sau
-khi final predictions đã được ghi.}
+\includegraphics[width=0.78\linewidth]{figures/pipeline.pdf}
+\caption{Luồng xử lý dữ liệu. Nhánh train-only bên phải không đi vào mô hình
+RUL; nhãn test chỉ được ghép ở bước đánh giá cuối.}
 \label{fig:pipeline}
 \end{figure}
 
-Dữ liệu raw được giữ bất biến. Reader và validator tạo observations cùng nhãn
-RUL train trong bộ nhớ; EDA và suy luận thống kê chỉ đọc phần train. ETL ghi
-observations và train targets vào Silver Parquet, sau đó tạo engine summary trong
-Gold Parquet và SQLite. Rolling features được xây dựng từ Silver observations
-và ghi vào Gold. Modeling ghép rolling features train với train targets, ghi
-final predictions cho test, rồi mới đọc nhãn test để tính metric cuối. Ranh giới
-này giúp kiểm tra việc mất hoặc nhân bản dòng và ngăn test labels đi vào model
-selection.
-
-\subsection{Quan hệ dữ liệu và các phép transform}
-Mỗi observation được định danh bởi bộ khóa $(split, engine\_id, cycle)$.
-Một \texttt{engine\_id} có nhiều cycle; tại mỗi cycle có 3 operational settings,
-21 sensor readings và một nhãn RUL đối với train. Quan hệ thời gian nằm trong
-cùng engine: trạng thái ở cycle sau kế thừa lịch sử của các cycle trước, vì vậy
-không được trộn các window của cùng engine giữa train và validation.
-
-Nhãn RUL train được tạo theo công thức
-$RUL_{e,t}=T_e-t$, trong đó $T_e$ là cycle cuối của engine $e$ và $t$ là cycle
-hiện tại. Ví dụ, nếu engine kết thúc ở cycle 200 thì observation tại cycle 170
-có RUL bằng 30. Với rolling window, observation tại cycle 170 lấy 30 cycle từ
-141 đến 170 của cùng engine. Sáu phép tóm tắt trên mỗi sensor (last, mean,
-standard deviation, min, max và slope) biến 21 cột sensor theo thời gian thành
-126 feature columns. Đây là transform từ bảng quan sát dài sang bảng mẫu cho
-model; không phải mọi dòng sensor đều trở thành một mẫu độc lập.
-
-Bảng~\ref{tab:tool-boundaries} ghi rõ công cụ ở từng boundary. Pandas là đường
-tham chiếu cho reader, ETL, feature và modeling preparation; PySpark tái hiện
-các boundary ETL để kiểm tra khả năng chuyển sang xử lý phân tán. Parquet là
-định dạng lưu trữ cột cho Silver/Gold, scikit-learn thực hiện modeling, còn
-Matplotlib/Seaborn và Streamlit chỉ tạo đầu ra trực quan và giao diện đọc kết
-quả.
+Bảng~\ref{tab:tool-boundaries} liệt kê công cụ ở từng bước. Pandas là
+implementation chính; PySpark thực hiện lại phần ETL để đối chiếu kết quả. Cách
+gom, lưu trữ, truy vấn và biến đổi dữ liệu của nhánh chính đã được trình bày chi
+tiết ở Mục~\ref{sec:data-processing}; các mục dưới đây mô tả mô hình và các
+protocol đánh giá.
 
 \begin{table}[H]
 \centering
-\caption{Công cụ và đầu ra tại từng bước xử lý}
+\caption{Công cụ và đầu ra của từng bước.}
 \label{tab:tool-boundaries}
-\scriptsize
-\begin{tabular}{p{0.22\linewidth}p{0.27\linewidth}p{0.38\linewidth}}
+\small
+\begin{tabular}{L{3.2cm}L{4.4cm}L{6.4cm}}
 \toprule
-\textbf{Bước} & \textbf{Công cụ} & \textbf{Đầu ra / vai trò} \\
+Bước & Công cụ & Đầu ra \\
 \midrule
-Đọc và kiểm tra & Python, Pandas & Schema, khóa, cycle continuity, train RUL \\
-ETL Silver/Gold & Pandas, PySpark, Parquet, SQLite & Dữ liệu typed, engine summary và parity \\
-Rolling features & Pandas, NumPy & Window 30 cycles, 126 features \\
-Modeling & scikit-learn & GroupKFold, Ridge, HistGradientBoostingRegressor \\
-Đánh giá & scikit-learn, SciPy & MAE, RMSE, NASA score, bootstrap CI \\
-Trực quan hóa & Matplotlib, Seaborn & Histogram, sensor plots, error plots \\
-Trình bày & Streamlit, LaTeX & Dashboard và báo cáo có thể truy vết \\
+Đọc và kiểm tra & Python, Pandas & Bảng quan sát đã kiểm tra, nhãn RUL train \\
+ETL & Pandas, PySpark, Parquet, SQLite & Lớp Silver/Gold, báo cáo parity \\
+Tạo đặc trưng & Pandas, NumPy & 126 đặc trưng trên window 30 cycles \\
+Mô hình & scikit-learn & GroupKFold, Ridge, HistGradientBoosting \\
+Đánh giá & scikit-learn, SciPy & MAE, RMSE, NASA score, khoảng tin cậy bootstrap \\
+Phân tích chuỗi & statsmodels & ARIMA, ADF, Ljung--Box \\
+Trực quan hóa & Matplotlib, Seaborn, Streamlit & Hình trong báo cáo, dashboard chỉ đọc kết quả \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-PCA--ARIMA đọc cùng Silver observations nhưng chỉ giữ train. Pipeline chọn 10
-engine theo fold và vị trí lifetime cách đều trước khi xem dự báo. Để giữ ranh
-giới đánh giá theo thời gian, StandardScaler, PCA một thành phần, hướng PC1 theo tương
-quan với cycle và tham số chuẩn hóa Health Index được fit trên 90 train engines
-còn lại; 10 engine được chọn chỉ được transform. Mỗi chuỗi được chia theo thứ
-tự cycle: 70\% đầu dùng để huấn luyện ARIMA và 30\% cuối dùng để đánh giá. Bậc ARIMA
-được chọn bằng grid AIC trên đoạn huấn luyện của từng engine; đầu ra gồm MAE, RMSE,
-tỷ lệ bao phủ của khoảng dự đoán 95\%, ADF và Ljung--Box với bậc tự do điều
-chỉnh theo $p+q$. Dự báo Health Index chỉ mô tả diễn biến cảm biến trong train
-và không đọc test labels.
+\subsection{Huấn luyện và đánh giá mô hình RUL}
+\label{sec:modeling}
+Ba mô hình được so sánh:
+\begin{itemize}
+\item \textbf{Median baseline}: dự đoán một hằng số bằng trung vị có trọng số
+      của RUL trong fold huấn luyện.
+\item \textbf{Ridge}: hồi quy tuyến tính với phạt L2, $\alpha=1$; đặc trưng
+      được chuẩn hóa bằng \texttt{StandardScaler} fit trong từng fold huấn luyện.
+\item \textbf{HistGradientBoosting (HGB)}: tổ hợp cây hồi quy với 200 vòng
+      boosting, learning rate 0,05, tối đa 31 lá mỗi cây, tối thiểu 20 mẫu mỗi
+      lá, tắt early stopping, \texttt{random\_state=42}; dùng đặc trưng ở thang
+      đo gốc.
+\end{itemize}
 
-Pandas là implementation tham chiếu. PySpark tái hiện ba boundary và bộ đối chiếu
-schema, khóa, số dòng và giá trị số; sai khác tuyệt đối lớn
-nhất bằng 0 trong lần chạy local có JRE. Benchmark chỉ đo chi phí tạo engine
-summary trên dữ liệu nhân bản, vì vậy không tạo thêm engine độc lập và không
-được dùng để kết luận về khả năng mở rộng của hệ thống phân tán.
+Mô hình được chọn bằng GroupKFold 5 fold theo \texttt{engine\_id}: mỗi fold có
+20 động cơ, và mọi window của một động cơ nằm cùng một fold. Chia ngẫu nhiên
+theo dòng sẽ đưa các window gần như trùng nhau của cùng động cơ vào cả train và
+validation, làm sai số validation thấp một cách giả tạo. Vì động cơ sống lâu có
+nhiều window hơn, trọng số mẫu được chuẩn hóa để tổng trọng số của mỗi động cơ
+bằng 1; nếu không, vài động cơ dài sẽ chi phối hàm mất mát.
 
-\subsection{Vai trò của thành phần Big Data}
-FD001 có 33.727 observations sau khi ghép train và test; toàn bộ bốn subset có
-265.256 observations trong các file observations. Đây vẫn chưa phải khối lượng dữ liệu đủ
-lớn để kết luận về tốc độ xử lý trên cụm máy. Thành phần Big Data của
-báo cáo được thể hiện ở ba lớp. Thứ nhất, data contract và validation kiểm soát
-độ tin cậy của dữ liệu trước khi dữ liệu đi vào phân tích. Thứ hai, ETL tổ chức dữ liệu qua
-Bronze, Silver và Gold; Parquet giữ bảng phân tích còn SQLite cung cấp truy vấn
-local. Thứ ba, PySpark tái hiện các boundary ETL và bộ đối chiếu
-kết quả với Pandas. Benchmark 1$\times$, 10$\times$ và 100$\times$ chỉ là phép
-đo cục bộ trên dữ liệu nhân bản; nó minh họa cách kiểm tra chi phí theo quy mô,
-không thay thế thử nghiệm khả năng mở rộng trên cụm máy hoặc dữ liệu streaming.
+Tiêu chí chọn là MAE trung bình theo động cơ: tính MAE trên các window của từng
+động cơ, lấy trung bình trên các động cơ trong fold, rồi lấy trung bình qua 5
+fold. RMSE và NASA score được ghi kèm để tham khảo. Mô hình có MAE thấp nhất
+được huấn luyện lại trên toàn bộ 17.731 window train và dự đoán RUL tại cycle
+cuối của mỗi động cơ test. Chỉ sau khi 100 dự đoán này đã được ghi ra file,
+pipeline mới đọc \texttt{RUL\_FD001.txt} để tính metric cuối. Khoảng tin cậy 95\%
+của metric test được ước lượng bằng bootstrap 10.000 lần, lấy mẫu lại động cơ có
+hoàn lại, seed 42.
 
-Dashboard Streamlit chỉ đọc các kết quả modeling và
-PCA--ARIMA đã ghi. Loader kiểm tra sự tồn tại và schema của file trước khi dựng
-view; dashboard không huấn luyện lại model, không chạy lại dự báo và không mở
-\texttt{RUL\_FD001.txt}. Các view gồm metric final evaluation, chi tiết một test
-engine, Health Index/ARIMA của một validation engine và nguồn gốc của hai lần
-chạy. Đây là lớp trình bày kết quả, không phải một bước mới trong evaluation
-protocol.
+\subsection{Cảnh báo sớm}
+\label{sec:warning-method}
+Để minh họa cách dùng dự đoán RUL, pipeline chuyển dự đoán OOF trên train thành
+cảnh báo: động cơ được cảnh báo tại cycle đầu tiên mà RUL dự đoán không vượt quá
+30 cycles. Ngưỡng 30 được cố định trước, không tối ưu trên dữ liệu. Tập train
+được dùng vì mỗi động cơ có toàn bộ quỹ đạo đến khi hỏng, trong khi test chỉ có
+một điểm cắt.
 
-\subsection{EDA theo đơn vị động cơ}
-EDA chỉ sử dụng train. Phân phối tuổi thọ được tính một lần cho mỗi engine,
-trong khi histogram RUL theo observation chịu ảnh hưởng của việc các engine có
-độ dài chuỗi khác nhau. Hai phép tổng hợp trả lời hai câu hỏi khác nhau và phải
-được diễn giải riêng.
+Với động cơ $i$, đặt $a_i$ là cycle cảnh báo đầu tiên
+($\min\{t:\hat y_{i,t}\leq30\}$) và $r_i$ là cycle đầu tiên RUL thật chạm ngưỡng
+($\min\{t:y_{i,t}\leq30\}$). Hai đại lượng được ghi lại là:
+\begin{itemize}
+\item \textbf{Lead time} $\ell_i=T_i-a_i$: số cycle từ cảnh báo đến khi hỏng.
+\item \textbf{Độ lệch so với ngưỡng} $\delta_i=a_i-r_i$: $\delta_i<0$ là cảnh
+      báo trước ngưỡng, $\delta_i=0$ là đúng ngưỡng, $\delta_i>0$ là sau ngưỡng
+      (cảnh báo trễ).
+\end{itemize}
+Động cơ không bao giờ có dự đoán dưới ngưỡng được ghi là bỏ lỡ. Vì mọi động cơ
+train đều đi đến hỏng, không tồn tại động cơ ``âm tính'', nên tỷ lệ báo động giả
+ở cấp động cơ không xác định. Ngoài ra, cùng tập OOF này đã được dùng để chọn mô
+hình, nên kết quả cảnh báo là đánh giá nội bộ, có phần lạc quan.
 
-Correlation giữa sensor và RUL được tính bằng Spearman riêng trong từng engine,
-sau đó tóm tắt bằng phân phối giữa các engine. Cách tính này giữ engine là đơn
-vị tổng hợp và tránh để chuỗi dài có trọng số quá lớn. Correlation chỉ có vai
-trò mô tả; nó không chứng minh quan hệ nhân quả hoặc hiệu quả dự đoán ngoài mẫu.
+\subsection{Phân tích ghép cặp đầu/cuối vòng đời}
+\label{sec:paired-method}
+Phân tích này trả lời câu hỏi Q2 trên tập train. Với sensor $s$ của động cơ $i$,
+báo cáo tính trung bình của 30 cycles đầu và 30 cycles cuối, rồi lấy chênh lệch:
+\begin{equation}
+ E_{i,s}=\frac{1}{30}\sum_{t=1}^{30}x_{i,t,s},\qquad
+ L_{i,s}=\frac{1}{30}\sum_{t=T_i-29}^{T_i}x_{i,t,s},\qquad
+ \Delta_{i,s}=L_{i,s}-E_{i,s}.
+ \label{eq:paired-difference}
+\end{equation}
+Với động cơ hỏng ở cycle 200, đoạn đầu là cycles 1--30 và đoạn cuối là cycles
+171--200. Động cơ ngắn nhất dài 128 cycles, nên hai đoạn không bao giờ chồng
+nhau. Lấy trung bình 30 cycles thay vì một giá trị đơn lẻ giúp giảm ảnh hưởng
+của nhiễu đo. Mỗi động cơ đóng góp đúng một cặp cho mỗi sensor, tổng cộng
+$100\times21=2.100$ cặp.
 
-Sensor hằng có correlation không xác định và được giữ dưới dạng NaN. Ba động cơ
-minh họa được chọn gần các tứ phân vị tuổi thọ, không dựa trên hình dạng sensor;
-chúng không đại diện cho toàn bộ phân phối.
+Đại lượng chính là trung bình chênh lệch $\widehat{\Delta}_s=\frac{1}{100}\sum_i\Delta_{i,s}$,
+có cùng đơn vị với sensor. Cấu hình suy luận được cố định trước khi chạy:
+\begin{itemize}
+\item Khoảng tin cậy 95\% của $\widehat{\Delta}_s$: bootstrap percentile,
+      10.000 lần lấy mẫu lại động cơ, seed 42.
+\item Kiểm định Wilcoxon hai phía, dạng permutation với 100.000 hoán vị; chênh
+      lệch bằng 0 bị loại khỏi phép xếp hạng (\texttt{zero\_method="wilcox"}).
+\item Hiệu chỉnh Benjamini--Hochberg với $q=0{,}05$ trên cả nhóm 21 sensor.
+      Sensor có toàn bộ chênh lệch bằng 0 được giữ trong bảng với trạng thái
+      ``không kiểm định được''.
+\end{itemize}
+Vì các sensor có thang đo khác nhau, độ lớn $\widehat{\Delta}_s$ không so sánh
+được giữa hai sensor. Kết quả mô tả sự thay đổi trên train và không được dùng để
+chọn đặc trưng cho mô hình.
 
-\subsection{Đặc trưng từ trailing window}
-Biểu diễn đã triển khai là trailing window dài 30 cycles, chỉ chứa hiện tại và
-quá khứ của cùng một động cơ. Ví dụ, mẫu tại cycle 170 dùng cycles 141--170.
-Mỗi dòng được định danh bởi \texttt{(split, engine\_id, cycle)}; engine có dưới
-30 cycles bị loại khỏi bước tạo window, không padding hoặc rút ngắn window.
+\subsection{Health Index và dự báo ARIMA}
+\label{sec:arima-method}
+Nhánh này khảo sát liệu một chỉ số sức khỏe tổng hợp có dự báo được theo thời
+gian hay không. Mười động cơ train được chọn trước khi chạy dự báo: hai động cơ
+trong mỗi fold GroupKFold, tại các vị trí cách đều theo tuổi thọ. StandardScaler,
+PCA một thành phần và hướng của PC1 được fit trên 90 động cơ còn lại; mười động
+cơ được chọn chỉ được biến đổi theo các tham số đã fit.
 
-Với mỗi 21 sensor, pipeline tạo sáu đặc trưng: giá trị cuối, mean, sample
-standard deviation (\texttt{ddof=1}), min, max và linear slope theo vị trí
-1--30. Vì vậy, mỗi dòng có 126 feature columns và ba cột khóa. Tập dữ liệu gồm
-17.731 train windows và 10.196 test windows. Bước này chưa ghép test labels;
-các lựa chọn phụ thuộc dữ liệu được giữ ở bước modeling riêng để tránh data
-leakage.
+Chuỗi Health Index của mỗi động cơ được chia theo thời gian: 70\% đầu để fit
+ARIMA và 30\% cuối để đánh giá dự báo. Bậc mô hình được chọn bằng AIC trên lưới
+$p,q\in\{0,1,2\}$ và $d\in\{0,1\}$, chỉ dùng đoạn fit. Đầu ra gồm MAE, RMSE, tỷ
+lệ điểm thật nằm trong khoảng dự đoán 95\%, kiểm định ADF trên đoạn fit và
+Ljung--Box trên phần dư (bậc tự do trừ đi $p+q$). Để có mốc so sánh, hai baseline
+được tính trên cùng đoạn: \texttt{last\_value} giữ nguyên giá trị cuối của đoạn
+fit, còn \texttt{drift} kéo dài đường thẳng nối điểm đầu và điểm cuối của đoạn
+fit.
 
-\subsection{Mô hình và cấu hình đánh giá RUL}
-Modeling dùng 17.731 train windows và 126 feature columns từ tập rolling features
-dài 30 cycles. Tập
-validation được chia bằng GroupKFold 5-fold theo \texttt{engine\_id}; mọi window
-của cùng một engine nằm trong cùng một fold validation. Trong training fold,
-tổng sample weight của mỗi engine bằng 1 để engine dài không chi phối loss chỉ
-vì có nhiều window hơn.
+\subsection{Đánh giá chuyển miền sang FD002--FD004}
+\label{sec:transfer-method}
+Thí nghiệm này trả lời câu hỏi Q6. Window 30 không dùng được cho mọi subset vì
+động cơ test ngắn nhất của FD004 chỉ có 19 cycles, nên toàn bộ ma trận dùng
+window 10 cycles. Mỗi subset được đánh giá theo hai cách:
+\begin{itemize}
+\item \textbf{Nội bộ}: chọn mô hình bằng GroupKFold, huấn luyện lại và đánh giá
+      trên train và test của chính subset đó.
+\item \textbf{Chuyển miền}: mô hình được chọn và huấn luyện trên toàn bộ train
+      FD001, giữ cố định rồi dự đoán test của FD002, FD003 và FD004.
+\end{itemize}
+Các bước còn lại, gồm đặc trưng, tiêu chí chọn mô hình, cách đọc nhãn test muộn
+và bootstrap theo động cơ, giống protocol chính. Vì window khác nhau, kết quả
+của ma trận này không so sánh trực tiếp với MAE 15,3490 cycles của FD001.
 
-Weighted median baseline dự đoán một hằng số học từ training fold, với tổng
-trọng số mỗi engine bằng 1. Ridge chuẩn hóa đặc trưng trong training fold rồi
-học quan hệ tuyến tính bằng sai số bình phương có trọng số và phạt L2 với
-$\alpha=1$. Trong implementation, sample weight truyền cho bước Ridge, không
-truyền cho StandardScaler. HistGradientBoosting xây dựng một tổ hợp cộng các
-cây hồi quy qua 200 iterations với learning rate 0,05; mỗi cây có tối đa
-31 leaf nodes và tối thiểu 20 samples/leaf. Các cấu hình này giữ cố định giữa
-fold; khác biệt metric phản ánh ba ứng viên trong cấu hình đã chạy, không
-phải kết quả tối ưu hyperparameter đầy đủ.
+\subsection{Thử nghiệm cải thiện bằng nested cross-validation}
+\label{sec:nested-method}
+Sau khi có kết quả chính, báo cáo thử ba hướng cải thiện độ chính xác ở vùng RUL
+thấp, nơi cảnh báo được phát ra: (1) đổi độ dài window, (2) chỉnh siêu tham số
+của HGB, và (3) tăng trọng số cho mẫu có RUL thấp. Để đánh giá công bằng một quy
+trình có bước chọn cấu hình, thí nghiệm dùng nested GroupKFold
+(Hình~\ref{fig:rul-improvement})~\cite{sklearnNestedCV2026,sklearnGroupedCV}.
+Vòng ngoài giữ nguyên 5 fold của mô hình gốc; trong mỗi vòng ngoài, một inner
+GroupKFold 3 fold chỉ dùng động cơ của phần train để chọn cấu hình, sau đó cấu
+hình được chọn mới được đánh giá trên các động cơ validation vòng ngoài.
 
-Ba ứng viên được so sánh là median baseline, Ridge regression và
-HistGradientBoostingRegressor. Ridge đặt StandardScaler trong pipeline để scaler
-chỉ fit trên training fold. Metric chọn mô hình là mean engine-level MAE; RMSE
-và NASA asymmetric score được ghi kèm. Sau khi chọn mô hình, pipeline refit trên
-toàn bộ train windows và ghi đúng một dự đoán tại cycle cuối của mỗi test
-engine. File nhãn \texttt{RUL\_FD001.txt} chỉ được đọc trong bước final
-evaluation sau khi final predictions đã được ghi.
-
-Để tránh trộn các đại lượng cần ước lượng, kết quả được báo cáo tách theo đơn vị phân tích,
-group key, split, metric và vai trò của từng phép đo. OOF dùng cho
-model selection trên train; final evaluation dùng 100 test engines sau khi
-model đã được chọn; dự báo Health Index là phân tích chuỗi phụ trên 10
-train engines và không được dùng để xếp hạng model RUL.
-
-\subsection{Protocol đánh giá chuyển miền bổ sung}
-Ma trận bổ sung dùng cùng trailing window 10 cycles cho FD001--FD004, bởi test
-FD004 có engine ngắn nhất 19 cycles. Với mỗi subset, pipeline tạo train targets
-chỉ từ lịch sử train, chọn model bằng GroupKFold theo engine, refit và đánh giá
-một dự đoán tại cycle cuối của mỗi test engine. Trong phép transfer, model đã
-chọn và fit trên toàn bộ train FD001 được giữ cố định khi dự đoán test
-FD002--FD004; không fit lại trên target dataset. Test labels của từng target
-chỉ được đọc sau khi final predictions đã được ghi. Mean engine MAE, RMSE và
-NASA score được tính trên cùng tập test của mỗi target, kèm bootstrap CI theo
-engine. Vì window 10 khác window 30 của kết quả FD001 chính, hai nhóm metric
-được trình bày riêng.
-
-Đầu ra hỗ trợ quyết định được giới hạn ở một cảnh báo minh họa: với model được
-chọn, mỗi engine train được tổng hợp từ OOF predictions và phát cảnh báo đầu
-tiên khi predicted RUL $\leq 30$ cycles. Ngưỡng được khai báo trước, không tối
-ưu trên 100 test labels. Lead time được ghi bằng RUL thật tại thời điểm cảnh
-báo, tức proxy số cycle còn lại đến endpoint run-to-failure của FD001; đây
-không phải lịch bảo trì hoặc false-alarm rate có tính vận hành.
-
-Đặt $a_i=\min\{t:\hat y_{i,t}\leq30\}$ và
-$b_i=\min\{t:y_{i,t}\leq30\}$ trên các window OOF quan sát được. Lead time
-$L_i=T_i-a_i$ và độ trễ so với ngưỡng $D_i=a_i-b_i$ chỉ xác định khi có cảnh
-báo. $D_i<0$, $D_i=0$ và $D_i>0$ lần lượt là cảnh báo trước, đúng và sau
-ngưỡng; trường hợp $a_i=T_i$ được ghi riêng là cảnh báo tại failure. Nếu không
-có $a_i$, trạng thái là không cảnh báo, không gán lead time bằng 0. Helper yêu
-cầu cycle liên tục và nhãn $y_{i,t}=T_i-t$ đến RUL bằng 0. Vì cùng OOF đã phục
-vụ model selection, đây không phải đánh giá độc lập sau chọn model.
-
-False alarm ở cấp toàn trajectory được định nghĩa là có cảnh báo nhưng không
-có event RUL thấp trong lịch sử quan sát. Tất cả train engines đều đi đến
-RUL bằng 0 nên số engine âm tính bằng 0; false-alarm rate được lưu là null,
-không phải 0\%. Điều này không ngăn phân tích riêng cảnh báo quá sớm hoặc thời
-gian ở trạng thái cảnh báo ngoài vùng RUL thấp; đó là một đại lượng khác và
-không thuộc phạm vi báo cáo. Không chọn thêm yêu cầu lead time tối thiểu khi chưa có
-thông tin chuẩn bị bảo trì.
-
-\begin{table}[H]
+\begin{figure}[H]
 \centering
-\caption{Cấu hình mô hình và evaluation protocol.}
-\label{tab:model-config}
-\begin{tabularx}{\linewidth}{L{4.0cm}L{3.0cm}X}
-\toprule
-Thành phần & Giá trị & Vai trò \\\midrule
-Số fold & 5 & GroupKFold theo \texttt{engine\_id}. \\
-Seed & 42 & Tái lập bootstrap và các thành phần ngẫu nhiên của model; GroupKFold không shuffle. \\
-Baseline & Weighted median & Đường cơ sở với tổng trọng số mỗi engine bằng 1. \\
-Ridge & $\alpha=1{,}0$ & Có StandardScaler bên trong pipeline của từng training fold. \\
-HistGradientBoosting & learning rate $0{,}05$; 200 iterations; 31 leaf nodes;
-20 samples/leaf & Mô hình được chọn theo mean engine-level MAE. \\
-Early stopping & Tắt & Giữ cấu hình huấn luyện cố định giữa các fold. \\
-Test evaluation & 1 prediction/engine & Dự đoán tại cycle cuối quan sát; test labels
-được đọc sau khi ghi predictions. \\
-\bottomrule
-\end{tabularx}
-\end{table}
+\includegraphics[width=0.46\textwidth]{figures/rul-improvement.pdf}
+\caption{Quy trình nested cross-validation. Mọi bước chọn window, siêu tham số và
+trọng số đều nằm trong vòng trong.}
+\label{fig:rul-improvement}
+\end{figure}
 
-Các giá trị trong Bảng~\ref{tab:model-config} mô tả cấu hình đã chạy, không
-phải một tuyên bố rằng đây là cấu hình tối ưu cho các subset C-MAPSS khác.
+Việc chọn diễn ra tuần tự theo ba giai đoạn:
+\begin{enumerate}
+\item \textbf{Window}: 10, 20 hoặc 30 cycles. Cả ba cùng tính trên 17.731 dòng
+      từ cycle 30 trở đi, nên số mẫu so sánh không đổi. Window 50 không được xét
+      vì 7 động cơ test FD001 có ít hơn 50 cycles.
+\item \textbf{Siêu tham số}: 24 cấu hình, gồm cấu hình gốc và 23 cấu hình lấy
+      mẫu ngẫu nhiên (seed 42) từ learning rate $\{0{,}03;0{,}05;0{,}1\}$, số
+      vòng boosting $\{100;200;400\}$, số lá tối đa $\{15;31;63\}$, số mẫu tối
+      thiểu mỗi lá $\{10;20;40\}$ và hệ số L2 $\{0;0{,}01;0{,}1\}$~\cite{sklearnHGBAPI2026}.
+\item \textbf{Trọng số}: hệ số $(1;1;1)$, $(1;1{,}5;2)$ hoặc $(1;2;3)$ cho các
+      vùng $\mathrm{RUL}>30$, $15<\mathrm{RUL}\leq30$ và $\mathrm{RUL}\leq15$; sau
+      đó chuẩn hóa để tổng trọng số mỗi động cơ vẫn bằng 1.
+\end{enumerate}
 
-Với nhánh Health Index, cùng prefix 70\% và suffix 30\% được dùng cho ARIMA và
-hai baseline dự báo từng điểm. Baseline \texttt{last\_value} giữ giá trị cuối
-prefix; baseline \texttt{drift} ngoại suy mức thay đổi trung bình từ giá trị
-đầu đến cuối prefix. Hai baseline không có khoảng dự đoán, nên chỉ được
-so sánh bằng MAE và RMSE; tỷ lệ bao phủ 95\% chỉ thuộc về ARIMA.
+Tiêu chí được chốt trước khi chạy. Metric chính là \textbf{MAE ở vùng RUL thấp},
+tức MAE trên các dòng có RUL thật $\leq30$, tính theo động cơ rồi lấy trung
+bình. Một cấu hình chỉ được chấp nhận nếu đồng thời không làm tăng ba chỉ số
+kiểm soát so với cấu hình đang dùng: MAE toàn bộ, tỷ lệ động cơ cảnh báo trễ hoặc
+bỏ lỡ (theo Mục~\ref{sec:warning-method}), và tỷ lệ báo sớm, tức tỷ lệ dòng có RUL
+dự đoán $\leq30$ trong khi RUL thật $>30$. Chênh lệch giữa cấu hình mới và mô
+hình gốc được ước lượng bằng paired bootstrap trên cùng các động cơ, 10.000 lần.
+Cuối cùng, cùng quy trình chọn được chạy lại trên toàn bộ train để ra cấu hình
+cuối, rồi mới dự đoán test.
 
-\subsection{Suy luận thống kê}
-Phân tích suy luận so sánh mean của 30 cycles đầu và 30 cycles cuối trong cùng
-engine train. Bảng cặp gồm 2.100 dòng (100 engines $\times$ 21 sensors), còn
-bảng suy luận gồm một dòng cho mỗi sensor. Protocol giữ đủ 21 sensor, dùng mean
-paired difference, bootstrap percentile 95\%, Wilcoxon permutation và
-Benjamini--Hochberg FDR. Hình phân phối và effect size được đọc cùng khoảng tin
-cậy và số dấu của từng sensor; kết quả này mô tả thay đổi trong protocol đầu/cuối,
-không phải bằng chứng chọn feature hoặc giá trị dự đoán RUL ngoài mẫu.
-
-% Chi tiết nested improvement experiment được giữ trong experiments/ và handoff;
-% báo cáo chính chỉ tóm tắt protocol và kết quả đã kiểm chứng để giữ giới hạn trang.
+Cần lưu ý rằng nhãn test FD001 đã được dùng để đánh giá mô hình gốc trước thí
+nghiệm này. Thí nghiệm không dùng test để chọn cấu hình, nhưng không thể coi test
+là hoàn toàn ``chưa từng thấy''.

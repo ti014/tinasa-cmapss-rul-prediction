@@ -147,7 +147,7 @@ phụ. Chưa mở thêm CNN, LSTM hoặc streaming.
   Không suy từ correlation dương quan sát được rằng mọi điều kiện bảo đảm đều đã thỏa.
 - Đầu ra cần viết: estimand (đại lượng cần ước lượng), giả thuyết, đơn vị mẫu,
   họ kiểm định, cấu hình và xử lý trường hợp suy biến. Xem
-  [protocol](../report/sections/statistical-protocol.tex): ranh giới mean 30
+  [protocol](../report/sections/methodology.tex) (Mục 4.6): ranh giới mean 30
   cycles đầu/cuối và cấu hình thống kê đã được chốt trước khi chạy suy luận.
 
 Ví dụ: engine kết thúc ở cycle 200 dùng 1–30 và 171–200 để phân tích hồi cứu.

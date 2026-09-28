@@ -1,76 +1,90 @@
 # Slide trình bày C-MAPSS FD001--FD004
 
-Deck chính: [`cmapss_fd001_presentation.pptx`](cmapss_fd001_presentation.pptx)
-([bản xuất riêng để đối chiếu](archive/decks/cmapss_fd001_presentation_transfer.pptx))
-Nguồn Beamer: [`cmapss_fd001_presentation.tex`](cmapss_fd001_presentation.tex) ·
-[PDF Beamer](cmapss_fd001_presentation.pdf)
+Deck chính: [`cmapss_fd001_presentation.pptx`](cmapss_fd001_presentation.pptx) ·
+[bản PDF](cmapss_fd001_presentation.pdf) (xuất từ PowerPoint).
+Kịch bản nói 30 phút: [`SPEECH_SCRIPT_VI.pdf`](../handoff/SPEECH_SCRIPT_VI.pdf)
+([nguồn LaTeX](../handoff/SPEECH_SCRIPT_VI.tex)).
 Kịch bản demo dashboard: [`handoff/DEMO_SCRIPT.md`](../handoff/DEMO_SCRIPT.md).
-Kịch bản thuyết trình LaTeX: [`SPEECH_SCRIPT_VI.pdf`](../handoff/SPEECH_SCRIPT_VI.pdf)
-và [nguồn LaTeX](../handoff/SPEECH_SCRIPT_VI.tex).
 
-Deck gồm 18 slide, đi theo mạch bài thuyết trình học thuật: bài toán, dữ liệu,
-nhãn RUL, pipeline, phân tích sensor, rolling features, evaluation protocol,
-model selection, kết quả RUL, phân tích lỗi, Health Index--ARIMA, cảnh báo sớm,
-ETL/tái lập, kết luận và ma trận transfer FD001--FD004.
+## Cấu trúc bài nói
 
-Nguồn số liệu lấy từ các artifact đã kiểm chứng trong `outputs/`, đặc biệt:
+Deck gồm 20 slide, bằng giới hạn 20 slide, cho bài nói khoảng 29 phút và một
+phút dự phòng. Mỗi slide có tiêu đề nêu kết luận, một thành phần trực quan chính,
+dòng nguồn và speaker notes ghi thời lượng.
 
-- `outputs/modeling/tables/final_metrics.json`
-- `outputs/modeling/tables/model_metrics.csv`
-- `outputs/modeling/tables/warning_summary.json`
-- `outputs/timeseries/run_info.json`
-- `outputs/timeseries/tables/baseline_metrics.csv`
-- `outputs/etl/benchmark.json`
-- `outputs/cross_dataset/matrix.json`
-- `outputs/cross_dataset/README.md`
-- `tmp/e2e-review-20260924/validation.json`
-- `report/sections/conclusion.tex`
+| Phần | Slide | Thời lượng | Nội dung |
+|---|---|---|---|
+| Bìa | 1 | 0:30 | Đề tài, tác giả, bốn con số chính |
+| 1. Bài toán và dữ liệu | 2--5 | 5:30 | Câu hỏi nghiên cứu, RUL, đối chiếu yêu cầu đề tài 8, bốn subset, ranh giới nhãn test |
+| 2. Pipeline Big Data | 6--7 | 4:00 | Bronze/Silver/Gold, parity Pandas--PySpark, benchmark Pandas 1×/10×/100× |
+| 3. Phân tích chuỗi thời gian | 8--11 | 6:00 | EDA, xu hướng suy giảm sensor, trailing window 30, Health Index--ARIMA |
+| 4. Mô hình và đánh giá | 12--16 | 8:00 | GroupKFold, chọn model, kết quả test, phân tích lỗi, cảnh báo sớm |
+| 5. Mở rộng và kết luận | 17--20 | 5:15 | Nested CV, transfer FD001→FD002--FD004, trả lời câu hỏi, giới hạn |
 
-Deck hiện hành được xây dựng bằng `build_academic_presentation.mjs` với font
-Arial, giữ tỷ lệ 16:9 và các bảng native editable. `finalize_academic_presentation.mjs`
-kiểm tra bản xuất bằng Artifact Tool. Hai script dùng runtime đã được cung cấp
-trong môi trường Codex; chúng không sinh lại số liệu khoa học.
+Slide làm tròn số liệu đến hai chữ số thập phân; speaker notes và kịch bản nói
+dùng số đầy đủ. Metric chính FD001 dùng window 30; slide 18 dùng window 10 và
+không so trực tiếp với metric chính.
 
-Slide RUL ghi MAE 15,3490 cycles và khoảng tin cậy bootstrap theo engine 95%
-[12,7286; 18,0866]. Slide cảnh báo ghi timing 44/7/49 và median lead time
-30 cycles trên selected-model OOF train. OOF cũng được dùng để chọn model, nên
-đây là bằng chứng mô tả nội bộ. Benchmark chỉ đo Pandas in-memory; chưa có phép
-đo tốc độ PySpark. Slide 18 ghi rõ ma trận window 10: transfer từ FD001 sang
-FD002, FD003 và FD004 có MAE lần lượt 60,3215; 47,3949; 58,5731 cycles. Metric
-chính FD001 dùng window 30 và không so trực tiếp với ma trận window 10.
+## Luồng dựng deck
 
-Bản cập nhật đã qua kiểm tra package integrity, layout, Arial, import và tám
-bảng editable trên slide 3, 6, 7, 8, 11, 15, 16 và 18. Cả 18 slide đã được render để soát
-clipping, wrapping, hình, bảng và số trang. Biên bản finalizer ở
-`tmp/slides-rul-20260927/finalizer/` (thư mục tạm, không thuộc gói Git).
-
-Bản cũ trước redesign được giữ trong `archive/decks/` để đối chiếu hoặc khôi
-phục khi cần.
-
-## Cập nhật ngày 28/09/2026
-
-Slide 4 bổ sung boundary đọc file, `union`, Silver Parquet và SQLite. Slide 6
-ghi rõ one-to-one join bằng ba cột khóa, 126 feature columns và việc ba
-operational settings chưa nằm trong `X`. Nội dung này khớp với
-[`handoff/DATA_WALKTHROUGH.md`](../handoff/DATA_WALKTHROUGH.md). Finalizer mới
-pass package integrity, layout, font và import cho 18 slide.
-
-Slide 14–16 trình bày protocol cải thiện, kết quả vòng ngoài và đánh đổi trong
-inner CV. Slide 17 là kết luận, slide 18 là ma trận transfer. Nguồn số liệu mới:
-`outputs/experiments/rul_improvement/20260927_full/`. Không thay baseline;
-MAE test vẫn 15,3490 cycles. Ví dụ low-RUL MAE giảm 9,75% ở một ứng viên inner
-CV phải được đọc cùng mức tăng MAE toàn bộ 0,32 cycles.
-
-Hai script build/finalize dùng đường dẫn runtime Codex cục bộ ở đầu file.
-Trước khi chạy finalizer trong môi trường này, đặt:
-
-```powershell
-$env:RUNTIME_NODE_MODULES='C:/Users/timewo/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules'
-$env:RUNTIME_NODE='C:/Users/timewo/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node.exe'
-& $env:RUNTIME_NODE slides/build_academic_presentation.mjs
-& $env:RUNTIME_NODE slides/finalize_academic_presentation.mjs
+```text
+outputs/ (JSON, CSV, Parquet, PNG đã nghiệm thu)
+  │  slides/extract_slide_data.py   chỉ đọc artifact, không huấn luyện lại
+  ▼
+slides/slide_data.json              số liệu dùng trên slide
+  │  slides/build_presentation.cjs  pptxgenjs + sharp (crop hình sensor)
+  ▼
+slides/cmapss_fd001_presentation.pptx
+  │  PowerPoint (COM) SaveAs PDF
+  ▼
+slides/cmapss_fd001_presentation.pdf
 ```
 
-Kết quả finalizer nằm trong `tmp/slides-rul-20260927/final/`; chỉ sao chép sang
-deck chính sau khi validation đạt. Máy khác cần điều chỉnh đường dẫn runtime,
-hoặc biên dịch nguồn Beamer bằng TeX distribution có hỗ trợ tiếng Việt.
+Biểu đồ trên slide 7, 11, 13, 16 và 18 là chart native của PowerPoint, dữ liệu
+lấy từ `slide_data.json`. Hình còn lại là PNG sẵn có trong `outputs/`; slide 9
+crop hai panel `sensor_4` và `sensor_7` từ
+`outputs/eda/figures/sensor_trajectories_1.png` lúc build.
+
+Nguồn số liệu chính:
+
+- `outputs/modeling/tables/{final_metrics.json,model_metrics.csv,warning_summary.json}`
+- `outputs/modeling/predictions/final_evaluation.parquet`
+- `outputs/etl/{parity.json,benchmark.json}`, `outputs/features/run_info.json`
+- `outputs/eda/tables/`, `outputs/statistics/tables/sensor_inference.csv`
+- `outputs/timeseries/tables/{forecast_metrics.csv,baseline_metrics.csv}`
+- `outputs/cross_dataset/matrix.json`, `outputs/cross_dataset/FD00x/etl/run_info.json`
+- `outputs/experiments/rul_improvement/20260927_full/`
+
+## Cách build lại
+
+```powershell
+uv run --frozen python slides/extract_slide_data.py
+$env:NODE_PATH='C:/Users/timewo/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules'
+& 'C:/Users/timewo/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node.exe' slides/build_presentation.cjs
+```
+
+Đường dẫn Node ở trên là runtime cục bộ trên máy tác giả, có sẵn `pptxgenjs` và
+`sharp`. Máy khác cần Node và hai package này trong `NODE_PATH`. Biến
+`DECK_OUT` cho phép ghi deck ra đường dẫn khác để kiểm tra trước khi thay deck
+chính. PDF được xuất bằng PowerPoint; repository không có script xuất PDF.
+
+## Kiểm tra đã chạy (28/09/2026)
+
+- `validate.py` của pptx skill: `All validations PASSED!`.
+- Render 20 slide bằng PowerPoint ở 1600×900 và soát chữ tràn, chồng lấn, nhãn
+  biểu đồ, dấu thập phân và số trang. Lần render đầu phát hiện chồng chữ ở slide
+  5, 9, 10, 13, nhãn phần tràn khung và dấu thập phân kiểu Anh trong chart; đã
+  sửa bằng cách đưa giá trị vào nhãn trục hoặc dùng số nguyên (ms, cycles làm tròn).
+- PDF xuất từ PowerPoint có 20 trang; kịch bản nói build bằng Tectonic, 25 trang,
+  log không có lỗi, overfull hoặc underfull.
+
+Giới hạn: chưa trình chiếu thử trên máy của phòng báo cáo. Font là Arial; nếu máy
+trình chiếu thiếu Arial, bố cục có thể lệch. Chart native hiển thị theo locale
+của PowerPoint, nên các giá trị thập phân được đặt trong nhãn text thay vì data
+label.
+
+## Bản cũ
+
+Deck 18 slide trước ngày 28/09/2026 (PPTX, nguồn Beamer và PDF Beamer) nằm trong
+[`archive/decks/`](archive/decks/) với hậu tố `_18slides_20260928`; script
+build/finalize cũ nằm trong [`archive/builders/`](archive/builders/).

@@ -61,7 +61,7 @@ soát. Các bài gốc M1–M3 cung cấp attribution; phần thao tác và gi�
 đối chiếu với tài liệu chính thức đã đọc, không tuyên bố đã đọc chứng minh gốc.
 
 Báo cáo có [cơ sở lý thuyết](../report/sections/theory.tex) và
-[protocol thống kê](../report/sections/statistical-protocol.tex). Chỉ tài liệu
+[protocol thống kê](../report/sections/methodology.tex) (Mục 4.6). Chỉ tài liệu
 được trích trong thân báo cáo xuất hiện trong bibliography của PDF; danh mục
 đọc rộng hơn không đồng nghĩa tất cả nguồn đã được sử dụng hoặc đọc toàn văn.
 

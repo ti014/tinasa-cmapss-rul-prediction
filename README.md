@@ -22,6 +22,10 @@ Available now:
 - The original NASA C-MAPSS FD001--FD004 files and source documentation; the primary report uses FD001 and the supplemental matrix uses all four subsets.
 - Readers, validators, and tests for row counts, engines, schema, keys, cycles, and train RUL.
 - A [data contract](data/CONTRACTS.md), JSON validation CLI, and dependency lockfile.
+- An [executed data-pipeline walkthrough notebook](notebooks/00_data_pipeline_walkthrough.ipynb)
+  that shows, step by step on FD001, how the files are combined, stored,
+  queried (SQLite SQL, Spark SQL and Pandas on Parquet), transformed into the
+  126 features, and joined; it also checks every table relationship on the data.
 - An [executed EDA notebook](notebooks/01_fd001_eda.ipynb), 12 CSV tables,
   11 figures, and [analysis notes and validation evidence](outputs/eda/README.md).
 - A curated bibliography and reading guide.
@@ -30,7 +34,7 @@ Available now:
   grouped RUL evaluation, PCA--ARIMA, early warning, and the supplemental
   FD001--FD004 matrix. It includes a data dictionary, glossary, error analysis,
   and reproducibility notes; the built PDF is 49 pages.
-- A cited theoretical background and [statistical protocol](report/sections/statistical-protocol.tex).
+- A cited theoretical background and [statistical protocol](report/sections/methodology.tex) (Section 4.6).
   The paired comparison uses each sensor's mean over the first and last 30 cycles of every train engine.
   The inference configuration was fixed before execution.
 - A train-only `build_engine_sensor_pairs` helper that creates and validates one
@@ -64,16 +68,28 @@ Available now:
   20,631 Health Index rows, 704 holdout forecasts, ARIMA and same-horizon
   last-value/drift baseline MAE/RMSE, 95% prediction-interval coverage, ADF and
   adjusted Ljung--Box diagnostics without reading test labels.
-- An [artifact-driven Streamlit dashboard](app.py) for final RUL evaluation,
-  per-engine Health Index/ARIMA inspection and run provenance. It does not fit
-  models or read raw test labels when opened.
+- An [artifact-driven Streamlit dashboard](app.py) with eight pages: overview,
+  data and EDA, RUL evaluation (test engine and OOF trajectory), early warning,
+  cross-dataset, improvement study, Health Index/ARIMA and provenance. Charts are
+  interactive Altair charts. It does not fit models or read raw test labels when
+  opened.
+- Three executed result-review notebooks:
+  [modeling and early warning](notebooks/03_fd001_modeling_evaluation.ipynb),
+  [Health Index/ARIMA](notebooks/04_fd001_health_index_arima.ipynb) and
+  [cross-dataset and improvement study](notebooks/05_cross_dataset_and_improvement.ipynb).
+  Each notebook recomputes metrics from stored predictions with package
+  functions and `assert`s that they match the artifacts; none fits a model or
+  writes to `outputs/`.
 
 Final handoff:
 
-- The [18-slide presentation deck](slides/cmapss_fd001_presentation.pptx) now
-  explains the problem, data, evaluation protocol, RUL results, Health Index,
-  OOF warning evidence, transfer evaluation, reproducibility, and limitations. The [handoff
-  checklist](handoff/FINAL_HANDOFF.md) lists validation.
+- The [20-slide presentation deck](slides/cmapss_fd001_presentation.pptx)
+  ([PDF](slides/cmapss_fd001_presentation.pdf)) is sized for a 30-minute talk in
+  five parts: problem and data, Big Data pipeline, time-series analysis,
+  modeling and evaluation, and extensions and conclusions. Slide values are read
+  from `outputs/` by [`slides/extract_slide_data.py`](slides/extract_slide_data.py);
+  the [speech script](handoff/SPEECH_SCRIPT_VI.pdf) gives timing per slide. The
+  [handoff checklist](handoff/FINAL_HANDOFF.md) lists validation.
 
 Installation, data validation, notebook, ETL, feature-generation, modeling and
 time-series instructions are available below. The dashboard requires the
@@ -340,8 +356,10 @@ Current repository structure:
 │   ├── raw/                 # Original FD001--FD004 files and provenance notes
 │   └── archive/             # Data retained for comparison, not active modeling
 ├── references/              # Bibliography, reading guide, papers, assignment context
-├── notebooks/               # Executed FD001 train EDA and statistics notebooks
-├── src/cmapss/              # data/, statistics/, etl/, features/, modeling/, timeseries/, eda.py, validate.py
+├── notebooks/               # Executed: 00 data walkthrough, 01 EDA, 02 statistics, 03–05 result review
+├── src/cmapss/              # data/, statistics/, etl/, features/, modeling/, timeseries/, eda.py, validate.py,
+│                            # dashboard.py (artifact loaders), dashboard_app.py (Streamlit UI)
+├── scripts/                 # Notebook builders, report figures and improvement-study verification
 ├── tests/                   # Data contract, CLI, EDA, statistics, ETL, features, modeling, timeseries, and reproducibility tests
 ├── outputs/validation/      # Data-validation reports
 ├── outputs/eda/             # EDA tables, figures, methods, and validation
@@ -359,11 +377,11 @@ Current repository structure:
 ├── requirements-dashboard.txt # Optional Streamlit dashboard dependencies
 ├── uv.lock                  # Locked dependency versions
 ├── report/                  # LaTeX source, PDF, figures, and evidence
-├── slides/                  # Beamer source/PDF and validated 18-slide deck
+├── slides/                  # 20-slide deck, PDF export, data extractor and builder
 │   └── archive/             # Superseded decks and builders
 ├── handoff/                 # Demo script and final handoff checklist
 │   └── archive/             # Legacy speech source
-├── app.py                   # Streamlit dashboard entry point
+├── app.py                   # Streamlit entry point (calls cmapss.dashboard_app)
 ├── README.md                # English documentation
 └── README.vi.md             # Vietnamese documentation
 ```
@@ -454,9 +472,9 @@ After installing `requirements-dev.txt`, open the notebook from the repository r
 Select the `.venv` Python kernel and **Restart Kernel and Run All Cells**.
 This analyzes only train and recreates 12 CSV tables and 11 PNG figures.
 Validated fresh-kernel runs produced identical EDA artifacts in the same
-environment. The repository-wide test suite passed **175 tests**, including
-data, statistics, ETL, feature, modeling, PCA--ARIMA, cross-dataset, and
-end-to-end reproducibility checks.
+environment. The repository-wide test suite passed **188 tests** (run on
+2026-09-28), including data, statistics, ETL, feature, modeling, PCA--ARIMA,
+cross-dataset, dashboard, and end-to-end reproducibility checks.
 
 ![FD001 train EDA workflow](assets/diagrams/fd001-eda.svg)
 
@@ -603,6 +621,26 @@ The current artifact contains 20,631 train Health Index rows and 704 holdout
 forecasts from 10 engines. See [PCA--ARIMA artifacts and diagnostics](outputs/timeseries/README.md)
 for the selection rule, metrics, figures, and limitations.
 
+### Run the result-review notebooks
+
+Notebooks 03–05 only read existing artifacts. They recompute metrics with
+package functions and stop on an `assert` if a number differs from the file in
+`outputs/`:
+
+| Notebook | Content | Checked against |
+|---|---|---|
+| `03_fd001_modeling_evaluation.ipynb` | Per-fold MAE, test metrics, bootstrap CI, error by RUL range, RUL ≤ 30 warning | `outputs/modeling/tables/*` |
+| `04_fd001_health_index_arima.ipynb` | Health Index trend, ARIMA holdout metrics, naive baselines, ADF/Ljung–Box | `outputs/timeseries/tables/*` |
+| `05_cross_dataset_and_improvement.ipynb` | FD001–FD004 matrix, nested-CV ablation and paired CI | `outputs/cross_dataset/matrix.json`, `outputs/experiments/rul_improvement/20260927_full/*` |
+
+Build and execute them from a fresh kernel with:
+
+```powershell
+.venv\Scripts\python scripts/build_results_notebooks.py --execute
+```
+
+Add `--only 04` to rebuild a single notebook.
+
 ### Run the reproducibility dashboard
 
 Install the optional dashboard dependencies and start Streamlit after the
@@ -613,11 +651,27 @@ uv sync --extra dashboard
 uv run --extra dashboard streamlit run app.py
 ```
 
-The dashboard reads `outputs/modeling` and `outputs/timeseries`, then shows a
-model comparison, final RUL metrics, a selected test-engine evaluation, Health
-Index forecasts, prediction-interval coverage, diagnostics and run provenance.
-The light theme and five views include the OOF early-warning analysis. It does not
-retrain models or read `data/raw/RUL_FD001.txt`.
+The dashboard has eight pages. A page can be opened directly with a query
+string, for example `http://localhost:8501/?page=Cross-dataset`.
+
+| Page | Artifacts read | Content |
+|---|---|---|
+| Tổng quan (overview) | `outputs/modeling` | Test metrics and CI, pipeline, CV model comparison, suggested demo order |
+| Dữ liệu & EDA | `outputs/eda`, `outputs/features` | Lifetime distribution, sensor–RUL Spearman, per-engine sensor trajectories |
+| Đánh giá RUL | `outputs/modeling/predictions` | One test engine at its last cycle, scatter and residuals; OOF trajectory of a train engine per model |
+| Cảnh báo sớm | `outputs/modeling/tables` | 30-cycle threshold, timing classes, trajectory with the first-warning marker |
+| Cross-dataset | `outputs/cross_dataset/matrix.json` | MAE and CI for 4 within-subset and 3 transfer evaluations |
+| Thử nghiệm cải thiện | `outputs/experiments/rul_improvement/20260927_full` | Ablation, paired CI, baseline versus selected-procedure trajectories |
+| Health Index / ARIMA | `outputs/timeseries` | Forecast with 95% prediction interval, naive-baseline comparison, diagnostics |
+| Provenance | `run_info.json` | Schema and isolation contract of the run |
+
+Artifact loaders live in `src/cmapss/dashboard.py` and the UI in
+`src/cmapss/dashboard_app.py`. `app.py` is only the entry point and still
+exports `load_dashboard_data`, which `cmapss.reproducibility` imports, so
+importing `app` does not require Streamlit. The dashboard does not retrain
+models or read `data/raw/RUL_FD001.txt`. The data page uses the
+`sensor_*__last` and `sensor_*__mean` Gold rolling-feature columns, so
+trajectories start at cycle 30.
 
 ### Validate the end-to-end pipeline
 

@@ -1,0 +1,300 @@
+{
+  "diagnostics": {
+    "top10_nasa_share": 0.7553559019179925,
+    "oof_mean_pred_150_200": 147.16069144672653,
+    "oof_mean_pred_200_400": 145.36006559799625,
+    "late_mean_life": 182.75510204081633,
+    "early_mean_life": 229.0681818181818,
+    "life_delay_r": -0.5575256972807734,
+    "transfer": {
+      "FD001": {
+        "inside_range": null,
+        "pred_std": 51.07428705623092,
+        "mean_signed_error": 15.075435584785671
+      },
+      "FD002": {
+        "inside_range": 0.15157280195084322,
+        "pred_std": 13.33216185679221,
+        "mean_signed_error": 50.78935136515229
+      },
+      "FD003": {
+        "inside_range": 0.9466605072172679,
+        "pred_std": 55.01163264622016,
+        "mean_signed_error": 45.34305373257441
+      },
+      "FD004": {
+        "inside_range": 0.14139747550724402,
+        "pred_std": 12.715308017924468,
+        "mean_signed_error": 49.387381137274176
+      }
+    }
+  },
+  "subsets": [
+    {
+      "name": "FD001",
+      "train_engines": 100,
+      "test_engines": 100,
+      "observations": 33727
+    },
+    {
+      "name": "FD002",
+      "train_engines": 260,
+      "test_engines": 259,
+      "observations": 87750
+    },
+    {
+      "name": "FD003",
+      "train_engines": 100,
+      "test_engines": 100,
+      "observations": 41316
+    },
+    {
+      "name": "FD004",
+      "train_engines": 249,
+      "test_engines": 248,
+      "observations": 102463
+    }
+  ],
+  "eda": {
+    "lifetime": {
+      "min": 128.0,
+      "50%": 199.0,
+      "max": 362.0,
+      "mean": 206.31
+    },
+    "always_constant": [
+      "sensor_1",
+      "sensor_5",
+      "sensor_10",
+      "sensor_16",
+      "sensor_18",
+      "sensor_19",
+      "setting_3"
+    ],
+    "partially_constant": [
+      {
+        "measurement": "sensor_6",
+        "constant_engines": 38
+      }
+    ]
+  },
+  "statistics": {
+    "n_sensors": 21,
+    "n_reject": 15,
+    "n_degenerate": 6,
+    "resamples": 10000
+  },
+  "timeseries": {
+    "n_engines": 10,
+    "mae": {
+      "ARIMA": 0.41095335024550667,
+      "drift": 0.7468818036967699,
+      "last_value": 0.9477916727232675
+    },
+    "coverage_min": 0.2142857142857142,
+    "coverage_max": 0.9702970297029704
+  },
+  "modeling": {
+    "final": {
+      "n_rows": 100,
+      "n_engines": 100,
+      "mean_window_mae": 15.349047436930459,
+      "mean_engine_mae": 15.349047436930459,
+      "rmse": 20.541266675083385,
+      "nasa_score": 1513.257655888328
+    },
+    "ci_mae": {
+      "ci_lower": 12.728606926330093,
+      "ci_upper": 18.086553527187498
+    },
+    "bootstrap_resamples": 10000,
+    "cv": [
+      {
+        "model_name": "hist_gradient_boosting",
+        "mean_engine_mae": 20.214340719422676,
+        "std_engine_mae": 0.98211531280843,
+        "selected": true
+      },
+      {
+        "model_name": "median_baseline",
+        "mean_engine_mae": 46.95433396927657,
+        "std_engine_mae": 0.1192577731526976,
+        "selected": false
+      },
+      {
+        "model_name": "ridge_alpha_1",
+        "mean_engine_mae": 23.992163147294058,
+        "std_engine_mae": 0.947940071946988,
+        "selected": false
+      }
+    ],
+    "n_over": 74,
+    "n_under": 26,
+    "worst": {
+      "engine_id": 23,
+      "y_true": 113.0,
+      "y_pred": 170.4768346456548,
+      "abs_error": 57.476834645654804
+    },
+    "warning": {
+      "threshold": 30,
+      "timing": {
+        "before_threshold": 44,
+        "at_threshold": 7,
+        "after_threshold": 49,
+        "at_failure": 0,
+        "no_warning": 0
+      },
+      "lead": {
+        "n": 100,
+        "min": 19.0,
+        "q25": 26.0,
+        "median": 30.0,
+        "q75": 35.0,
+        "max": 55.0
+      }
+    }
+  },
+  "pipeline": {
+    "window": 30,
+    "feature_rows": {
+      "rolling_features": 27927,
+      "rolling_features_train": 17731,
+      "rolling_features_test": 10196
+    },
+    "feature_columns": 126,
+    "benchmark": [
+      {
+        "scale": 1,
+        "rows": 33727,
+        "seconds": 0.019501900009345263
+      },
+      {
+        "scale": 10,
+        "rows": 337270,
+        "seconds": 0.15887749998364598
+      },
+      {
+        "scale": 100,
+        "rows": 3372700,
+        "seconds": 1.675210600020364
+      }
+    ],
+    "parity": [
+      {
+        "name": "silver_observations",
+        "rows": 33727,
+        "max_abs_diff": 0.0,
+        "status": "passed"
+      },
+      {
+        "name": "silver_train_targets",
+        "rows": 20631,
+        "max_abs_diff": 0.0,
+        "status": "passed"
+      },
+      {
+        "name": "gold_engine_summary",
+        "rows": 200,
+        "max_abs_diff": 0.0,
+        "status": "passed"
+      }
+    ]
+  },
+  "improvement": {
+    "outer_splits": 5,
+    "inner_splits": 3,
+    "n_hgb_candidates": 24,
+    "outer": {
+      "baseline": {
+        "mae": 20.21434071942267,
+        "low_mae": 3.667626597050413,
+        "late": 49,
+        "rows": 17731
+      },
+      "weights": {
+        "mae": 20.24588955809163,
+        "low_mae": 3.672996727476754,
+        "late": 53,
+        "rows": 17731
+      }
+    },
+    "low_delta_ci": [
+      0.0053701304263399,
+      -0.0506077593112285,
+      0.0638835982292637
+    ],
+    "inner": {
+      "baseline": {
+        "mae": 20.361328050707677,
+        "low_mae": 3.614782699309458,
+        "late": 50
+      },
+      "hgb_08": {
+        "mae": 20.684582021706827,
+        "low_mae": 3.262492389424903,
+        "late": 49
+      },
+      "strong_low_rul": {
+        "mae": 20.407247057123968,
+        "low_mae": 3.3900726281767164,
+        "late": 47
+      }
+    },
+    "decision": "retain_baseline"
+  },
+  "transfer": {
+    "window": 10,
+    "rows": [
+      {
+        "source": "FD001",
+        "target": "FD001",
+        "type": "within_subset",
+        "mae": 21.92583265973346,
+        "n_engines": 100
+      },
+      {
+        "source": "FD002",
+        "target": "FD002",
+        "type": "within_subset",
+        "mae": 22.355599274429856,
+        "n_engines": 259
+      },
+      {
+        "source": "FD003",
+        "target": "FD003",
+        "type": "within_subset",
+        "mae": 28.32546490864543,
+        "n_engines": 100
+      },
+      {
+        "source": "FD004",
+        "target": "FD004",
+        "type": "within_subset",
+        "mae": 27.221778119465824,
+        "n_engines": 248
+      },
+      {
+        "source": "FD001",
+        "target": "FD002",
+        "type": "transfer",
+        "mae": 60.321502473649105,
+        "n_engines": 259
+      },
+      {
+        "source": "FD001",
+        "target": "FD003",
+        "type": "transfer",
+        "mae": 47.39485738337189,
+        "n_engines": 100
+      },
+      {
+        "source": "FD001",
+        "target": "FD004",
+        "type": "transfer",
+        "mae": 58.57307720834232,
+        "n_engines": 248
+      }
+    ]
+  }
+}

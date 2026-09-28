@@ -1,65 +1,67 @@
 # Báo cáo cuối kỳ
 
 [Bản PDF](main.pdf) được biên dịch từ [main.tex](main.tex), cập nhật ngày
-28/09/2026. Báo cáo trình bày các kết quả chính trên NASA C-MAPSS FD001 và ma
-trận đánh giá bổ sung trên toàn bộ FD001--FD004. Kết quả RUL chi tiết vẫn thuộc
-FD001; FD002--FD004 dùng protocol window 10 cycles riêng để kiểm tra chuyển miền.
-Báo cáo được biên tập theo cấu trúc mục tiêu--phương pháp--kết quả--thảo luận:
-kiểm tra dữ liệu, EDA train-only, ETL Silver/Gold, đối chiếu Pandas--PySpark,
-rolling features 30 cycles, suy luận chênh lệch sensor đầu/cuối vòng đời,
-phân tích PCA--ARIMA train-only, đánh giá mô hình RUL, cảnh báo sớm OOF và phân
-tích lỗi theo engine.
+28/09/2026. Báo cáo trình bày pipeline dự đoán RUL trên NASA C-MAPSS FD001 và
+ma trận đánh giá chuyển miền sang FD002--FD004 (window 10 cycles).
 
-Báo cáo tập trung vào nội dung học thuật, kết quả đã kiểm chứng và giới hạn; không
-đưa timeline hoặc kế hoạch cá nhân vào PDF. Phần dữ liệu giải thích rõ nhãn kết cục, ý nghĩa cột,
-phân bố và cách xử lý; phần phương pháp giải thích lý do, đơn vị và nguồn của
-các công thức. Dashboard Streamlit chỉ đọc các tệp kết quả; PCA--ARIMA vẫn được
-trình bày như phân tích phụ trên Health Index, không phải mô hình RUL. Lệnh tái lập end-to-end đã chạy lại pipeline Pandas từ
-raw và đối chiếu artifact cuối.
-Phần [Đọc, truy vấn và biến đổi dữ liệu](sections/data-walkthrough.tex) đối chiếu
-trực tiếp cách gom file, boundary Parquet/SQLite, time window, feature columns,
-join key và phạm vi Big Data đã thực sự triển khai.
-Checklist bàn giao nằm tại `handoff/FINAL_HANDOFF.md` đã đồng bộ với báo cáo.
-Deck 18 slide tại `slides/` đã được cập nhật ngày 28/09/2026 theo mạch học thuật: bài toán,
-dữ liệu, protocol, phương pháp, kết quả, phân tích lỗi, Health Index, cảnh báo
-sớm, tái lập và giới hạn. Bản cập nhật dùng các metric đã nghiệm thu và được
-render, finalizer kiểm tra ngày 28/09/2026.
+Ngày 28/09/2026, phần thân báo cáo được viết lại theo cấu trúc Giới thiệu --
+Dữ liệu -- Cơ sở lý thuyết -- Tổ chức, truy vấn và biến đổi dữ liệu -- Phương
+pháp -- Kết quả -- Thảo luận -- Kết luận. Bản viết lại giữ nguyên toàn bộ số
+liệu, gom các giới hạn về Mục 7.6 thay vì lặp lại ở từng đoạn, và đưa thử
+nghiệm nested CV vào PDF (Mục 5.7 và 6.6).
+
+Mục 4 là section riêng về xử lý dữ liệu, trả lời năm câu hỏi: gom nhiều file
+thế nào (union có cột `split`), lưu ở đâu (Parquet, SQLite), truy vấn ra sao
+(SQL trên SQLite, Spark SQL và Pandas trên Parquet), biến đổi qua những bước nào
+(sáu bước, kèm kích thước bảng sau mỗi bước), cột nào vào mô hình, và quan hệ
+giữa các bảng (1:N, 1:1, 1:0..1; không có N:N). Mục này có hai sơ đồ TikZ mới,
+bốn đoạn mã nguồn trích từ `src/cmapss` và một hình minh họa window vẽ từ dữ
+liệu. Mọi ví dụ chạy lại được trong
+[`notebooks/00_data_pipeline_walkthrough.ipynb`](../notebooks/00_data_pipeline_walkthrough.ipynb).
+
+Nội dung của `data-walkthrough.tex`, `statistical-protocol.tex` và hai file
+`rul-improvement-*.tex` được gộp vào `data-processing.tex`, `methodology.tex` và
+`current-results.tex`. Hình TikZ `statistical-protocol` không còn dùng nên đã
+được xóa; có thể khôi phục từ lịch sử Git nếu cần.
 
 ## Cấu trúc
 
 ```text
 report/
-├── main.tex                     # Bìa, định dạng, mục lục và ghép các phần
-├── main.pdf                     # Bản PDF đã biên dịch
+├── main.tex                  # Bìa, tóm tắt, mục lục, cấu hình listings, ghép các phần
+├── main.pdf                  # Bản PDF đã biên dịch (49 trang)
 ├── sections/
-│   ├── glossary.tex             # Thuật ngữ và chữ viết tắt dùng trong báo cáo
-│   ├── problem-data.tex         # Bài toán, data dictionary và chất lượng dữ liệu
-│   ├── theory.tex               # Cơ sở lý thuyết của các phương pháp đã dùng
-│   ├── methodology.tex          # Luồng xử lý, EDA, feature và suy luận
-│   ├── statistical-protocol.tex # Protocol ghép cặp đầu/cuối vòng đời
-│   ├── current-results.tex      # Bảng, hình và diễn giải kết quả
-│   ├── rul-improvement-method.tex  # Nested CV và tiêu chí lựa chọn
-│   ├── rul-improvement-results.tex # Kết quả và đánh đổi đã quan sát
-│   ├── discussion.tex           # Thảo luận, giới hạn và hướng phát triển
-│   ├── conclusion.tex           # Kết luận và phạm vi khái quát hóa
-│   └── appendix.tex             # Phụ lục nguồn; giữ ngoài PDF chính để giới hạn trang
+│   ├── glossary.tex          # Thuật ngữ và chữ viết tắt
+│   ├── problem-data.tex      # Mục 1 Giới thiệu, Mục 2 Dữ liệu
+│   ├── theory.tex            # Mục 3 Cơ sở lý thuyết
+│   ├── data-processing.tex   # Mục 4 Gom file, lưu trữ, truy vấn, biến đổi,
+│   │                         # cột cho mô hình, quan hệ giữa các bảng
+│   ├── methodology.tex       # Mục 5 Phương pháp: mô hình, cảnh báo, phân tích
+│   │                         # ghép cặp, ARIMA, chuyển miền, nested CV
+│   ├── current-results.tex   # Mục 6 Kết quả
+│   ├── discussion.tex        # Mục 7 Thảo luận: nguồn gốc sai số, cảnh báo trễ,
+│   │                         # chuyển miền, giới hạn, hướng phát triển
+│   ├── conclusion.tex        # Mục 8 Kết luận theo câu hỏi Q1--Q6
+│   └── appendix.tex          # Phụ lục nguồn; không đưa vào PDF chính
 └── figures/
-    ├── pipeline.tex             # Bản TeX giữ cho report PDF hiện tại
-    ├── pipeline.pdf             # Hình pipeline dùng trong báo cáo
-    ├── rul-improvement.tex       # Nguồn TikZ của thực nghiệm cải thiện
-    ├── rul-improvement.pdf       # Bản xuất đã kiểm tra
-    ├── statistical-protocol.tex # Nguồn TikZ của protocol thống kê
-    └── statistical-protocol.pdf # Bản xuất của protocol
+    ├── data-flow.tex / .pdf        # Luồng dữ liệu: bảng, kích thước, phép biến đổi
+    ├── data-relations.tex / .pdf   # Quan hệ giữa các bảng, khóa và bậc quan hệ
+    ├── pipeline.tex / .pdf         # Pipeline tổng thể gồm nhánh train-only
+    └── rul-improvement.tex / .pdf  # Sơ đồ nested CV
 ```
 
-Hình EDA và thống kê được tham chiếu trực tiếp từ thư mục `outputs/` để tránh
-sao chép và lệch nguồn. Bibliography dùng chung tại
-`../references/bibliography.bib`.
+Các biểu đồ vẽ từ dữ liệu (minh họa window, dự đoán OOF theo RUL thật, cảnh báo
+theo tuổi thọ, dịch chuyển sensor khi chuyển miền, ma trận MAE chuyển miền) được
+sinh bởi `scripts/report_figures.py` vào `outputs/diagnostics/figures/`. Script
+chỉ đọc dữ liệu raw và artifact có sẵn, không huấn luyện lại mô hình:
 
-Sơ đồ pipeline có nguồn Draw.io chỉnh sửa được tại
-`../assets/diagrams/fd001-pipeline.drawio`. File này là nguồn để mở và chỉnh
-trong Draw.io; bản PDF trong report vẫn được giữ riêng để biên dịch LaTeX ổn
-định.
+```powershell
+.venv/Scripts/python.exe scripts/report_figures.py
+```
+
+Hình kết quả được tham chiếu trực tiếp từ `outputs/` để tránh sao chép và lệch
+nguồn. Bibliography dùng chung tại `../references/bibliography.bib`. Sơ đồ
+pipeline có nguồn Draw.io tại `../assets/diagrams/fd001-pipeline.drawio`.
 
 ## Biên dịch
 
@@ -67,7 +69,8 @@ Với TeX distribution có `latexmk`, từ thư mục gốc repository:
 
 ```powershell
 latexmk -cd -xelatex -interaction=nonstopmode report/figures/pipeline.tex
-latexmk -cd -xelatex -interaction=nonstopmode report/figures/statistical-protocol.tex
+latexmk -cd -xelatex -interaction=nonstopmode report/figures/data-flow.tex
+latexmk -cd -xelatex -interaction=nonstopmode report/figures/data-relations.tex
 latexmk -cd -xelatex -interaction=nonstopmode report/figures/rul-improvement.tex
 latexmk -cd -xelatex -interaction=nonstopmode report/main.tex
 ```
@@ -76,28 +79,43 @@ Môi trường hiện tại dùng Tectonic portable tại
 `tmp/report-tools/tectonic/tectonic.exe`:
 
 ```powershell
-Push-Location report/figures
-../../tmp/report-tools/tectonic/tectonic.exe --keep-logs pipeline.tex
-../../tmp/report-tools/tectonic/tectonic.exe --keep-logs statistical-protocol.tex
-../../tmp/report-tools/tectonic/tectonic.exe --keep-logs rul-improvement.tex
-Pop-Location
 Push-Location report
 ../tmp/report-tools/tectonic/tectonic.exe --keep-logs main.tex
 Pop-Location
 ```
 
-Lần build ngày 28/09/2026 tạo PDF 49 trang (dưới giới hạn 50 trang), không có lỗi
-biên dịch, citation undefined, reference undefined hoặc overfull/underfull box.
-Phần nested improvement và phụ lục cấu hình chi tiết vẫn được giữ trong source,
-`experiments/` và handoff để không làm phình PDF chính. Tectonic vẫn ghi
-cảnh báo môi trường về Fontconfig và font Windows; đây không phải lỗi nội dung.
+Lần build ngày 28/09/2026 tạo PDF 49 trang (dưới giới hạn 50 trang), không có
+lỗi biên dịch, citation hoặc reference chưa phân giải, và không có
+overfull/underfull box. Tectonic vẫn ghi cảnh báo môi trường về đường dẫn font
+Windows; đây không phải lỗi nội dung.
+
+## Số liệu chẩn đoán cho phần Thảo luận
+
+Mục 7 dùng thêm các số liệu chẩn đoán được tính lại từ artifact đã có, không
+huấn luyện lại mô hình. Chạy lại bằng:
+
+```powershell
+.venv/Scripts/python.exe scripts/report_error_diagnostics.py
+```
+
+Script ghi `outputs/diagnostics/error_diagnostics.json`, gồm:
+
+- sai số OOF của HGB theo nhóm RUL thật (Bảng 24, Hình 15): dự đoán trung bình gần như
+  không đổi, khoảng 145--147 cycles, khi RUL thật trên 150;
+- tỷ trọng của mười sai số test lớn nhất trong NASA score (75,5%) và MAE test
+  theo nhóm RUL thật;
+- tuổi thọ trung bình theo nhóm thời điểm cảnh báo (trễ: 182,8; trước ngưỡng:
+  229,1 cycles) và tương quan giữa tuổi thọ và độ lệch cảnh báo (−0,56);
+- chẩn đoán chuyển miền (Bảng 25, Hình 18): tỷ lệ giá trị sensor test nằm trong miền
+  train FD001, sai số có dấu và độ lệch chuẩn của dự đoán.
+
+Phần so sánh với Li và cộng sự dùng RMSE FD001 trong Table 4 của bài báo
+(`references/papers/R4_Li_Ding_Sun_2018_CNN_RUL.pdf`): 12,61 cycles khi cắt nhãn
+ở 125 và 13,32 cycles khi không cắt nhãn.
 
 ## Thực nghiệm cải thiện RUL
 
-Đã bổ sung nested GroupKFold 5×3, bảng so sánh bốn giai đoạn, khoảng tin cậy
-chênh lệch, trajectory tốt/xấu và bảng đánh đổi trong inner CV. Kết quả chưa
-đạt tiêu chí thay baseline: MAE RUL thấp ở vòng ngoài 3,6676 → 3,6730 cycles,
-cảnh báo trễ 49 → 53/100 engines. Cấu hình cuối trùng baseline; test MAE vẫn
-15,3490 cycles. Ví dụ `hgb_08` giảm sai số RUL thấp khoảng 9,75% trong inner CV
-nhưng tăng MAE toàn bộ khoảng 0,32 cycles; đây chưa phải kết quả ngoài độc lập.
-Nguồn và lệnh chạy lại: [thực nghiệm](../experiments/README.md).
+Nested GroupKFold 5×3 không tìm được cấu hình đáp ứng tiêu chí đặt trước: MAE
+vùng RUL thấp ở vòng ngoài tăng từ 3,6676 lên 3,6730 cycles, số động cơ cảnh
+báo trễ tăng từ 49 lên 53. Cấu hình cuối trùng mô hình gốc, nên test MAE vẫn là
+15,3490 cycles. Nguồn và lệnh chạy lại: [thực nghiệm](../experiments/README.md).

@@ -1,0 +1,6 @@
+{
+  "observed_improvement_meets_plan": false,
+  "both_primary_intervals_below_zero": false,
+  "default_model": "retain_baseline",
+  "interval_scope": "paired engine resampling conditional on stored outer predictions; excludes retraining variability"
+}

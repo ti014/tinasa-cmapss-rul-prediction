@@ -72,7 +72,7 @@ uv lock --check
 
 Lần kiểm tra end-to-end ngày 2026-09-24 đã đối chiếu 18 bảng, metrics, năm hình
 byte-identical, raw hashes và dashboard loader. Lượt nghiệm thu timing tiếp
-theo tại `tmp/e2e-review-20260924` cũng đạt; full suite ngày 27/09/2026 đạt 175 tests.
+theo tại `tmp/e2e-review-20260924` cũng đạt; lượt kiểm tra lịch sử ngày 27/09/2026 đạt 175 tests.
 
 Kiểm tra ngày 2026-09-24 gồm loader và trang Cảnh báo sớm trên browser thật
 ở localhost:8517; đã quan sát bảng timing và phân phối lead time. Không gọi

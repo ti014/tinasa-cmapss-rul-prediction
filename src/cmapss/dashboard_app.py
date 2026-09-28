@@ -789,5 +789,3 @@ def main(repo_root: str | Path | None = None) -> None:
 
     _hero(data)
     _guarded(pages[page])
-
-\n

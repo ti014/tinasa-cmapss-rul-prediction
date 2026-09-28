@@ -3,7 +3,8 @@
 Runner so sánh window 10/20/30, 24 cấu hình HistGradientBoosting và ba phương án
 trọng số RUL. Mục tiêu là giảm sai số ở vùng RUL không quá 30 cycles, đồng thời
 kiểm soát sai số toàn bộ, cảnh báo trễ và thời gian báo sớm. Đợt đầy đủ
-`20260927_full` đã hoàn tất. Theo tiêu chí đã chốt, giữ baseline vì quy trình
+`20260928_rebuild` đã hoàn tất. Run `20260927_full` được giữ làm historical
+baseline để đối chiếu. Theo tiêu chí đã chốt, giữ baseline vì quy trình
 mới chưa giảm sai số RUL thấp và làm tăng số cảnh báo trễ.
 
 ## Chạy và phục hồi
@@ -12,7 +13,7 @@ Từ thư mục gốc repository, sau khi ETL đã tạo Silver:
 
 ```powershell
 uv sync --frozen
-uv run --frozen cmapss-model-improvement --output-dir outputs/experiments/rul_improvement/20260927_full
+uv run --frozen cmapss-model-improvement --output-dir outputs/experiments/rul_improvement/20260928_rebuild
 ```
 
 Chạy lại đúng lệnh để dùng lại các fit đã lưu. Runner từ chối dùng cache nếu
@@ -86,7 +87,7 @@ outputs/experiments/rul_improvement/<run_id>/
 
 Cache từng fit có danh sách train/validation engines và thời gian chạy. Khi
 fit lỗi, runner ghi `*.failed.json` rồi dừng. Không tạo predictions thay thế.
-Dashboard đọc đợt `20260927_full` sau khi đánh giá cuối hoàn tất; báo cáo dùng
+Dashboard đọc đợt `20260928_rebuild` sau khi đánh giá cuối hoàn tất; báo cáo dùng
 cùng CSV và hình. `outputs/modeling` vẫn là baseline để đối chiếu.
 
 ## Kiểm tra
@@ -122,11 +123,11 @@ MAE từ 3,6148 xuống 3,2625 cycles (khoảng 9,75%), nhưng tăng MAE toàn b
 20,3613 lên 20,6846. Đây là dữ liệu dùng để lựa chọn, chưa phải bằng chứng
 ngoài mẫu độc lập cho ứng viên đó. Không đổi tiêu chí sau khi thấy kết quả.
 
-[Thư mục kết quả](../outputs/experiments/rul_improvement/20260927_full/) chứa
+[Thư mục kết quả](../outputs/experiments/rul_improvement/20260928_rebuild/) chứa
 `ablation_metrics.csv`, `paired_comparison.csv`, `test_comparison.csv` và
-`final_selection_metrics.csv`. [Validation](../outputs/experiments/rul_improvement/20260927_full/validation.json)
+`final_selection_metrics.csv`. [Validation](../outputs/experiments/rul_improvement/20260928_rebuild/validation.json)
 đã đối chiếu 511 fit records, bốn stage outer, paired CI và model đã lưu.
-Full suite đạt 175 tests. Dashboard có trang **Thử nghiệm cải thiện**, đọc cùng
+Full suite đạt 188 tests. Dashboard có trang **Thử nghiệm cải thiện**, đọc cùng
 artifact với báo cáo; AppTest đã kiểm tra trang mới và chuyển sang engine 98.
 
 ```powershell

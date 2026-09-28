@@ -439,7 +439,7 @@ def build_cross_improvement() -> nbf.NotebookNode:
 
     1. `outputs/cross_dataset/`: chạy cùng pipeline trên bốn subset C-MAPSS và chuyển
        model FD001 sang FD002–FD004.
-    2. `outputs/experiments/rul_improvement/20260927_full/`: nested cross-validation so
+    2. `outputs/experiments/rul_improvement/20260928_rebuild/`: nested cross-validation so
        sánh baseline với quy trình chọn window, tham số HGB và trọng số mẫu.
 
     Mỗi bảng tổng hợp được tính lại từ prediction bằng hàm của package rồi so với
@@ -513,12 +513,12 @@ transfer[["mean_engine_mae", "within_mae", "ratio"]]
     được tính lại từ `outer_predictions.parquet`.
     """)
     nb.code("""
-RUN = ROOT / "outputs" / "experiments" / "rul_improvement" / "20260927_full"
+RUN = ROOT / "outputs" / "experiments" / "rul_improvement" / "20260928_rebuild"
 outer = pd.read_parquet(RUN / "outer_predictions.parquet")
 ablation = pd.read_csv(RUN / "ablation_metrics.csv").set_index("stage")
 paired_stored = pd.read_csv(RUN / "paired_comparison.csv")
-decision = read_json("outputs/experiments/rul_improvement/20260927_full/decision.json")
-run_info = read_json("outputs/experiments/rul_improvement/20260927_full/run_info.json")
+decision = read_json("outputs/experiments/rul_improvement/20260928_rebuild/decision.json")
+run_info = read_json("outputs/experiments/rul_improvement/20260928_rebuild/run_info.json")
 resamples, seed = int(paired_stored["resamples"].iloc[0]), int(paired_stored["seed"].iloc[0])
 
 tables = {}

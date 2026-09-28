@@ -610,7 +610,7 @@ và dùng `assert` để dừng nếu số liệu lệch với file trong `outpu
 |---|---|---|
 | `03_fd001_modeling_evaluation.ipynb` | MAE theo fold, metric test, bootstrap CI, sai số theo khoảng RUL, cảnh báo RUL ≤ 30 | `outputs/modeling/tables/*` |
 | `04_fd001_health_index_arima.ipynb` | Xu hướng Health Index, metric holdout ARIMA, naive baseline, ADF/Ljung–Box | `outputs/timeseries/tables/*` |
-| `05_cross_dataset_and_improvement.ipynb` | Ma trận FD001–FD004, ablation và paired CI của nested CV | `outputs/cross_dataset/matrix.json`, `outputs/experiments/rul_improvement/20260927_full/*` |
+| `05_cross_dataset_and_improvement.ipynb` | Ma trận FD001–FD004, ablation và paired CI của nested CV | `outputs/cross_dataset/matrix.json`, `outputs/experiments/rul_improvement/20260928_rebuild/*` |
 
 Notebook được sinh và chạy lại từ fresh kernel bằng:
 
@@ -640,7 +640,7 @@ Dashboard có tám trang. Có thể mở thẳng một trang bằng query string
 | Đánh giá RUL | `outputs/modeling/predictions` | Một test engine tại cycle cuối, scatter và residual; quỹ đạo OOF của train engine theo từng model |
 | Cảnh báo sớm | `outputs/modeling/tables` | Ngưỡng 30 cycles, phân loại thời điểm, trajectory có vạch cảnh báo đầu tiên |
 | Cross-dataset | `outputs/cross_dataset/matrix.json` | MAE và khoảng tin cậy của 4 evaluation nội bộ và 3 transfer |
-| Thử nghiệm cải thiện | `outputs/experiments/rul_improvement/20260927_full` | Ablation, paired CI, quỹ đạo baseline và quy trình chọn |
+| Thử nghiệm cải thiện | `outputs/experiments/rul_improvement/20260928_rebuild` | Ablation, paired CI, quỹ đạo baseline và quy trình chọn |
 | Health Index / ARIMA | `outputs/timeseries` | Forecast và khoảng dự đoán 95%, so sánh với naive baseline, diagnostics |
 | Provenance | `run_info.json` | Schema và isolation contract của lần chạy |
 

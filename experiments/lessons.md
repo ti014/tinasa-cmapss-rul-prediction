@@ -2,7 +2,7 @@
 
 - 27/09/2026: Giảm MAE RUL thấp có thể làm tăng MAE toàn bộ. Ví dụ hgb_08
   giảm khoảng 9,75% low-RUL MAE trong inner CV, nhưng tăng overall MAE 0,3233.
-  Nguồn: `20260927_full/final_selection_metrics.csv`.
+  Nguồn: `20260928_rebuild/final_selection_metrics.csv`.
 - Window ngắn không tự động tốt hơn. Window 30 được chọn ở cả năm outer
   runs và final selection trong đợt đã xét; không suy rộng ngoài search này.
 - Quy trình chọn cấu hình thắng trong inner CV vẫn có thể kém hơn baseline

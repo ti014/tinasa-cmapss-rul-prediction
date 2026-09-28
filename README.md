@@ -631,7 +631,7 @@ package functions and stop on an `assert` if a number differs from the file in
 |---|---|---|
 | `03_fd001_modeling_evaluation.ipynb` | Per-fold MAE, test metrics, bootstrap CI, error by RUL range, RUL ≤ 30 warning | `outputs/modeling/tables/*` |
 | `04_fd001_health_index_arima.ipynb` | Health Index trend, ARIMA holdout metrics, naive baselines, ADF/Ljung–Box | `outputs/timeseries/tables/*` |
-| `05_cross_dataset_and_improvement.ipynb` | FD001–FD004 matrix, nested-CV ablation and paired CI | `outputs/cross_dataset/matrix.json`, `outputs/experiments/rul_improvement/20260927_full/*` |
+| `05_cross_dataset_and_improvement.ipynb` | FD001–FD004 matrix, nested-CV ablation and paired CI | `outputs/cross_dataset/matrix.json`, `outputs/experiments/rul_improvement/20260928_rebuild/*` |
 
 Build and execute them from a fresh kernel with:
 
@@ -661,7 +661,7 @@ string, for example `http://localhost:8501/?page=Cross-dataset`.
 | Đánh giá RUL | `outputs/modeling/predictions` | One test engine at its last cycle, scatter and residuals; OOF trajectory of a train engine per model |
 | Cảnh báo sớm | `outputs/modeling/tables` | 30-cycle threshold, timing classes, trajectory with the first-warning marker |
 | Cross-dataset | `outputs/cross_dataset/matrix.json` | MAE and CI for 4 within-subset and 3 transfer evaluations |
-| Thử nghiệm cải thiện | `outputs/experiments/rul_improvement/20260927_full` | Ablation, paired CI, baseline versus selected-procedure trajectories |
+| Thử nghiệm cải thiện | `outputs/experiments/rul_improvement/20260928_rebuild` | Ablation, paired CI, baseline versus selected-procedure trajectories |
 | Health Index / ARIMA | `outputs/timeseries` | Forecast with 95% prediction interval, naive-baseline comparison, diagnostics |
 | Provenance | `run_info.json` | Schema and isolation contract of the run |
 

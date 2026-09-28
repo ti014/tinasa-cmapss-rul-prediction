@@ -25,8 +25,8 @@ training trong lúc thuyết trình.
 6. **Kết (15 giây).** Nhắc FD001 chỉ mô phỏng một điều kiện vận hành và một
    dạng lỗi; chưa kiểm chứng tổng quát hóa sang động cơ thực tế.
 
-Nếu browser hoặc mạng trình chiếu gặp sự cố, dùng
-`report/main.pdf`; slide cũ cần đối chiếu lại trước khi dùng. Lệnh
+Nếu browser hoặc mạng trình chiếu gặp sự cố, dùng slide 14–16 của
+`slides/cmapss_fd001_presentation.pptx` hoặc `report/main.pdf`. Lệnh
 `/_stcore/health` chỉ chứng minh server sẵn sàng; cần mở các view cần trình bày để xác
 nhận flow demo.
 
@@ -62,6 +62,6 @@ inner CV nhưng tăng MAE toàn bộ khoảng 0,32 cycles. Nhấn mạnh hai b�
 hai cấp đánh giá khác nhau. Kết luận: đã thử cải thiện, chưa đạt điều kiện thay
 mô hình; baseline vẫn dự đoán RUL với test MAE 15,3490 cycles.
 
-Dùng slide 14–16 của deck hiện hành hoặc phần thực nghiệm trong báo cáo làm
+Dùng slide 17 của deck hiện hành hoặc phần thực nghiệm trong báo cáo làm
 phương án dự phòng. Có AppTest cho trang mới; vẫn nên mở trực tiếp trang này
 trên máy trình chiếu trước buổi báo cáo.

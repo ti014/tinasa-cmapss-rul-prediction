@@ -7,6 +7,7 @@
 \usepackage{amsmath,amssymb,booktabs,array,tabularx,longtable}
 \usepackage{graphicx,float,setspace,enumitem,xcolor,fancyhdr}
 \usepackage{caption}
+\usepackage{listings}
 \usepackage{xurl}
 \usepackage[colorlinks=true,linkcolor=blue!45!black,citecolor=blue!45!black,urlcolor=blue!45!black]{hyperref}
 \hypersetup{pdftitle={Phân tích dữ liệu cảm biến, dự đoán RUL và cảnh báo sớm trên NASA C-MAPSS FD001--FD004},pdfauthor={}}
@@ -26,6 +27,27 @@
 \setlength{\headheight}{16pt}
 \setlist{nosep,leftmargin=*}
 \captionsetup{font=small,labelfont=bf}
+\renewcommand{\lstlistingname}{Mã nguồn}
+\lstset{
+  basicstyle=\ttfamily\small,
+  keywordstyle=\bfseries\color{blue!55!black},
+  commentstyle=\color{black!55},
+  stringstyle=\color{green!35!black},
+  frame=single,
+  rulecolor=\color{black!25},
+  backgroundcolor=\color{black!3},
+  framesep=4pt,
+  xleftmargin=4pt,
+  xrightmargin=4pt,
+  columns=fullflexible,
+  keepspaces=true,
+  breaklines=true,
+  showstringspaces=false,
+  captionpos=t,
+  aboveskip=0.8em,
+  belowskip=0.6em
+}
+\lstdefinelanguage{SparkSQL}[]{SQL}{morekeywords={OVER,WINDOW,PARTITION,ROWS,PRECEDING,CURRENT,ROW,ROUND}}
 \pagestyle{fancy}
 \fancyhf{}
 \fancyhead[L]{\small NASA C-MAPSS FD001--FD004}
@@ -60,49 +82,38 @@ Ngành: & Khoa học máy tính
 \pagenumbering{roman}
 \section*{Tóm tắt}
 \addcontentsline{toc}{section}{Tóm tắt}
-Báo cáo nghiên cứu một pipeline phân tích dữ liệu cảm biến và ước lượng
-Remaining Useful Life (RUL, tuổi thọ hữu ích còn lại) trên bộ dữ liệu mô phỏng
-NASA C-MAPSS FD001--FD004, trong đó FD001 là subset chính cho phân tích chi tiết.
-Mục tiêu là kiểm tra tính hợp lệ của dữ liệu, xây dựng biểu diễn trailing window,
-đánh giá mô hình hồi quy theo đơn vị động cơ và mô tả diễn
-biến cảm biến bằng phân tích thống kê cùng PCA--ARIMA. Phương pháp gồm kiểm tra
-data contract, ETL qua các lớp Silver/Gold, tạo đặc trưng từ window 30 cycles,
-GroupKFold theo engine và đánh giá cuối trên 100 test engines của FD001. Mô hình
-HistGradientBoosting đạt mean engine-level MAE bằng 15,3490 cycles, RMSE bằng
-20,5413 cycles và NASA score bằng 1.513,2577 trong evaluation protocol được xác định trước. Phân tích
-PCA--ARIMA tạo 704 dự báo Health Index trên 10 engine train được chọn trước;
-phân tích này được xem là nhánh phụ và không phải mô hình dự báo RUL. Với đầu
-ra cảnh báo sớm minh họa, ngưỡng cố định $\mathrm{RUL}\leq 30$ cycles trên OOF
-train tạo cảnh báo ở 100/100 engine: 44 trước ngưỡng thật, 7 đúng ngưỡng và 49
-sau ngưỡng. Lead time có trung vị 30 cycles và miền 19--55. Cùng OOF đã dùng
-để chọn model, nên đây là mô tả nội bộ, không phải đánh giá độc lập về hiệu
-quả cảnh báo hoặc lịch bảo trì tối ưu.
+Báo cáo xây dựng và đánh giá một pipeline dự đoán Remaining Useful Life (RUL,
+tuổi thọ hữu ích còn lại) cho động cơ turbofan trên bộ dữ liệu mô phỏng NASA
+C-MAPSS. Phân tích chính được thực hiện trên subset FD001; ba subset
+FD002--FD004 được dùng để kiểm tra khả năng chuyển miền của mô hình.
 
-Thực nghiệm bổ sung dùng cùng window 10 cycles cho FD001--FD004 để giữ đủ các
-test engines. Với model train trên FD001 và áp dụng trực tiếp sang dataset khác,
-mean engine MAE lần lượt là 60,3215 cycles trên FD002, 47,3949 trên FD003 và
-58,5731 trên FD004. Các giá trị này cao hơn evaluation nội bộ trên từng subset
-theo cùng protocol window 10, cho thấy khả năng chuyển miền của model FD001 còn
-hạn chế. Metric bổ sung không được so trực tiếp với kết quả chính dùng window
-30 cycles.
+Dữ liệu được kiểm tra schema và tính liên tục của cycle trước khi đi qua các
+lớp lưu trữ Bronze, Silver và Gold. Mỗi mẫu học là một trailing window 30
+cycles, được tóm tắt thành 126 đặc trưng. Ba mô hình (median baseline, Ridge và
+HistGradientBoosting) được so sánh bằng GroupKFold 5 fold theo động cơ; mô hình
+tốt nhất được huấn luyện lại trên toàn bộ train và đánh giá một lần trên 100
+động cơ test.
 
-Kết quả cho thấy pipeline có thể tái lập từ raw FD001 và ma trận bổ sung FD002--FD004
-giữ nguyên ranh giới train/test trong quá trình xử lý. Tuy nhiên, FD001 chỉ đại
-diện cho một điều kiện vận hành và một dạng suy giảm; kết quả transfer cho thấy
-khác biệt giữa các subset trong môi trường mô phỏng. Vì dữ liệu không
-cung cấp chi phí bảo trì, downtime hoặc quy đổi cycle sang thời gian lịch, các
-kết quả chưa đủ để suy ra chính sách bảo trì hoặc khả năng khái quát cho động cơ
-thực tế.
+HistGradientBoosting đạt MAE 15,3490 cycles (khoảng tin cậy bootstrap 95\%:
+12,7286--18,0866), RMSE 20,5413 cycles và NASA score 1.513,2577. Khi chuyển dự
+đoán out-of-fold thành cảnh báo với ngưỡng $\mathrm{RUL}\leq30$ cycles, 44/100
+động cơ được cảnh báo trước ngưỡng, 7 đúng ngưỡng và 49 sau ngưỡng; thời gian
+báo trước có trung vị 30 cycles. Thử nghiệm nested cross-validation với window
+10/20/30, 24 cấu hình siêu tham số và ba phương án trọng số không tìm được cấu
+hình tốt hơn mô hình gốc theo tiêu chí đặt trước. Với window 10 cycles, mô hình
+huấn luyện trên FD001 có MAE 47,39--60,32 cycles khi áp dụng trực tiếp lên
+FD002--FD004, so với 21,93--28,33 cycles khi mỗi subset tự huấn luyện và đánh
+giá.
 
-Thực nghiệm cải thiện bổ sung dùng nested GroupKFold để so sánh window
-10/20/30, 24 cấu hình HGB và ba phương án trọng số. MAE RUL thấp trên vòng
-đánh giá ngoài chưa giảm (3,6676 so với 3,6730 cycles), còn số cảnh báo trễ
-tăng từ 49 lên 53 engines. Cấu hình được chọn cuối trùng baseline, nên kết
-quả test giữ nguyên. Báo cáo trình bày các đánh đổi quan sát được và giữ
-model hiện tại theo tiêu chí đã xác định trước.
+Các phân tích phụ cho thấy 15/21 sensor thay đổi có ý nghĩa thống kê giữa đầu và
+cuối vòng đời sau hiệu chỉnh Benjamini--Hochberg; ARIMA trên Health Index có sai
+số dự báo thấp hơn hai baseline đơn giản trên 10 động cơ được chọn trước; ETL
+bằng Pandas và PySpark cho kết quả trùng khớp. Các kết quả chỉ áp dụng cho dữ
+liệu mô phỏng C-MAPSS. Dữ liệu không có chi phí bảo trì hay quy đổi cycle sang
+thời gian thực, nên báo cáo không đề xuất lịch bảo trì.
 
-\noindent\textbf{Từ khóa:} NASA C-MAPSS FD001--FD004; RUL; early warning; rolling window;
-GroupKFold; ETL; Health Index; PCA--ARIMA.
+\noindent\textbf{Từ khóa:} NASA C-MAPSS; RUL; bảo trì dự đoán; trailing window;
+GroupKFold; ETL; PySpark; Health Index; ARIMA.
 \clearpage
 \begin{spacing}{1.1}
 \tableofcontents
@@ -117,11 +128,9 @@ GroupKFold; ETL; Health Index; PCA--ARIMA.
 \clearpage
 \input{sections/theory}
 \clearpage
+\input{sections/data-processing}
+\clearpage
 \input{sections/methodology}
-\clearpage
-\input{sections/data-walkthrough}
-\clearpage
-\input{sections/statistical-protocol}
 \clearpage
 \input{sections/current-results}
 \clearpage

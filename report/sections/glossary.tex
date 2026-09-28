@@ -1,8 +1,8 @@
-\section*{Bảng thuật ngữ và chữ viết tắt}
-\addcontentsline{toc}{section}{Bảng thuật ngữ và chữ viết tắt}
+\section*{Thuật ngữ và chữ viết tắt}
+\addcontentsline{toc}{section}{Thuật ngữ và chữ viết tắt}
 
 \begin{small}
-\begin{longtable}{L{3.4cm}L{10.4cm}}
+\begin{longtable}{L{3.6cm}L{10.2cm}}
 \toprule
 Thuật ngữ & Ý nghĩa trong báo cáo\\
 \midrule
@@ -17,42 +17,33 @@ Thuật ngữ & Ý nghĩa trong báo cáo\\
 \bottomrule
 \endlastfoot
 
-Remaining Useful Life (RUL) & Tuổi thọ hữu ích còn lại, tính bằng số cycle trước khi động cơ hỏng.\\
-NASA C-MAPSS / FD001--FD004 & Bộ dữ liệu mô phỏng chuỗi vận hành turbofan; FD001 là subset chính, FD002--FD004 dùng cho đánh giá chuyển miền. FD001 có một điều kiện vận hành và một dạng suy giảm HPC.\\
-Engine / \texttt{engine\_id} & Đơn vị động cơ và ranh giới của các phép ghép cặp, window và tổng hợp.\\
-Cycle & Bước vận hành rời rạc trong lịch sử một engine; không quy đổi thành giờ hoặc ngày.\\
-Sensor & Kênh đo tín hiệu; mỗi subset có 21 sensor trong mỗi observation.\\
-Train / test & Train có lịch sử đến khi hỏng để tạo nhãn RUL; test bị cắt trước khi hỏng và có nhãn đánh giá tách riêng.\\
-Data contract & Tập điều kiện hợp lệ của schema, kiểu số, khóa duy nhất, split và cycle continuity.\\
-Exploratory Data Analysis (EDA) & Phân tích khám phá phân phối, biến thiên và tín hiệu trước khi xây dựng feature.\\
-Extract, Transform, Load (ETL) & Quy trình đọc, biến đổi và ghi dữ liệu qua các lớp lưu trữ.\\
-Bronze / Silver / Gold & Bronze giữ raw; Silver lưu observations và train targets đã kiểm tra; Gold lưu engine summary và rolling features.\\
-Trailing window & Đoạn quan sát liên tiếp gần nhất của một engine tại cycle đang xét; báo cáo dùng 30 cycles.\\
-Feature & Biến được tạo từ observations; mỗi sensor có last, mean, sample standard deviation, min, max và slope.\\
-Metric & Đại lượng định lượng dùng để đánh giá hoặc so sánh kết quả, chẳng hạn MAE, RMSE và NASA score.\\
-Artifact & Tệp kết quả có schema và metadata được ghi ra để đọc lại, kiểm tra hoặc tái lập.\\
-Provenance & Thông tin truy nguyên nguồn input, cấu hình, phiên bản và trạng thái tạo artifact.\\
-Parity & Đối chiếu hai implementation trên cùng input để kiểm tra schema, số dòng và giá trị kết quả.\\
-Dataset shift & Khác biệt phân bố giữa các subset hoặc điều kiện dữ liệu; trong báo cáo được kiểm tra qua đánh giá transfer.\\
-Estimand & Đại lượng cần ước lượng trong một phép đánh giá; cần tách rõ đơn vị phân tích, split và metric.\\
-Outer evaluation & Đánh giá vòng ngoài dùng để ước lượng cả quy trình chọn model, không chỉ model sau khi đã chọn.\\
-Domain adaptation & Điều chỉnh mô hình hoặc biểu diễn để xử lý khác biệt giữa dữ liệu nguồn và dữ liệu đích.\\
-Lead time & Số cycle báo trước theo định nghĩa cảnh báo; không tự động là thời gian bảo trì.\\
-Out-of-fold (OOF) & Dự đoán của một engine được tạo khi engine đó không nằm trong phần dữ liệu dùng để huấn luyện.\\
-Model selection & Quy trình chọn mô hình dựa trên metric của validation; trong báo cáo dùng mean engine-level MAE.\\
-Holdout & Đoạn dữ liệu được giữ lại để đánh giá sau khi fit; PCA--ARIMA dùng 30\% cuối chuỗi làm holdout.\\
-Trajectory & Toàn bộ chuỗi diễn biến của một engine theo cycle; metric cuối chỉ đánh giá tại một điểm cắt.\\
-Paired analysis & Ghép hai phép đo của cùng một engine; protocol dùng 30 cycles đầu và 30 cycles cuối.\\
-Bootstrap & Lấy mẫu lại có hoàn lại để ước lượng độ bất định; engine là đơn vị lấy mẫu.\\
-Wilcoxon signed-rank test & Kiểm định phi tham số cho dữ liệu ghép cặp dựa trên thứ hạng và dấu chênh lệch.\\
-Benjamini--Hochberg FDR & Hiệu chỉnh nhiều p-value trong họ 21 sensor để kiểm soát False Discovery Rate.\\
-Parquet / SQLite & Parquet lưu bảng phân tích; SQLite cung cấp lớp truy vấn local cho engine summary.\\
-Spark / PySpark & Framework xử lý dữ liệu phân tán và API Python dùng để đối chiếu ETL với Pandas.\\
-Health Index & Điểm tổng hợp PC1 sau chuẩn hóa 21 sensor; dùng để mô tả diễn biến sensor và không phải RUL.\\
-Principal Component Analysis (PCA) & Phương pháp giảm chiều tuyến tính; báo cáo dùng PC1 để tạo Health Index từ train sensor.\\
-ARIMA & Mô hình chuỗi thời gian tự hồi quy tích hợp trung bình trượt, dùng như phân tích phụ trên Health Index.\\
-Augmented Dickey--Fuller (ADF) & Kiểm định nghiệm đơn vị, được dùng để đánh giá bằng chứng về tính dừng của đoạn huấn luyện Health Index.\\
-Ljung--Box & Kiểm định chẩn đoán tự tương quan của residual sau khi fit ARIMA.\\
+RUL & Remaining Useful Life, tuổi thọ hữu ích còn lại: số cycle động cơ còn vận hành được trước khi hỏng.\\
+C-MAPSS & Commercial Modular Aero-Propulsion System Simulation, bộ dữ liệu mô phỏng động cơ turbofan của NASA, gồm bốn subset FD001--FD004.\\
+Cycle & Một chu kỳ vận hành của động cơ; là đơn vị thời gian rời rạc của dữ liệu, không quy đổi được sang giờ hoặc ngày.\\
+Train / test & Train chứa lịch sử vận hành đến khi hỏng; test bị cắt trước khi hỏng và có file nhãn RUL riêng.\\
+Trailing window & Đoạn $w$ cycles liên tiếp gần nhất của một động cơ tính đến cycle đang xét; báo cáo dùng $w=30$.\\
+GroupKFold & Cross-validation chia fold theo nhóm; ở đây mỗi nhóm là một động cơ, nên mọi window của một động cơ nằm cùng một fold.\\
+OOF & Out-of-fold: dự đoán cho một động cơ được tạo bởi mô hình không dùng động cơ đó khi huấn luyện.\\
+Nested CV & Cross-validation lồng nhau: vòng trong chọn cấu hình, vòng ngoài đánh giá cả quy trình chọn.\\
+MAE / RMSE & Sai số tuyệt đối trung bình / căn bậc hai của sai số bình phương trung bình, tính bằng cycle.\\
+NASA score & Điểm phạt bất đối xứng, phạt dự đoán trễ (cao hơn RUL thật) nặng hơn dự đoán sớm.\\
+CI & Confidence interval, khoảng tin cậy.\\
+HGB & HistGradientBoostingRegressor của scikit-learn.\\
+Data leakage & Rò rỉ dữ liệu: thông tin không có tại thời điểm dự đoán (như nhãn test hoặc cycle tương lai) lọt vào quá trình huấn luyện hoặc chọn mô hình.\\
+EDA & Exploratory Data Analysis, phân tích khám phá dữ liệu.\\
+ETL & Extract, Transform, Load: đọc, biến đổi và ghi dữ liệu.\\
+Bronze / Silver / Gold & Ba lớp lưu trữ: dữ liệu gốc; dữ liệu đã kiểm tra và chuẩn hóa kiểu; bảng tổng hợp phục vụ phân tích.\\
+Parquet / SQLite & Định dạng lưu trữ dạng cột / cơ sở dữ liệu quan hệ dạng file.\\
+Parity & Đối chiếu kết quả của hai implementation (Pandas và PySpark) trên cùng input.\\
+Lead time & Thời gian báo trước: số cycle từ cảnh báo đầu tiên đến khi động cơ hỏng.\\
+Health Index & Chỉ số tổng hợp trạng thái động cơ, ở đây là thành phần chính thứ nhất của 21 sensor sau chuẩn hóa.\\
+PCA & Principal Component Analysis, phân tích thành phần chính.\\
+ARIMA & Mô hình chuỗi thời gian tự hồi quy, sai phân và trung bình trượt.\\
+AIC & Akaike Information Criterion, tiêu chí chọn bậc mô hình.\\
+ADF & Kiểm định Augmented Dickey--Fuller về nghiệm đơn vị (tính dừng).\\
+Ljung--Box & Kiểm định tự tương quan của phần dư.\\
+Wilcoxon & Kiểm định dấu-hạng Wilcoxon cho dữ liệu ghép cặp.\\
+BH / FDR & Hiệu chỉnh Benjamini--Hochberg nhằm kiểm soát False Discovery Rate (tỷ lệ phát hiện sai).\\
 
 \end{longtable}
 \end{small}

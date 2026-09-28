@@ -19,7 +19,7 @@ from cmapss.modeling.improvement_analysis import engine_metrics, paired_comparis
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--run", default="outputs/experiments/rul_improvement/20260927_full")
+    parser.add_argument("--run", default="outputs/experiments/rul_improvement/20260928_rebuild")
     args = parser.parse_args()
     output = Path(args.run)
     manifest = json.loads((output / "search_manifest.json").read_text(encoding="utf-8"))

@@ -7,13 +7,14 @@ features, grouped RUL modeling, PCA--ARIMA Health Index và dashboard
 read-only. Bộ slide trình bày nằm tại
 `slides/cmapss_fd001_presentation.pptx`.
 
-Deck 18 slide được cập nhật ngày 28/09/2026 theo mạch bài thuyết trình học
-thuật, gồm bài toán, dữ liệu, protocol, phương pháp, kết quả RUL, phân tích lỗi,
-Health Index, cảnh báo sớm, tái lập, giới hạn và ma trận transfer FD001--FD004.
-Finalizer đạt package integrity, layout, font và import; 18 slide đã được render
-để kiểm tra nội dung và bố cục.
-Bản 10 slide trước redesign được giữ tại
-`slides/archive/decks/cmapss_fd001_presentation_before_academic_redesign.pptx`.
+Deck được dựng lại ngày 28/09/2026 thành 20 slide cho bài nói 30 phút, chia năm
+phần: bài toán và dữ liệu; pipeline Big Data; phân tích chuỗi thời gian; mô hình
+và đánh giá; mở rộng và kết luận. Mỗi slide có tiêu đề nêu kết luận, một thành
+phần trực quan chính, dòng nguồn và speaker notes có thời lượng. Validator của
+pptx skill pass; 20 slide đã được render bằng PowerPoint để soát chữ tràn, chồng
+lấn và số liệu. Kịch bản nói 30 phút: `handoff/SPEECH_SCRIPT_VI.pdf`.
+Deck 18 slide trước đó (PPTX và Beamer) được giữ tại
+`slides/archive/decks/cmapss_fd001_presentation_18slides_20260928*`.
 
 Kết quả RUL chính vẫn được diễn giải trong phạm vi FD001: 100 train engines, 100
 test engines, một điều kiện vận hành và một dạng lỗi. Ma trận bổ sung dùng
@@ -29,12 +30,12 @@ và bản xem trước SVG/PNG.
 
 ```text
 slides/
-├── cmapss_fd001_presentation.pptx
-├── archive/decks/                 # Bản deck cũ để đối chiếu
-├── cmapss_fd001_presentation.tex
-└── cmapss_fd001_presentation.pdf
-├── build_academic_presentation.mjs
-├── finalize_academic_presentation.mjs
+├── cmapss_fd001_presentation.pptx # Deck chính 20 slide
+├── cmapss_fd001_presentation.pdf  # Bản PDF xuất từ PowerPoint
+├── extract_slide_data.py          # Đọc số liệu từ outputs/ → slide_data.json
+├── slide_data.json
+├── build_presentation.cjs         # Dựng deck bằng pptxgenjs
+├── archive/decks/                 # Deck cũ, gồm bản 18 slide PPTX/Beamer
 ├── archive/builders/              # Script build cũ
 └── README.md
 handoff/
@@ -142,12 +143,17 @@ Ví dụ `hgb_08` giảm low-RUL MAE khoảng 9,75% trong inner CV nhưng tăng 
 bộ 0,32 cycles. Đây là đánh đổi cần xác định mục tiêu trước đợt tiếp theo;
 không gọi nó là kết quả ngoài mẫu độc lập hoặc mô hình đã được thay thế.
 
-Bằng chứng: `outputs/experiments/rul_improvement/20260927_full/validation.json`
+Bằng chứng: `outputs/experiments/rul_improvement/20260928_rebuild/validation.json`
 đối chiếu 511 fit records, split, source/input hashes, baseline không đổi và
 predictions của model đã lưu. Run đầy đủ mất 78,61 phút, thêm một fit cuối.
-Lệnh kiểm tra: `uv run --frozen python scripts/verify_rul_improvement.py`.
-Full suite đạt 175 tests. Báo cáo hiện 49 trang, dưới giới hạn 50 trang; PPTX/Beamer
-18 slide, dưới giới hạn 20 slide. AppTest kiểm
+Run rebuild ngày 28/09/2026 đã tạo manifest mới theo đúng source bytes hiện tại.
+Verifier pass với 511 fit records, 100 outer engines, 17.731 dòng mỗi stage,
+baseline không đổi, paired CI được tính lại và 100 test predictions khớp model đã
+lưu. Các bảng kết quả chính khớp run `20260927_full`; chỉ `fit_seconds` khác do
+thời gian chạy. Lệnh kiểm tra dùng run mới:
+`uv run --frozen python scripts/verify_rul_improvement.py`.
+Full suite đạt 188 tests. Báo cáo hiện 49 trang (bản viết lại ngày 28/09/2026), dưới giới hạn 50 trang; deck PPTX
+có 20 slide, bằng giới hạn 20 slide. AppTest kiểm
 tra trang **Thử nghiệm cải thiện** và chọn engine 98; đây là kiểm tra giao diện
 bằng Streamlit testing API, không phải browser rehearsal của toàn dashboard.
 

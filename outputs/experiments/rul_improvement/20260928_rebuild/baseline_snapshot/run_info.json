@@ -1,0 +1,82 @@
+{
+  "schema_version": 3,
+  "pipeline": "sklearn_grouped_rul_modeling",
+  "generated_at_utc": "2026-09-23T23:59:33.427599+00:00",
+  "input_sha256": {
+    "rolling_features.parquet": "3adf4810d9f3181bc244005592a0d9dea5d07ce2420ebd57d9c27abeaeb69231",
+    "train_targets.parquet": "51da68e3be2b379e71c29cd7ac6ea34834722b372373dee2e36a04b63cf61905"
+  },
+  "config": {
+    "n_splits": 5,
+    "seed": 42,
+    "candidate_models": [
+      "median_baseline",
+      "ridge_alpha_1",
+      "hist_gradient_boosting"
+    ],
+    "primary_metric": "mean_engine_mae",
+    "engine_equal_sample_weighting": true,
+    "prediction_clipping": "none",
+    "early_warning": {
+      "target": "low RUL",
+      "threshold_cycles": 30,
+      "source": "selected-model OOF predictions on train only"
+    }
+  },
+  "selected_model": "hist_gradient_boosting",
+  "row_counts": {
+    "fold_assignments": 100,
+    "oof_predictions": 53193,
+    "fold_metrics": 15,
+    "model_metrics": 3,
+    "final_predictions": 100,
+    "warning_events": 100
+  },
+  "outputs": {
+    "fold_assignments": "tables\\fold_assignments.csv",
+    "fold_metrics": "tables\\fold_metrics.csv",
+    "model_metrics": "tables\\model_metrics.csv",
+    "oof_predictions": "predictions\\oof_predictions.parquet",
+    "final_predictions": "predictions\\final_predictions.parquet",
+    "selected_model": "models\\selected_model.joblib",
+    "evaluation_protocol": "tables\\evaluation_protocol.csv",
+    "warning_events": "tables\\warning_events.csv",
+    "warning_summary": "tables\\warning_summary.json",
+    "warning_figure": "figures\\warning_trajectory.png",
+    "final_evaluation": "predictions\\final_evaluation.parquet",
+    "final_metrics": "tables\\final_metrics.json",
+    "final_true_vs_predicted": "figures\\final_true_vs_predicted.png",
+    "final_residuals_by_rul": "figures\\final_residuals_by_rul.png"
+  },
+  "test_label_join": {
+    "status": "completed_after_final_predictions",
+    "test_label_sha256": "a19c8ec94931949d0485bdc35118206e9c81c4547b422efb9cf86f4ceddbceca",
+    "final_metrics": {
+      "n_rows": 100,
+      "n_engines": 100,
+      "mean_window_mae": 15.349047436930459,
+      "mean_engine_mae": 15.349047436930459,
+      "rmse": 20.541266675083385,
+      "nasa_score": 1513.257655888328
+    },
+    "bootstrap": {
+      "resamples": 10000,
+      "seed": 42,
+      "method": "engine_cluster_resampling_with_replacement; mean_engine_mae preserves duplicate engine draws",
+      "intervals": {
+        "mean_engine_mae": {
+          "ci_lower": 12.728606926330093,
+          "ci_upper": 18.086553527187498
+        },
+        "rmse": {
+          "ci_lower": 17.344213024532703,
+          "ci_upper": 23.585014646744003
+        },
+        "nasa_score": {
+          "ci_lower": 743.4999196439833,
+          "ci_upper": 2476.274258819017
+        }
+      }
+    }
+  }
+}

@@ -6,6 +6,13 @@ của từng engine, pipeline tạo 126 đặc trưng trên window 30 cycles đ�
 Tài liệu này giải thích hành vi đã triển khai, đối chiếu với code và artifact
 ngày 28/09/2026. Không có kết quả training hoặc benchmark mới trong lượt này.
 
+Bản trình bày đầy đủ nằm ở Mục 4 của [báo cáo](../report/main.pdf), gồm sơ đồ
+luồng dữ liệu, sơ đồ quan hệ, truy vấn SQL/Spark SQL và code trích từ
+`src/cmapss`. Để chạy lại từng bước và xem kết quả trung gian, mở
+[`notebooks/00_data_pipeline_walkthrough.ipynb`](../notebooks/00_data_pipeline_walkthrough.ipynb);
+notebook được dựng lại bằng
+`.venv/Scripts/python.exe scripts/build_data_walkthrough_notebook.py --execute`.
+
 ## Đối chiếu yêu cầu môn học
 
 Brief Đề tài 8 yêu cầu phân tích dữ liệu cảm biến, xử lý nhiều tín hiệu,

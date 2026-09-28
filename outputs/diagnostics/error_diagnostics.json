@@ -1,0 +1,160 @@
+{
+  "description": "Read-only diagnostics for report Section 6; no model is trained.",
+  "range_sensors": [
+    "sensor_2",
+    "sensor_3",
+    "sensor_4",
+    "sensor_7",
+    "sensor_11",
+    "sensor_12",
+    "sensor_15",
+    "sensor_20",
+    "sensor_21"
+  ],
+  "oof_hgb_by_true_rul": [
+    {
+      "true_rul_bin": "(-1, 30]",
+      "n_rows": 3100.0,
+      "mae": 3.6676265970504134,
+      "mean_signed_error": 1.4740911980524327,
+      "mean_prediction": 16.47409119805243
+    },
+    {
+      "true_rul_bin": "(30, 60]",
+      "n_rows": 3000.0,
+      "mae": 10.679279788689302,
+      "mean_signed_error": 5.593870855831333,
+      "mean_prediction": 51.09387085583134
+    },
+    {
+      "true_rul_bin": "(60, 90]",
+      "n_rows": 3000.0,
+      "mae": 20.853956709294287,
+      "mean_signed_error": 14.515577818826687,
+      "mean_prediction": 90.0155778188267
+    },
+    {
+      "true_rul_bin": "(90, 125]",
+      "n_rows": 3392.0,
+      "mae": 22.805439982558415,
+      "mean_signed_error": 12.880030237028462,
+      "mean_prediction": 120.60821419929262
+    },
+    {
+      "true_rul_bin": "(125, 150]",
+      "n_rows": 1999.0,
+      "mae": 20.81710497221195,
+      "mean_signed_error": -2.8704006925242713,
+      "mean_prediction": 134.72989945755077
+    },
+    {
+      "true_rul_bin": "(150, 200]",
+      "n_rows": 2226.0,
+      "mae": 30.250266558014534,
+      "mean_signed_error": -23.30112346791857,
+      "mean_prediction": 147.16069144672653
+    },
+    {
+      "true_rul_bin": "(200, 400]",
+      "n_rows": 1014.0,
+      "mae": 91.29322025515133,
+      "mean_signed_error": -91.2868772027927,
+      "mean_prediction": 145.36006559799625
+    }
+  ],
+  "test_errors": {
+    "top10_share_of_nasa_score": 0.7553559019179925,
+    "mae_by_true_rul_bin": {
+      "(-1, 30]": {
+        "mae": 4.383042419332334,
+        "n_engines": 25
+      },
+      "(30, 60]": {
+        "mae": 8.773400516587051,
+        "n_engines": 14
+      },
+      "(60, 90]": {
+        "mae": 21.52856963302275,
+        "n_engines": 15
+      },
+      "(90, 10000]": {
+        "mae": 21.295055032221253,
+        "n_engines": 46
+      }
+    }
+  },
+  "warning_by_lifetime": {
+    "failure_cycle_by_timing": {
+      "after_threshold": {
+        "n_engines": 49,
+        "mean": 182.75510204081633,
+        "median": 185.0
+      },
+      "at_threshold": {
+        "n_engines": 7,
+        "mean": 228.14285714285714,
+        "median": 231.0
+      },
+      "before_threshold": {
+        "n_engines": 44,
+        "mean": 229.0681818181818,
+        "median": 213.5
+      }
+    },
+    "pearson_failure_cycle_vs_threshold_delay": -0.5575256972807734
+  },
+  "transfer": {
+    "FD001_to_FD001": {
+      "mean_signed_error": 15.075435584785671,
+      "share_overpredicted": 0.72,
+      "prediction_mean": 90.59543558478565,
+      "prediction_std": 51.07428705623092,
+      "true_mean": 75.52
+    },
+    "FD001_to_FD002": {
+      "mean_signed_error": 50.78935136515229,
+      "share_overpredicted": 0.8108108108108109,
+      "prediction_mean": 131.97467955048046,
+      "prediction_std": 13.33216185679221,
+      "true_mean": 81.18532818532819,
+      "mean_share_test_values_inside_fd001_train_range": 0.15157280195084322
+    },
+    "FD001_to_FD003": {
+      "mean_signed_error": 45.34305373257441,
+      "share_overpredicted": 0.83,
+      "prediction_mean": 120.66305373257441,
+      "prediction_std": 55.01163264622016,
+      "true_mean": 75.32,
+      "mean_share_test_values_inside_fd001_train_range": 0.9466605072172679
+    },
+    "FD001_to_FD004": {
+      "mean_signed_error": 49.387381137274176,
+      "share_overpredicted": 0.7943548387096774,
+      "prediction_mean": 135.9398004921129,
+      "prediction_std": 12.715308017924468,
+      "true_mean": 86.5524193548387,
+      "mean_share_test_values_inside_fd001_train_range": 0.14139747550724402
+    },
+    "FD002_to_FD002": {
+      "mean_signed_error": 2.6360647607123693,
+      "share_overpredicted": 0.5366795366795367,
+      "prediction_mean": 83.82139294604055,
+      "prediction_std": 52.52966013919762,
+      "true_mean": 81.18532818532819
+    },
+    "FD003_to_FD003": {
+      "mean_signed_error": 22.845289909105375,
+      "share_overpredicted": 0.75,
+      "prediction_mean": 98.16528990910538,
+      "prediction_std": 63.11058645002019,
+      "true_mean": 75.32
+    },
+    "FD004_to_FD004": {
+      "mean_signed_error": 12.18106455722189,
+      "share_overpredicted": 0.6209677419354839,
+      "prediction_mean": 98.7334839120606,
+      "prediction_std": 62.59108977750797,
+      "true_mean": 86.5524193548387
+    }
+  }
+}

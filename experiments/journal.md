@@ -1,5 +1,28 @@
 # Experiment journal
 
+### 2026-09-28 — Rebuild after source line-ending normalization
+
+**Status**: COMPLETED.
+**Purpose**: Recreate provenance with current source bytes, retaining the
+20260927_full run as historical evidence. No change to the search recipe or
+selection rule; expected metrics should match the original study.
+**Config**: Same seed 42, 5 outer folds, 3 inner folds, 24 HGB candidates,
+windows 10/20/30, 10,000 bootstrap resamples and 4 fit threads.
+**Output**: outputs/experiments/rul_improvement/20260928_rebuild.
+**Recovery**: Resume checks config, source, inputs, dependencies and baseline
+snapshot before reusing cached fits. Record written during recovery; the
+search manifest was already created by the original invocation before fitting.
+**Actual outcome**: Selected `window=30`, `weight_scheme=uniform`, matching the
+original baseline. The verifier passed with 511 fit records, 100 outer engines,
+baseline unchanged and 100 saved-model test predictions matching. Ablation,
+paired comparison, outer metrics and test comparison match `20260927_full`;
+only `fit_seconds` differs.
+**Duration**: Resumed run completed after the original process stopped.
+**Learning**: Rebuilding with current source bytes restores a passing provenance
+check without changing the experiment result.
+**Next**: Commit and push the repository changes after the final diff audit.
+Full test suite during recovery: 188 passed, 14 dependency deprecation warnings.
+
 ### 2026-09-27 — RUL improvement baseline and staged nested GroupKFold
 
 **Status**: PLANNED

@@ -1,188 +1,130 @@
-\section{Cơ sở lý thuyết và nghiên cứu liên quan}
+\section{Cơ sở lý thuyết}
 \label{sec:theory}
 
-\subsection{Prognostics và RUL}
-Prognostics nghiên cứu diễn biến suy giảm của một hệ thống và thời gian còn lại
-trước khi hệ thống đạt trạng thái hỏng. Trong C-MAPSS, chuỗi train của mỗi subset kết
-thúc tại failure nên có thể dùng để suy ra nhãn RUL; chuỗi test bị cắt trước
-failure và chỉ có nhãn đánh giá ở cycle cuối quan sát. Saxena và cộng sự mô tả
-cơ chế mô phỏng suy giảm và bài toán đánh giá prognostics~\cite{saxena2008damage}.
-Ramasso và Saxena chỉ ra rằng kết quả trên C-MAPSS phụ thuộc mạnh vào subset dữ
-liệu và evaluation protocol~\cite{ramasso2014review}; đây là lý do báo cáo giữ
-FD001 làm subset chính và đánh giá FD002--FD004 bằng một ma trận protocol riêng.
+\subsection{Dự đoán RUL và các nghiên cứu liên quan}
+Prognostics là lĩnh vực nghiên cứu diễn biến suy giảm của hệ thống và thời gian
+còn lại trước khi hỏng. Saxena và cộng sự xây dựng C-MAPSS để có dữ liệu
+run-to-failure với nhãn đã biết cho bài toán này~\cite{saxena2008damage}. Các
+nghiên cứu sau đó tiếp cận theo hai hướng chính: trích xuất đặc trưng thủ công
+rồi dùng mô hình hồi quy, hoặc học trực tiếp từ chuỗi bằng deep learning như
+CNN và LSTM~\cite{lei2018machinery,li2018rul,zheng2017lstm}. Ramasso và Saxena
+lưu ý rằng kết quả trên C-MAPSS phụ thuộc mạnh vào subset và cách đánh
+giá~\cite{ramasso2014review}; vì vậy, các con số giữa những bài báo dùng cách
+tiền xử lý hoặc chia dữ liệu khác nhau không so sánh trực tiếp được.
 
-\subsection{Định vị nghiên cứu}
-Các nghiên cứu về RUL thường sử dụng feature engineering, mô hình hồi quy hoặc
-deep learning để ánh xạ lịch sử cảm biến thành thời gian còn lại
-~\cite{lei2018machinery,li2018rul,zheng2017lstm}. Báo cáo này tập trung vào một
-pipeline có thể kiểm tra ở từng ranh giới dữ liệu: contract được kiểm tra trước
-EDA, feature chỉ dùng lịch sử đến cycle hiện tại, và GroupKFold giữ toàn bộ
-window của một engine trong cùng một fold. Vì mục tiêu của môn học là phân tích
-dữ liệu lớn có khả năng tái lập, phần triển khai nhấn mạnh nguồn gốc dữ liệu và đối chiếu kết quả
-ETL; mô hình được dùng để đánh giá pipeline trên FD001 và kiểm tra chuyển miền,
-không phải để tuyên bố
-trạng thái tiên tiến của bài toán RUL.
+Báo cáo chọn hướng thứ nhất. Đặc trưng thống kê trên window kết hợp với mô hình
+cây cho phép kiểm tra từng bước của pipeline và phù hợp với trọng tâm của môn
+học là xử lý dữ liệu tái lập được. Bảng~\ref{tab:related-work} tóm tắt vị trí
+của báo cáo so với các nguồn tham khảo chính.
 
 \begin{table}[H]
 \centering
-\caption{Định vị báo cáo so với một số nguồn tham khảo.}
+\caption{Vị trí của báo cáo so với một số nghiên cứu liên quan.}
 \label{tab:related-work}
 \small\sloppy
 \setlength{\tabcolsep}{3pt}
-\begin{tabular}{L{2.7cm}L{3.0cm}L{3.6cm}L{5.6cm}}
+\begin{tabular}{L{3.0cm}L{4.2cm}L{7.4cm}}
 \toprule
-Nguồn & Phạm vi & Hướng tiếp cận & Liên hệ với báo cáo \\\midrule
-Saxena và cộng sự~\cite{saxena2008damage} & Mô phỏng suy giảm động cơ
-run-to-failure & Cơ sở dữ liệu và bài toán prognostics & Nguồn nền cho cách hiểu
-FD001 và nhãn RUL. \\
-Ramasso và Saxena~\cite{ramasso2014review} & Các thuật toán trên C-MAPSS &
-Tổng quan và phân tích protocol & Cơ sở để giữ rõ subset, split và metric. \\
+Nguồn & Nội dung & Liên hệ với báo cáo \\\midrule
+Saxena và cộng sự~\cite{saxena2008damage} & Mô phỏng suy giảm, tạo C-MAPSS &
+Cơ sở để hiểu dữ liệu và cách tạo nhãn RUL. \\
+Ramasso và Saxena~\cite{ramasso2014review} & Tổng quan các phương pháp trên C-MAPSS &
+Lý do báo cáo mô tả rõ subset, cách chia dữ liệu và metric. \\
 Lei và cộng sự~\cite{lei2018machinery} & Tổng quan machinery prognostics &
-Từ thu nhận dữ liệu đến RUL prediction & Đặt pipeline của báo cáo trong bối
-cảnh rộng hơn. \\
-Li và cộng sự~\cite{li2018rul} & RUL estimation & Deep convolutional neural
-network và biểu diễn window & Nguồn đối chiếu độ dài window; báo cáo dùng
-feature-based model đơn giản hơn. \\
-Zheng và cộng sự~\cite{zheng2017lstm} & RUL estimation & Long Short-Term Memory
-network & Cho thấy một hướng deep learning khác; không được tái lập trong phạm
-vi hiện tại. \\
-Saxena và cộng sự~\cite{saxena2010metrics} & Offline prognostic evaluation &
-Metric và cách đánh giá & Cơ sở để phân biệt điểm cắt với toàn bộ trajectory. \\
+Bối cảnh chung từ thu thập dữ liệu đến dự đoán RUL. \\
+Li và cộng sự~\cite{li2018rul} & CNN trên window thời gian &
+Tham khảo độ dài window 30 cycles và NASA score. \\
+Zheng và cộng sự~\cite{zheng2017lstm} & LSTM cho dự đoán RUL &
+Hướng deep learning chưa được thực hiện trong báo cáo. \\
+Saxena và cộng sự~\cite{saxena2010metrics} & Metric đánh giá prognostics &
+Phân biệt đánh giá tại một điểm cắt với đánh giá trên toàn chuỗi. \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Một dự đoán tại cycle cuối của mỗi test engine chỉ đo chất lượng tại điểm cắt,
-không đại diện cho sai số trên toàn bộ trajectory~\cite{saxena2010metrics}.
-Các subset C-MAPSS cũng không có chi phí can thiệp hoặc downtime, nên RUL không trực tiếp
-xác định lịch bảo trì tối ưu.
-
-Điểm khác biệt trong thiết kế thực nghiệm ở đây là cách biểu diễn dữ liệu và
-phạm vi kết luận. Thay vì tái lập neural network của các nghiên cứu trong
-Bảng~\ref{tab:related-work}, báo cáo cố định 126 đặc trưng tổng hợp từ window
-30 cycles và so sánh baseline hằng, tuyến tính, phi tuyến. Cách làm này cho
-phép kiểm tra lợi ích của model trong cùng split, nhưng chưa trả lời liệu
-representation học trực tiếp từ chuỗi có tốt hơn hay không. Không xếp hạng
-metric của báo cáo với metric trong paper khi chưa đồng nhất target, split,
-preprocessing và điểm đánh giá.
-
-\subsection{Metric RUL và NASA score}
-MAE đo sai số tuyệt đối trung bình, còn RMSE tăng trọng số cho các sai số lớn.
-Báo cáo bổ sung NASA score để phản ánh chi phí bất đối xứng của sai số RUL. Với
-$e=\hat{y}-y$, score của một dự đoán được định nghĩa bởi:
+\subsection{Metric đánh giá}
+Với $n$ động cơ, sai số $e_i=\hat{y}_i-y_i$ là RUL dự đoán trừ RUL thật. MAE
+bằng $\frac{1}{n}\sum|e_i|$ và RMSE bằng $\sqrt{\frac{1}{n}\sum e_i^2}$; cả hai
+có đơn vị cycle, trong đó RMSE nhạy hơn với các sai số lớn. NASA score cộng
+điểm phạt của từng dự đoán~\cite{li2018rul}:
 \begin{equation}
- S(e)=
+ S=\sum_{i=1}^{n}s(e_i),\qquad
+ s(e)=
  \begin{cases}
   \exp(-e/13)-1, & e<0,\\
   \exp(e/10)-1, & e\geq 0.
  \end{cases}
  \label{eq:nasa-score}
 \end{equation}
-Trong đó $y$ là RUL thật và $\hat{y}$ là RUL dự đoán. Hai mẫu số khác nhau làm
-cho score phạt hai hướng sai số ở mức khác nhau; vì vậy NASA score không thể
-được đọc như một đơn vị cycle và chỉ có ý nghĩa khi so sánh trên cùng protocol.
-Trong báo cáo, cross-validation dùng tổng score trên các validation windows để
-so sánh ứng viên, còn metric cuối dùng 100 dự đoán tại điểm cắt của test
-engines.
+Mẫu số 10 nhỏ hơn 13, nên dự đoán cao hơn RUL thật (báo hỏng muộn) bị phạt nặng
+hơn dự đoán thấp hơn cùng độ lớn, phản ánh việc báo muộn có thể khiến động cơ
+hỏng trước khi kịp bảo trì~\cite{saxena2008damage}. NASA score không có đơn vị và tăng theo hàm
+mũ, nên chỉ dùng để so sánh các mô hình trên cùng tập đánh giá.
 
-\subsection{Biểu diễn chuỗi bằng trailing window}
-Tại cycle $t$, một mẫu chỉ chứa các quan sát hiện có của cùng engine:
+Theo Saxena và cộng sự~\cite{saxena2010metrics}, một dự đoán tại cycle cuối của
+mỗi động cơ test chỉ đo chất lượng tại điểm cắt đó, không đo sai số dọc theo
+toàn bộ vòng đời.
+
+\subsection{Trailing window và đặc trưng thống kê}
+Tại cycle $t$, mẫu đầu vào của động cơ $i$ là ma trận gồm $w$ cycles gần nhất:
 \begin{equation}
  W_{i,t}=[\mathbf{x}_{i,t-w+1},\ldots,\mathbf{x}_{i,t}]^{\mathsf T}
- \in\mathbb{R}^{w\times p},\qquad t\geq w.
+ \in\mathbb{R}^{w\times J},\qquad t\geq w,
  \label{eq:window}
 \end{equation}
-\noindent Trong đó:
-\begin{itemize}[label={+},leftmargin=1.6em,itemsep=0.15em,topsep=0.25em]
-\item $i$: engine đang được xét.
-\item $t$: cycle cuối của window, tính bằng cycle vận hành.
-\item $w$: số cycle trong window, với cấu hình hiện tại $w=30$.
-\item $p$: số sensor, với cấu hình hiện tại $p=21$.
-\item $\mathbf{x}_{i,t}$: vector sensor của engine $i$ tại cycle $t$; mỗi phần
-tử giữ đơn vị gốc ẩn danh của sensor tương ứng.
-\item $W_{i,t}$: ma trận đầu vào có $w$ hàng và $p$ cột, tức $30\times21$
-trong cấu hình hiện tại.
-\end{itemize}
-Công thức~\ref{eq:window} là định nghĩa biểu diễn được triển khai trong báo cáo,
-không phải công thức dự đoán RUL do một nguồn bên ngoài đề xuất. Độ dài 30
-cycles được đối chiếu với một cấu hình window từng xuất hiện trong nghiên cứu
-trước, nhưng không được xem là giá trị tối ưu phổ quát~\cite{li2018rul}. Tại
-cycle $t$, chỉ dữ liệu quá khứ và hiện tại được phép đi vào feature; điều kiện
-này ngăn data leakage từ cycle tương lai. Validator kiểm tra rằng mỗi window có
-đủ 30 cycle liên tiếp, thuộc cùng một engine và không nối qua ranh giới engine.
-Chẳng hạn, mẫu tại cycle 170 dùng cycles 141--170 và không dùng cycle 171.
+trong đó $\mathbf{x}_{i,t}$ là vector $J=21$ giá trị sensor tại cycle $t$. Báo
+cáo dùng $w=30$, một độ dài từng được sử dụng cho FD001~\cite{li2018rul}. Window
+chỉ chứa quá khứ và hiện tại, nên không có thông tin từ cycle tương lai; ví dụ,
+mẫu tại cycle 170 dùng cycles 141--170.
 
-Mỗi sensor trong window được tóm tắt bằng giá trị cuối, mean, sample standard
-deviation, min, max và linear slope. Với dãy $z_1,\ldots,z_w$ của một sensor,
-slope được tính bởi
+Mỗi cột sensor trong window được tóm tắt bằng sáu thống kê: giá trị cuối, trung
+bình, độ lệch chuẩn mẫu, min, max và độ dốc tuyến tính. Với dãy $z_1,\ldots,z_w$,
+độ dốc là hệ số của hồi quy bình phương tối thiểu theo vị trí $k$~\cite{hyndman2021fpp3}:
 \begin{equation}
  b=\frac{\sum_{k=1}^{w}(k-\bar{k})(z_k-\bar{z})}
- {\sum_{k=1}^{w}(k-\bar{k})^2}.
+ {\sum_{k=1}^{w}(k-\bar{k})^2},
  \label{eq:slope}
 \end{equation}
-\noindent Trong đó:
-\begin{itemize}[label={+},leftmargin=1.6em,itemsep=0.15em,topsep=0.25em]
-\item $k$: vị trí cycle trong window, chạy từ 1 đến $w$.
-\item $w$: độ dài window, hiện bằng 30 cycles.
-\item $z_k$: giá trị sensor tại vị trí $k$, giữ đơn vị gốc của sensor đó.
-\item $\bar{k}$: mean của các vị trí cycle trong window.
-\item $\bar{z}$: mean của các giá trị sensor trong window.
-\item $b$: mức thay đổi tuyến tính ước lượng trên mỗi cycle, có đơn vị
-``đơn vị sensor trên một cycle''.
-\end{itemize}
-Slope trong Công thức~\ref{eq:slope} là hệ số hồi quy tuyến tính một biến theo
-ordinary least squares (OLS, bình phương tối thiểu thông thường) của sensor trên
-vị trí cycle trong window~\cite{hyndman2021fpp3}. Đặc trưng này bổ sung hướng
-thay đổi cục bộ mà giá trị cuối và mean không thể hiện đầy đủ. Tuy nhiên, một
-slope có thể tái lập không đồng nghĩa với giá trị dự đoán; giá trị này chỉ được
-đánh giá gián tiếp qua cross-validation của mô hình.
+với $\bar{k}$ và $\bar{z}$ là trung bình của vị trí và của giá trị sensor. Đơn
+vị của $b$ là đơn vị sensor trên một cycle. Giá trị cuối và trung bình cho biết
+mức tín hiệu, còn độ dốc cho biết tín hiệu đang tăng hay giảm trong 30 cycles
+gần nhất.
 
-\subsection{Paired analysis, bootstrap và nhiều kiểm định}
-Paired analysis ghép hai phép đo của cùng một engine để loại bỏ một phần khác
-biệt nền giữa các engine. Mean paired difference mô tả mức thay đổi theo đơn vị
-gốc; Wilcoxon signed-rank dùng thứ hạng và dấu của chênh lệch để kiểm định trung
-vị chênh lệch bằng 0 dưới giả định phân phối chênh lệch đối xứng
-~\cite{wilcoxon1945,scipyWilcoxon}. Do đó, Wilcoxon không phải là kiểm định
-trực tiếp cho mean paired difference.
+\subsection{Kiểm định ghép cặp và hiệu chỉnh đa kiểm định}
+Khi so sánh một sensor ở đầu và cuối vòng đời của cùng một động cơ, phép ghép
+cặp loại bỏ khác biệt nền giữa các động cơ. Kiểm định dấu-hạng Wilcoxon xếp hạng
+độ lớn các chênh lệch rồi so sánh tổng hạng của chênh lệch dương và âm; dưới giả
+định phân phối chênh lệch đối xứng, nó kiểm định trung vị chênh lệch bằng
+0~\cite{wilcoxon1945,scipyWilcoxon}. Bootstrap lấy mẫu lại có hoàn lại các động
+cơ để ước lượng khoảng tin cậy cho trung bình chênh lệch mà không cần giả định
+phân phối chuẩn~\cite{efron1979bootstrap,scipyBootstrap}.
 
-Bootstrap lấy mẫu lại engine có hoàn lại và giữ cặp đầu/cuối cùng nhau để ước
-lượng độ bất định~\cite{efron1979bootstrap,scipyBootstrap}. Với 21 sensor,
-Benjamini--Hochberg điều chỉnh p-value nhằm kiểm soát False Discovery Rate (FDR,
-tỷ lệ phát hiện sai kỳ vọng) trong họ kiểm định đã xác định~\cite{benjamini1995fdr,scipyFDR}.
-Khoảng tin cậy riêng từng sensor không trở thành simultaneous interval chỉ vì
-p-value đã được hiệu chỉnh.
-
-\subsection{Spark, lưu trữ và giới hạn benchmark}
-RDD là abstraction nền tảng của Spark cho xử lý phân tán và khả năng phục hồi
-tính toán~\cite{zaharia2012rdd}. Với dữ liệu có schema, Spark SQL/DataFrame cung
-cấp các phép xử lý có cấu trúc~\cite{sparkSQLGuide}. Báo cáo dùng Pandas làm
-reference implementation và PySpark để đối chiếu kết quả ETL, không mặc định
-rằng Spark nhanh hơn trên FD001.
-
-Bronze giữ dữ liệu nguồn; Silver lưu observations và train targets đã kiểm tra;
-Gold lưu engine summary và rolling features. Parquet phục vụ lưu bảng phân tích,
-SQLite phục vụ truy vấn local. Dữ liệu nhân bản chỉ dùng cho benchmark xử lý và
-không tăng số mẫu khoa học độc lập.
+Khi kiểm định đồng thời 21 sensor, xác suất có ít nhất một kết quả dương tính giả
+tăng lên. Thủ tục Benjamini--Hochberg điều chỉnh các p-value để kiểm soát tỷ lệ
+phát hiện sai kỳ vọng (FDR) trong nhóm kiểm định~\cite{benjamini1995fdr,scipyFDR}.
 
 \subsection{Health Index và ARIMA}
-Health Index trong báo cáo là điểm PC1 sau khi chuẩn hóa 21 sensor bằng
-StandardScaler và fit Principal Component Analysis (PCA, phân tích thành phần
-chính) trên train~\cite{sklearnPCA}. PCA tìm hướng tuyến tính giải thích nhiều phương sai nhất;
-điểm PC1 được đổi hướng theo tương quan với cycle để có quy ước giảm theo thời
-gian. Đây là biểu diễn tổng hợp của sensor, không phải nhãn RUL và không mang
-đơn vị cycle.
+Health Index là một chỉ số duy nhất tóm tắt trạng thái của động cơ từ nhiều
+sensor. Báo cáo tạo Health Index bằng cách chuẩn hóa 21 sensor rồi lấy thành
+phần chính thứ nhất (PC1) của PCA~\cite{sklearnPCA}. Dấu của PC1 được chọn sao
+cho chỉ số giảm dần theo cycle, tức giá trị thấp ứng với trạng thái xấu hơn.
 
-Với chuỗi Health Index $h_t$, ARIMA$(p,d,q)$ mô hình hóa sai phân bậc $d$ và
-phần tự hồi quy, trung bình trượt:
+Chuỗi Health Index $h_t$ của từng động cơ được mô hình hóa bằng
+ARIMA$(p,d,q)$~\cite{hyndman2021fpp3}:
 \begin{equation}
 \phi(B)(1-B)^d h_t = c + \theta(B)\varepsilon_t,
 \label{eq:arima}
 \end{equation}
-\noindent trong đó $B$ là toán tử trễ, $p$ và $q$ là bậc tự hồi quy và trung
-bình trượt, $d$ là bậc sai phân, còn $\varepsilon_t$ là phần dư~\cite{hyndman2021fpp3}. Pipeline chọn
-order bằng AIC trên 70\% đầu chuỗi của từng engine, rồi đánh giá 30\% còn lại;
-không dùng kết quả holdout để chọn order hoặc engine. ADF được ghi để chẩn đoán
-tính dừng~\cite{statsmodelsADF} và Ljung--Box để kiểm tra tự tương quan phần dư. Các chẩn đoán này
-chỉ mô tả độ phù hợp của dự báo Health Index trong FD001; chúng không chứng
-minh quan hệ nhân quả, không thay thế GroupKFold RUL model và không xác định
-lịch bảo trì.
+trong đó $B$ là toán tử trễ, $\phi(B)$ và $\theta(B)$ là đa thức tự hồi quy bậc
+$p$ và trung bình trượt bậc $q$, $d$ là bậc sai phân và $\varepsilon_t$ là nhiễu
+trắng. Kiểm định ADF đánh giá tính dừng của chuỗi~\cite{statsmodelsADF}, còn
+kiểm định Ljung--Box kiểm tra phần dư sau khi fit còn tự tương quan hay không.
+
+\subsection{Xử lý dữ liệu với Spark và lưu trữ phân lớp}
+Apache Spark xử lý dữ liệu phân tán dựa trên Resilient Distributed Dataset,
+cho phép tính toán song song và phục hồi khi lỗi~\cite{zaharia2012rdd}; API
+DataFrame của Spark SQL hỗ trợ các phép biến đổi trên dữ liệu có
+schema~\cite{sparkSQLGuide}. Tổ chức dữ liệu theo ba lớp Bronze--Silver--Gold
+tách dữ liệu gốc, dữ liệu đã làm sạch và bảng tổng hợp, giúp mỗi bước biến đổi
+có đầu vào và đầu ra rõ ràng. Parquet lưu dữ liệu theo cột, phù hợp cho truy vấn
+phân tích chỉ đọc một số cột.

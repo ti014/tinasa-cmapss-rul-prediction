@@ -1,0 +1,72 @@
+\documentclass[tikz,border=10pt]{standalone}
+\usepackage{fontspec}
+\setsansfont{Arial}
+\setmonofont{Consolas}[Scale=0.9]
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,shapes.multipart,calc}
+\definecolor{entityFill}{HTML}{F5F7FA}
+\definecolor{entityHead}{HTML}{DDE6EE}
+\definecolor{entityStroke}{HTML}{546E7A}
+\definecolor{relStroke}{HTML}{0277BD}
+\begin{document}
+\begin{tikzpicture}[
+font=\sffamily\small,
+entity/.style={rectangle split,rectangle split parts=2,rectangle split part fill={entityHead,entityFill},
+  draw=entityStroke,thick,rounded corners=2pt,align=left,text width=4.4cm,inner sep=4pt},
+rel/.style={thick,draw=relStroke},
+card/.style={font=\sffamily\small\bfseries,text=relStroke,inner sep=1pt},
+note/.style={font=\sffamily\scriptsize,text=black!75,align=center,inner sep=1.5pt}]
+
+% Hàng trên.
+\node[entity] (summary) at (-8.6,0) {\textbf{engine\_summary}
+  \nodepart{second}\scriptsize\textbf{Khóa:} split, engine\_id\\ n\_cycles, first\_cycle, last\_cycle\\ 200 dòng; 1 dòng / động cơ};
+\node[entity] (obs) at (0,0) {\textbf{observations}
+  \nodepart{second}\scriptsize\textbf{Khóa:} split, engine\_id, cycle\\ setting\_1..3, sensor\_1..21\\ 33.727 dòng; 1 dòng / cycle};
+\node[entity] (targets) at (8.6,0) {\textbf{train\_targets}
+  \nodepart{second}\scriptsize\textbf{Khóa:} split, engine\_id, cycle\\ rul\\ 20.631 dòng; chỉ train};
+
+% Hàng dưới.
+\node[entity] (labels) at (-8.6,-5.0) {\textbf{test\_labels} (RUL\_FD001.txt)
+  \nodepart{second}\scriptsize engine\_id = số thứ tự dòng\\ rul\\ 100 dòng; 1 dòng / động cơ test};
+\node[entity] (pred) at (0,-5.0) {\textbf{final\_predictions}
+  \nodepart{second}\scriptsize\textbf{Khóa:} split, engine\_id\\ cycle cuối, y\_pred\\ 100 dòng; 1 dòng / động cơ test};
+\node[entity] (features) at (8.6,-5.0) {\textbf{rolling\_features}
+  \nodepart{second}\scriptsize\textbf{Khóa:} split, engine\_id, cycle\\ 126 cột \texttt{sensor\_k\_\_stat}\\ 27.927 dòng; từ cycle 30};
+
+% engine_summary 1 : N observations
+\draw[rel] (summary.east) -- (obs.west);
+\node[note,above=2pt] at ($(summary.east)!0.5!(obs.west)$) {mỗi động cơ\\31--362 cycles};
+\node[card,above right=1pt and 3pt] at (summary.east) {1};
+\node[card,above left=1pt and 3pt] at (obs.west) {N};
+
+% observations 1 : 1 train_targets
+\draw[rel] (obs.east) -- (targets.west);
+\node[note,above=2pt] at ($(obs.east)!0.5!(targets.west)$) {chỉ các dòng\\split = train};
+\node[card,above right=1pt and 3pt] at (obs.east) {1};
+\node[card,above left=1pt and 3pt] at (targets.west) {1};
+
+% observations 1 : 0..1 rolling_features (cạnh chéo duy nhất)
+\draw[rel] (obs.south east) -- (features.north west);
+\node[note,below left=0pt and 2pt] at ($(obs.south east)!0.5!(features.north west)$) {29 cycle đầu của mỗi động cơ\\chưa đủ window};
+\node[card,below right=2pt and 6pt] at (obs.south east) {1};
+\node[card,above left=4pt and 8pt] at (features.north west) {0..1};
+
+% rolling_features (train) 1 : 1 train_targets
+\draw[rel] (features.north) -- (targets.south);
+\node[note,right=4pt] at ($(features.north)!0.5!(targets.south)$) {phần train:\\JOIN 3 khóa};
+\node[card,above right=2pt and 3pt] at (features.north) {1};
+\node[card,below right=2pt and 3pt] at (targets.south) {1};
+
+% rolling_features 1 : 0..1 final_predictions
+\draw[rel] (features.west) -- (pred.east);
+\node[note,above=2pt] at ($(features.west)!0.5!(pred.east)$) {dòng cycle cuối\\của động cơ test};
+\node[card,above left=1pt and 3pt] at (features.west) {1};
+\node[card,above right=1pt and 3pt] at (pred.east) {0..1};
+
+% final_predictions 1 : 1 test_labels
+\draw[rel] (pred.west) -- (labels.east);
+\node[note,above=2pt] at ($(pred.west)!0.5!(labels.east)$) {JOIN engine\_id,\\sau khi ghi dự đoán};
+\node[card,above left=1pt and 3pt] at (pred.west) {1};
+\node[card,above right=1pt and 3pt] at (labels.east) {1};
+\end{tikzpicture}
+\end{document}

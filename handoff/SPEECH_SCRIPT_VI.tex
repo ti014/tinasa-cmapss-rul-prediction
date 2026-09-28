@@ -8,8 +8,8 @@
 \usepackage{setspace,enumitem,xcolor,fancyhdr,xurl}
 \usepackage[colorlinks=true,linkcolor=blue!45!black,urlcolor=blue!45!black]{hyperref}
 
-\definecolor{navy}{HTML}{0F243E}
-\definecolor{teal}{HTML}{1F7A8C}
+\definecolor{navy}{HTML}{0B2239}
+\definecolor{teal}{HTML}{157A7F}
 \newcommand{\filepath}[1]{\nolinkurl{#1}}
 \newcommand{\cue}[1]{\par\smallskip\noindent\textit{\textcolor{teal}{#1}}\par\smallskip}
 \newcommand{\slide}[3]{
@@ -28,7 +28,7 @@
 \setlist{nosep,leftmargin=*}
 \pagestyle{fancy}
 \fancyhf{}
-\fancyhead[L]{\small Kịch bản thuyết trình -- NASA C-MAPSS FD001--FD004}
+\fancyhead[L]{\small Kịch bản thuyết trình 30 phút -- NASA C-MAPSS FD001--FD004}
 \fancyhead[R]{\small Phân tích dữ liệu lớn}
 \fancyfoot[C]{\thepage}
 
@@ -41,9 +41,9 @@
 \vspace{0.5cm}
 {\large Báo cáo cuối kỳ môn Phân tích dữ liệu lớn\par}
 \vspace{1.4cm}
-{\LARGE\bfseries Pipeline dự đoán RUL trên NASA C-MAPSS\par}
+{\LARGE\bfseries Dự đoán tuổi thọ còn lại và cảnh báo sớm\\cho động cơ turbofan\par}
 \vspace{0.4cm}
-{\Large FD001--FD004\par}
+{\Large NASA C-MAPSS FD001--FD004\par}
 \vspace{1.5cm}
 \begin{tabular}{ll}
 Học viên thực hiện: & Phan Nguyễn Mai Phương\\
@@ -60,247 +60,341 @@ Ngành: & Khoa học máy tính
 
 \section*{Hướng dẫn sử dụng}
 \addcontentsline{toc}{section}{Hướng dẫn sử dụng}
-Tài liệu này bám theo deck 18 slide tại
-\filepath{slides/cmapss_fd001_presentation.pptx}. Phần trình bày chính dùng
-FD001 với trailing window 30 cycles. Slide 18 trình bày ma trận bổ sung dùng
-window 10 cycles cho FD001--FD004; hai nhóm metric phải được nói tách biệt.
-Tổng thời lượng mục tiêu khoảng 13--15 phút, chưa tính phần hỏi đáp.
+Tài liệu này bám theo deck 20 slide tại
+\filepath{slides/cmapss_fd001_presentation.pptx}. Tổng thời lượng mục tiêu
+khoảng 29 phút, chưa tính hỏi đáp, để còn khoảng một phút dự phòng trong giới
+hạn 30 phút. Speaker notes trong deck chứa bản rút gọn của từng mục dưới đây.
 
-\slide{1}{Bìa}{20 giây}
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+Phần & Slide & Thời lượng \\
+\midrule
+Bìa & 1 & 0:30 \\
+1. Bài toán và dữ liệu & 2--5 & 5:30 \\
+2. Pipeline Big Data & 6--7 & 4:00 \\
+3. Phân tích chuỗi thời gian & 8--11 & 6:00 \\
+4. Mô hình và đánh giá & 12--16 & 8:00 \\
+5. Mở rộng và kết luận & 17--20 & 5:15 \\
+\midrule
+Tổng & 20 & 29:15 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Slide làm tròn số liệu đến hai chữ số thập phân; kịch bản dùng số đầy đủ theo
+artifact. Metric chính FD001 dùng window 30 cycles. Slide 18 dùng window 10
+cycles cho FD001--FD004; hai nhóm metric phải được nói tách biệt. Nếu bị rút
+thời gian, có thể rút gọn slide 7, 11 và 17 xuống khoảng 45 giây mỗi slide.
+
+\slide{1}{Bìa}{30 giây}
 \cue{Mở deck ở slide 1.}
-Kính chào thầy/cô và các bạn. Em tên là Phan Nguyễn Mai Phương. Hôm nay em xin
-trình bày báo cáo cuối kỳ môn Phân tích dữ liệu lớn về pipeline dự đoán
-Remaining Useful Life, viết tắt là RUL, trên bộ dữ liệu NASA C-MAPSS.
+Kính chào thầy/cô. Em là Phan Nguyễn Mai Phương. Hôm nay em trình bày báo cáo
+cuối kỳ môn Phân tích dữ liệu lớn về dự đoán Remaining Useful Life, viết tắt là
+RUL, và cảnh báo sớm cho động cơ turbofan trên bộ dữ liệu NASA C-MAPSS.
 
-Mục tiêu của báo cáo là xây dựng một quy trình có thể kiểm tra và tái lập từ
-raw data đến kết quả RUL. Phần chính dùng FD001. Sau đó, em bổ sung một ma trận
-đánh giá trên FD002, FD003 và FD004 để kiểm tra model có chuyển sang điều kiện
-vận hành hoặc fault mode khác được hay không.
+Mục tiêu là xây dựng một pipeline có thể kiểm tra và tái lập từ raw data đến dự
+đoán. Bốn con số ở dưới là khung của bài: 100 train engines, 21 sensor mỗi
+cycle, 126 đặc trưng và MAE 15,3490 cycles trên 100 test engines.
 
-\slide{2}{Bài toán nghiên cứu}{45 giây}
-\cue{Giải thích ví dụ RUL trên slide.}
-RUL là số cycle vận hành còn lại trước khi engine đi đến failure. Đây là bài
-toán supervised regression vì đầu ra là một giá trị số.
+\slide{2}{Nội dung và câu hỏi nghiên cứu}{1 phút}
+\cue{Chỉ lần lượt năm phần, sau đó chuyển sang khung câu hỏi.}
+Bài trình bày có năm phần: bài toán và dữ liệu; pipeline Big Data; phân tích
+chuỗi thời gian; mô hình và đánh giá; cuối cùng là phần mở rộng và kết luận.
 
-Trong train, nếu engine kết thúc ở cycle 200 thì nhãn tại cycle 170 là 30
-cycles. Trong test, trajectory bị cắt trước failure nên không được tự lấy cycle
-cuối quan sát làm nhãn. Model chỉ tạo một dự đoán tại cycle cuối quan sát, sau
-đó mới ghép nhãn NASA tương ứng để đánh giá.
+Ba câu hỏi nghiên cứu dẫn dắt toàn bài. Câu thứ nhất: dữ liệu sensor có thể hiện
+xu hướng suy giảm theo vòng đời engine không. Câu thứ hai: chỉ dùng 30 cycle gần
+nhất, RUL của engine chưa thấy được dự đoán với sai số bao nhiêu. Câu thứ ba: có
+thể phát cảnh báo trước khi RUL xuống dưới 30 cycles không, và model có dùng
+được cho subset khác không. Ở slide 19, em sẽ trả lời lại từng câu bằng số liệu.
 
-RUL được tính theo cycle, không quy đổi thành giờ hoặc ngày vì dữ liệu không có
-thông tin quy đổi lịch vận hành.
+\slide{3}{Bài toán}{1 phút 30 giây}
+\cue{Giải thích ví dụ bên trái trước, sau đó đọc bảng đối chiếu.}
+RUL là số cycle vận hành còn lại trước failure. Đây là bài toán supervised
+regression: input là chuỗi 21 sensor theo cycle, output là một số.
 
-\slide{3}{Dữ liệu C-MAPSS và ranh giới nhãn}{50 giây}
-\cue{Nêu FD001 là protocol chính và FD002--FD004 là phần bổ sung.}
-Kho raw hiện có đủ bốn subset C-MAPSS. FD001 có một operating condition và một
-fault mode. FD002 có sáu operating conditions, FD003 có hai fault modes, còn
-FD004 có cả sáu conditions và hai fault modes.
+Ví dụ trên một train engine: engine kết thúc ở cycle 200. Tại cycle 170, RUL
+thật bằng 200 trừ 170, tức 30 cycles. Đơn vị là cycle; dữ liệu không có thông
+tin quy đổi ra giờ hoặc ngày, nên em không quy đổi.
 
-Phần chính của báo cáo dùng FD001: 100 train engines với 20.631 observations và
-100 test engines với 13.096 observations. Mỗi observation có engine ID, cycle,
-ba operational settings và 21 sensor measurements.
+Bảng bên phải đối chiếu yêu cầu của đề tài 8 với phần đã làm. Xử lý chuỗi thời
+gian nằm ở validation và window theo engine. Về xử lý nhiễu, em dùng thống kê
+trên window 30 cycles và Health Index từ PCA; repository chưa dùng một bộ lọc
+tín hiệu riêng. Chuẩn hóa và tổng hợp theo window nằm ở slide 10. Trực quan xu
+hướng suy giảm ở slide 9 và 11. Dự đoán thời điểm bảo trì và cảnh báo sớm ở
+slide 14 và 16.
 
-Điểm kiểm soát quan trọng là nhãn test của từng subset chỉ được đọc sau khi
-final predictions đã được ghi. Nhờ vậy, test labels không tham gia EDA,
-feature engineering hoặc model selection.
+\slide{4}{Bốn subset C-MAPSS}{1 phút 30 giây}
+\cue{Chỉ vào thẻ FD001, sau đó so sánh ba thẻ còn lại.}
+C-MAPSS là dữ liệu mô phỏng động cơ turbofan của NASA. Mỗi subset có file train,
+trong đó engine chạy đến failure; file test, trong đó chuỗi bị cắt trước failure;
+và file RUL chứa nhãn cho test.
 
-\slide{4}{Quy trình xử lý dữ liệu}{45 giây}
-\cue{Đọc sơ đồ pipeline từ trái sang phải.}
-Raw files được đọc và kiểm tra schema, kiểu dữ liệu, khóa duy nhất và cycle
-continuity. Trong từng subset, reader đọc train và test, thêm cột \texttt{split}
-rồi union theo dòng. ETL tạo observations typed ở Silver Parquet; SQLite chỉ
-chứa engine summary và train targets. Từ observations, pipeline tạo trailing
-features theo từng engine.
+Bốn subset khác nhau theo hai trục: số điều kiện vận hành và số fault mode.
+FD001 có một điều kiện và một fault mode là HPC degradation, gồm 100 train, 100
+test engines và 33.727 observations. FD002 có sáu điều kiện vận hành. FD003 thêm
+fault mode Fan. FD004 có cả sáu điều kiện và hai fault mode.
 
-Nhánh modeling dùng GroupKFold để chọn model, sau đó refit trên toàn bộ train và
-tạo final predictions. Nhánh Health Index dùng PCA--ARIMA là phân tích phụ.
-Cuối cùng, các artifact được dùng cho metric, hình minh họa, dashboard và báo
-cáo.
+Mỗi dòng observation có 26 trường: \texttt{engine\_id}, \texttt{cycle}, ba
+operational settings và 21 sensor. Trong một subset, khóa là
+\texttt{(split, engine\_id, cycle)}. Bốn subset được xử lý riêng vì khóa hiện tại
+chưa có \texttt{dataset\_id}.
 
-Khóa của một observation là \texttt{(split, engine\_id, cycle)}. FD001--FD004
-được xử lý riêng vì khóa hiện tại chưa có \texttt{dataset\_id}. Đây là batch
-ETL có PySpark parity local; benchmark hiện chỉ đo Pandas, chưa phải benchmark
-cluster.
+\slide{5}{Nhãn RUL và ranh giới train/test}{1 phút 30 giây}
+\cue{Đọc hai làn Train và Test từ trái sang phải.}
+Ở train, mỗi engine chạy đến failure, nên nhãn suy ra trực tiếp: RUL tại cycle
+$t$ bằng cycle cuối trừ $t$. FD001 có 20.631 nhãn train.
 
-\slide{5}{Sensor thay đổi theo vòng đời}{45 giây}
-\cue{Nêu rõ đây là phân tích train-only, không phải feature selection.}
-Em so sánh mean của 30 cycles đầu và 30 cycles cuối trong cùng một train engine.
-Chênh lệch được tính theo từng sensor, sau đó dùng bootstrap theo engine,
-Wilcoxon signed-rank và hiệu chỉnh Benjamini--Hochberg cho 21 sensor.
+Ở test, chuỗi bị cắt trước failure. Không được coi cycle cuối quan sát là
+failure. Model tạo đúng một dự đoán tại cycle cuối quan sát của mỗi test engine.
+Chỉ sau khi final predictions đã được ghi, pipeline mới ghép file
+\texttt{RUL\_FD001.txt} để chấm điểm.
 
-Theo protocol này, 15 sensor có bằng chứng bác bỏ giả thuyết không sau hiệu
-chỉnh. Kết quả mô tả thay đổi đầu và cuối vòng đời. Nó không chứng minh quan hệ
-nhân quả và không được dùng như bằng chứng rằng sensor đó sẽ tổng quát tốt trên
-engine mới.
+Khung bên phải tóm tắt ba kiểm soát. Nhãn test không dùng trong EDA, đặc trưng
+hay chọn model. Nhãn được ghép muộn. Và có dấu vết: \texttt{run\_info.json} ghi
+trạng thái \texttt{completed\_after\_final\_predictions}, còn
+\texttt{final\_metrics.json} ghi SHA-256 của file nhãn đã dùng. Đây là ranh giới
+ngăn data leakage, tức rò rỉ dữ liệu từ test vào quá trình xây dựng mô hình.
 
-\slide{6}{Từ chuỗi sensor đến đặc trưng}{45 giây}
-\cue{Giải thích window 30 và sáu phép tóm tắt.}
-Với protocol chính, mỗi dòng feature dùng 30 cycles gần nhất của cùng engine.
-Ví dụ, tại cycle 170, window dùng cycles 141 đến 170 và không dùng cycle tương
-lai.
+\slide{6}{Kiến trúc pipeline}{2 phút}
+\cue{Đọc sơ đồ từ trái sang phải, sau đó chỉ hai nhánh bên dưới.}
+Bronze là file raw dạng text. Reader kiểm tra đúng 26 trường, kiểu dữ liệu, khóa
+duy nhất và cycle liên tục. Train và test cùng schema, nên được thêm cột
+\texttt{split} rồi union theo dòng bằng Pandas concat hoặc PySpark
+\texttt{unionByName}. Đây là union, không phải join.
 
-Mỗi trong 21 sensor tạo sáu đặc trưng: giá trị cuối, mean, sample standard
-deviation, min, max và linear slope. Như vậy có 126 feature columns. Window
-không đi qua engine khác, không dùng test labels và không padding engine ngắn.
+Silver lưu \texttt{observations} với 33.727 dòng và \texttt{train\_targets} với
+20.631 dòng dưới dạng Parquet. Gold lưu \texttt{engine\_summary} cho 200 engine
+dưới dạng Parquet và SQLite. Từ Silver, bước đặc trưng tạo trailing window 30
+cycles, cho 27.927 dòng và 126 cột. Bước mô hình dùng GroupKFold để chọn model,
+refit và tạo 100 dự đoán test.
 
-Artifact FD001 chính có 17.731 train windows và 10.196 test windows.
+Hai nhánh bên dưới: EDA, kiểm định thống kê và Health Index chỉ dùng train; nhánh
+còn lại xuất metric, hình và dashboard. Khi ghép feature với target, pipeline
+dùng đủ ba cột khóa và kiểm tra quan hệ một--một; nếu chỉ join theo
+\texttt{engine\_id}, mọi cycle sẽ ghép với mọi cycle và làm nhân dòng.
 
-Khi ghép với RUL train, modeling dùng đầy đủ ba cột khóa và kiểm tra one-to-one.
-Ba operational settings không nằm trong $X$ của model RUL hiện tại. Tạo 126
-cột là feature engineering, chưa phải feature selection.
+\slide{7}{Parity Pandas--PySpark và benchmark}{2 phút}
+\cue{Đọc bảng trái trước, sau đó biểu đồ phải, cuối cùng nêu giới hạn.}
+Bảng trái là bằng chứng cho phần Big Data. Cùng một input, pipeline Pandas và
+pipeline PySpark cho cùng schema, khóa, số dòng và giá trị ở ba boundary:
+Silver observations, Silver train targets và Gold engine summary. Sai khác
+tuyệt đối lớn nhất bằng 0.
 
-\slide{7}{Đánh giá theo engine}{50 giây}
-\cue{Nhấn mạnh lý do dùng GroupKFold.}
-Em dùng 5-fold GroupKFold với engine ID làm group key. Mọi window của cùng một
-engine nằm trong cùng một fold. Cách chia này cần thiết vì các cycle liên tiếp
-trong một engine có phụ thuộc thời gian; chia ngẫu nhiên theo row sẽ làm metric
-lạc quan.
+Biểu đồ phải là thử nghiệm khả năng mở rộng: nhân bản dữ liệu 1, 10 và 100 lần
+rồi đo phép \texttt{build\_engine\_summary} bằng Pandas. Ở 100 lần, input có
+3.372.700 dòng và lần chạy cold mất 1,6752 giây, so với 0,0195 giây ở 1 lần. Số
+dòng tăng 100 lần, thời gian tăng khoảng 86 lần.
 
-Trong training fold, tổng sample weight của mỗi engine bằng 1 để engine có
-nhiều window không chi phối loss chỉ vì trajectory dài hơn.
+Giới hạn cần nói rõ: đây không phải benchmark PySpark, không đo I/O và không
+chạy trên cluster. PySpark hiện chạy local để kiểm tra parity; modeling và
+rolling features dùng Pandas và scikit-learn. Báo cáo không claim Airflow hoặc
+Power BI.
 
-Sau model selection, model được refit trên toàn bộ train và chỉ tạo một dự đoán
-cho cycle cuối của mỗi test engine.
+\slide{8}{EDA}{1 phút}
+\cue{Chỉ vào histogram, sau đó chuyển sang các cột không đổi.}
+EDA chỉ dùng train. Tuổi thọ 100 train engines phân tán rộng: ngắn nhất 128,
+trung vị 199, trung bình 206,31 và dài nhất 362 cycles, có vài engine dài bất
+thường ở đuôi phải.
 
-\slide{8}{Lựa chọn model}{50 giây}
-\cue{Đọc bảng so sánh ba model.}
-Ba ứng viên là median baseline, Ridge regression và
-HistGradientBoostingRegressor. Metric chọn model là mean engine-level MAE.
+Bảy cột không đổi trong cả 100 engine: sensor 1, 5, 10, 16, 18, 19 và
+\texttt{setting\_3}. Sensor 6 không đổi trong 38 trên 100 engine. Em chưa loại cột
+nào: 126 đặc trưng vẫn gồm đủ 21 sensor. Đây là lựa chọn có chủ đích để không dùng
+kết quả EDA làm bước chọn biến ngoài training fold.
 
-Median baseline đạt 46,9543 cycles. Ridge đạt 23,9922 cycles.
-HistGradientBoosting đạt 20,2143 cycles và được chọn trong cross-validation.
+\slide{9}{Xu hướng suy giảm của sensor}{1 phút 45 giây}
+\cue{Chỉ hai hình trước, sau đó đọc ba bước kiểm định.}
+Hai hình là quỹ đạo giá trị gốc của ba train engine có tuổi thọ 178, 199 và 229
+cycles. Sensor 4 tăng dần, sensor 7 giảm dần khi engine tiến gần failure. Tín
+hiệu có nhiễu rõ theo từng cycle; đây là lý do em tóm tắt theo window ở slide sau.
 
-Kết quả này chỉ nói rằng boosting tốt nhất trong ba ứng viên và trong protocol
-đã chốt. Nó không phải tuyên bố rằng đây là model tốt nhất cho mọi dataset.
+Để kiểm tra trên toàn bộ train, với mỗi engine em lấy mean 30 cycle cuối trừ mean
+30 cycle đầu. Bootstrap theo engine 10.000 lần cho khoảng tin cậy; Wilcoxon
+signed-rank cho p-value; Benjamini--Hochberg với $q = 0{,}05$ hiệu chỉnh cho 21
+sensor.
 
-\slide{9}{Kết quả chính trên FD001}{70 giây}
-\cue{Dùng slide 9 để trình bày metric chính.}
-Sau khi chọn model, pipeline refit HistGradientBoosting trên toàn bộ 17.731
-train windows và tạo đúng 100 final predictions.
+Kết quả: 15 trên 21 sensor bác bỏ giả thuyết không sau hiệu chỉnh; 6 sensor hằng
+số nên không kiểm định. Kết quả này mô tả khác biệt đầu và cuối vòng đời. Nó không
+chứng minh quan hệ nhân quả và không phải feature selection.
 
-Trên 100 FD001 test engines, mean engine MAE là 15,3490 cycles, RMSE là
-20,5413 cycles và NASA score là 1.513,2577. Bootstrap theo engine với 10.000
-lần resampling cho khoảng tin cậy 95% của MAE là [12,7286; 18,0866].
+\slide{10}{Trailing window và đặc trưng}{1 phút 45 giây}
+\cue{Chỉ dải ô cycle, sau đó sáu thống kê, cuối cùng khung bên phải.}
+Với protocol chính, mỗi dòng đặc trưng dùng 30 cycle gần nhất của cùng engine. Ví
+dụ tại cycle 170, window gồm cycles 141 đến 170; cycle 171 trở đi không được dùng.
 
-Đây là kết quả chính của báo cáo với window 30 cycles. Slide 18 dùng window 10
-cho một câu hỏi khác, nên hai con số đó không được so trực tiếp.
+Với mỗi sensor, em tính sáu thống kê: giá trị cuối, mean, sample standard
+deviation, min, max và slope tuyến tính. 21 sensor nhân 6 bằng 126 cột. Hai mươi
+chín cycle đầu mỗi engine chưa đủ window nên không tạo dòng và không padding. FD001
+có 17.731 train windows và 10.196 test windows.
 
-\slide{10}{Phân tích lỗi}{45 giây}
-\cue{Chỉ vào các trường hợp sai lớn trên hình.}
-Trong FD001 test, 74 dự đoán cao hơn RUL thật và 26 dự đoán thấp hơn. Engine 23
-có RUL thật 113 nhưng model dự đoán 170,4768, sai 57,4768 cycles.
+Khung bên phải trả lời yêu cầu về nhiễu và chuẩn hóa. Thống kê trên 30 cycles tóm
+tắt dao động từng cycle; repository chưa dùng bộ lọc tín hiệu riêng. ETL chuẩn hóa
+schema và kiểu dữ liệu. StandardScaler được fit trong training fold cho Ridge và
+trên 90 engine cho Health Index. HistGradientBoosting dùng thang đo gốc.
 
-Ví dụ này cho thấy metric trung bình không mô tả đầy đủ failure mode của model.
-Các trường hợp dự đoán cao hơn RUL thật đóng góp đáng kể vào NASA score vì NASA
-score phạt bất đối xứng sai số dự đoán trễ.
+\slide{11}{Health Index và ARIMA}{1 phút 30 giây}
+\cue{Chỉ hình trái để nói về xu hướng suy giảm, sau đó biểu đồ phải.}
+Health Index là thành phần chính thứ nhất sau khi chuẩn hóa sensor. Scaler, PCA và
+hướng PC1 được fit trên 90 train engines; 10 engine còn lại chỉ được transform.
+Hình cho thấy chỉ số giảm dần và giảm nhanh ở cuối vòng đời. Đây là biểu đồ xu
+hướng suy giảm mà đề tài yêu cầu.
 
-\slide{11}{Health Index và ARIMA}{45 giây}
-\cue{Nhắc rõ đây là phân tích phụ.}
-Health Index được xây từ sensor sau StandardScaler và PCA. Scaler và PCA fit trên
-90 train engines, còn 10 engine được chọn chỉ được transform. ARIMA fit 70% đầu
-chuỗi và forecast 30% cuối.
+ARIMA fit 70\% đầu chuỗi và dự báo 30\% cuối. MAE trung bình trên 10 engine là
+0,4110, thấp hơn drift 0,7469 và last-value 0,9478, tính trên thang Health Index,
+không phải cycle.
 
-Trên 10 holdout trajectories, ARIMA có MAE trung bình 0,4110, thấp hơn drift
-0,7469 và last-value 0,9478. Coverage khoảng dự đoán dao động từ 21,43% đến
-97,03%, nên đây là comparison mô tả. Health Index forecast không phải RUL
-forecast và không thay thế model RUL.
+Giới hạn: ARIMA chỉ thấp hơn drift ở 7 trên 10 engine, và coverage của khoảng dự
+đoán 95\% dao động từ 21,43\% đến 97,03\%. Health Index forecast không phải RUL
+forecast; đây là phân tích phụ.
 
-\slide{12}{Cảnh báo sớm}{45 giây}
-\cue{Nêu điều kiện OOF và giới hạn của warning.}
-Ngưỡng cảnh báo được cố định ở RUL nhỏ hơn hoặc bằng 30 cycles. Trên OOF train,
-44 engine được cảnh báo trước ngưỡng thật, 7 đúng ngưỡng và 49 sau ngưỡng nhưng
-vẫn trước failure. Lead time có trung vị 30 cycles, miền 19 đến 55 cycles.
+\slide{12}{Evaluation protocol}{1 phút 30 giây}
+\cue{Chỉ lưới fold bên trái, sau đó bốn bước bên phải.}
+Em dùng 5-fold GroupKFold với \texttt{engine\_id} làm group. 100 train engines
+được chia thành năm nhóm 20 engine; mỗi fold dùng một nhóm làm validation, bốn
+nhóm còn lại để fit.
 
-Đây là phân tích timing nội bộ. OOF đã được dùng để chọn model, nên kết quả
-chưa phải đánh giá độc lập về utility bảo trì. Vì mọi train trajectory đều đi
-đến failure, false-alarm rate cấp toàn trajectory không xác định theo định nghĩa
-hiện tại.
+Lý do: hai window liền kề của cùng engine trùng nhau 29 trên 30 cycles. Nếu một
+window ở train và window kề nó ở validation, model gần như đã thấy đáp án và metric
+sẽ lạc quan.
 
-\slide{13}{ETL và khả năng tái lập}{45 giây}
-\cue{Nêu ngắn gọn bằng chứng kỹ thuật.}
-Pandas và PySpark cho kết quả khớp tại ba boundary Silver/Gold, với sai khác
-tuyệt đối lớn nhất bằng 0 trong phép parity đã chạy. Benchmark runtime hiện chỉ
-đo Pandas in-memory trên dữ liệu nhân bản, không phải benchmark cluster.
+Bốn bước bên phải: chọn model bằng mean engine-level MAE trên dự đoán out-of-fold;
+đặt sample weight sao cho tổng trọng số mỗi engine bằng 1, để engine có vòng đời dài
+không chi phối loss; refit trên toàn bộ 17.731 train windows; cuối cùng dự đoán một
+điểm cho mỗi test engine, sau đó mới ghép nhãn.
 
-Pipeline được kiểm tra lại bằng full test suite. Lần chạy hiện tại đạt 175 tests.
-Raw files, config, metric và provenance được lưu thành artifact để người đọc có
-thể truy vết kết quả.
+\slide{13}{Chọn model}{1 phút 15 giây}
+\cue{Đọc biểu đồ từ trên xuống.}
+Ba ứng viên được so trên cùng năm fold: median baseline là dự đoán hằng; Ridge với
+StandardScaler trong pipeline; và HistGradientBoostingRegressor.
 
-\slide{14}{Quy trình thử nghiệm cải thiện}{45 giây}
-\cue{Chỉ rõ nhóm động cơ được giữ riêng để đánh giá.}
-Đợt này thử window 10, 20 và 30 cycles, 24 cấu hình HistGradientBoosting
-và ba mức trọng số. Mỗi vòng ngoài giữ riêng một nhóm động cơ; phần còn lại
-được chia thành ba nhóm để chọn cấu hình. Có năm vòng ngoài, cùng 17.731
-điểm đánh giá của 100 train engines. Test không dùng để chọn cấu hình.
+Mean engine MAE lần lượt là 46,9543, 23,9922 và 20,2143 cycles.
+HistGradientBoosting thấp nhất và được chọn. Độ lệch chuẩn giữa fold của HGB là
+0,98 cycles. Kết luận chỉ áp dụng trong ba ứng viên và protocol này.
 
-\slide{15}{Kết quả cải thiện}{45 giây}
-\cue{Đọc bảng vòng ngoài và nêu quyết định giữ baseline.}
-MAE khi RUL không quá 30 thay đổi từ 3,6676 thành 3,6730 cycles, còn số cảnh
-báo trễ tăng từ 49 lên 53 engines. Kết quả chưa đạt tiêu chí đã chốt.
-Cấu hình chọn cuối cùng trên toàn train trùng baseline. MAE test giữ nguyên
-15,3490 cycles. Mô hình có dự đoán; thí nghiệm này chưa tạo được phương án
-đáp ứng đầy đủ điều kiện thay mô hình hiện tại.
+Lưu ý khung bên phải: MAE cross-validation khoảng 20 và MAE test khoảng 15 không so
+trực tiếp. CV chấm mọi train window từ cycle 30 đến failure; test chỉ chấm một điểm
+cắt mỗi engine.
 
-\slide{16}{Đánh đổi giữa các chỉ số}{45 giây}
-\cue{Nêu rõ đây là inner CV dùng để lựa chọn.}
-Trong inner CV, hgb\_08 giảm sai số RUL thấp khoảng 9,75\%, nhưng tăng MAE toàn
-bộ khoảng 0,32 cycles. Tiêu chí ban đầu không chấp nhận mức tăng đó. Vì vậy,
-không kết luận rằng mọi cấu hình đều không thể cải thiện. Đợt tiếp theo cần
-chốt mức đánh đổi chấp nhận được trước khi đánh giá. Đây chưa phải bằng chứng
-ngoài mẫu độc lập cho ứng viên hgb\_08.
+\slide{14}{Kết quả trên test}{1 phút 45 giây}
+\cue{Đọc ba thẻ số bên trái, sau đó giải thích hình.}
+Đây là kết quả chính của báo cáo. Trên 100 FD001 test engines, mean engine MAE là
+15,3490 cycles, RMSE là 20,5413 cycles và NASA score là 1.513,2577. Bootstrap theo
+engine 10.000 lần cho khoảng tin cậy 95\% của MAE là [12,7286; 18,0866].
 
-\slide{17}{Kết luận và giới hạn}{45 giây}
-\cue{Tóm tắt trước khi chuyển sang slide transfer.}
-Kết luận chính là HistGradientBoosting dự đoán RUL trên FD001 trong protocol
-window 30 với MAE 15,3490 cycles. Pipeline kiểm soát data leakage bằng group
-split, trailing window và late test-label join.
+RMSE phạt sai số lớn mạnh hơn MAE. NASA score là score bất đối xứng, phạt dự đoán
+trễ nặng hơn và không có đơn vị cycle.
 
-Giới hạn gồm dữ liệu mô phỏng, một điểm cắt cho mỗi test engine, không có cost,
-downtime hoặc intervention records, và warning OOF chưa độc lập với model
-selection.
+Đọc hình: trục ngang là RUL thật, trục dọc là RUL dự đoán. Điểm càng gần đường chéo
+càng đúng. Vùng RUL thấp bám sát đường chéo hơn vùng RUL cao; đây là vùng quan
+trọng cho cảnh báo.
 
-\slide{18}{Transfer giữa các subset C-MAPSS}{80 giây}
-\cue{Đây là phần bổ sung mới. Chỉ rõ window 10 trước khi đọc bảng.}
-Để kiểm tra khả năng chuyển miền, em chạy cùng pipeline với window 10 cycles cho
-cả FD001, FD002, FD003 và FD004. Window 10 được chọn vì test FD004 có engine
-ngắn nhất 19 cycles. Metric này không thay thế metric chính FD001 dùng window
-30.
+\slide{15}{Phân tích lỗi}{1 phút 30 giây}
+\cue{Chỉ hình residual, sau đó thanh 74/26 và engine 23.}
+Hình là residual, tức dự đoán trừ RUL thật, theo RUL thật. Residual dương nghĩa là
+model cho rằng engine còn sống lâu hơn thực tế, tương ứng cảnh báo muộn.
 
-Evaluation nội bộ cho MAE 21,9258 trên FD001, 22,3556 trên FD002, 28,3255 trên
-FD003 và 27,2218 trên FD004. Đây là trường hợp train và test cùng subset.
+Có 74 dự đoán cao hơn RUL thật và 26 dự đoán thấp hơn. Sai số lớn hơn khi RUL thật
+lớn. Trường hợp sai lớn nhất là engine 23: RUL thật 113, dự đoán 170,4768, sai
+57,4768 cycles. Engine này không bị loại khỏi metric.
 
-Sau đó, em giữ model fit trên toàn bộ train FD001 và áp dụng trực tiếp sang test
-subset khác. MAE tăng lên 60,3215 trên FD002, 47,3949 trên FD003 và 58,5731 trên
-FD004. Kết quả cho thấy operating-condition shift và fault-mode shift làm giảm
-khả năng chuyển model.
+Thông điệp: metric trung bình không thay thế việc xem từng trường hợp sai lớn.
 
-Kết luận thực tế của thí nghiệm là model FD001 không nên dùng trực tiếp cho
-FD002--FD004 nếu chưa retraining hoặc domain adaptation. Đây là negative result
-nhưng có giá trị vì nó trả lời trực tiếp câu hỏi model có tổng quát sang dataset
-khác hay không.
+\slide{16}{Cảnh báo sớm}{2 phút}
+\cue{Đây là sản phẩm đặc thù đề tài yêu cầu. Đọc hình trái trước.}
+Quy tắc cảnh báo: phát cảnh báo khi RUL dự đoán nhỏ hơn hoặc bằng 30 cycles. Hình
+trái là engine 1: đường xanh là RUL thật, đường đỏ là RUL dự đoán out-of-fold,
+đường cam là ngưỡng 30. Cảnh báo đầu tiên ở cycle 162, trước failure ở cycle 192
+đúng 30 cycles.
 
-\section*{Kết thúc}
-\addcontentsline{toc}{section}{Kết thúc}
-Em xin cảm ơn thầy/cô và các bạn đã chú ý lắng nghe. Em xin sẵn sàng nhận câu
-hỏi phản biện.
+Trên 100 train engines: 44 engine được cảnh báo trước khi RUL thật chạm 30, 7 đúng
+ngưỡng và 49 sau ngưỡng nhưng vẫn trước failure. Không engine nào thiếu cảnh báo.
+Lead time đến failure có trung vị 30 cycles, khoảng tứ phân vị 26 đến 35 và miền 19
+đến 55.
+
+Giới hạn: dự đoán out-of-fold này cũng đã dùng để chọn model, nên đây là mô tả nội
+bộ. Mọi train engine đều đi đến failure, nên tỷ lệ cảnh báo sai cấp engine không
+xác định. Dữ liệu không có chi phí bảo trì, nên đây chưa phải chính sách bảo trì.
+
+\slide{17}{Thử nghiệm cải thiện}{1 phút 45 giây}
+\cue{Chỉ sơ đồ nested CV, sau đó bảng vòng ngoài, cuối cùng bảng inner CV.}
+Sau kết quả trên, em thử cải thiện vùng RUL thấp và giảm cảnh báo trễ. Em dùng
+nested GroupKFold 5 nhân 3: vòng ngoài giữ riêng 20 engine để đánh giá; vòng trong
+chia phần còn lại thành ba nhóm để chọn window 10, 20 hoặc 30, một trong 24 cấu hình
+HGB và một trong ba cách đặt trọng số. Test không dùng để chọn cấu hình.
+
+Bảng vòng ngoài trên cùng 17.731 dòng: MAE khi RUL không quá 30 đổi từ 3,6676 thành
+3,6730 cycles, chênh lệch +0,0054 với khoảng tin cậy 95\% [$-0{,}0506$; 0,0639];
+cảnh báo trễ hoặc bỏ lỡ tăng từ 49 lên 53. Không đạt tiêu chí, nên giữ baseline;
+test MAE vẫn 15,3490.
+
+Bảng inner CV cho thấy đánh đổi: \texttt{hgb\_08} giảm MAE vùng RUL thấp khoảng
+9,75\% nhưng tăng MAE toàn bộ 0,32 cycles. Đây là căn cứ cho lần thử sau, không phải
+bằng chứng ngoài mẫu.
+
+\slide{18}{Chuyển miền FD001--FD004}{1 phút 30 giây}
+\cue{Nói rõ window 10 trước khi đọc biểu đồ.}
+Câu hỏi cuối: model FD001 có dùng được cho subset khác không. Em chạy cùng pipeline
+với window 10 cycles, vì FD004 có test engine ngắn nhất chỉ 19 cycles. Các số này
+không so với MAE 15,3490 dùng window 30.
+
+Cột xanh nhạt là train và test cùng subset: FD002 22,3556, FD003 28,3255 và FD004
+27,2218 cycles. Cột cam là giữ model FD001 và áp dụng sang test subset khác: 60,3215,
+47,3949 và 58,5731 cycles. MAE tăng từ khoảng 1,7 đến 2,7 lần.
+
+Khác biệt điều kiện vận hành ở FD002 và fault mode ở FD003 đều làm MAE tăng; FD004
+có cả hai. Kết luận: cần huấn luyện lại hoặc domain adaptation trước khi dùng model
+FD001 cho subset khác. Đây là negative result nhưng trả lời trực tiếp câu hỏi về
+khả năng tổng quát hóa.
+
+\slide{19}{Trả lời câu hỏi nghiên cứu}{1 phút 15 giây}
+\cue{Đọc ba thẻ từ trái sang phải.}
+Câu một: có. 15 trên 21 sensor thay đổi giữa đầu và cuối vòng đời, và Health Index
+giảm rõ ở cuối vòng đời.
+
+Câu hai: trên 100 test engines FD001, MAE là 15,3490 cycles, khoảng tin cậy 95\%
+[12,7286; 18,0866].
+
+Câu ba: với ngưỡng 30 cycles, lead time trung vị là 30 cycles trên out-of-fold,
+nhưng 49 trên 100 cảnh báo đến sau ngưỡng thật. Model FD001 không chuyển trực tiếp
+sang FD002 đến FD004.
+
+Đóng góp Big Data của báo cáo là batch ETL nhiều file, Parquet Silver/Gold, parity
+Pandas--PySpark và artifact có hash, \texttt{run\_info} để tái lập.
+
+\slide{20}{Giới hạn, hướng tiếp theo và hỏi đáp}{45 giây}
+\cue{Đọc nhanh hai cột, sau đó mời đặt câu hỏi.}
+Bốn giới hạn chính: dữ liệu mô phỏng và FD001 chỉ có một điều kiện vận hành, một
+fault mode; mỗi test engine chỉ được đánh giá ở một điểm cắt; không có chi phí,
+downtime hay intervention records nên chưa tối ưu được lịch bảo trì; PySpark chạy
+local và benchmark chỉ đo Pandas.
+
+Ba hướng tiếp theo là đề xuất, chưa thực hiện: huấn luyện lại hoặc chuẩn hóa theo
+operating condition cho FD002--FD004; chốt trước mức đánh đổi cho vùng RUL thấp; và
+đo Spark trên cluster, gồm I/O và thời gian end-to-end.
+
+Em xin cảm ơn thầy/cô đã lắng nghe và xin nhận câu hỏi. Nếu thầy/cô muốn xem trực
+tiếp, em có thể mở dashboard theo \filepath{handoff/DEMO_SCRIPT.md}, khoảng bốn phút.
 
 \clearpage
 \section*{Câu hỏi phản biện thường gặp}
 \addcontentsline{toc}{section}{Câu hỏi phản biện thường gặp}
 
-\answer{1. Vì sao chia GroupKFold theo engine?}{Vì các window trong cùng engine có phụ thuộc thời gian. Nếu chia ngẫu nhiên theo row, window rất gần nhau có thể nằm ở cả train và validation, làm metric lạc quan. GroupKFold bảo đảm một engine chỉ thuộc một fold validation.}
+\answer{1. Vì sao chia GroupKFold theo engine?}{Vì các window trong cùng engine có phụ thuộc thời gian và chồng lấn 29/30 cycles. Nếu chia ngẫu nhiên theo row, window rất gần nhau có thể nằm ở cả train và validation, làm metric lạc quan. GroupKFold bảo đảm một engine chỉ thuộc một fold validation.}
 
-\answer{2. Có data leakage không?}{Pipeline không dùng tương lai trong trailing window, giữ mọi window của engine trong cùng fold và chỉ đọc test labels sau khi final predictions đã được ghi.}
+\answer{2. Có data leakage không?}{Pipeline không dùng tương lai trong trailing window, giữ mọi window của engine trong cùng fold và chỉ đọc test labels sau khi final predictions đã được ghi. \texttt{run\_info.json} ghi trạng thái join và \texttt{final\_metrics.json} ghi SHA-256 của file nhãn.}
 
-\answer{3. Vì sao không áp dụng model FD001 trực tiếp cho FD002--FD004?}{Kết quả transfer cho thấy MAE tăng từ khoảng 22--28 cycles trong evaluation nội bộ lên 47--60 cycles khi giữ model FD001 cố định. Dataset shift làm model mất độ chính xác, nên cần retraining hoặc domain adaptation.}
+\answer{3. Xử lý nhiễu ở đâu?}{Thống kê mean, min, max, std và slope trên 30 cycles tóm tắt dao động từng cycle; Health Index gom 21 sensor bằng PCA. Repository chưa dùng bộ lọc tín hiệu riêng như moving median hoặc Kalman filter; đây là giới hạn nếu cô hỏi.}
 
-\answer{4. Vì sao window 10 và window 30 không so trực tiếp?}{Window 30 cung cấp lịch sử dài hơn và là protocol chính của FD001. Window 10 được dùng để mọi subset đều có đủ test windows, đặc biệt FD004. Thay đổi window làm thay đổi input và metric.}
+\answer{4. Vì sao không áp dụng model FD001 trực tiếp cho FD002--FD004?}{Kết quả transfer cho thấy MAE tăng từ khoảng 22--28 cycles trong evaluation nội bộ lên 47--60 cycles khi giữ model FD001 cố định. Khác biệt phân bố giữa các subset làm model mất độ chính xác, nên cần retraining hoặc domain adaptation.}
 
-\answer{5. ARIMA có dự báo RUL không?}{Không. ARIMA forecast Health Index chuẩn hóa từ PCA. Health Index không phải countdown RUL và chỉ là phân tích phụ.}
+\answer{5. Vì sao window 10 và window 30 không so trực tiếp?}{Window 30 cung cấp lịch sử dài hơn và là protocol chính của FD001. Window 10 được dùng để mọi subset đều có đủ test windows, đặc biệt FD004 có test engine ngắn nhất 19 cycles. Thay đổi window làm thay đổi input và metric.}
 
-\answer{6. Kết quả có áp dụng cho động cơ thực tế không?}{Chưa thể kết luận. C-MAPSS là dữ liệu mô phỏng và không có chi phí bảo trì, downtime hoặc intervention records. Cần dữ liệu thực tế và evaluation ngoài miền trước khi triển khai.}
+\answer{6. ARIMA có dự báo RUL không?}{Không. ARIMA forecast Health Index chuẩn hóa từ PCA. Health Index không phải countdown RUL và chỉ là phân tích phụ.}
 
-\answer{7. Big Data nằm ở đâu khi dữ liệu gốc nhỏ?}{Đóng góp Big Data nằm ở ETL, Parquet, parity Pandas/PySpark, provenance và thử nghiệm scale nhân tạo. Repository không tuyên bố FD001 tự thân là workload production-scale.}
+\answer{7. Vì sao không dùng LSTM hoặc Transformer?}{Phần thảo luận của báo cáo ghi rằng LSTM/Transformer cần một giả thuyết về biểu diễn thời gian và phải so trên cùng protocol với baseline hiện tại. Báo cáo chưa chạy thí nghiệm đó, nên không đưa ra nhận định về hiệu quả của các model này.}
 
+\answer{8. Kết quả có áp dụng cho động cơ thực tế không?}{Chưa thể kết luận. C-MAPSS là dữ liệu mô phỏng và không có chi phí bảo trì, downtime hoặc intervention records. Cần dữ liệu thực tế và evaluation ngoài miền trước khi triển khai.}
+
+\answer{9. Big Data nằm ở đâu khi dữ liệu gốc nhỏ?}{Đóng góp Big Data nằm ở batch ETL nhiều file, Parquet Silver/Gold, parity Pandas/PySpark, provenance và thử nghiệm scale nhân bản đến 3.372.700 dòng. Repository không tuyên bố FD001 tự thân là workload production-scale và chưa có benchmark cluster.}
 
 \end{document}

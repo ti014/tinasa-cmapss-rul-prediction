@@ -1,49 +1,36 @@
 \section{Kết luận}
+\label{sec:conclusion}
 
-Báo cáo trả lời năm câu hỏi nghiên cứu chính trên NASA C-MAPSS FD001 và một câu
-hỏi bổ sung về chuyển miền sang FD002--FD004.
-Thứ nhất, FD001 có 20.631 train observations và 13.096 test observations đáp ứng các
-kiểm tra schema, khóa và tính liên tục của cycle; điều này xác nhận khả năng
-xử lý dữ liệu theo contract, không xác nhận tính đại diện cho động cơ thực tế.
-Thứ hai, phân tích đầu/cuối 30 cycles ghi nhận 15 sensor bác bỏ giả thuyết
-không của Wilcoxon sau hiệu chỉnh BH trong cấu hình đã chọn; kết quả cần đọc
-cùng giả định signed-rank, độ lớn chênh lệch và số zero, không dùng làm
-feature selection ngoài training fold.
+Báo cáo đã xây dựng một pipeline tái lập được để dự đoán RUL trên NASA C-MAPSS,
+từ dữ liệu thô qua các lớp Bronze--Silver--Gold đến mô hình và đánh giá, trong đó
+nhãn test chỉ được dùng một lần ở bước cuối. Các câu hỏi nghiên cứu được trả lời
+như sau:
+\begin{enumerate}[label=\textbf{Q\arabic*.},leftmargin=2.6em]
+\item Dữ liệu FD001 (20.631 dòng train, 13.096 dòng test) đạt mọi kiểm tra về
+      schema, khóa và tính liên tục của cycle; sáu sensor hằng số và không mang
+      thông tin.
+\item 15/21 sensor thay đổi có ý nghĩa thống kê giữa 30 cycles đầu và 30 cycles
+      cuối vòng đời; năm sensor 4, 7, 11, 12 và 20 thay đổi cùng hướng ở cả 100
+      động cơ.
+\item ETL bằng PySpark khớp hoàn toàn với Pandas trên ba bảng Silver/Gold.
+\item HistGradientBoosting với 126 đặc trưng từ window 30 cycles đạt MAE 15,3490
+      cycles (khoảng tin cậy 95\%: 12,7286--18,0866) và RMSE 20,5413 cycles trên
+      100 động cơ test. Sai số nhỏ khi động cơ gần hỏng và lớn hơn khi RUL còn
+      cao, chủ yếu do dự đoán quá cao. Nested CV với window, siêu tham số và
+      trọng số khác không cải thiện được mô hình này.
+\item Với ngưỡng 30 cycles, mọi động cơ train đều được cảnh báo với lead time
+      trung vị 30 cycles, nhưng 49/100 cảnh báo đến sau khi RUL thật đã dưới
+      ngưỡng. Cảnh báo trễ tập trung ở các động cơ ngắn đời, tức suy giảm nhanh.
+\item Mô hình FD001 không dùng trực tiếp được cho các subset khác: MAE tăng từ
+      21,93--28,33 cycles (huấn luyện nội bộ) lên 47,39--60,32 cycles (chuyển
+      miền). Với FD002 và FD004, phần lớn giá trị sensor nằm ngoài miền huấn
+      luyện nên dự đoán gần như hằng số; với FD003, dự đoán bị lệch cao dù sensor
+      nằm trong miền quen thuộc.
+\end{enumerate}
 
-Thứ ba, Pandas và PySpark khớp ba boundary Silver/Gold đã kiểm tra, với sai
-khác tuyệt đối lớn nhất bằng 0. Runtime chỉ được đo cho Pandas; báo cáo chưa
-có bằng chứng so sánh tốc độ hai engine hoặc hiệu năng cluster. Thứ tư,
-HistGradientBoosting có mean engine MAE thấp nhất trong ba ứng viên trên
-GroupKFold. Sau refit, model đạt MAE 15,3490 cycles và RMSE 20,5413 cycles tại
-điểm cắt của 100 test engines; bootstrap CI 95\% cho MAE là
-[12,7286; 18,0866]. Metric tại điểm cắt không mô tả toàn bộ trajectory.
-
-Thứ năm, ngưỡng cảnh báo minh họa 30 cycles tạo ít nhất một event trên mỗi
-engine OOF train, nhưng chỉ 44 engine cảnh báo trước ngưỡng và 7 đúng ngưỡng;
-49 engine cảnh báo sau ngưỡng. Lead time có trung vị 30 cycles, khoảng tứ
-phân vị 26--35 và miền 19--55. Vì OOF cũng dùng để chọn model, đây là đánh giá
-nội bộ, chưa chứng minh chất lượng cảnh báo độc lập hay giá trị sử dụng cho bảo trì.
-Ví dụ engine 1 cảnh báo tại cycle 162, trước failure proxy cycle 192 đúng
-30 cycles; điều đó chưa quy định cần can thiệp khi nào.
-
-Nhánh phụ PCA--ARIMA có MAE trung bình 0,4110, thấp hơn drift 0,7469 và
-last-value 0,9478 trên cùng 10 chuỗi giữ lại để kiểm tra. Tuy nhiên, ARIMA chỉ có
-MAE thấp hơn drift ở 7/10 engine, và tỷ lệ bao phủ thay đổi từ 21,43\% đến 97,03\%.
-Kết quả này hỗ trợ phân tích Health Index, không thay thế dự đoán RUL.
-
-Đóng góp của báo cáo là một pipeline có thể tái lập, các phép so sánh được mô tả
-theo cùng evaluation protocol và các giới hạn được công bố. Ma trận bổ sung với
-window 10 cycles cho thấy model train trên FD001 có MAE 60,3215 trên FD002,
-47,3949 trên FD003 và 58,5731 trên FD004, cao hơn evaluation nội bộ của các
-subset. Vì vậy, kết luận chính được giữ ở phạm vi FD001; các subset khác cho
-thấy cần huấn luyện lại hoặc xử lý khác biệt giữa các subset trước khi áp dụng.
-Phạm vi dữ liệu hiện tại chưa cho phép kết luận về lịch bảo trì tối ưu hoặc hiệu
-quả triển khai thực tế.
-
-Đợt cải thiện bổ sung dùng nested GroupKFold đã kiểm tra window 10/20/30,
-24 cấu hình HGB và ba phương án trọng số. Trên outer predictions, MAE RUL
-thấp thay đổi từ 3,6676 thành 3,6730 cycles; cảnh báo trễ tăng từ 49 lên 53
-engines. Cấu hình cuối được chọn lại là baseline, nên MAE test giữ nguyên
-15,3490 cycles. Kết quả này chưa đáp ứng tiêu chí cải thiện đã chốt. Các
-đánh đổi quan sát được trong inner CV là căn cứ cho thử nghiệm tiếp theo,
-không phải bằng chứng rằng dự đoán RUL không thể tốt hơn.
+Nhìn chung, pipeline cho kết quả RUL hợp lý trên FD001 và có ranh giới dữ liệu
+rõ ràng. Phân tích lỗi chỉ ra ba hạn chế có nguyên nhân cụ thể: sai số lớn ở đầu
+vòng đời do tín hiệu sensor chưa thay đổi, cảnh báo trễ ở động cơ suy giảm nhanh,
+và mất khả năng dự đoán khi điều kiện vận hành thay đổi. Vì vậy, hướng tiếp theo
+nên tập trung vào cách định nghĩa nhãn, đặc trưng về tốc độ suy giảm và chuẩn hóa
+theo điều kiện vận hành, thay vì tiếp tục chỉnh siêu tham số.

@@ -1,0 +1,20 @@
+{
+  "status": "passed",
+  "dataset": "FD001",
+  "fit_records": 151,
+  "unique_fit_seconds": 1195.6638592992094,
+  "outer_engines": 100,
+  "outer_rows_per_stage": 17731,
+  "test_engines": 100,
+  "paired_ci_recomputed": true,
+  "saved_model_predictions_match": true,
+  "source_verification": {
+    "recorded_source_verified": true,
+    "verified_files": 23,
+    "archived_files": 23,
+    "working_tree_matches_recorded_source": false,
+    "working_tree_differences": [
+      "src/cmapss/modeling/followup.py"
+    ]
+  }
+}

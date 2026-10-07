@@ -1,0 +1,14 @@
+"""Contract cho Gold rolling features FD001."""
+
+from cmapss.data.contracts import KEY, SENSORS
+
+FEATURE_SCHEMA_VERSION = 1
+ROLLING_WINDOW_CYCLES = 30
+ROLLING_FEATURE_KEY = KEY
+ROLLING_FEATURE_STATS = ("last", "mean", "std", "min", "max", "slope")
+ROLLING_FEATURE_VALUE_COLUMNS = tuple(
+    f"{sensor}__{stat}" for sensor in SENSORS for stat in ROLLING_FEATURE_STATS
+)
+ROLLING_FEATURE_COLUMNS = ROLLING_FEATURE_KEY + ROLLING_FEATURE_VALUE_COLUMNS
+ROLLING_FEATURE_STD_DDOF = 1
+ROLLING_FEATURE_SLOPE_POSITION_START = 1

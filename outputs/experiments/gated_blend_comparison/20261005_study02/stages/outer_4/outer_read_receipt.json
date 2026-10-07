@@ -1,0 +1,6 @@
+{
+  "outer_fold": 4,
+  "outer_predictions_read_after_selection": true,
+  "read_completed_at_utc": "2026-10-05T10:28:27.169713+00:00",
+  "selection_sha256": "fb7bdcd040ef130b2606a863c5a542f014e540fd6c1f27b8223ef1df4efc3afd"
+}

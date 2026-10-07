@@ -1,0 +1,21 @@
+{
+  "all_final_procedures_replayed_exact": true,
+  "fresh_fits": 0,
+  "frozen_at_utc": "2026-10-05T10:29:11.202413+00:00",
+  "inference_sha256": "43fe873b2962aef9a631e2dd9005dff33323c7983e794848fe62f77658223029",
+  "models_metadata_sha256": {
+    "hgb_cap125": "70616296880e7943b7d03119b0dbd4f7b3a42616f291b2200d654ac586b6c151",
+    "hgb_uncapped": "0ad70ba5f460ab1c355ddd113ef334b479d0a65cffc24da973d99f522ca86595"
+  },
+  "models_sha256": {
+    "hgb_cap125": "8a587c3b3af52b549f7de10051ea61a2d21a5490a988318ac50af014cfffd4f9",
+    "hgb_uncapped": "5818ed32b7e8675cda711c7d4e27b6d41057318eacf3560f2dd414c06f330821"
+  },
+  "original_base_prediction_replay_exact": true,
+  "outer_decision_sha256": "411ceed7e8979211edeb542993a668d35c971f8eaea5a38145ba653fb6f76e06",
+  "predictions_sha256": "6ea14cfd8e0047cf956c9d491674f2762cb46ab5f923f021022a1703bf5eb8be",
+  "saved_model_replay_exact": true,
+  "selection_sha256": "de873d04bed95020391d8a6e0e6f7783337f084addbe4307fe5aa28fdd747721",
+  "source_identity": "35c5ca253b77062f4f6065d0ef90b3c4a143fa7e5c256e2305ecc4afe7230d77",
+  "test_labels_read": false
+}

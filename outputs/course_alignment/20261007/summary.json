@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "author": "Phan Nguyễn Mai Phương",
+  "mshv": "25002711",
+  "generated_at_utc": "2026-10-07T06:55:53.684534+00:00",
+  "purpose": "course-alignment evidence for report and slides",
+  "read_only_replay": true,
+  "model_specs": {
+    "hgb126": "historical hist_gradient_boosting OOF; 126 rolling features",
+    "hgb169": "historical hgb_baseline169 outer predictions; 126 rolling + cycle + 42 history features"
+  },
+  "validation": {
+    "key_columns": [
+      "split",
+      "engine_id",
+      "cycle"
+    ],
+    "same_keys": true,
+    "same_raw_truth": true,
+    "same_grouped_fold": true,
+    "row_count": 17731,
+    "engine_count": 100,
+    "cycle_min": 30,
+    "cycle_max": 362,
+    "hgb126_fold_column": "fold",
+    "hgb169_fold_column": "outer_fold",
+    "hgb126_oof_source": "outputs/modeling/predictions/oof_predictions.parquet",
+    "hgb169_outer_source": "outputs/experiments/multiscale_comparison/20261006_study02/outer_predictions.parquet",
+    "input_sha256": {
+      "outputs\\modeling\\predictions\\oof_predictions.parquet": "c9952e7833b1b49f9877203bf4e1e40407f3e732e2238cf25556e8e216c2828d",
+      "outputs\\experiments\\multiscale_comparison\\20261006_study02\\outer_predictions.parquet": "f5db1fc5888263c83f20b9c005e1edbdcd720a5eeebbaed7954c6749409382c7",
+      "outputs\\etl\\silver\\observations.parquet": "9e031b0d6430512fbce9af344b3110aeeb17429d44f394f28e370130d13560f8",
+      "outputs\\etl\\silver\\train_targets.parquet": "51da68e3be2b379e71c29cd7ac6ea34834722b372373dee2e36a04b63cf61905",
+      "outputs\\experiments\\multiscale_comparison\\20261006_study02\\manifest.json": "39f13522743fb3a0c16f1bd13d80aece5e07e483490b3331445378d93b18f9e3",
+      "outputs\\experiments\\multiscale_comparison\\20261006_study02\\aggregate_metrics.csv": "cc3bf3a05105020866d9867a75c2fd7d2d6edad47a2a1bcfb5580c0e7cc42eae",
+      "scripts\\build_course_alignment_evidence.py": "185c8cc3f6f8da2dc260bc4d136dd3ff3679388f799b0131894fb00e8fbd8312"
+    }
+  },
+  "endpoint_definition": {
+    "fractions": [
+      0.5,
+      0.7,
+      0.9
+    ],
+    "cycle_origin": "floor(fraction*lifetime), clamped to first persisted cycle",
+    "aggregation": "equal-engine MAE; pooled row RMSE; total and equal-engine NASA retained",
+    "row_count": 300,
+    "engine_count": 100
+  },
+  "model_selection_status": "No new selection; evidence compares persisted models and keeps the historical calibrated169 reference separate.",
+  "recommendation": {
+    "main_predictor": "hgb169",
+    "decision": "Use HGB169 as the main predictor candidate for the report because it is better on the common full-trajectory and endpoint panels, subject to the stated conditional-bootstrap and historical-inspection limits.",
+    "whole_process_warning_readout": "Do not claim an unconditional whole-process improvement: under the fixed threshold30 policy HGB169 is less timely, while under threshold40 it is slightly more timely with a small burden increase.",
+    "warning_policy": "Keep the historically calibrated169 policy as a separate reference and report fixed-policy sensitivity. A deployment policy must be declared and validated separately from selecting the predictor.",
+    "test_reporting": "Keep test reporting separate; these outputs do not use test labels to choose the predictor or warning policy."
+  },
+  "fixed_warning_policy_status": "thresholds 30 and 40, persistence 1, lead requirement 30; common sensitivity policies, not newly calibrated",
+  "calibrated169_reference": {
+    "source": {
+      "aggregate_metrics": "outputs/experiments/multiscale_comparison/20261006_study02/aggregate_metrics.csv",
+      "outer_predictions": "outputs/experiments/multiscale_comparison/20261006_study02/outer_predictions.parquet",
+      "manifest": "outputs/experiments/multiscale_comparison/20261006_study02/manifest.json"
+    },
+    "historical_procedure": "hgb_baseline169 with inner-selected warning policy per outer fold",
+    "outer_policy_by_fold": [
+      {
+        "outer_fold": 1,
+        "threshold": 40,
+        "persistence": 1
+      },
+      {
+        "outer_fold": 2,
+        "threshold": 40,
+        "persistence": 1
+      },
+      {
+        "outer_fold": 3,
+        "threshold": 40,
+        "persistence": 1
+      },
+      {
+        "outer_fold": 4,
+        "threshold": 40,
+        "persistence": 3
+      },
+      {
+        "outer_fold": 5,
+        "threshold": 40,
+        "persistence": 1
+      }
+    ],
+    "trajectory_rmse": 29.80684578955247,
+    "trajectory_mean_engine_mae": 17.000946016902613,
+    "endpoint_mean_engine_mae": 9.891336299046634,
+    "on_time_rate": 0.94,
+    "early_alarm_burden": 0.0521587921813207,
+    "condition": "historical nested-policy readout; not comparable to the fixed-policy sensitivity table as a calibrated-vs-fixed claim",
+    "scope_limit": "outer predictions and inner selection were historically inspected; no new refit or independent blind confirmation",
+    "manifest_scientific": true
+  },
+  "smoothing": {
+    "n_train_rows": 20631,
+    "n_engines": 100,
+    "n_sensors_total": 21,
+    "n_nonconstant_sensors": 17,
+    "nonconstant_sensors": [
+      "sensor_2",
+      "sensor_3",
+      "sensor_4",
+      "sensor_5",
+      "sensor_6",
+      "sensor_7",
+      "sensor_8",
+      "sensor_9",
+      "sensor_11",
+      "sensor_12",
+      "sensor_13",
+      "sensor_14",
+      "sensor_15",
+      "sensor_16",
+      "sensor_17",
+      "sensor_20",
+      "sensor_21"
+    ],
+    "window_cycles": 30,
+    "causal_definition": "mean of cycles max(1, t-29)..t; output interpreted only from cycle 30 onward",
+    "purpose": "descriptive evidence that smoothing attenuates short-term variation while retaining broad change",
+    "limitations": [
+      "C-MAPSS has no clean sensor ground truth, so reduction in first differences is a proxy for attenuation, not proof of noise removal.",
+      "Trailing means create boundary delay and are not a causal mechanism explanation.",
+      "No smoothing parameter was fitted, searched or selected from labels.",
+      "The analysis does not establish that smoothing improves RUL prediction."
+    ]
+  },
+  "figures": [
+    "figure_causal_smoothing_sensors_11_12_21.png",
+    "figure_smoothing_variation_reduction.png",
+    "figure_slope_preservation_sensors_11_12_21.png"
+  ],
+  "input_sha256": {
+    "outputs\\modeling\\predictions\\oof_predictions.parquet": "c9952e7833b1b49f9877203bf4e1e40407f3e732e2238cf25556e8e216c2828d",
+    "outputs\\experiments\\multiscale_comparison\\20261006_study02\\outer_predictions.parquet": "f5db1fc5888263c83f20b9c005e1edbdcd720a5eeebbaed7954c6749409382c7",
+    "outputs\\etl\\silver\\observations.parquet": "9e031b0d6430512fbce9af344b3110aeeb17429d44f394f28e370130d13560f8",
+    "outputs\\etl\\silver\\train_targets.parquet": "51da68e3be2b379e71c29cd7ac6ea34834722b372373dee2e36a04b63cf61905",
+    "outputs\\experiments\\multiscale_comparison\\20261006_study02\\manifest.json": "39f13522743fb3a0c16f1bd13d80aece5e07e483490b3331445378d93b18f9e3",
+    "outputs\\experiments\\multiscale_comparison\\20261006_study02\\aggregate_metrics.csv": "cc3bf3a05105020866d9867a75c2fd7d2d6edad47a2a1bcfb5580c0e7cc42eae",
+    "scripts\\build_course_alignment_evidence.py": "185c8cc3f6f8da2dc260bc4d136dd3ff3679388f799b0131894fb00e8fbd8312"
+  },
+  "limitations": [
+    "No new model fitting or test-label read was performed.",
+    "Paired bootstrap is conditional on saved predictions and excludes refit, seed and selection uncertainty.",
+    "Historical inspection means this evidence is not an independent blind confirmation.",
+    "The 126-versus-169 comparison changes feature representation as well as feature count; it does not isolate architecture.",
+    "Causal smoothing descriptors do not identify true sensor noise and do not establish RUL benefit."
+  ]
+}

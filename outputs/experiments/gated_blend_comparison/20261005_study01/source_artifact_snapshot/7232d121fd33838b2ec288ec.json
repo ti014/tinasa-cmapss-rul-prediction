@@ -1,0 +1,39 @@
+{
+  "author": {
+    "full_name": "Phan Nguyễn Mai Phương",
+    "student_id": "25002711"
+  },
+  "decision": {
+    "bootstrap_scope": "paired engines conditional on fixed outer predictions; duplicate sampled engines retain multiplicity; excludes refitting variability",
+    "capped_reference_endpoint_controls": {
+      "endpoint_mae_not_worse": false,
+      "endpoint_nasa_not_worse": false
+    },
+    "capped_reference_endpoint_controls_met": false,
+    "capped_reference_reporting_only": true,
+    "controls": {
+      "endpoint_mae_not_worse": true,
+      "endpoint_nasa_not_worse": true,
+      "trajectory_rmse_improved": false,
+      "warning_burden_not_worse": true,
+      "warning_on_time_not_worse": true
+    },
+    "evaluation_limit": "exploratory follow-up using historically inspected engine folds; retrospective endpoints; fixed-prediction conditional bootstrap",
+    "full_protocol_configuration": true,
+    "gate": "selected_pipeline vs hgb_uncapped: paired trajectory RMSE upper95% CI<0; endpoint engine MAE/NASA and early burden upper95% CI<=0; on-time rate lower95% CI>=0; no test gating",
+    "historical_baseline_overwritten": false,
+    "outer_trajectory_rmse_ci_lower": 0.0,
+    "outer_trajectory_rmse_ci_upper": 0.0,
+    "outer_trajectory_rmse_delta": 0.0,
+    "promotion_gate_met": false,
+    "selection_source": "inner grouped CV only; no procedure selection from outer readouts"
+  },
+  "historical_baseline_overwritten": false,
+  "output_dir": "outputs/experiments/lightgbm_comparison/20261005_study01",
+  "seconds": 473.4299766999902,
+  "selected_procedure": "hgb_uncapped",
+  "source_identity": "c10425d965e3f7d0411d14a56d15526ff33373c8e2ee077467b3aa38950ce90a",
+  "status": "completed",
+  "test_evaluated": true,
+  "test_reporting_only": true
+}

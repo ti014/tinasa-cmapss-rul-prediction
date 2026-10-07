@@ -82,5 +82,5 @@ chưa đủ đánh giá biến thiên runtime; không kết luận tốc độ c
   33.727 dòng, Silver train targets 20.631 dòng và Gold engine summary 200
   dòng; `max_abs_diff=0.0` ở cả ba bảng.
 - Raw files không bị ghi đè; output path được chặn nếu nằm trong `data/raw`.
-- PySpark trên Windows vẫn phát cảnh báo thiếu `winutils.exe` và native Hadoop;
-  parity local trả mã 0 và không ghi HDFS hoặc cluster artifact.
+- PySpark trên Windows vẫn phát cảnh báo thiếu `winutils.exe` và native runtime;
+  parity local trả mã 0 và không ghi artifact lên hệ thống lưu trữ phân tán.

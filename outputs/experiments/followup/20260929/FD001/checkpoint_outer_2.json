@@ -1,0 +1,11 @@
+{
+  "completed": true,
+  "selected": {
+    "name": "cap_110_history_1",
+    "window": 30,
+    "target_cap": 110,
+    "history": true,
+    "settings": false,
+    "normalize_conditions": false
+  }
+}

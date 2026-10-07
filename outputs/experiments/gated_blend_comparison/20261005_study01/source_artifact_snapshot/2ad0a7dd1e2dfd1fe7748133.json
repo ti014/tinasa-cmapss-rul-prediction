@@ -1,0 +1,63 @@
+{
+  "artifacts_modified": false,
+  "author": {
+    "full_name": "Phan Nguyễn Mai Phương",
+    "student_id": "25002711"
+  },
+  "cache_metadata_records": 128,
+  "checks": {
+    "all_checks_passed": true,
+    "cache_prediction_integrity": true,
+    "complete_cv_cache_count": true,
+    "complete_inner_task_coverage": true,
+    "complete_outer_task_coverage": true,
+    "completed_full_run": true,
+    "engine_fold_assignments": true,
+    "exact_source_and_input_snapshots": true,
+    "final_models_checksum_and_prediction_replay": true,
+    "frozen_feature_schema_169_unique": true,
+    "full_candidate_grid": true,
+    "inner_candidate_metrics_recomputed": true,
+    "inner_only_family_selection_recomputed": true,
+    "inner_only_policy_selection_recomputed": true,
+    "inner_only_procedure_selection_recomputed": true,
+    "inner_outer_engine_separation": true,
+    "lightgbm_runtime_pin_4_6_0": true,
+    "outer_aggregate_metrics_recomputed": true,
+    "outer_endpoint_panel_recomputed": true,
+    "outer_gate_recomputed_without_test": true,
+    "outer_prediction_truth_and_keys": true,
+    "paired_bootstrap_recomputed": true,
+    "runner_immutable_source_input_lock_guard": true,
+    "selected_pipeline_aliases_inner_choice": true,
+    "test_reporting_only_and_gate_frozen_before_labels": true,
+    "unique_132_full_fit_coverage": true,
+    "warning_events_recomputed": true
+  },
+  "counts": {
+    "cache_json": 128,
+    "expected_cv": 128,
+    "expected_final_models": 4,
+    "expected_inner": 108,
+    "expected_outer": 20,
+    "expected_total_fits": 132,
+    "unique_final_fits": 4,
+    "unique_inner_fits": 108,
+    "unique_outer_fits": 20,
+    "unique_total_fits": 132
+  },
+  "evaluation_scope": "read-only verification of disjoint engine CV, retrospective outer panel, paired bootstrap and reporting-only test flags",
+  "model_fit_performed": false,
+  "numeric_comparison": {
+    "independently_recomputed_aggregate_atol": 1e-08,
+    "independently_recomputed_aggregate_rtol": 1e-10,
+    "prediction_truth_and_model_replay": "exact equality",
+    "reused_inner_and_paired_readouts": "exact equality with CSV round-trip float parsing"
+  },
+  "raw_test_labels_read": false,
+  "schema_version": 1,
+  "source_identity": "c10425d965e3f7d0411d14a56d15526ff33373c8e2ee077467b3aa38950ce90a",
+  "source_script_sha256": "adf8212a1053f065199d26b079846ec3a0150e88985f3ceb62e94dfd24b49313",
+  "status": "passed",
+  "study_dir": "outputs/experiments/lightgbm_comparison/20261005_study01"
+}

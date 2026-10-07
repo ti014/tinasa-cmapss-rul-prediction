@@ -1,0 +1,11 @@
+{
+  "source_identity": "87452cb02c68dbead9a98b76eb98bcdd05ac1518b9c8d7ba9214d8357f1f7942",
+  "predictions_sha256": "0e1a74304dff6f8fd230e674d2249f8958b64ccf5363f611880272ed021e02b6",
+  "test_labels_read": false,
+  "saved_model_replay_exact": true,
+  "models_sha256": {
+    "hgb_baseline169": "61dad281302653488d9c72c41151aed3697dd206a0a8ce09b32a4ef79517b1a4",
+    "hgb_multiscale10_30": "f2a9b53baa5c960b696f5f64bbbd98073aa26aa8d9c23f427cc97b106c57e595",
+    "hgb_initial_profile42": "a9b18f4c65ffa0b70a572f7119bdf72e267a574bc2d355d2540447b12667a41b"
+  }
+}

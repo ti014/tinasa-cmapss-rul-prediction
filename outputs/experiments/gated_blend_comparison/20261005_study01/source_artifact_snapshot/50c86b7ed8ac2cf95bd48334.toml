@@ -1,0 +1,59 @@
+[build-system]
+requires = ["setuptools==80.9.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cmapss-rul"
+version = "0.1.0"
+description = "FD001 data contracts and validation for a reproducible RUL study"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "pandas==2.3.3",
+    "numpy==2.3.3",
+    "matplotlib==3.10.6",
+    "seaborn==0.13.2",
+    "scipy==1.16.2",
+    "pyarrow==23.0.1",
+    "scikit-learn==1.9.1",
+    "joblib==1.6.0",
+    "statsmodels==0.14.5",
+    "pillow==12.3.0",
+    "xgboost==3.4.1",
+]
+
+[project.scripts]
+cmapss-validate = "cmapss.validate:main"
+cmapss-etl = "cmapss.etl.cli:main"
+cmapss-features = "cmapss.features.cli:main"
+cmapss-modeling = "cmapss.modeling.cli:main"
+cmapss-cross-dataset = "cmapss.cross_dataset:main"
+cmapss-model-improvement = "cmapss.modeling.improvement_cli:main"
+cmapss-tree-comparison = "cmapss.modeling.tree_comparison.runner:main"
+
+[project.optional-dependencies]
+lightgbm = [
+    "lightgbm==4.6.0",
+]
+etl = [
+    "pyspark==4.0.1",
+]
+dashboard = [
+    "streamlit==1.54.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest==9.0.3",
+    "jupyterlab==4.5.10",
+    "ipykernel==6.30.1",
+    "nbclient==0.10.2",
+    "nbformat==5.10.4",
+    "nbconvert==7.17.1",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"

@@ -1,0 +1,54 @@
+{
+  "raw_rolling_feature_rows": 27927,
+  "n_features": 126,
+  "exact": false,
+  "n_differing_values": 197348,
+  "max_abs_delta": 7.105427357601002e-15,
+  "cache_frame_checks": [
+    {
+      "candidate_id": "hgb_baseline",
+      "inner_fold": 1,
+      "windows_feature_frame_recreates_linux_cache_key": false
+    },
+    {
+      "candidate_id": "hgb_baseline",
+      "inner_fold": 2,
+      "windows_feature_frame_recreates_linux_cache_key": false
+    },
+    {
+      "candidate_id": "hgb_baseline",
+      "inner_fold": 3,
+      "windows_feature_frame_recreates_linux_cache_key": false
+    },
+    {
+      "candidate_id": "hgb_history",
+      "inner_fold": 1,
+      "windows_feature_frame_recreates_linux_cache_key": false
+    },
+    {
+      "candidate_id": "hgb_history",
+      "inner_fold": 2,
+      "windows_feature_frame_recreates_linux_cache_key": false
+    },
+    {
+      "candidate_id": "hgb_history",
+      "inner_fold": 3,
+      "windows_feature_frame_recreates_linux_cache_key": false
+    },
+    {
+      "candidate_id": "hgb_cap125_history",
+      "inner_fold": 1,
+      "windows_feature_frame_recreates_linux_cache_key": false
+    },
+    {
+      "candidate_id": "hgb_cap125_history",
+      "inner_fold": 2,
+      "windows_feature_frame_recreates_linux_cache_key": false
+    },
+    {
+      "candidate_id": "hgb_cap125_history",
+      "inner_fold": 3,
+      "windows_feature_frame_recreates_linux_cache_key": false
+    }
+  ]
+}

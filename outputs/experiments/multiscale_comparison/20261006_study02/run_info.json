@@ -1,0 +1,33 @@
+{
+  "status": "completed",
+  "author": {
+    "full_name": "Phan Nguyễn Mai Phương",
+    "student_id": "25002711"
+  },
+  "source_identity": "87452cb02c68dbead9a98b76eb98bcdd05ac1518b9c8d7ba9214d8357f1f7942",
+  "output_dir": "outputs/experiments/multiscale_comparison/20261006_study02",
+  "decision": {
+    "full_protocol_configuration": true,
+    "promotion_gate_met": false,
+    "controls": {
+      "trajectory_rmse_improved": false,
+      "endpoint_mae_not_worse": true,
+      "endpoint_nasa_not_worse": true,
+      "warning_on_time_not_worse": true,
+      "warning_burden_not_worse": true
+    },
+    "outer_trajectory_rmse_delta": 0.0,
+    "outer_trajectory_rmse_ci_lower": 0.0,
+    "outer_trajectory_rmse_ci_upper": 0.0,
+    "selected_reference": "hgb_baseline169",
+    "selection_source": "inner grouped OOF only; no procedure selection from outer readouts",
+    "gate": "selected_pipeline vs hgb_baseline169: paired trajectory RMSE upper 95% CI<0; endpoint MAE/NASA and early alarm burden upper 95% CI<=0; on-time rate lower 95% CI>=0; no test gating",
+    "bootstrap_scope": "paired engines conditional on fixed outer predictions; duplicate sampled engines retain multiplicity; excludes refitting variability",
+    "historical_baseline_overwritten": false,
+    "evaluation_limit": "follow-up study on historically inspected FD001 engine folds; conditional fixed-prediction bootstrap excludes refitting variability"
+  },
+  "selected_procedure": "hgb_multiscale10_30",
+  "test_evaluated": true,
+  "test_reporting_only": true,
+  "seconds": 1087.556784400018
+}

@@ -1,0 +1,11 @@
+{
+  "completed": true,
+  "selected": {
+    "name": "baseline",
+    "window": 30,
+    "target_cap": null,
+    "history": false,
+    "settings": false,
+    "normalize_conditions": false
+  }
+}

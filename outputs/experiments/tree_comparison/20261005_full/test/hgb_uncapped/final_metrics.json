@@ -1,0 +1,23 @@
+{
+  "bootstrap_intervals": {
+    "mean_engine_mae": {
+      "ci_lower": 10.790824334844274,
+      "ci_upper": 16.95062064741111
+    },
+    "nasa_score": {
+      "ci_lower": 1044.757157125921,
+      "ci_upper": 7346.924416407997
+    },
+    "rmse": {
+      "ci_lower": 16.39266855085287,
+      "ci_upper": 25.18590438337341
+    }
+  },
+  "mean_engine_mae": 13.753449726474107,
+  "mean_window_mae": 13.753449726474107,
+  "n_engines": 100,
+  "n_rows": 100,
+  "nasa_score": 3744.351401188193,
+  "procedure": "hgb_uncapped",
+  "rmse": 20.933433329001442
+}

@@ -1,0 +1,50 @@
+{
+  "author": {
+    "full_name": "Phan Nguyễn Mai Phương",
+    "student_id": "25002711"
+  },
+  "status": "COMPLETED",
+  "promotional": false,
+  "platform": "Windows-11-10.0.26200-SP0",
+  "python": "3.12.14",
+  "config": {
+    "sequence_length": 30,
+    "channels": 32,
+    "kernel_size": 3,
+    "dilations": [
+      1,
+      2,
+      4,
+      8
+    ],
+    "dropout": 0.1,
+    "epochs": 8,
+    "batch_size": 256,
+    "learning_rate": 0.001,
+    "weight_decay": 0.0001,
+    "outer_splits": 5,
+    "inner_splits": 3,
+    "seed": 42,
+    "fit_threads": 4,
+    "bootstrap_resamples": 10000,
+    "endpoint_fractions": [
+      0.5,
+      0.7,
+      0.9
+    ]
+  },
+  "input_rows": 20631,
+  "sequence_rows": 17731,
+  "sequence_channels": 21,
+  "sequence_length": 30,
+  "outer_folds": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "raw_test_labels_read": false,
+  "test_evaluated": false,
+  "note": "Pilot only: no inner selection, no promotion gate, no published model change."
+}

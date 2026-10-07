@@ -1,0 +1,9 @@
+{
+  "candidate_id": "gate_lo90_hi150_w0.25",
+  "completed_gates": 13,
+  "fresh_fits": 0,
+  "outer_fold": 0,
+  "stage": "inner_gate_evaluated",
+  "total_gates": 16,
+  "updated_at_utc": "2026-10-05T10:22:07.982188+00:00"
+}

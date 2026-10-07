@@ -1,0 +1,16 @@
+{
+  "author": {
+    "full_name": "Phan Nguyễn Mai Phương",
+    "student_id": "25002711"
+  },
+  "status": "completed",
+  "promotional": false,
+  "features": 169,
+  "candidates": [
+    "lgbm_uncapped_base",
+    "lgbm_uncapped_reg10",
+    "lgbm_cap125_base",
+    "lgbm_cap125_reg10"
+  ],
+  "test_labels_read": false
+}

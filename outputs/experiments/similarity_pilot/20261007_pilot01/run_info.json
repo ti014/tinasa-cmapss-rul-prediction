@@ -1,0 +1,22 @@
+{
+  "author": {
+    "full_name": "Phan Nguyễn Mai Phương",
+    "student_id": "25002711"
+  },
+  "run_id": "20261007_pilot01",
+  "smoke": false,
+  "protocol": "experiments/SIMILARITY_PILOT_PROTOCOL.md",
+  "window": 30,
+  "block_size": 5,
+  "neighbors": [
+    5,
+    10
+  ],
+  "batch_size": 128,
+  "fit_threads": 4,
+  "test_labels_read": false,
+  "common_rows": 17731,
+  "common_engines": 100,
+  "observations_sha256": "9e031b0d6430512fbce9af344b3110aeeb17429d44f394f28e370130d13560f8",
+  "targets_sha256": "51da68e3be2b379e71c29cd7ac6ea34834722b372373dee2e36a04b63cf61905"
+}

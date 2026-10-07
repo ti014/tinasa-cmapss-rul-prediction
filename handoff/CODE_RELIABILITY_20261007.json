@@ -1,0 +1,189 @@
+{
+  "schema_version": "1.0",
+  "author": {
+    "full_name": "Phan Nguyễn Mai Phương",
+    "student_id": "25002711"
+  },
+  "verified_at_utc": "2026-10-07T05:43:58.977179+00:00",
+  "objective": "Hoàn tất cải thiện Bronze boundary, artifact publication/rollback, dependency và runner dùng chung.",
+  "plan": "handoff/CODE_RELIABILITY_PLAN_20261007.md",
+  "pytest": {
+    "passed": 426,
+    "tests": 427,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 1,
+    "duration_seconds": 79.43,
+    "dependency_deprecation_warnings": 14,
+    "skipped_reason": "torch chưa cài; tests/test_tcn_comparison_core.py",
+    "command": ".venv/Scripts/python -m pytest tests -q --tb=short --ignore=rules --ignore=skills --ignore=vendor_imports --basetemp=tmp/pytest-code-reliability-20261007-full01 --junitxml=tmp/code-reliability-pytest-20261007.xml"
+  },
+  "runtime_pipeline": {
+    "author": {
+      "full_name": "Phan Nguyễn Mai Phương",
+      "student_id": "25002711"
+    },
+    "verified_at_utc": "2026-10-07T05:40:13.397787+00:00",
+    "platform": "Windows",
+    "changed_cwd": "D:\\IUH\\BigData\\Final_Project\\tmp\\code-runtime-smoke-20261007",
+    "raw_sha256_before": {
+      "Damage Propagation Modeling.pdf": "e7aaef80c177333f400a4c1099fe76e67d244569b9397c937ec4cd3ed5b44a27",
+      "DATA_SOURCE.md": "45c283e78cfea5de86834d60b125dfe6b57671136d7d62054665c0f787d08eb4",
+      "readme.txt": "4f5270554b775c67e73aff383c5436fd329d6e4cc3d3a116913276fae511269b",
+      "RUL_FD001.txt": "a19c8ec94931949d0485bdc35118206e9c81c4547b422efb9cf86f4ceddbceca",
+      "RUL_FD002.txt": "c851dd96a6ea6998d3c4a8f834d3c8013aa90e93a6ed950dc826ad0655b2906b",
+      "RUL_FD003.txt": "df1e0566306b174a2de41c67a3e7a51877889598b78643fc3e5685259091b7cb",
+      "RUL_FD004.txt": "196b836b85a95ac7fdbbf29c5fdf1657382eafa445644d114ffaaf50dc2975e1",
+      "test_FD001.txt": "3cda7109ce17bafb5443f2ac926cfcf88154b941b8c4cf95eb55d1ddd6f52851",
+      "test_FD002.txt": "de7b5bf7e998a985c378488480528b7c02cff1406a46740def362dda8d9b4e02",
+      "test_FD003.txt": "299babd63c8d987cef079c4a425429f33b3a34797d803bbe2ad48c29dbd0d790",
+      "test_FD004.txt": "1dc675fff0624bac10786927c6715b37d1297657137400d2b1a3138d777a3ba5",
+      "train_FD001.txt": "963b5e22825b34d8b21c69e1aeb4af3e647050eb672ee8834ba4b5d91d2de0f8",
+      "train_FD002.txt": "dac6c4dbc4e7c1bdeb5747da3d313d05c395bb99801b44a002b26a2ba13d788f",
+      "train_FD003.txt": "2abbe9968cc5e8eb091980f51b20f62bb4127336d3482cb52071d53bf23329e2",
+      "train_FD004.txt": "27ef6160b6a1dcb2613a88de9c239f763b223f02cdc41dc5cdedc5dc189b6218"
+    },
+    "raw_sha256_after": {
+      "Damage Propagation Modeling.pdf": "e7aaef80c177333f400a4c1099fe76e67d244569b9397c937ec4cd3ed5b44a27",
+      "DATA_SOURCE.md": "45c283e78cfea5de86834d60b125dfe6b57671136d7d62054665c0f787d08eb4",
+      "readme.txt": "4f5270554b775c67e73aff383c5436fd329d6e4cc3d3a116913276fae511269b",
+      "RUL_FD001.txt": "a19c8ec94931949d0485bdc35118206e9c81c4547b422efb9cf86f4ceddbceca",
+      "RUL_FD002.txt": "c851dd96a6ea6998d3c4a8f834d3c8013aa90e93a6ed950dc826ad0655b2906b",
+      "RUL_FD003.txt": "df1e0566306b174a2de41c67a3e7a51877889598b78643fc3e5685259091b7cb",
+      "RUL_FD004.txt": "196b836b85a95ac7fdbbf29c5fdf1657382eafa445644d114ffaaf50dc2975e1",
+      "test_FD001.txt": "3cda7109ce17bafb5443f2ac926cfcf88154b941b8c4cf95eb55d1ddd6f52851",
+      "test_FD002.txt": "de7b5bf7e998a985c378488480528b7c02cff1406a46740def362dda8d9b4e02",
+      "test_FD003.txt": "299babd63c8d987cef079c4a425429f33b3a34797d803bbe2ad48c29dbd0d790",
+      "test_FD004.txt": "1dc675fff0624bac10786927c6715b37d1297657137400d2b1a3138d777a3ba5",
+      "train_FD001.txt": "963b5e22825b34d8b21c69e1aeb4af3e647050eb672ee8834ba4b5d91d2de0f8",
+      "train_FD002.txt": "dac6c4dbc4e7c1bdeb5747da3d313d05c395bb99801b44a002b26a2ba13d788f",
+      "train_FD003.txt": "2abbe9968cc5e8eb091980f51b20f62bb4127336d3482cb52071d53bf23329e2",
+      "train_FD004.txt": "27ef6160b6a1dcb2613a88de9c239f763b223f02cdc41dc5cdedc5dc189b6218"
+    },
+    "raw_unchanged": true,
+    "cli_receipts": [
+      {
+        "module": "cmapss.etl",
+        "returncode": 0,
+        "stdout": "ETL Pandas hoàn tất: D:\\IUH\\BigData\\Final_Project\\tmp\\code-runtime-smoke-20261007\\etl",
+        "stderr": ""
+      },
+      {
+        "module": "cmapss.features",
+        "returncode": 0,
+        "stdout": "rolling_features rows=27927 train=17731 test=10196",
+        "stderr": ""
+      }
+    ],
+    "etl_row_counts": {
+      "observations": 33727,
+      "train_targets": 20631,
+      "engine_summary": 200
+    },
+    "feature_row_counts": {
+      "rolling_features": 27927,
+      "rolling_features_train": 17731,
+      "rolling_features_test": 10196
+    },
+    "auxiliary_checks": {
+      "benchmark": {
+        "status": "passed",
+        "path": "benchmark.json"
+      },
+      "parity": {
+        "status": "not_requested"
+      }
+    },
+    "benchmark_linked_to_current_run": true,
+    "output_dir": "D:\\IUH\\BigData\\Final_Project\\tmp\\code-runtime-smoke-20261007"
+  },
+  "minimal_no_dev_runtime": {
+    "environment": "tmp/dependency-runtime-verified",
+    "psutil": "7.2.2",
+    "pytest_installed": false,
+    "pyspark_installed": false,
+    "jupyterlab_installed": false,
+    "benchmark_cli_help_returncode": 0,
+    "worker_returncode": 0,
+    "worker_measurement": {
+      "engine": "pandas",
+      "input_rows": 33727,
+      "summary_rows": 200,
+      "spark_driver_heap_bytes": null,
+      "feature_rows": 27927,
+      "peak_process_tree_rss_bytes": 282824704,
+      "startup_seconds": 8.00006091594696e-07,
+      "read_seconds": 0.05363689997466281,
+      "summary_seconds": 0.033395999984350055,
+      "rolling_seconds": 9.260903100017458,
+      "write_seconds": 0.19456670002546161,
+      "pipeline_seconds": 9.542509399994742,
+      "total_seconds": 9.542510200000834
+    }
+  },
+  "spawn_worker_smoke": {
+    "status": "passed",
+    "scope": "real spawn child processes; two HGB fits of two iterations only, no full study",
+    "results": [
+      {
+        "study": "tree_comparison",
+        "rows": 80,
+        "feature_count": 169,
+        "candidate_id": "hgb_uncapped",
+        "model_sha256": "071a76c2aa67b7f4b3e814bd139325848d04bbdee8b5852c0b95ee1d57e3df6d",
+        "saved_model_replay_exact": true,
+        "resume_reused_model": true
+      },
+      {
+        "study": "lightgbm_comparison",
+        "rows": 80,
+        "feature_count": 169,
+        "candidate_id": "hgb_uncapped",
+        "model_sha256": "5a57ed56d85a4eaaffb55699fb8f5842ebba137cc5d3da4552b648111d93954f",
+        "saved_model_replay_exact": true,
+        "resume_reused_model": true
+      }
+    ]
+  },
+  "source_sha256": {
+    "src/cmapss/artifacts.py": "7c50cf1267b55437eff5888f70664b48262423df4ba56437ab05c948539a224d",
+    "src/cmapss/etl/pandas_pipeline.py": "a243ffed5ee4cf4a9b9075e9c63cd71244e2b831f2ab2a58ac4640db21f0cd5c",
+    "src/cmapss/etl/cli.py": "bf30091781898a0ed1ed18f3c5502dfedf433e0c75df63d87df1565a3a0ccf93",
+    "src/cmapss/features/rolling.py": "3c1e1c7570e2d8d8a5636d7ebbfdda3e08d9c0c0887627bc5dce0a414b75cdb5",
+    "src/cmapss/features/cli.py": "eb4dd3c876fd5816c04292b7c60dfba14d512d7e86f12d1d19f13bcc46b9d71c",
+    "src/cmapss/cross_dataset.py": "600e633de72a523707783fef2f181aa668c207882bfa1fa89488e47b2885a433",
+    "src/cmapss/modeling/comparison_runner.py": "dd8c87b71173f1bd3f2d1f6f744d48e410d9cad2cd7c5da606e46f42762ada14",
+    "src/cmapss/modeling/tree_comparison/runner.py": "276800c21eafe9e5874ac2b9be0546e871866ef1c0fd33504335b067584dbf51",
+    "src/cmapss/modeling/lightgbm_comparison/runner.py": "e4bd4442cde6bcff01ae68ac4c6b7f5066fc4ecb47cc91cba2269f362716f626",
+    "pyproject.toml": "31765ff841b1ddcc9dad6c7ee8c068439ca98dc867c7350b479ef2b4c08ff574",
+    "uv.lock": "97a36ed8204c0538ff37effd87720b83fec87ee72dbe07d98dc14c0ce1a0a673",
+    "requirements.txt": "71a784e28ec03a54290752aec67bc7b51a5ee32a2d5f3f275d2a9f24dad27cc7",
+    "requirements-dev.txt": "e5cb1c156c3b439ff5cd574de5849fa0505509966c2db6e29767c8ce30347f80",
+    "requirements-etl.txt": "f546219c91b40306318ffd12b76018fcc9ec8b039ac80ccbcef717394b2f60af",
+    "requirements-dashboard.txt": "74024ae8f3559457a97ff1e99cedc1a11c57f98fec81c9403689c7290df5b1ef",
+    "tests/test_artifact_safety.py": "4fee97cbaeb354387456bfd51bbf211a6af215a39b05008d1226a1aa714b8de9",
+    "tests/test_comparison_runner.py": "9566199fdcac600723620dcbe736d46f28516ac6d127e0b17257408e3c7a2464",
+    "tests/test_dependency_exports.py": "452f819b517a15ca5e4cf39de6da6c923250fd4cebfb0af28f48bf12c4acaf55"
+  },
+  "requirements_export_tests": {
+    "passed": 5,
+    "frozen_lock_exports_match": true,
+    "linux_nccl_pin": "2.32.3"
+  },
+  "limits": [
+    "Publication nhiều file không bảo đảm reader/writer đồng thời hoặc mất điện.",
+    "Đã chạy trên Windows; Linux mới đối chiếu dependency markers/pins từ lock.",
+    "Không chạy lại nested scientific studies hoặc TCN; giữ metric và snapshot lịch sử."
+  ],
+  "scientific_source_unchanged_against_snapshots": {
+    "src/cmapss/modeling/tree_comparison/contracts.py": "outputs/experiments/tree_comparison/20261005_full/source_snapshot/src/cmapss/modeling/tree_comparison/contracts.py",
+    "src/cmapss/modeling/tree_comparison/analysis.py": "outputs/experiments/tree_comparison/20261005_full/source_snapshot/src/cmapss/modeling/tree_comparison/analysis.py",
+    "src/cmapss/modeling/tree_comparison/cache.py": "outputs/experiments/tree_comparison/20261005_full/source_snapshot/src/cmapss/modeling/tree_comparison/cache.py",
+    "src/cmapss/modeling/tree_comparison/estimators.py": "outputs/experiments/tree_comparison/20261005_full/source_snapshot/src/cmapss/modeling/tree_comparison/estimators.py",
+    "src/cmapss/modeling/lightgbm_comparison/contracts.py": "outputs/experiments/lightgbm_comparison/20261005_study01/source_snapshot/src/cmapss/modeling/lightgbm_comparison/contracts.py",
+    "src/cmapss/modeling/lightgbm_comparison/analysis.py": "outputs/experiments/lightgbm_comparison/20261005_study01/source_snapshot/src/cmapss/modeling/lightgbm_comparison/analysis.py",
+    "src/cmapss/modeling/lightgbm_comparison/cache.py": "outputs/experiments/lightgbm_comparison/20261005_study01/source_snapshot/src/cmapss/modeling/lightgbm_comparison/cache.py",
+    "src/cmapss/modeling/lightgbm_comparison/estimators.py": "outputs/experiments/lightgbm_comparison/20261005_study01/source_snapshot/src/cmapss/modeling/lightgbm_comparison/estimators.py"
+  },
+  "local_execution_plan": "docs/plans/completed/2026-10-07-code-reliability.md"
+}

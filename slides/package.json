@@ -1,0 +1,14 @@
+{
+  "name": "cmapss-presentation",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Reproducible build of the C-MAPSS final presentation",
+  "packageManager": "pnpm@11.25.0",
+  "scripts": {
+    "build": "node build_presentation.cjs"
+  },
+  "dependencies": {
+    "pptxgenjs": "4.0.1",
+    "sharp": "0.35.4"
+  }
+}

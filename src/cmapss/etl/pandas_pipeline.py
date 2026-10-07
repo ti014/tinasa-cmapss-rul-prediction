@@ -10,6 +10,7 @@ from __future__ import annotations
 import hashlib
 import json
 import sqlite3
+from contextlib import closing
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -17,6 +18,7 @@ from typing import Any
 
 import pandas as pd
 
+from cmapss.artifacts import default_raw_dir, staged_artifact_bundle
 from cmapss.data.contracts import (
     DATASET_IDS,
     KEY,
@@ -35,6 +37,14 @@ from cmapss.etl.contracts import (
     SILVER_TARGET_COLUMNS,
 )
 
+PANDAS_ARTIFACT_PATHS = {
+    "silver_observations": Path("silver/observations.parquet"),
+    "silver_train_targets": Path("silver/train_targets.parquet"),
+    "gold_engine_summary": Path("gold/engine_summary.parquet"),
+    "gold_sqlite": Path("gold/etl.sqlite"),
+    "run_info": Path("run_info.json"),
+}
+
 
 @dataclass(frozen=True)
 class PandasETLResult:
@@ -45,6 +55,7 @@ class PandasETLResult:
     engine_summary: pd.DataFrame
     input_sha256: dict[str, str]
     dataset_id: str = "FD001"
+    raw_dir: str | None = None
 
     @property
     def row_counts(self) -> dict[str, int]:
@@ -158,7 +169,8 @@ def build_engine_summary(observations: pd.DataFrame) -> pd.DataFrame:
 
 def run_pandas_etl(raw_dir: str | Path, dataset_id: str = "FD001") -> PandasETLResult:
     """Chạy toàn bộ ETL Pandas trong bộ nhớ."""
-    observations, train_targets, input_sha256 = load_dataset(raw_dir, dataset_id)
+    raw_path = Path(raw_dir).resolve()
+    observations, train_targets, input_sha256 = load_dataset(raw_path, dataset_id)
     engine_summary = build_engine_summary(observations)
     return PandasETLResult(
         observations=observations,
@@ -166,6 +178,7 @@ def run_pandas_etl(raw_dir: str | Path, dataset_id: str = "FD001") -> PandasETLR
         engine_summary=engine_summary,
         input_sha256=input_sha256,
         dataset_id=dataset_id.upper(),
+        raw_dir=str(raw_path),
     )
 
 
@@ -182,7 +195,7 @@ def _write_parquet(frame: pd.DataFrame, path: Path) -> None:
 
 def _write_sqlite(result: PandasETLResult, path: Path) -> None:
     """Ghi Gold engine summary và train targets vào SQLite portable."""
-    with sqlite3.connect(path) as connection:
+    with closing(sqlite3.connect(path)) as connection, connection:
         result.engine_summary.to_sql("engine_summary", connection, if_exists="replace", index=False)
         result.train_targets.to_sql("train_targets", connection, if_exists="replace", index=False)
         connection.execute(
@@ -206,12 +219,18 @@ def _json_safe(value: Any) -> Any:
     return value
 
 
-def write_pandas_artifacts(result: PandasETLResult, output_dir: str | Path) -> dict[str, Any]:
+def write_pandas_artifacts(
+    result: PandasETLResult,
+    output_dir: str | Path,
+    *,
+    raw_dir: str | Path | None = None,
+) -> dict[str, Any]:
     """Ghi Silver Parquet, Gold Parquet/SQLite và metadata lần chạy.
 
     Args:
         result: Kết quả từ :func:`run_pandas_etl`.
-        output_dir: Thư mục artifact ETL, không được nằm trong `data/raw`.
+        output_dir: Thư mục artifact ETL, không được nằm trong Bronze.
+        raw_dir: Bronze cho result tạo thủ công; không bỏ qua result.raw_dir.
 
     Returns:
         Metadata JSON-serializable gồm row counts, schema và output paths.
@@ -222,31 +241,21 @@ def write_pandas_artifacts(result: PandasETLResult, output_dir: str | Path) -> d
         OSError: Nếu không tạo/ghi được artifact.
     """
     output_path = Path(output_dir).resolve()
-    raw_path = Path("data/raw").resolve()
-    if output_path == raw_path or raw_path in output_path.parents:
-        raise ValueError("ETL output không được ghi vào data/raw để bảo vệ Bronze immutable")
-
-    silver_dir = output_path / "silver"
-    gold_dir = output_path / "gold"
-    silver_dir.mkdir(parents=True, exist_ok=True)
-    gold_dir.mkdir(parents=True, exist_ok=True)
-
-    outputs = {
-        "silver_observations": silver_dir / "observations.parquet",
-        "silver_train_targets": silver_dir / "train_targets.parquet",
-        "gold_engine_summary": gold_dir / "engine_summary.parquet",
-        "gold_sqlite": gold_dir / "etl.sqlite",
-        "run_info": output_path / "run_info.json",
-    }
-    _write_parquet(result.observations, outputs["silver_observations"])
-    _write_parquet(result.train_targets, outputs["silver_train_targets"])
-    _write_parquet(result.engine_summary, outputs["gold_engine_summary"])
-    _write_sqlite(result, outputs["gold_sqlite"])
+    raw_path = Path(result.raw_dir or raw_dir or default_raw_dir()).resolve()
+    protected_dirs = [raw_path]
+    if raw_dir is not None:
+        protected_dirs.append(Path(raw_dir).resolve())
+    outputs = PANDAS_ARTIFACT_PATHS
 
     payload: dict[str, Any] = {
         "schema_version": ETL_SCHEMA_VERSION,
         "pipeline": "pandas",
         "dataset_id": result.dataset_id,
+        "raw_dir": str(raw_path),
+        "auxiliary_checks": {
+            "benchmark": {"status": "not_run"},
+            "parity": {"status": "not_run"},
+        },
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
         "input_sha256": result.input_sha256,
         "row_counts": result.row_counts,
@@ -262,7 +271,7 @@ def write_pandas_artifacts(result: PandasETLResult, output_dir: str | Path) -> d
             "gold_engine_summary": list(GOLD_ENGINE_COLUMNS),
         },
         "outputs": {
-            name: str(path.relative_to(output_path))
+            name: str(path)
             for name, path in outputs.items()
             if name != "run_info"
         },
@@ -271,8 +280,15 @@ def write_pandas_artifacts(result: PandasETLResult, output_dir: str | Path) -> d
             "reason": "M3.1 ETL chỉ tạo engine summary; M3.2 ghi rolling features riêng tại outputs/features.",
         },
     }
-    outputs["run_info"].write_text(
-        json.dumps(payload, ensure_ascii=False, indent=2, default=_json_safe) + "\n",
-        encoding="utf-8",
-    )
+    with staged_artifact_bundle(
+        output_path, tuple(outputs.values()), protected_dirs=protected_dirs,
+    ) as stage:
+        _write_parquet(result.observations, stage / outputs["silver_observations"])
+        _write_parquet(result.train_targets, stage / outputs["silver_train_targets"])
+        _write_parquet(result.engine_summary, stage / outputs["gold_engine_summary"])
+        _write_sqlite(result, stage / outputs["gold_sqlite"])
+        (stage / outputs["run_info"]).write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2, default=_json_safe) + "\n",
+            encoding="utf-8",
+        )
     return payload

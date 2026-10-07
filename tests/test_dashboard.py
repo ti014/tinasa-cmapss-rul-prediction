@@ -3,6 +3,8 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
+from cmapss.project import IMPROVEMENT_RUN
+
 from cmapss.dashboard import (
     DashboardDataError,
     _require_columns,
@@ -48,7 +50,7 @@ def test_dashboard_loader_rejects_missing_columns() -> None:
 
 
 def test_improvement_dashboard_refuses_unfinished_run(tmp_path: Path) -> None:
-    target = tmp_path / "outputs/experiments/rul_improvement/20260927_full"
+    target = tmp_path / IMPROVEMENT_RUN
     target.mkdir(parents=True)
     (target / "run_info.json").write_text('{"test_label_joined": false}', encoding="utf-8")
     with pytest.raises(DashboardDataError, match="chưa hoàn tất"):

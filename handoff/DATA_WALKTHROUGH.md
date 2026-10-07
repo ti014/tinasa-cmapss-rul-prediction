@@ -3,8 +3,10 @@
 Pipeline hiện có đọc từng subset, nối các dòng train/test có cùng schema, lưu
 observations trong Parquet, tạo nhãn train và tổng hợp theo engine. Từ lịch sử
 của từng engine, pipeline tạo 126 đặc trưng trên window 30 cycles để dự đoán RUL.
-Tài liệu này giải thích hành vi đã triển khai, đối chiếu với code và artifact
-ngày 28/09/2026. Không có kết quả training hoặc benchmark mới trong lượt này.
+Tài liệu này giải thích hành vi đã triển khai, đối chiếu với code và các artifact
+đã lưu đến 07/10/2026. Lượt đồng bộ này không chạy lại training hay thay số liệu
+khoa học; benchmark local và parity được dẫn từ run ngày 29/09, còn bằng chứng
+reliability phần mềm được dẫn từ handoff ngày 07/10.
 
 Bản trình bày đầy đủ nằm ở Mục 4 của [báo cáo](../report/main.pdf), gồm sơ đồ
 luồng dữ liệu, sơ đồ quan hệ, truy vấn SQL/Spark SQL và code trích từ
@@ -25,8 +27,8 @@ yêu cầu; transcript nhận dạng tiếng nói có lỗi chỉ bổ sung bố
 | Chuỗi cảm biến, nhiều tín hiệu | 21 sensor theo engine/cycle, EDA và thống kê train | Dữ liệu mô phỏng batch, chưa có streaming hoặc thiết bị thật |
 | Chuẩn hóa và time window | Schema/type ở ETL; scaler riêng cho Ridge và Health Index; 30-cycle rolling features | HGB dùng feature theo thang gốc; không có một bước scaling chung trước mọi model |
 | Xu hướng suy giảm | Quỹ đạo sensor, so sánh đầu/cuối, Health Index | Thay đổi tín hiệu chưa chứng minh quan hệ nhân quả hoặc điểm bắt đầu suy giảm |
-| Dự đoán/cảnh báo | RUL test, OOF warning trajectory và timing 44/7/49 | Ngưỡng nghiên cứu 30 cycles, chưa suy ra lịch bảo trì tối ưu |
-| Nội dung xử lý dữ liệu lớn | PySpark ETL local, Parquet, nhiều tầng dữ liệu, parity và benchmark Pandas 1×/10×/100× | Chưa đo cluster, Spark runtime hay partition-aware query |
+| Dự đoán/cảnh báo | RUL test của HGB126 baseline lịch sử, OOF warning trajectory và timing 44/7/49 | Ngưỡng nghiên cứu 30 cycles, chưa suy ra lịch bảo trì tối ưu |
+| Nội dung xử lý dữ liệu lớn | PySpark ETL và rolling local[4], Parquet nhiều tầng, parity và benchmark stage có I/O ở scale 1×/10× | Chưa đo cluster, distributed writer hay partition-aware query |
 
 ## 1. Nhiều file được tổ chức và gom thế nào?
 
@@ -129,11 +131,13 @@ Không có scaler chung nằm trước bước rolling features trong pipeline R
 Observation có 27 cột: ba cột khóa và 24 cột đo lường. Rolling features giữ
 ba khóa cùng **21 × 6 = 126** cột theo mẫu `<sensor>__<stat>`: `last`, `mean`,
 `std` với ddof=1, `min`, `max`, `slope`. Ba `setting_*` không đi vào X của
-model RUL hiện tại. `split`, `engine_id`, `cycle` dùng quản lý và chia fold,
-không phải các feature columns đưa vào estimator.
+baseline HGB126. `split`, `engine_id`, `cycle` dùng quản lý và chia fold trong
+protocol baseline; predictor tham chiếu HGB169 của alignment thêm `cycle` cùng
+42 history features vào 126 rolling columns.
 
-Tạo 126 feature columns là feature engineering (xây dựng đặc trưng).
-Model hiện nhận đủ 126 cột, chưa thực hiện feature selection để giảm số cột.
+Tạo 126 feature columns là feature engineering (xây dựng đặc trưng). HGB126
+nhận đủ 126 cột và không thực hiện feature selection để giảm số cột; HGB169 là
+biểu diễn khác, thêm cycle và 42 history features theo artifact alignment.
 Danh sách sensor có correlation cao hoặc có p-value nhỏ trong EDA/statistics
 không được dùng để chọn sensor cho model.
 
@@ -181,28 +185,55 @@ của một dòng), khóa, union/join, group/window, lưu trữ và truy xuất 
 nói metric model. Project minh họa các nội dung này bằng batch ETL nhiều file,
 Parquet, ba boundary PySpark tương đương Pandas và phép đo tổng hợp theo scale.
 
-PySpark hiện chạy `local[1]`, parity collect về Pandas; output khoa học được
-ghi bởi đường Pandas. Không có distributed cluster/HDFS, Spark rolling
-features, Airflow DAG hoặc Power BI. Không gọi giữ Parquet theo thư mục subset
-là đã partitionBy engine. Benchmark 100× có 3.372.700 observations **nhân bản**,
-chỉ đo hàm Pandas `build_engine_summary` trong bộ nhớ, không đo I/O, Spark hoặc
-rolling feature workload. Không dùng số đó để kết luận Spark nhanh hơn.
+PySpark benchmark chạy `local[4]` với bốn partition và heap driver/executor 4 GiB.
+Cùng input Parquet được đo ở scale 1× (33.727 observations) và 10× (337.270
+observations), ba lượt cho mỗi engine. Stage gồm đọc, engine summary, rolling
+features và ghi; startup Spark được báo riêng, còn peak RSS lấy theo cả process
+tree. Lượt ghi Spark qua `toArrow` rồi PyArrow trên driver trong môi trường
+Windows, nên `write_seconds` và `pipeline_seconds` không phải phép đo của
+distributed writer. Parity tại scale 1× cho toàn bộ 27.927 rolling rows × 126
+features khớp với tolerance $10^{-7}$; ETL boundary cũng có `max_abs_diff = 0`.
+
+Không có distributed cluster, Airflow DAG hoặc Power BI. Không gọi giữ
+Parquet theo thư mục subset là đã `partitionBy engine`. Dữ liệu scale 10× là bản
+nhân bản để đo chi phí kỹ thuật, không dùng để huấn luyện và không đại diện cho
+workload production. Không dùng benchmark local để kết luận Spark nhanh hơn trên
+cluster.
 
 Cách trình bày phù hợp: báo cáo áp dụng các thao tác tổ chức và xử lý dữ liệu
 trong môn Phân tích dữ liệu lớn cho bài toán cảm biến time series; evidence
-phân tán hiện giới hạn ở ETL PySpark local và parity. Chưa có tiêu chí chấm đủ
-để khẳng định phần này đáp ứng mọi yêu cầu của giảng viên.
+Spark hiện giới hạn ở pipeline local, parity và benchmark có I/O. Đây là bằng
+chứng về tính đúng và khả năng chuyển implementation, không phải tuyên bố đã có
+hạ tầng phân tán production.
 
-## 7. Câu trả lời ngắn khi trình bày
+## 7. Reliability và khả năng truy vết
+
+Đợt kiểm tra phần mềm ngày 07/10/2026 được ghi tại
+[`CODE_RELIABILITY_20261007.json`](CODE_RELIABILITY_20261007.json) và kế hoạch
+được mô tả tại [`CODE_RELIABILITY_PLAN_20261007.md`](CODE_RELIABILITY_PLAN_20261007.md).
+Bằng chứng gồm 426 test passed và 1 test skip vì môi trường thiếu `torch` cho
+TCN; chạy CLI từ CWD khác vẫn giữ checksum raw; worker spawn thực hiện save/load
+và resume; dependency runtime và lockfile được đối chiếu. Đây là bằng chứng
+reliability của code và artifact, không phải kết quả model mới.
+
+ETL và rolling ghi ra staging rồi publish manifest sau cùng; khi validation
+không đạt, output cũ được giữ và thao tác có rollback. Cơ chế này không cam kết
+atomic transaction nhiều file trước mất điện, không giải quyết concurrent
+read/write và chưa được kiểm chứng trên Linux. Vì vậy khi demo chỉ nói “có
+staging, rollback và manifest để truy vết”, không gọi là hệ thống transaction
+phân tán.
+
+## 8. Câu trả lời ngắn khi trình bày
 
 “Trong một subset, chương trình đọc hai file observations cùng schema rồi
 union theo dòng và giữ split. Dữ liệu sensor nằm trong Parquet, bảng tổng hợp
 và nhãn train nằm trong SQLite. Chương trình group theo engine, lấy 30 cycles
 gần nhất, tạo 126 features rồi join đúng cycle với RUL train. Engine train 1
 ở cycle 100 dùng cycles 71–100 và có target 92. Quan hệ chính là một engine
-có nhiều observations; join features/targets là một–một. PySpark hiện kiểm
-tra ETL tương đương Pandas trên local, còn modeling và rolling features dùng
-Pandas/scikit-learn.”
+có nhiều observations; join features/targets là một–một. PySpark chạy
+local[4] để kiểm tra ETL và rolling tương đương Pandas, còn modeling dùng
+Pandas/scikit-learn. Benchmark scale 1×/10× có đọc và ghi, nhưng Spark ghi
+qua driver nên chưa suy rộng được hiệu năng sang cluster.”
 
 ## Nguồn kiểm tra
 
@@ -212,6 +243,8 @@ Pandas/scikit-learn.”
   [model columns](../src/cmapss/modeling/contracts.py).
 - Row counts/parity: [ETL](../outputs/etl/run_info.json),
   [parity](../outputs/etl/parity.json), [features](../outputs/features/run_info.json).
+- Local benchmark: [run info](../outputs/benchmarks/20260929/run_info.json),
+  [median summary](../outputs/benchmarks/20260929/summary.csv).
 - Model/cảnh báo: [modeling artifacts](../outputs/modeling/README.md).
 - Health Index: [timeseries artifacts](../outputs/timeseries/README.md).
 - Walkthrough demo: [DEMO_SCRIPT.md](DEMO_SCRIPT.md).

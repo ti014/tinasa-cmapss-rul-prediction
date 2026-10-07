@@ -10,7 +10,7 @@ quả sau khi ghi.
 
 \begin{table}[H]
 \centering
-\caption{Các cấu hình chính của thực nghiệm.}
+\caption[Cấu hình thực nghiệm]{Các cấu hình chính của thực nghiệm.}
 \label{tab:environment}
 \begin{tabular}{ll@{\qquad}ll}
 \toprule
@@ -46,11 +46,36 @@ kiểm tra riêng transfer từ FD001 sang FD002--FD004 với window 10 cycles. 
 không chứng minh khả năng mở rộng trên cụm máy, khả năng khái quát tới động cơ thực
 tế hoặc tính phù hợp của metric cho quyết định bảo trì.
 
+\subsection{Kiểm chứng mã nguồn ngày 07/10/2026}
+
+Bộ kiểm thử đạt 426 tests passed, một phần kiểm thử TCN bị bỏ qua do chưa cài
+\texttt{torch}; 14 cảnh báo còn lại là deprecation warnings của dependency.
+Fault injection kiểm tra lỗi ghi Parquet, SQLite, metadata và lỗi publication;
+bộ output cũ được khôi phục khi rollback thành công. Hai worker chạy bằng
+\texttt{spawn} trên Windows fit HGB 2 iterations với 80 dòng và 169 features,
+đọc lại model cho prediction trùng chính xác và resume giữ checksum model.
+Các kiểm tra này chứng minh hành vi triển khai trong phạm vi đã chạy, không
+phải thực nghiệm mới về độ chính xác RUL.
+
+CLI ETL và rolling chạy từ CWD khác tạo 33.727 observations, 20.631 train targets,
+200 engine summaries và 27.927 feature rows; hash các file raw trước và sau
+không đổi. Môi trường \texttt{--no-dev} có \texttt{psutil} nhưng không có
+pytest, PySpark hoặc JupyterLab vẫn chạy được benchmark Pandas. Bốn requirements
+được export từ lock và kiểm tra bằng \filepath{tests/test_dependency_exports.py}.
+Bằng chứng đầy đủ nằm ở \filepath{handoff/CODE_RELIABILITY_20261007.json}; kế
+hoạch và cách phục hồi nằm ở \filepath{handoff/CODE_RELIABILITY_PLAN_20261007.md}.
+
+Raw boundary của rolling được lấy từ manifest ETL. Với Silver cũ chưa lưu
+raw directory, caller truyền đường dẫn thực tế qua \texttt{--raw-dir}; đường
+dẫn bổ sung không vô hiệu boundary từ manifest. Khi chạy tiếp XGBoost/LightGBM
+với mã nguồn mới, dùng run directory mới; giữ snapshot cũ để đối chiếu kết quả
+lịch sử, không chỉnh receipt để vượt source guard.
+
 \subsection{Nguồn đối chiếu kết quả}
 
 \begin{table}[H]
 \centering
-\caption{Đối chiếu các nhóm kết quả trong báo cáo.}
+\caption[Đối chiếu kết quả]{Đối chiếu các nhóm kết quả trong báo cáo.}
 \label{tab:result-map}
 \small
 \begin{tabular}{L{4.2cm}L{5.2cm}L{5.1cm}}

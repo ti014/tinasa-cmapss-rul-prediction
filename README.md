@@ -4,6 +4,15 @@
 
 # NASA C-MAPSS RUL Prediction Pipeline
 
+**Student:** Phan Nguyễn Mai Phương · **Student ID:** 25002711.
+
+**Last updated 7 October 2026:** the HGB126/HGB169 alignment, code reliability evidence,
+and final deck are synchronized. The 29 September follow-up tested capped RUL/history features on FD001, fold-local
+operating-condition normalization on FD002/FD004, and a staged local Pandas/Spark
+benchmark. See [results and reproduction commands](experiments/FOLLOWUP_20260929.md).
+All six notebooks identify the student. Dashboard, notebooks and slides share the
+canonical rebuilt experiment; slide dependencies are pinned in `slides/pnpm-lock.yaml`.
+
 A reproducible Big Data course project for analyzing multivariate turbofan sensor data and predicting Remaining Useful Life (RUL) on NASA C-MAPSS FD001--FD004. FD001 is the primary subset for detailed analysis; FD002--FD004 are evaluated in a supplemental cross-dataset matrix. The project emphasizes data provenance, statistically sound analysis, leakage-safe evaluation, scalable ETL, and explainable visual reporting.
 
 ## Project Status
@@ -14,8 +23,9 @@ This repository provides **FD001 data validation, train RUL targets, an executed
 compared windows 10/20/30, 24 HistGradientBoosting configurations and three weight
 schemes. Outer low-RUL MAE changed from 3.6676 to 3.6730 cycles; late warnings
 increased from 49 to 53/100 engines. The final selection retained the baseline,
-so test MAE remains 15.3490. Some inner-CV candidates improved low-RUL error at
-the cost of other metrics. See [results and reproduction](experiments/README.md).
+so this follow-up did not promote a new pipeline. The 7 October alignment audit
+separately compares HGB126 with HGB169 on the same saved panel. See
+[results and reproduction](experiments/README.md).
 
 Available now:
 
@@ -84,7 +94,7 @@ Available now:
 Final handoff:
 
 - The [20-slide presentation deck](slides/cmapss_fd001_presentation.pptx)
-  ([PDF](slides/cmapss_fd001_presentation.pdf)) is sized for a 30-minute talk in
+  ([PDF](slides/cmapss_fd001_presentation.pdf)) is sized for an 18–20-minute talk
   five parts: problem and data, Big Data pipeline, time-series analysis,
   modeling and evaluation, and extensions and conclusions. Slide values are read
   from `outputs/` by [`slides/extract_slide_data.py`](slides/extract_slide_data.py);
@@ -97,15 +107,14 @@ optional `dashboard` dependency group.
 
 ## Objectives
 
-The report addresses five primary questions on FD001:
+The report addresses six questions on FD001:
 
-1. How trustworthy and suitable is FD001 for an academic predictive-maintenance study?
-2. Which sensor signals exhibit measurable degradation across engine life cycles?
+1. Does FD001 satisfy the schema, key, and cycle-continuity checks?
+2. How do sensor values change between the beginning and end of engine life?
 3. Do Pandas and PySpark produce matching ETL outputs on the same input?
-4. How accurately can RUL be predicted from the most recent 30 operating cycles?
-5. How can model results be communicated as transparent, reproducible early-warning evidence?
-
-A supplemental question tests how a model fitted on FD001 transfers to FD002--FD004 under a common 10-cycle protocol.
+4. Is HGB126 or HGB169 more stable on the same trajectory and endpoint panels?
+5. How well can RUL predictions support an early-warning policy?
+6. How does an FD001 model behave when transferred to FD002--FD004?
 
 The primary objective is **RUL prediction**. Supervised regression is the modeling formulation because the target is a numeric number of remaining cycles; it is not the title or purpose of the project.
 
@@ -189,8 +198,9 @@ FD001 is not large enough to claim Big Data by volume alone. The report shows
 scalability through Bronze/Silver/Gold ETL, Parquet, PySpark parity, and 1x/10x/100x benchmarks.
 
 Pandas is used in the EDA notebook, ETL reference path, statistics and model
-preparation. PySpark reproduces the ETL boundaries for parity; recorded runtime
-benchmarks measure Pandas only. The original dataset is only a few megabytes, so the
+preparation. PySpark reproduces ETL and rolling features for parity. The added
+1x/10x benchmark measures both engines, including I/O and process-tree RSS; Spark
+exports Parquet through Arrow on the driver. The original dataset is only a few megabytes, so the
 repository will not claim that FD001 itself demonstrates large-scale data
 processing.
 
@@ -248,17 +258,28 @@ Windows never cross engine boundaries and never use future observations. Engines
 
 ### RUL Prediction
 
-The implemented first modeling pass compares:
+The historical modeling pass compares:
 
 1. A naive median-RUL baseline.
 2. Ridge regression as a regularized linear baseline.
-3. HistGradientBoostingRegressor as the nonlinear candidate model.
+3. HistGradientBoostingRegressor as the nonlinear candidate model (HGB126).
 
 Model selection uses five-fold grouped cross-validation, with `engine_id` as the group.
 The official NASA test labels remain isolated until final predictions have been
-written. HistGradientBoostingRegressor is currently selected. Final test metrics
+written. HistGradientBoostingRegressor is retained as the historical baseline. Final test metrics
 are mean engine-level MAE 15.3490, RMSE 20.5413, and NASA score 1513.2577, with
 bootstrap confidence intervals recorded in `outputs/modeling/tables/final_metrics.json`.
+
+### Predictor and warning-policy roles
+
+To keep protocols separate, HGB126 is the historical baseline; the FD001 test
+metrics above belong only to this model. HGB169 adds `cycle` and 42 history
+features to the 126 rolling features. A read-only alignment audit on the same
+saved OOF trajectory and endpoint panels found lower error, so HGB169 is retained
+as a conditional predictor candidate. This is not a blind refit and does not
+replace the HGB126 test readout. Warning sensitivity is evaluated separately on
+OOF predictions: threshold 30 gives 51%/45% on-time for HGB126/HGB169; threshold
+40 gives 94%/96% with higher burden, and is not a calibrated maintenance policy.
 
 ### FD002--FD004 Evaluation
 
@@ -292,10 +313,8 @@ the deterministic training RUL countdown; Health Index forecast is not RUL.
 On the same holdouts, mean MAE is 0.4110 for ARIMA, 0.7469 for drift and 0.9478
 for last-value; this comparison is descriptive and has no claim of statistical
 superiority.
-The fixed 30-cycle OOF warning protocol produces 44 before-threshold, 7 at-threshold,
-and 49 after-threshold first warnings. Lead time has median 30 cycles and range
-19--55 cycles. Because OOF predictions also selected the model, this is internal
-descriptive evidence rather than an independent post-selection evaluation.
+ARIMA does not replace the RUL predictor and is not used to select HGB126 or
+HGB169.
 
 ## Big Data Scope
 
@@ -423,6 +442,16 @@ It does not read test labels.
 the local package through `-e .`. For notebooks, development, or tests, install
 [`requirements-dev.txt`](requirements-dev.txt) instead.
 
+With uv, `uv sync --frozen --no-dev` installs the runtime environment without
+notebook or test dependencies. It includes `psutil` for the benchmark's memory
+measurements; Spark requires `--extra etl` and Java. For example,
+`python -m cmapss.etl.scalability --help` also works in the runtime environment.
+
+After changing dependencies, update `uv.lock` and rerun the export command
+printed at the top of each of the four `requirements*.txt` files. Run
+`python -m pytest tests/test_dependency_exports.py` to check the exports against
+the lock, including platform-specific pins for Linux.
+
 The data contract and train-only paired-data flow live in `src/cmapss/`:
 
 ```text
@@ -472,9 +501,11 @@ After installing `requirements-dev.txt`, open the notebook from the repository r
 Select the `.venv` Python kernel and **Restart Kernel and Run All Cells**.
 This analyzes only train and recreates 12 CSV tables and 11 PNG figures.
 Validated fresh-kernel runs produced identical EDA artifacts in the same
-environment. The repository-wide test suite passed **188 tests** (run on
-2026-09-28), including data, statistics, ETL, feature, modeling, PCA--ARIMA,
-cross-dataset, dashboard, and end-to-end reproducibility checks.
+environment. The 2026-10-07 reliability run achieved **426 passed, 1 skipped**;
+the TCN test is skipped because `torch` is unavailable. The 2026-09-29 run
+achieved **198 tests** and remains the historical evidence for data, statistics,
+ETL, feature, modeling, PCA--ARIMA, cross-dataset, dashboard, and end-to-end
+reproducibility checks.
 
 ![FD001 train EDA workflow](assets/diagrams/fd001-eda.svg)
 
@@ -557,6 +588,17 @@ uv sync --frozen --extra etl
 See [ETL artifacts and validation](outputs/etl/README.md) for schemas, row
 counts, benchmark measurements, and the Pandas/PySpark parity result.
 
+The pipeline records the resolved `raw_dir` and protects it after a working
+directory change. The ETL CLI stages Silver/Gold, the benchmark and requested
+parity before publishing; handled write/publication errors restore the old
+bundle. The manifest is published last and links auxiliary receipts to input
+checksums and the ETL timestamp. `auxiliary_checks.parity.status=not_requested`
+means this run did not execute Spark, even if a historical `parity.json` remains.
+Files outside the writer's scope, such as README, are preserved. Multiple-file
+publication does not guarantee concurrent readers/writers or sudden power loss;
+close applications holding SQLite files before rerunning on Windows. If rollback
+also fails, the error reports the retained backup directory for recovery.
+
 ### Generate rolling features
 
 After ETL has written Silver observations, create Gold rolling features:
@@ -570,6 +612,12 @@ After ETL has written Silver observations, create Gold rolling features:
 The current artifact has 27,927 rows: 17,731 train windows and 10,196 test
 windows. See [rolling feature artifacts and validation](outputs/features/README.md)
 for the column contract, row counts, leakage checks, and limitations.
+
+Rolling features inherit the Bronze boundary from ETL metadata. For legacy
+Silver without `raw_dir`, supply the actual `--raw-dir`, for example
+`--raw-dir D:/datasets/CMAPSS`. This adds protection rather than disabling a
+recorded boundary. The rolling writer also uses staging/rollback and rejects
+overwriting the Silver input or its source manifest.
 
 ### Run RUL modeling
 
@@ -716,6 +764,13 @@ New-Item -ItemType Directory -Force tmp | Out-Null
 ```
 
 Pytest clears its `--basetemp` directory on subsequent runs; reserve it for tests.
+
+The 2026-10-07 code verification achieved **426 passed, 1 skipped** (TCN requires
+the unavailable torch package). Coverage includes custom Bronze boundaries,
+ETL/rolling fault injection, dependency exports and the shared XGBoost/LightGBM
+lifecycle. See the [completed plan](handoff/CODE_RELIABILITY_PLAN_20261007.md)
+and [runtime evidence](handoff/CODE_RELIABILITY_20261007.json) for commands,
+Windows/Linux limits and real spawn worker checks.
 
 </details>
 

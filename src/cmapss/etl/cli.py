@@ -8,8 +8,9 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from cmapss.artifacts import staged_artifact_bundle
 from cmapss.etl.benchmark import BenchmarkConfig, benchmark_pandas
-from cmapss.etl.pandas_pipeline import run_pandas_etl, write_pandas_artifacts
+from cmapss.etl.pandas_pipeline import PANDAS_ARTIFACT_PATHS, run_pandas_etl, write_pandas_artifacts
 from cmapss.etl.parity import ParityError, compare_frames
 from cmapss.etl.spark_pipeline import SparkRuntimeUnavailable, run_spark_etl
 
@@ -81,17 +82,37 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         result = run_pandas_etl(args.raw_dir, args.dataset_id)
-        write_pandas_artifacts(result, args.output_dir)
-        benchmark = benchmark_pandas(
-            result.observations,
-            BenchmarkConfig(
-                scales=tuple(args.benchmark_scales),
-                repetitions=args.benchmark_repetitions,
-            ),
-        )
-        _write_json(args.output_dir / "benchmark.json", benchmark)
+        paths = [path for name, path in PANDAS_ARTIFACT_PATHS.items() if name != "run_info"]
+        paths.append(Path("benchmark.json"))
         if args.with_spark:
-            _run_parity(result, args.raw_dir, args.output_dir, args.dataset_id)
+            paths.append(Path("parity.json"))
+        paths.append(PANDAS_ARTIFACT_PATHS["run_info"])
+        with staged_artifact_bundle(
+            args.output_dir, paths, protected_dirs=[result.raw_dir or args.raw_dir],
+        ) as stage:
+            payload = write_pandas_artifacts(result, stage)
+            context = {
+                "dataset_id": result.dataset_id,
+                "input_sha256": result.input_sha256,
+                "etl_generated_at_utc": payload["generated_at_utc"],
+            }
+            benchmark = benchmark_pandas(
+                result.observations,
+                BenchmarkConfig(
+                    scales=tuple(args.benchmark_scales),
+                    repetitions=args.benchmark_repetitions,
+                ),
+            )
+            _write_json(stage / "benchmark.json", {**benchmark, **context})
+            payload["auxiliary_checks"] = {
+                "benchmark": {"status": "passed", "path": "benchmark.json"},
+                "parity": {"status": "not_requested"},
+            }
+            if args.with_spark:
+                parity = _run_parity(result, args.raw_dir, stage, args.dataset_id)
+                _write_json(stage / "parity.json", {**parity, **context})
+                payload["auxiliary_checks"]["parity"] = {"status": "passed", "path": "parity.json"}
+            _write_json(stage / "run_info.json", payload)
         print(f"ETL Pandas hoàn tất: {args.output_dir}")
         return 0
     except (OSError, ValueError, RuntimeError, ParityError, SparkRuntimeUnavailable) as error:

@@ -2,7 +2,7 @@
 \label{sec:data-processing}
 
 Mục này mô tả cách dữ liệu đi từ các file text gốc đến bảng đầu vào của mô hình,
-theo năm câu hỏi: gom nhiều file thế nào, lưu ở đâu, truy vấn ra sao, biến đổi
+theo các câu hỏi về cách gom nhiều file, lưu trữ, truy vấn và biến đổi dữ liệu,
 qua những bước nào, dùng những cột nào, và các bảng quan hệ với nhau ra sao.
 Hình~\ref{fig:data-flow} tóm tắt toàn bộ luồng; mỗi hộp là một bảng, ghi rõ một
 dòng biểu diễn điều gì và kích thước thực tế với FD001. Mọi ví dụ trong mục này
@@ -10,10 +10,19 @@ có thể chạy lại từng bước trong notebook
 \filepath{notebooks/00_data_pipeline_walkthrough.ipynb}; notebook gọi đúng các hàm
 của pipeline và in kết quả trung gian.
 
+Theo vòng đời quản lý dữ liệu của môn học, pipeline được ánh xạ trực tiếp thành
+năm bước: \textbf{thu thập} các file C-MAPSS và lưu hash nguồn; \textbf{làm sạch}
+bằng schema contract, kiểm tra khóa, cycle và giá trị hữu hạn; \textbf{chuẩn hóa}
+kiểu dữ liệu, tên cột và thứ tự khóa; \textbf{tích hợp} train/test bằng UNION,
+ghép nhãn theo khóa ba thành phần và tạo các bảng Silver--Gold; cuối cùng
+\textbf{lưu trữ} thành Parquet và SQLite để truy vấn bằng Pandas, SQL hoặc
+PySpark. Như vậy, mỗi bước đều có đầu vào, đầu ra và kiểm tra tương ứng thay vì
+chỉ mô tả bước tạo đặc trưng.
+
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.97\linewidth]{figures/data-flow.pdf}
-\caption{Luồng dữ liệu từ ba file gốc đến dữ liệu huấn luyện và đánh giá cuối.
+\caption[Luồng dữ liệu C-MAPSS]{Luồng dữ liệu từ ba file gốc đến dữ liệu huấn luyện và đánh giá cuối.
 Chữ trên mũi tên là phép biến đổi; nhãn test chỉ được đọc sau khi dự đoán đã được ghi.}
 \label{fig:data-flow}
 \end{figure}
@@ -55,7 +64,7 @@ khóa, để truy vấn nhanh bằng SQL.
 
 \begin{table}[H]
 \centering
-\caption{Các bảng được lưu cho FD001.}
+\caption[Các bảng FD001]{Các bảng được lưu cho FD001.}
 \label{tab:layers}
 \small
 \begin{tabular}{l L{4.0cm} L{3.2cm} r L{3.0cm}}
@@ -70,6 +79,24 @@ Gold & \filepath{rolling_features.parquet} & 1 window 30 cycles & $27.927\times1
 \bottomrule
 \end{tabular}
 \end{table}
+
+\paragraph{Bảo vệ dữ liệu và ghi kết quả.} Writer xác định thư mục raw thực tế,
+kể cả đường dẫn tùy chỉnh, để bảo vệ Bronze khi đổi thư mục làm việc. ETL và
+rolling features được ghi vào staging (thư mục tạm) cùng filesystem trước khi
+công bố; metadata được công bố sau cùng. Nếu ghi nhãn train thất bại, dữ liệu quan
+sát và metadata cũ được giữ cùng phiên bản. Lỗi khi công bố được xử lý bằng
+backup và rollback (khôi phục); nếu rollback cũng lỗi, backup được giữ để phục
+hồi thủ công. ETL CLI đưa benchmark và parity được yêu cầu vào cùng bộ kết quả,
+nên receipt cũ không được coi là bằng chứng cho lần chạy mới.
+
+\paragraph{Kiểm chứng triển khai.} Đợt kiểm tra ngày 07/10/2026 trên Windows đạt
+426 kiểm thử, bỏ qua một phần kiểm thử TCN do thiếu \texttt{torch}\footnote{Bằng
+chứng kiểm tra và hash mã nguồn: \filepath{handoff/CODE_RELIABILITY_20261007.json}.}.
+CLI chạy từ thư mục khác vẫn khớp số dòng ở Bảng~\ref{tab:layers} và giữ nguyên
+hash Bronze. Môi trường chỉ cài dependency runtime chạy được benchmark Pandas;
+bốn file requirements khớp \texttt{uv.lock}. Hai runner XGBoost và LightGBM dùng
+chung phần điều phối, lưu nguồn và kiểm tra kết quả; cấu hình mô hình và giao
+thức đánh giá được giữ nguyên.
 
 \subsection{Truy vấn dữ liệu}
 \label{sec:dp-query}
@@ -131,7 +158,7 @@ thước bảng sau mỗi bước.
 
 \begin{table}[H]
 \centering
-\caption{Sáu bước biến đổi dữ liệu và kích thước sau mỗi bước (FD001).}
+\caption[Các bước biến đổi FD001]{Sáu bước biến đổi dữ liệu và kích thước sau mỗi bước (FD001).}
 \label{tab:transform-steps}
 \small
 \begin{tabularx}{\linewidth}{c L{3.6cm} X r}
@@ -186,7 +213,7 @@ $13.096-100\times29=10.196$ dòng test.
 \begin{figure}[H]
 \centering
 \includegraphics[width=\linewidth]{../outputs/diagnostics/figures/window_example.png}
-\caption{Minh họa bước tạo đặc trưng và nhãn trên train engine 1. (a) Sáu thống kê
+\caption[Minh họa window và nhãn]{Minh họa bước tạo đặc trưng và nhãn trên train engine 1. (a) Sáu thống kê
 của \texttt{sensor\_11} trên window cycles 71--100 tạo thành phần đặc trưng của dòng
 cycle 100. (b) Nhãn RUL giảm tuyến tính về 0 tại cycle hỏng.}
 \label{fig:window-example}
@@ -197,10 +224,12 @@ chỉ diễn ra bên trong mô hình Ridge (StandardScaler fit trong từng fold
 Health Index; HGB dùng đặc trưng ở thang đo gốc.
 
 Để kiểm tra tính đúng của ETL, PySpark thực hiện lại bước 1--4 và bộ đối chiếu so
-sánh schema, khóa, số dòng và từng giá trị với kết quả Pandas. Ngoài ra, một
-benchmark đo thời gian Pandas thực hiện bước 4 khi dữ liệu được nhân bản 1, 10 và
-100 lần trong bộ nhớ. Benchmark chỉ đo một phép tổng hợp, không đo đọc ghi file và
-không đo PySpark; dữ liệu nhân bản không được dùng để huấn luyện.
+sánh schema, khóa, số dòng và từng giá trị với kết quả Pandas. Ngoài ra, benchmark
+ETL lịch sử đo thời gian Pandas thực hiện bước 4 khi dữ liệu được nhân bản 1, 10 và
+100 lần trong bộ nhớ. Benchmark này chỉ đo một phép tổng hợp, không đo đọc ghi file
+và không đo PySpark; dữ liệu nhân bản không được dùng để huấn luyện. Benchmark
+Pandas--PySpark bổ sung có đọc/ghi và rolling features được trình bày riêng ở
+Mục~\ref{sec:followup}.
 
 \subsection{Cột được dùng cho mô hình}
 \label{sec:dp-columns}
@@ -213,7 +242,7 @@ thành một giới hạn (Mục~\ref{sec:disc-transfer}).
 
 \begin{table}[H]
 \centering
-\caption{Vai trò của các nhóm cột.}
+\caption[Vai trò nhóm cột]{Vai trò của các nhóm cột.}
 \label{tab:column-roles}
 \small
 \begin{tabularx}{\linewidth}{L{5.0cm} r X c}
@@ -244,14 +273,14 @@ walkthrough; kết quả ghi ở cột cuối của bảng.
 \begin{figure}[H]
 \centering
 \includegraphics[width=\linewidth]{figures/data-relations.pdf}
-\caption{Quan hệ giữa các bảng trong một subset. Số ở hai đầu mỗi đường là bậc
+\caption[Quan hệ giữa các bảng]{Quan hệ giữa các bảng trong một subset. Số ở hai đầu mỗi đường là bậc
 quan hệ; ``0..1'' nghĩa là một dòng bên kia có thể có hoặc không có dòng tương ứng.}
 \label{fig:data-relations}
 \end{figure}
 
 \begin{table}[H]
 \centering
-\caption{Quan hệ giữa các bảng và kết quả kiểm tra trên FD001.}
+\caption[Kiểm tra quan hệ bảng]{Quan hệ giữa các bảng và kết quả kiểm tra trên FD001.}
 \label{tab:data-relations}
 \small
 \begin{tabularx}{\linewidth}{L{4.4cm} c X}

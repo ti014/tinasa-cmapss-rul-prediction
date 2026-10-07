@@ -15,18 +15,19 @@ from threadpoolctl import threadpool_limits
 from cmapss.features.rolling import build_rolling_features, read_silver_observations
 from cmapss.modeling.improvement import _metrics
 from cmapss.modeling.improvement_analysis import engine_metrics, paired_comparison
+from cmapss.project import IMPROVEMENT_RUN
+from cmapss.provenance import verify_source_snapshot
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--run", default="outputs/experiments/rul_improvement/20260928_rebuild")
+    parser.add_argument("--run", default=IMPROVEMENT_RUN.as_posix())
     args = parser.parse_args()
     output = Path(args.run)
     manifest = json.loads((output / "search_manifest.json").read_text(encoding="utf-8"))
     run_info = json.loads((output / "run_info.json").read_text(encoding="utf-8"))
     assert run_info["test_label_joined"]
-    for name, digest in manifest["identity"]["source_sha256"].items():
-        assert hashlib.sha256(Path(name).read_bytes()).hexdigest() == digest, name
+    source_proof = verify_source_snapshot(output, manifest, Path.cwd())
     for name, digest in manifest["baseline_sha256"].items():
         assert hashlib.sha256((Path("outputs/modeling") / name).read_bytes()).hexdigest() == digest, name
         assert hashlib.sha256((output / "baseline_snapshot" / name).read_bytes()).hexdigest() == digest, name
@@ -99,7 +100,8 @@ def main() -> None:
     proof = {"status": "passed", "baseline_unchanged": True, "source_and_inputs_match": True,
              "outer_engines": 100, "rows_per_stage": 17731, "stages": 4,
              "validated_fit_records": len(cache_records), "paired_ci_recomputed": True,
-             "saved_model_predictions_match": True, "test_predictions": 100}
+             "saved_model_predictions_match": True, "test_predictions": 100,
+             "source_verification": source_proof}
     (output / "validation.json").write_text(json.dumps(proof, indent=2)+"\n", encoding="utf-8")
     print(json.dumps(proof, indent=2))
 

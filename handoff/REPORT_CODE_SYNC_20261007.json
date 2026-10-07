@@ -1,0 +1,53 @@
+{
+  "author": {
+    "full_name": "Phan Nguyễn Mai Phương",
+    "student_id": "25002711"
+  },
+  "verified_at_local": "2026-10-07T20:15:40.610794+07:00",
+  "code_evidence": "handoff/CODE_RELIABILITY_20261007.json",
+  "report": "report/main.pdf",
+  "page_count": 49,
+  "published_pdf_matches_checked_build": true,
+  "changes": {
+    "section_4_2": [
+      "Actual Bronze boundary, staging and rollback, metadata published last",
+      "426 tests passed, one TCN skip due to unavailable torch",
+      "Runtime dependency and shared runner evidence"
+    ],
+    "section_7_6": [
+      "Multiple-file publication limitations",
+      "Windows runtime verified, Linux dependencies checked but not runtime-tested"
+    ],
+    "supplemental_appendix": "Updated source appendix; primary evidence is included in the main PDF",
+    "section_quality": [
+      "Added explicit outlier/noise handling boundary to the data-quality table; rolling statistics and Health Index are not claimed as denoising."
+    ],
+    "section_theory": [
+      "Removed standalone Hadoop/HDFS/MapReduce exposition and replaced it with implemented Spark DataFrame operations, layered storage and Parquet evidence"
+    ],
+    "section_infrastructure_wording": [
+      "Removed the Windows Hadoop-native-write explanation; retained the measured Spark local driver limitation"
+    ]
+  },
+  "visual_review_physical_pages": [
+    18,
+    19,
+    44,
+    45
+  ],
+  "compile_returncode": 0,
+  "overfull_underfull_or_unresolved_references": [],
+  "environment_warnings": "Existing Windows font paths/fontconfig messages; compilation successful",
+  "source_sha256": {
+    "report/main.tex": "a0c3d719ef831187eaaf1ea9d4d6d7684edfcb322d95b164b5540f8683ad5c78",
+    "report/sections/data-processing.tex": "b34a54e097512b1f33ab98e1debd0cc3d741d2cdeba753edcc1ed8ca06d84dbc",
+    "report/sections/discussion.tex": "93725bb45eb37c8984c74f36f0fe27c558493783e804f582af947898f3c3ace3",
+    "report/sections/appendix.tex": "f901e0512b7a7a84a8e347333b9ff5ad32df98cc4ebbd4fcd0fb940962ff4efd",
+    "report/sections/current-results.tex": "482ae33aa43a691a6007cfad52717c759eb022251bbd432d4de7bad55006472b",
+    "report/sections/problem-data.tex": "b66ffd0378736ce8c8255abaa001ef4a77b022822c8773d78525a04bd9373e36",
+    "report/sections/theory.tex": "358b577a42a259aa8b4148636ba8c042a7924ca276521011201268185fa4ca8d",
+    "report/README.md": "d7dade02766e60162365235448f8c9743f977ac382db42e068f1e202506db999",
+    "references/bibliography.bib": "8d17fc713cfcc9d2d16a531a91b93ab17d03acfbfca57a848772ad63c4fcb4bc"
+  },
+  "pdf_sha256": "68bd24b3f9cb379f6e0cfa796cb47378a2511cff4db30dd8f08ded1343b09c18"
+}

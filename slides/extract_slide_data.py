@@ -11,9 +11,11 @@ from pathlib import Path
 
 import pandas as pd
 
+from cmapss.project import IMPROVEMENT_RUN
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "outputs"
-IMPROVE = OUT / "experiments" / "rul_improvement" / "20260927_full"
+IMPROVE = ROOT / IMPROVEMENT_RUN
+ALIGN = OUT / "course_alignment" / "20261007"
 
 
 def read_json(path: Path) -> dict:
@@ -97,6 +99,58 @@ def modeling() -> dict:
             "timing": warning["timing_counts"],
             "lead": warning["lead_time_distribution"],
         },
+    }
+
+
+def alignment() -> dict:
+    """Đọc kết quả đối chiếu HGB126/HGB169 đã lưu, không huấn luyện lại."""
+    summary = read_json(ALIGN / "summary.json")
+    metrics = pd.read_csv(ALIGN / "model_metrics.csv")
+    ci = pd.read_csv(ALIGN / "paired_bootstrap_ci.csv")
+    warning = pd.read_csv(ALIGN / "warning_fixed_policies.csv")
+
+    def row(model: str, panel: str) -> dict:
+        r = metrics[(metrics["model"] == model) & (metrics["panel"] == panel)].iloc[0]
+        return {
+            "mean_engine_mae": float(r["mean_engine_mae"]),
+            "rmse": float(r["rmse"]),
+            "nasa_score": float(r["nasa_score"]),
+        }
+
+    def delta(panel: str, metric: str) -> dict:
+        r = ci[(ci["panel"] == panel) & (ci["metric"] == metric)].iloc[0]
+        return {
+            "value": float(r["delta_right_minus_left"]),
+            "ci_lower": float(r["ci_lower"]),
+            "ci_upper": float(r["ci_upper"]),
+        }
+
+    policies = []
+    for _, r in warning.iterrows():
+        policies.append(
+            {
+                "model": str(r["model"]),
+                "threshold": int(r["threshold"]),
+                "on_time_rate": float(r["on_time_rate"]),
+                "late_or_missed_rate": float(r["late_or_missed_rate"]),
+                "early_alarm_burden": float(r["early_alarm_burden"]),
+                "median_lead_time": float(r["median_lead_time"]),
+            }
+        )
+    return {
+        "main_predictor": summary["recommendation"]["main_predictor"],
+        "baseline": "hgb126",
+        "trajectory": {m: row(m, "trajectory") for m in ("hgb126", "hgb169")},
+        "endpoint": {m: row(m, "endpoint_50_70_90") for m in ("hgb126", "hgb169")},
+        "delta": {
+            "trajectory_mae": delta("trajectory", "mean_engine_mae"),
+            "trajectory_rmse": delta("trajectory", "rmse"),
+            "endpoint_mae": delta("endpoint_50_70_90", "mean_engine_mae"),
+            "endpoint_rmse": delta("endpoint_50_70_90", "rmse"),
+        },
+        "warning_policies": policies,
+        "calibrated169_on_time_rate": float(summary["calibrated169_reference"]["on_time_rate"]),
+        "limitations": summary["limitations"],
     }
 
 
@@ -197,19 +251,32 @@ def diagnostics() -> dict:
 
 
 def main() -> None:
+    from cmapss.followup_results import load_followup_results
+    from cmapss.project import FOLLOWUP_RUN
+
+    followup, followup_paired = load_followup_results(ROOT)
+    benchmark = pd.read_csv(OUT / "benchmarks/20260929/measurements.csv")
+    benchmark = benchmark.groupby(["engine", "scale"], as_index=False).median(numeric_only=True)
+    # Pandas has no JVM heap; omit that unused nullable field from strict JSON.
+    benchmark = benchmark.drop(columns=["spark_driver_heap_bytes"], errors="ignore")
     data = {
+        "provenance": {"improvement_run": IMPROVEMENT_RUN.as_posix(), "followup_run": FOLLOWUP_RUN.as_posix()},
+        "followup": followup.to_dict(orient="records"),
+        "followup_paired": followup_paired.to_dict(orient="records"),
+        "stage_benchmark": benchmark.to_dict(orient="records"),
         "diagnostics": diagnostics(),
         "subsets": subsets(),
         "eda": eda(),
         "statistics": statistics(),
         "timeseries": timeseries(),
         "modeling": modeling(),
+        "alignment": alignment(),
         "pipeline": pipeline(),
         "improvement": improvement(),
         "transfer": transfer(),
     }
     target = ROOT / "slides" / "slide_data.json"
-    target.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    target.write_text(json.dumps(data, ensure_ascii=False, indent=2, allow_nan=False) + "\n", encoding="utf-8")
     print(f"wrote {target.relative_to(ROOT)}")
 
 

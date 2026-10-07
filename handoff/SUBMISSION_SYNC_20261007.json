@@ -1,0 +1,63 @@
+{
+  "schema_version": "1.0",
+  "author": {
+    "full_name": "Phan Nguyễn Mai Phương",
+    "student_id": "25002711"
+  },
+  "verified_at_local": "2026-10-07T20:15:40.610794+07:00",
+  "artifacts": {
+    "report/main.pdf": {
+      "sha256": "68bd24b3f9cb379f6e0cfa796cb47378a2511cff4db30dd8f08ded1343b09c18"
+    },
+    "slides/cmapss_fd001_presentation.pptx": {
+      "sha256": "59c217ce8b9eb8a5ee730d22ebbb4135156cd22b6eaa77acf92a5e0bd00fd3e3"
+    },
+    "slides/cmapss_fd001_presentation.pdf": {
+      "sha256": "2ba07eff35e84708755f8bb7d56d7a9cf3aa1eaf237a87758985e24db92e41ed"
+    },
+    "handoff/SPEECH_SCRIPT_VI.pdf": {
+      "sha256": "47f7774ed1249e5bd86cb341464732a3957ce402be7f53998b1eb137f4e330e1"
+    }
+  },
+  "layout_checks": {
+    "report_pdf_pages": 49,
+    "deck_pptx_slides": 20,
+    "deck_pdf_pages": 20,
+    "speech_pdf_pages": 25,
+    "deck_speaker_notes": 20,
+    "report_latex_warnings": [],
+    "speech_latex_warnings": []
+  },
+  "consistency_checks": {
+    "hgb126_trajectory_mae_rmse": [
+      20.2143,
+      33.6359
+    ],
+    "hgb169_trajectory_mae_rmse": [
+      17.0009,
+      29.8068
+    ],
+    "hgb126_endpoint_mae_rmse": [
+      15.2577,
+      22.3462
+    ],
+    "hgb169_endpoint_mae_rmse": [
+      9.8913,
+      14.9913
+    ],
+    "warning_threshold_30_on_time_percent": [
+      51,
+      45
+    ],
+    "warning_threshold_40_on_time_percent": [
+      94,
+      96
+    ],
+    "feature_rows_total_train_test": [
+      17731,
+      10196
+    ],
+    "tests": "426 passed, 1 skipped (torch unavailable for TCN)"
+  },
+  "scope_decision": "Giữ HGB126 là baseline lịch sử/dashboard legacy; HGB169 là predictor candidate có điều kiện từ alignment replay; không claim blind refit hoặc deployment policy. Spark chạy local[4]; không giả lập hệ thống lưu trữ phân tán."
+}

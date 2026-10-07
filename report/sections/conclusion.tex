@@ -3,7 +3,7 @@
 
 Báo cáo đã xây dựng một pipeline tái lập được để dự đoán RUL trên NASA C-MAPSS,
 từ dữ liệu thô qua các lớp Bronze--Silver--Gold đến mô hình và đánh giá, trong đó
-nhãn test chỉ được dùng một lần ở bước cuối. Các câu hỏi nghiên cứu được trả lời
+nhãn test được tách khỏi huấn luyện và chọn cấu hình. Các câu hỏi nghiên cứu được trả lời
 như sau:
 \begin{enumerate}[label=\textbf{Q\arabic*.},leftmargin=2.6em]
 \item Dữ liệu FD001 (20.631 dòng train, 13.096 dòng test) đạt mọi kiểm tra về
@@ -13,14 +13,21 @@ như sau:
       cuối vòng đời; năm sensor 4, 7, 11, 12 và 20 thay đổi cùng hướng ở cả 100
       động cơ.
 \item ETL bằng PySpark khớp hoàn toàn với Pandas trên ba bảng Silver/Gold.
-\item HistGradientBoosting với 126 đặc trưng từ window 30 cycles đạt MAE 15,3490
-      cycles (khoảng tin cậy 95\%: 12,7286--18,0866) và RMSE 20,5413 cycles trên
-      100 động cơ test. Sai số nhỏ khi động cơ gần hỏng và lớn hơn khi RUL còn
-      cao, chủ yếu do dự đoán quá cao. Nested CV với window, siêu tham số và
-      trọng số khác không cải thiện được mô hình này.
-\item Với ngưỡng 30 cycles, mọi động cơ train đều được cảnh báo với lead time
-      trung vị 30 cycles, nhưng 49/100 cảnh báo đến sau khi RUL thật đã dưới
-      ngưỡng. Cảnh báo trễ tập trung ở các động cơ ngắn đời, tức suy giảm nhanh.
+\item Protocol lịch sử với HGB126 và 126 đặc trưng từ window 30 cycles đạt MAE
+      15,3490 cycles (khoảng tin cậy 95\%: 12,7286--18,0866) và RMSE 20,5413
+      cycles trên 100 động cơ test. Khi chấm lại HGB126 và HGB169 trên cùng
+      17.731 dòng OOF và cùng các fold, HGB169 (thêm \texttt{cycle} và 42 đặc
+      trưng lịch sử) đạt MAE trajectory 17,0009 và RMSE 29,8068, so với 20,2143
+      và 33,6359 của HGB126; trên panel endpoint tương ứng là 9,8913 và 14,9913
+      so với 15,2577 và 22,3462. Vì vậy HGB169 là predictor candidate chính theo
+      bằng chứng panel chung. Đây là alignment audit trên dự đoán đã lưu, chưa
+      phải xác nhận độc lập bằng refit mù; metric test HGB126 vẫn được giữ như
+      baseline lịch sử.
+\item Với cảnh báo, threshold 30 cycles là sensitivity policy cố định: tỷ lệ
+      đúng thời điểm là 51\% với HGB126 và 45\% với HGB169; threshold 40 nâng
+      các tỷ lệ này lên 94\% và 96\%, với early-alarm burden lần lượt 5,329\%
+      và 5,553\%. Các số liệu này được tính trên OOF và chưa phải policy bảo trì
+      đã hiệu chuẩn.
 \item Mô hình FD001 không dùng trực tiếp được cho các subset khác: MAE tăng từ
       21,93--28,33 cycles (huấn luyện nội bộ) lên 47,39--60,32 cycles (chuyển
       miền). Với FD002 và FD004, phần lớn giá trị sensor nằm ngoài miền huấn
@@ -31,6 +38,9 @@ như sau:
 Nhìn chung, pipeline cho kết quả RUL hợp lý trên FD001 và có ranh giới dữ liệu
 rõ ràng. Phân tích lỗi chỉ ra ba hạn chế có nguyên nhân cụ thể: sai số lớn ở đầu
 vòng đời do tín hiệu sensor chưa thay đổi, cảnh báo trễ ở động cơ suy giảm nhanh,
-và mất khả năng dự đoán khi điều kiện vận hành thay đổi. Vì vậy, hướng tiếp theo
-nên tập trung vào cách định nghĩa nhãn, đặc trưng về tốc độ suy giảm và chuẩn hóa
-theo điều kiện vận hành, thay vì tiếp tục chỉnh siêu tham số.
+và mất khả năng dự đoán khi điều kiện vận hành thay đổi. Các ablation thêm window
+10, profile đầu vòng đời và similarity retrieval chưa vượt promotion gate của
+HGB169; điều đó không chứng minh mọi kiến trúc mới đều kém. HGB169 được giữ là
+predictor candidate chính với giới hạn alignment audit và historical inspection
+đã nêu. Hướng phát triển phù hợp là refit mù độc lập, hiệu chuẩn policy cảnh báo
+và đánh giá sai số theo toàn quỹ đạo.

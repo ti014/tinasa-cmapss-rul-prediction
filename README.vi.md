@@ -4,6 +4,15 @@
 
 # Pipeline dự đoán RUL trên NASA C-MAPSS
 
+**Học viên:** Phan Nguyễn Mai Phương · **MSHV:** 25002711.
+
+**Cập nhật lần cuối 07/10/2026:** alignment HGB126/HGB169, reliability code và deck
+đã được đồng bộ. Follow-up ngày 29/09 thử capped RUL/history trên FD001, chuẩn hóa theo điều kiện
+vận hành trong từng fold trên FD002/FD004 và benchmark Pandas/PySpark theo stage.
+Xem [kết quả và cách tái lập](experiments/FOLLOWUP_20260929.md).
+Sáu notebook có thông tin học viên; dashboard, notebook và slide dùng chung run
+đã rebuild. Dependency slide được khóa bằng `slides/pnpm-lock.yaml`.
+
 Repository này phục vụ báo cáo cuối kỳ môn Phân tích dữ liệu lớn. Báo cáo xây dựng quy trình có khả năng tái lập để phân tích dữ liệu cảm biến đa biến và dự đoán Remaining Useful Life (RUL, tuổi thọ hữu ích còn lại) trên NASA C-MAPSS FD001--FD004. FD001 là subset chính cho phân tích chi tiết; FD002--FD004 được đánh giá trong ma trận chuyển miền bổ sung. Trọng tâm gồm nguồn gốc dữ liệu rõ ràng, phân tích thống kê phù hợp, đánh giá tránh data leakage (rò rỉ dữ liệu), ETL có khả năng mở rộng và trực quan hóa kết quả dễ diễn giải.
 
 ## Trạng thái
@@ -13,9 +22,9 @@ Repository đã có **kiểm tra dữ liệu FD001--FD004, nhãn RUL train, note
 **Đã hoàn tất thử nghiệm cải thiện (27/09/2026):** nested GroupKFold 5×3
 so sánh window 10/20/30, 24 cấu hình HistGradientBoosting và ba phương án trọng số.
 MAE RUL thấp ở vòng ngoài thay đổi từ 3,6676 thành 3,6730 cycles; số cảnh báo
-trễ tăng từ 49 lên 53/100 engines. Cấu hình cuối được chọn lại là baseline,
-nên MAE test vẫn là 15,3490. Một số ứng viên giảm sai số RUL thấp trong inner CV
-nhưng làm tăng chỉ số khác. Xem [kết quả và cách chạy lại](experiments/README.md).
+trễ tăng từ 49 lên 53/100 engines. Cổng promotion giữ lại baseline lịch sử.
+Kết quả này tách với alignment audit ngày 07/10, trong đó HGB126 và HGB169 được
+chấm trên cùng panel đã lưu. Xem [kết quả và cách chạy lại](experiments/README.md).
 
 Đã có:
 
@@ -76,7 +85,7 @@ nhưng làm tăng chỉ số khác. Xem [kết quả và cách chạy lại](exp
 Gói bàn giao cuối:
 
 - Đã có [slide trình bày](slides/cmapss_fd001_presentation.pptx)
-  ([PDF](slides/cmapss_fd001_presentation.pdf)) gồm 20 slide cho bài nói 30 phút,
+  ([PDF](slides/cmapss_fd001_presentation.pdf)) gồm 20 slide cho bài nói 18--20 phút,
   chia năm phần: bài toán và dữ liệu, pipeline Big Data, phân tích chuỗi thời
   gian, mô hình và đánh giá, mở rộng và kết luận. Số liệu trên slide được đọc từ
   `outputs/` bằng [`slides/extract_slide_data.py`](slides/extract_slide_data.py);
@@ -89,15 +98,14 @@ modeling và PCA--ARIMA có ở phần Bắt đầu. Dashboard dùng dependency 
 
 ## Mục tiêu
 
-Báo cáo tập trung trả lời năm câu hỏi chính trên FD001:
+Báo cáo tập trung trả lời sáu câu hỏi chính trên FD001:
 
-1. FD001 đáng tin và phù hợp đến mức nào cho một nghiên cứu học thuật về predictive maintenance?
-2. Những tín hiệu cảm biến nào thể hiện sự suy giảm có thể đo lường theo vòng đời động cơ?
+1. FD001 có đạt kiểm tra schema, khóa và cycle liên tục hay không?
+2. Sensor thay đổi thế nào giữa đầu và cuối vòng đời động cơ?
 3. ETL Pandas và PySpark có cho kết quả tương đương trên cùng input hay không?
-4. Có thể dự đoán RUL chính xác đến mức nào từ 30 cycles vận hành gần nhất?
-5. Làm thế nào trình bày kết quả mô hình thành bằng chứng cảnh báo sớm minh bạch và tái lập được?
-
-Câu hỏi bổ sung là model fit trên FD001 chuyển sang FD002--FD004 như thế nào khi dùng chung protocol window 10 cycles.
+4. HGB126 hay HGB169 ổn định hơn trên cùng panel trajectory và endpoint?
+5. Dự đoán RUL hỗ trợ cảnh báo sớm với chất lượng ra sao?
+6. Model huấn luyện trên FD001 hoạt động thế nào khi áp dụng FD002--FD004?
 
 Mục tiêu chính là **dự đoán RUL**. Supervised regression (hồi quy có giám sát) là cách mô hình hóa phù hợp vì biến mục tiêu là số cycle còn lại; đây không phải tên hoặc mục tiêu của báo cáo.
 
@@ -181,8 +189,9 @@ FD001 hiện chưa đủ lớn để tự gọi là Big Data. Báo cáo thể hi
 rộng qua ETL Bronze/Silver/Gold, Parquet, PySpark parity và benchmark 1x/10x/100x.
 
 Pandas đã được dùng trong notebook EDA, làm reference cho ETL, thống kê và
-chuẩn bị dữ liệu mô hình. PySpark tái hiện các boundary ETL để đối chiếu kết quả;
-runtime benchmark hiện chỉ đo Pandas. Bộ dữ liệu gốc chỉ có dung
+chuẩn bị dữ liệu mô hình. PySpark tái hiện ETL và rolling features để đối chiếu.
+Benchmark bổ sung 1x/10x đo cả hai engine, gồm I/O và RSS của process tree;
+Spark ghi qua Arrow trên driver. Bộ dữ liệu gốc chỉ có dung
 lượng vài MB, vì vậy repository không tuyên bố FD001 tự thân chứng minh khả
 năng xử lý dữ liệu quy mô lớn.
 
@@ -237,17 +246,29 @@ Mỗi window chỉ chứa dữ liệu của một động cơ và không sử d�
 
 ### Dự đoán RUL
 
-Pipeline modeling đã so sánh:
+Pipeline modeling lịch sử đã so sánh:
 
 1. Naive baseline theo trung vị RUL.
 2. Ridge regression làm baseline tuyến tính có regularization.
-3. HistGradientBoostingRegressor làm mô hình ứng viên phi tuyến.
+3. HistGradientBoostingRegressor làm mô hình ứng viên phi tuyến (HGB126).
 
 Mô hình được chọn bằng GroupKFold 5-fold, trong đó `engine_id` xác định group.
 Nhãn test chính thức của NASA được cô lập cho đến khi đã ghi final predictions.
-HistGradientBoostingRegressor đang là model được chọn. Metric test cuối gồm
+HistGradientBoostingRegressor được giữ làm baseline lịch sử. Metric test của baseline gồm
 mean engine-level MAE 15,3490, RMSE 20,5413 và NASA score 1.513,2577; khoảng tin
 cậy bootstrap được lưu trong `outputs/modeling/tables/final_metrics.json`.
+
+### Vai trò predictor và policy cảnh báo
+
+Để tách các protocol, HGB126 là baseline lịch sử; metric test FD001 ở trên chỉ
+thuộc mô hình này. HGB169 bổ sung `cycle` và 42 history features vào 126 rolling
+features. Alignment audit trên cùng panel OOF đã lưu cho thấy HGB169 có sai số
+thấp hơn ở trajectory và endpoint, nên được giữ là predictor candidate có điều
+kiện. Đây là read-only replay trên prediction đã lưu, chưa phải blind refit và
+không thay thế metric test của HGB126. Warning sensitivity được đánh giá riêng
+trên OOF: threshold 30 có on-time 51% với HGB126 và 45% với HGB169; threshold
+40 lần lượt là 94% và 96% nhưng burden tăng. Đây chưa phải policy bảo trì đã
+hiệu chuẩn.
 
 ### Đánh giá FD002--FD004
 
@@ -280,18 +301,18 @@ bỏ tính không dừng trên các đoạn huấn luyện. Sau khi điều ch�
 nhãn RUL train; dự báo Health Index không phải RUL.
 Trên cùng đoạn dữ liệu giữ lại để kiểm tra, MAE trung bình của ARIMA là 0,4110, của `drift` là 0,7469 và
 của `last_value` là 0,9478; đây là so sánh mô tả, chưa phải bằng chứng ưu thế
-thống kê. Warning OOF dùng ngưỡng 30 cycles: 44 engine cảnh báo trước ngưỡng,
-7 đúng ngưỡng và 49 sau ngưỡng; lead time có median 30 cycles. OOF đã được dùng
-để chọn model nên đây là phân tích nội bộ, không phải đánh giá độc lập.
+thống kê. ARIMA không thay thế predictor RUL và không được dùng để chọn HGB126
+hay HGB169.
 
 Ma trận đại lượng cần ước lượng, đơn vị phân tích, cách chia dữ liệu/khoảng dự báo, metric và vai trò báo cáo
 được lưu trong
 [`outputs/modeling/tables/evaluation_protocol.csv`](outputs/modeling/tables/evaluation_protocol.csv).
-Phân tích cảnh báo sớm dùng OOF train của model được chọn với ngưỡng cố định
-`RUL <= 30` cycles: 44 engine cảnh báo trước ngưỡng, 7 đúng ngưỡng và 49 sau
-ngưỡng; lead time có median 30 cycles và miền 19--55. OOF đã được dùng để chọn
-model nên đây là bằng chứng mô tả nội bộ, không phải đánh giá độc lập hoặc lịch
-bảo trì tối ưu.
+Phân tích cảnh báo sớm dùng OOF train của HGB126 baseline lịch sử với ngưỡng cố
+định RUL <= 30 cycles: 44 engine cảnh báo trước ngưỡng, 7 đúng ngưỡng và 49
+sau ngưỡng; lead time có median 30 cycles và miền 19--55. Bảng sensitivity
+HGB126/HGB169 ở threshold 30/40 nằm trong artifact alignment. OOF đã được dùng
+để chọn model nên đây là bằng chứng mô tả nội bộ, không phải đánh giá độc lập hoặc
+lịch bảo trì tối ưu.
 
 ## Phạm vi Big Data
 
@@ -409,6 +430,15 @@ Test labels không được đọc trong luồng này.
 trình và cài gói hiện tại qua `-e .`. Nếu cần notebook, phát triển hoặc chạy test,
 thay bằng [`requirements-dev.txt`](requirements-dev.txt) ở bước cài đặt.
 
+Với uv, `uv sync --frozen --no-dev` cài môi trường chạy chương trình, không kèm
+dependency cho notebook hoặc test. Môi trường này có `psutil` để đo bộ nhớ khi
+benchmark; Spark cần thêm `--extra etl` và Java. Ví dụ,
+`python -m cmapss.etl.scalability --help` vẫn chạy được trong môi trường này.
+
+Khi đổi dependency, cập nhật `uv.lock` rồi chạy lại lệnh export ở đầu cả bốn file
+`requirements*.txt`. Chạy `python -m pytest tests/test_dependency_exports.py` để
+đối chiếu các file với lock, kể cả những phiên bản chỉ được cài trên Linux.
+
 Đặc tả dữ liệu và luồng dữ liệu ghép cặp chỉ dùng train nằm trong `src/cmapss/`:
 
 ```text
@@ -458,9 +488,11 @@ Sau khi cài `requirements-dev.txt`, mở notebook từ thư mục gốc:
 Chọn kernel Python của `.venv` và **Restart Kernel and Run All Cells**.
 Notebook chỉ phân tích train và tạo lại 12 bảng CSV, 11 hình PNG.
 Các lần kiểm tra với kernel mới tạo tệp EDA giống nhau trong cùng môi trường.
-Bộ kiểm thử toàn repository đạt **188 tests** (lần chạy ngày 28/09/2026), gồm kiểm tra
-dữ liệu, thống kê, ETL, đặc trưng, modeling, PCA--ARIMA, đánh giá liên subset,
-dashboard và tái lập end-to-end.
+Bộ kiểm thử reliability ngày 07/10/2026 đạt **426 passed, 1 skipped**; kiểm thử
+TCN được bỏ qua vì môi trường chưa có `torch`. Lần chạy ngày 29/09/2026 đạt
+**198 tests** và được giữ như bằng chứng lịch sử cho các nhánh dữ liệu, thống kê,
+ETL, đặc trưng, modeling, PCA--ARIMA, đánh giá liên subset, dashboard và tái lập
+end-to-end.
 
 ![Quy trình EDA train FD001](assets/diagrams/fd001-eda.svg)
 
@@ -539,6 +571,16 @@ uv sync --frozen --extra etl
 Xem [artifact và validation ETL](outputs/etl/README.md) để biết schema, số
 dòng, thời gian benchmark và kết quả đối chiếu Pandas/PySpark.
 
+Pipeline lưu `raw_dir` tuyệt đối trong metadata và bảo vệ thư mục này ngay cả
+khi đổi thư mục chạy. ETL CLI ghi Silver/Gold, benchmark và parity được yêu cầu
+vào staging trước khi publish; lỗi ghi hoặc publish sẽ khôi phục bộ cũ. Manifest
+được publish cuối, liên kết benchmark/parity với checksum input và thời điểm ETL.
+`auxiliary_checks.parity.status=not_requested` nghĩa là lần hiện tại không chạy
+Spark, dù thư mục còn `parity.json` lịch sử. Writer giữ các file ngoài phạm vi
+của nó, ví dụ README. Publication nhiều file không bảo đảm reader/writer đồng
+thời hoặc mất điện; đóng ứng dụng đang mở SQLite trước khi ghi lại trên Windows.
+Nếu rollback cũng lỗi, thông báo trả đường dẫn backup để phục hồi.
+
 ### Tạo rolling features
 
 Sau khi ETL đã ghi Silver observations, tạo Gold rolling features:
@@ -552,6 +594,11 @@ Sau khi ETL đã ghi Silver observations, tạo Gold rolling features:
 Artifact hiện tại có 27.927 dòng: 17.731 train windows và 10.196 test windows.
 Xem [artifact và validation rolling features](outputs/features/README.md) để
 biết contract cột, số dòng, kiểm tra leakage và giới hạn.
+
+Rolling pipeline kế thừa Bronze boundary từ metadata ETL. Với Silver cũ chưa
+lưu `raw_dir`, truyền thêm `--raw-dir` thực tế; ví dụ `--raw-dir D:/datasets/CMAPSS`.
+Đường dẫn này bổ sung bảo vệ, không bỏ qua boundary đã lưu. Rolling writer cũng
+dùng staging/rollback và từ chối ghi đè Silver input hoặc manifest của nguồn.
 
 ### Chạy modeling RUL
 
@@ -693,6 +740,13 @@ New-Item -ItemType Directory -Force tmp | Out-Null
 ```
 
 Pytest dọn thư mục `--basetemp` khi chạy lại; chỉ dành thư mục đó cho test.
+
+Đợt kiểm chứng mã nguồn ngày 07/10/2026 đạt **426 passed, 1 skipped** (TCN thiếu
+torch). Bao gồm bảo vệ Bronze tùy chỉnh, fault injection ETL/rolling, dependency
+exports và lifecycle dùng chung cho XGBoost/LightGBM. Xem
+[kế hoạch đã hoàn tất](handoff/CODE_RELIABILITY_PLAN_20261007.md) và
+[bằng chứng runtime](handoff/CODE_RELIABILITY_20261007.json) để biết lệnh kiểm
+tra, giới hạn Windows/Linux và kết quả worker spawn thực tế.
 
 </details>
 

@@ -247,7 +247,9 @@ không phải filesystem permission áp dụng cho mọi chương trình khác.
 ### ETL_SILVER_GOLD
 
 Pipeline ETL phải đọc raw qua reader/validator hiện có, không sửa Bronze và
-ghi artifact ra ngoài `data/raw/`. Silver observations giữ đúng schema
+ghi artifact ra ngoài Bronze thực tế, kể cả `--raw-dir` tùy chỉnh. Result giữ
+raw boundary đã resolve để đổi working directory không làm mất bảo vệ.
+Silver observations giữ đúng schema
 `OBSERVATION_COLUMNS`, khóa `(split, engine_id, cycle)` và thứ tự canonical theo
 `split`, `engine_id`, `cycle`. Silver train targets giữ đúng
 `TRAIN_TARGET_COLUMNS`, có cùng tập khóa với train observations và công thức
@@ -270,6 +272,18 @@ Bản nhân bản không được ghi vào artifact khoa học, không được 
 EDA hoặc huấn luyện mô hình. Metadata phải ghi scale, số lần lặp, cold/warm
 run, runtime và row counts.
 
+ETL và rolling writers ghi vào staging trước khi publish. Khi lỗi ghi hoặc
+publication được xử lý, artifact cũ phải được khôi phục đủ; nếu rollback cũng
+lỗi, giữ backup và báo đường dẫn phục hồi. Manifest được publish cuối. Không
+gọi việc thay nhiều file là atomic transaction; reader/writer đồng thời và mất
+điện ngoài phạm vi bảo đảm. Kiểm thử `tests/test_artifact_safety.py` bao phủ raw
+tùy chỉnh, thay CWD, junction, lỗi Parquet/SQLite/metadata và lỗi publication.
+
+ETL CLI đưa benchmark và parity được yêu cầu vào cùng staging. Receipts mới
+ghi `dataset_id`, `input_sha256` và `etl_generated_at_utc` để đối chiếu manifest.
+Chỉ dùng trạng thái `auxiliary_checks` của lần hiện tại; `parity.json` lịch sử
+còn trong thư mục không chứng minh parity cho một lần chạy `not_requested`.
+
 
 ### ROLLING_FEATURES
 
@@ -279,6 +293,11 @@ Rolling features M3.2 đọc Silver observations đã đạt contract và ghi Go
 Mỗi window có đúng 30 observations liên tục, cùng split và cùng engine; không
 được dùng cycle tương lai, không nối qua engine khác và không đọc hoặc join
 `RUL_FD001.txt`.
+
+Rolling pipeline kế thừa raw boundary từ manifest ETL; explicit `raw_dir` chỉ
+bổ sung boundary được bảo vệ. Với Silver legacy thiếu metadata raw, caller
+phải chỉ rõ Bronze tùy chỉnh. Writer từ chối ghi đè Silver input và manifest
+nguồn, kể cả qua đường dẫn symlink/junction.
 
 Artifact giữ đủ 21 sensors để chưa thực hiện feature selection trên toàn bộ
 train. Mỗi sensor tạo sáu cột theo mẫu `<sensor>__<stat>` với `stat` thuộc

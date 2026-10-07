@@ -13,7 +13,7 @@ ghi ra file.
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.78\linewidth]{figures/pipeline.pdf}
-\caption{Luồng xử lý dữ liệu. Nhánh train-only bên phải không đi vào mô hình
+\caption[Pipeline xử lý dữ liệu]{Luồng xử lý dữ liệu. Nhánh train-only bên phải không đi vào mô hình
 RUL; nhãn test chỉ được ghép ở bước đánh giá cuối.}
 \label{fig:pipeline}
 \end{figure}
@@ -26,7 +26,7 @@ protocol đánh giá.
 
 \begin{table}[H]
 \centering
-\caption{Công cụ và đầu ra của từng bước.}
+\caption[Công cụ và đầu ra]{Công cụ và đầu ra của từng bước.}
 \label{tab:tool-boundaries}
 \small
 \begin{tabular}{L{3.2cm}L{4.4cm}L{6.4cm}}
@@ -35,7 +35,7 @@ Bước & Công cụ & Đầu ra \\
 \midrule
 Đọc và kiểm tra & Python, Pandas & Bảng quan sát đã kiểm tra, nhãn RUL train \\
 ETL & Pandas, PySpark, Parquet, SQLite & Lớp Silver/Gold, báo cáo parity \\
-Tạo đặc trưng & Pandas, NumPy & 126 đặc trưng trên window 30 cycles \\
+Tạo đặc trưng & Pandas, NumPy & 126 đặc trưng rolling; alignment audit thêm \texttt{cycle} và 42 đặc trưng lịch sử \\
 Mô hình & scikit-learn & GroupKFold, Ridge, HistGradientBoosting \\
 Đánh giá & scikit-learn, SciPy & MAE, RMSE, NASA score, khoảng tin cậy bootstrap \\
 Phân tích chuỗi & statsmodels & ARIMA, ADF, Ljung--Box \\
@@ -52,7 +52,7 @@ Ba mô hình được so sánh:
       của RUL trong fold huấn luyện.
 \item \textbf{Ridge}: hồi quy tuyến tính với phạt L2, $\alpha=1$; đặc trưng
       được chuẩn hóa bằng \texttt{StandardScaler} fit trong từng fold huấn luyện.
-\item \textbf{HistGradientBoosting (HGB)}: tổ hợp cây hồi quy với 200 vòng
+\item \textbf{HistGradientBoosting (HGB126)}: tổ hợp cây hồi quy với 200 vòng
       boosting, learning rate 0,05, tối đa 31 lá mỗi cây, tối thiểu 20 mẫu mỗi
       lá, tắt early stopping, \texttt{random\_state=42}; dùng đặc trưng ở thang
       đo gốc.
@@ -73,6 +73,19 @@ cuối của mỗi động cơ test. Chỉ sau khi 100 dự đoán này đã đ�
 pipeline mới đọc \texttt{RUL\_FD001.txt} để tính metric cuối. Khoảng tin cậy 95\%
 của metric test được ước lượng bằng bootstrap 10.000 lần, lấy mẫu lại động cơ có
 hoàn lại, seed 42.
+
+\paragraph{Alignment audit giữa hai biểu diễn đặc trưng.} Sau protocol lịch sử,
+báo cáo chấm lại các dự đoán đã lưu của HGB126 và HGB169 trên cùng 17.731 dòng,
+cùng bộ khóa \texttt{(split, engine\_id, cycle)}, cùng nhãn RUL và cùng các fold
+theo động cơ. HGB126 dùng 126 đặc trưng rolling của window 30 cycles. HGB169
+dùng đúng 126 đặc trưng đó, thêm cột \texttt{cycle} và 42 đặc trưng lịch sử từ
+30 cycles đầu, tổng cộng 169 đặc trưng; mọi đặc trưng đều được tính nhân quả.
+So sánh dùng paired bootstrap 10.000 lần trên \texttt{engine\_id}, điều kiện
+trên dự đoán đã lưu, nên khoảng tin cậy không bao gồm bất định do fit lại,
+random seed hoặc chọn mô hình. Panel trajectory dùng toàn bộ 17.731 dòng; panel
+endpoint lấy các mốc $0{,}5$, $0{,}7$ và $0{,}9$ tuổi thọ của mỗi động cơ. Kết quả
+này dùng để chọn predictor candidate cho báo cáo; không đọc nhãn test để thực
+hiện lựa chọn. Metric test của các run lịch sử chỉ được báo cáo tách riêng.
 
 \subsection{Cảnh báo sớm}
 \label{sec:warning-method}
@@ -108,8 +121,9 @@ báo cáo tính trung bình của 30 cycles đầu và 30 cycles cuối, rồi l
 \end{equation}
 Với động cơ hỏng ở cycle 200, đoạn đầu là cycles 1--30 và đoạn cuối là cycles
 171--200. Động cơ ngắn nhất dài 128 cycles, nên hai đoạn không bao giờ chồng
-nhau. Lấy trung bình 30 cycles thay vì một giá trị đơn lẻ giúp giảm ảnh hưởng
-của nhiễu đo. Mỗi động cơ đóng góp đúng một cặp cho mỗi sensor, tổng cộng
+nhau. Lấy trung bình 30 cycles thay vì một giá trị đơn lẻ giúp giảm biến động
+ngắn hạn trong mô tả đầu/cuối; dữ liệu không có ground truth cảm biến sạch để
+khẳng định đây là khử nhiễu. Mỗi động cơ đóng góp đúng một cặp cho mỗi sensor, tổng cộng
 $100\times21=2.100$ cặp.
 
 Đại lượng chính là trung bình chênh lệch $\widehat{\Delta}_s=\frac{1}{100}\sum_i\Delta_{i,s}$,
@@ -173,7 +187,7 @@ hình được chọn mới được đánh giá trên các động cơ validati
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.46\textwidth]{figures/rul-improvement.pdf}
-\caption{Quy trình nested cross-validation. Mọi bước chọn window, siêu tham số và
+\caption[Nested cross-validation]{Quy trình nested cross-validation. Mọi bước chọn window, siêu tham số và
 trọng số đều nằm trong vòng trong.}
 \label{fig:rul-improvement}
 \end{figure}

@@ -1,0 +1,190 @@
+{
+  "author": "Phan Nguyễn Mai Phương",
+  "student_id": "25002711",
+  "recorded_at": "2026-09-29T04:25:27.727986+07:00",
+  "test_run": {
+    "status": "passed",
+    "passed": 198,
+    "warnings": 14,
+    "warnings_note": "Existing Matplotlib/Pyparsing deprecation warnings",
+    "command": ".venv\\Scripts\\python.exe -m pytest -q --tb=short --basetemp=D:\\IUH\\BigData\\Final_Project\\tmp\\pytest-final-20260929-a1",
+    "elapsed_seconds": 46.06,
+    "evidence": "Completed command output in this task; final edits afterward affect documentation/slide wording only."
+  },
+  "dependency_checks": {
+    "uv lock --check": "passed",
+    "uv pip check --python .venv/Scripts/python.exe": "passed",
+    "pnpm install --frozen-lockfile (slides)": "passed"
+  },
+  "original_study": {
+    "status": "passed",
+    "baseline_unchanged": true,
+    "source_and_inputs_match": true,
+    "outer_engines": 100,
+    "rows_per_stage": 17731,
+    "stages": 4,
+    "validated_fit_records": 511,
+    "paired_ci_recomputed": true,
+    "saved_model_predictions_match": true,
+    "test_predictions": 100,
+    "source_verification": {
+      "recorded_source_verified": true,
+      "verified_files": 54,
+      "archived_files": 54,
+      "working_tree_matches_recorded_source": false,
+      "working_tree_differences": [
+        "src/cmapss/dashboard.py",
+        "src/cmapss/dashboard_app.py",
+        "uv.lock"
+      ]
+    }
+  },
+  "followup_studies": {
+    "FD001": {
+      "status": "passed",
+      "dataset": "FD001",
+      "fit_records": 151,
+      "unique_fit_seconds": 1195.6638592992094,
+      "outer_engines": 100,
+      "outer_rows_per_stage": 17731,
+      "test_engines": 100,
+      "paired_ci_recomputed": true,
+      "saved_model_predictions_match": true,
+      "source_verification": {
+        "recorded_source_verified": true,
+        "verified_files": 23,
+        "archived_files": 23,
+        "working_tree_matches_recorded_source": false,
+        "working_tree_differences": [
+          "src/cmapss/modeling/followup.py"
+        ]
+      }
+    },
+    "FD002": {
+      "status": "passed",
+      "dataset": "FD002",
+      "fit_records": 64,
+      "unique_fit_seconds": 1031.7233921001898,
+      "outer_engines": 260,
+      "outer_rows_per_stage": 51419,
+      "test_engines": 259,
+      "paired_ci_recomputed": true,
+      "saved_model_predictions_match": true,
+      "source_verification": {
+        "recorded_source_verified": true,
+        "verified_files": 23,
+        "archived_files": 23,
+        "working_tree_matches_recorded_source": false,
+        "working_tree_differences": [
+          "src/cmapss/modeling/followup.py"
+        ]
+      }
+    },
+    "FD004": {
+      "status": "passed",
+      "dataset": "FD004",
+      "fit_records": 64,
+      "unique_fit_seconds": 1112.431771699863,
+      "outer_engines": 249,
+      "outer_rows_per_stage": 59008,
+      "test_engines": 248,
+      "paired_ci_recomputed": true,
+      "saved_model_predictions_match": true,
+      "source_verification": {
+        "recorded_source_verified": true,
+        "verified_files": 23,
+        "archived_files": 23,
+        "working_tree_matches_recorded_source": false,
+        "working_tree_differences": [
+          "src/cmapss/modeling/followup.py"
+        ]
+      }
+    }
+  },
+  "benchmark": {
+    "status": "complete",
+    "successful_measurements": 12,
+    "parity": {
+      "1": {
+        "features": {
+          "rows": 27927,
+          "columns": 129,
+          "all_cells_match": true
+        },
+        "summary": {
+          "rows": 200,
+          "columns": 5,
+          "all_cells_match": true
+        }
+      },
+      "2": {
+        "features": {
+          "rows": 27927,
+          "columns": 129,
+          "all_cells_match": true
+        },
+        "summary": {
+          "rows": 200,
+          "columns": 5,
+          "all_cells_match": true
+        }
+      },
+      "3": {
+        "features": {
+          "rows": 27927,
+          "columns": 129,
+          "all_cells_match": true
+        },
+        "summary": {
+          "rows": 200,
+          "columns": 5,
+          "all_cells_match": true
+        }
+      }
+    },
+    "failed_default_heap_attempt": "Preserved separately; excluded from final medians",
+    "scope": "Local Spark local[4], 4 GiB heap; driver Arrow/PyArrow export; startup reported separately"
+  },
+  "notebook_identity_and_no_saved_errors": [
+    "notebooks/00_data_pipeline_walkthrough.ipynb",
+    "notebooks/01_fd001_eda.ipynb",
+    "notebooks/02_fd001_inference.ipynb",
+    "notebooks/03_fd001_modeling_evaluation.ipynb",
+    "notebooks/04_fd001_health_index_arima.ipynb",
+    "notebooks/05_cross_dataset_and_improvement.ipynb"
+  ],
+  "pdf_pages": {
+    "report/main.pdf": 49,
+    "slides/cmapss_fd001_presentation.pdf": 20,
+    "handoff/SPEECH_SCRIPT_VI.pdf": 25
+  },
+  "slide_visual_review": {
+    "changed_slides": [
+      7,
+      17,
+      20
+    ],
+    "unchanged_slides_pixel_equal": 17,
+    "render": "PowerPoint COM",
+    "review": "Changed slides visually inspected; no visible clipping or overlap"
+  },
+  "protected_artifacts": {
+    "raw_and_baseline_git_diff_empty": true,
+    "baseline_sha256_matches": 16
+  },
+  "artifact_sha256": {
+    "report/main.pdf": "4d42501554be9202f19ef963eda3ce9fdb2a3a8354b445a72c2def622c168208",
+    "slides/cmapss_fd001_presentation.pdf": "15ebe7b047d3dad51d69be24a5ea837797ac9a41f80668a9d4a287e9480ce9ba",
+    "handoff/SPEECH_SCRIPT_VI.pdf": "8730b5cea81fdf2d554462a37df72e6b2c007c27a3c24cc1c12cd78f721b6385",
+    "slides/cmapss_fd001_presentation.pptx": "03c1bbe419e9a846d90e773afc210cd2746ab9985e6a10901e88f30d2a7e2225",
+    "experiments/FOLLOWUP_20260929.md": "6f9aa363e62d8fca2d0c40f7dd1f7d9d970a3d96ed636ae0fd0f85ea0cefb81b",
+    "uv.lock": "7cb230748abda6fa1555c91c19f23ea448c884c91794d47bdf00d74e6fa4d9ce",
+    "slides/pnpm-lock.yaml": "fd8e5dccfd1a66bfe22ec311f59066eb68e763f611d3c50194bb821abb20b0b9"
+  },
+  "limitations": [
+    "FD001 follow-up gate fails; original baseline retained.",
+    "FD002/FD004 pass MAE criterion but warning counts worsen; no model automatically promoted.",
+    "Historical test labels had already been inspected; results remain exploratory.",
+    "Frozen source differs from current followup.py only by module-entry serialization fix; recorded source snapshots retained unchanged."
+  ]
+}

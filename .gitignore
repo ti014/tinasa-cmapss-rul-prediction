@@ -32,6 +32,20 @@ dist/
 .ipynb_checkpoints/
 
 # Environment variables and secrets
+# Local assistant state must never enter the project history.
+/auth.json
+/.cockpit_codex_auth.json
+/.codex-global-state.json
+/config.toml
+/installation_id
+/goals_*.sqlite*
+/logs_*.sqlite*
+/memories_*.sqlite*
+/queue_*.sqlite*
+/state_*.sqlite*
+/sqlite/
+/skills/
+/slides/node_modules.runtime-link/
 .env
 .env.*
 !.env.example
@@ -40,10 +54,31 @@ dist/
 
 # Logs and temporary files
 *.log
+*.blg
+# LaTeX build intermediates; keep .tex sources and final PDFs.
+*.aux
+*.bbl
+*.lof
+*.lot
+*.out
+*.toc
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+# Dated slide exports are local copies of the main deck.
+slides/cmapss_fd001_presentation_*.pptx
 logs/
 tmp/
 # Rebuildable per-fit predictions; keep summary artifacts and manifests in Git.
 outputs/experiments/rul_improvement/*/fit_cache/
+outputs/experiments/followup/**/fit_cache/
+outputs/experiments/tree_comparison/*/fit_cache/
+outputs/experiments/lightgbm_comparison/*/fit_cache/
+# Smoke runs only check wiring; study runs keep the reported evidence.
+outputs/experiments/*/*smoke*/
+# Frozen inputs are rebuildable; manifests keep their SHA-256 hashes.
+outputs/experiments/**/frozen_*_features.parquet
+outputs/experiments/**/source_artifact_snapshot/*.parquet
 temp/
 *.tmp
 *.bak

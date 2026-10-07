@@ -19,7 +19,7 @@ của báo cáo so với các nguồn tham khảo chính.
 
 \begin{table}[H]
 \centering
-\caption{Vị trí của báo cáo so với một số nghiên cứu liên quan.}
+\caption[Vị trí nghiên cứu]{Vị trí của báo cáo so với một số nghiên cứu liên quan.}
 \label{tab:related-work}
 \small\sloppy
 \setlength{\tabcolsep}{3pt}
@@ -120,11 +120,20 @@ $p$ và trung bình trượt bậc $q$, $d$ là bậc sai phân và $\varepsilon
 trắng. Kiểm định ADF đánh giá tính dừng của chuỗi~\cite{statsmodelsADF}, còn
 kiểm định Ljung--Box kiểm tra phần dư sau khi fit còn tự tương quan hay không.
 
-\subsection{Xử lý dữ liệu với Spark và lưu trữ phân lớp}
-Apache Spark xử lý dữ liệu phân tán dựa trên Resilient Distributed Dataset,
-cho phép tính toán song song và phục hồi khi lỗi~\cite{zaharia2012rdd}; API
-DataFrame của Spark SQL hỗ trợ các phép biến đổi trên dữ liệu có
-schema~\cite{sparkSQLGuide}. Tổ chức dữ liệu theo ba lớp Bronze--Silver--Gold
-tách dữ liệu gốc, dữ liệu đã làm sạch và bảng tổng hợp, giúp mỗi bước biến đổi
-có đầu vào và đầu ra rõ ràng. Parquet lưu dữ liệu theo cột, phù hợp cho truy vấn
-phân tích chỉ đọc một số cột.
+\subsection{Spark, Bronze--Silver--Gold và Parquet}
+Pipeline dùng PySpark ở chế độ \texttt{local[4]} để thực hiện các phép biến đổi
+trên dữ liệu có schema. DataFrame API hỗ trợ \texttt{unionByName} để gom các file
+quan sát, \texttt{groupBy} và \texttt{agg} để tạo bảng tóm tắt theo động cơ,
+\texttt{join} để tạo nhãn RUL, cùng các phép sắp xếp theo
+\texttt{(split, engine\_id, cycle)}~\cite{sparkSQLGuide}. Các thao tác này được
+thực thi lại trên cùng input với pipeline Pandas; kết quả được thu về để kiểm tra
+schema, khóa, số dòng và giá trị trong phép đối chiếu parity. Phần modeling vẫn
+dùng Pandas và scikit-learn, nên phạm vi Spark được giữ ở ETL và feature pipeline.
+
+Tổ chức Bronze--Silver--Gold tách ba vai trò dữ liệu. Bronze giữ file text gốc và
+hash nguồn; Silver giữ observations đã kiểm tra kiểu dữ liệu cùng train targets;
+Gold giữ \texttt{engine\_summary}, rolling features và các bảng phục vụ truy vấn.
+Parquet là định dạng lưu trữ theo cột, có encoding và compression cho dữ liệu
+phân tích~\cite{apacheParquetOverview}; SQLite giữ các bảng nhỏ có index để truy
+vấn nhanh. Cách phân lớp này giúp mỗi bước có input, output và kiểm tra riêng,
+đồng thời cho phép thay implementation ETL mà vẫn giữ contract dữ liệu.

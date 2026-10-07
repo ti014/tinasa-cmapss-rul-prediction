@@ -28,20 +28,20 @@ cấp riêng RUL thật tại cycle cuối được quan sát của mỗi độn
 \subsection{Mục tiêu và câu hỏi nghiên cứu}
 Mục tiêu của báo cáo là xây dựng một pipeline tái lập được, đi từ dữ liệu thô
 đến dự đoán RUL, và đánh giá pipeline đó mà không để thông tin của tập test ảnh
-hưởng tới việc chọn mô hình. Báo cáo trả lời năm câu hỏi chính và một câu hỏi
-bổ sung:
+hưởng tới việc chọn mô hình. Báo cáo trả lời sáu câu hỏi, gồm kiểm tra dữ liệu,
+xu hướng sensor, parity ETL, so sánh biểu diễn đặc trưng, cảnh báo và chuyển miền:
 \begin{enumerate}[label=\textbf{Q\arabic*.},leftmargin=2.6em]
 \item Dữ liệu FD001 có đáp ứng các điều kiện hợp lệ về schema, khóa và tính liên
       tục của cycle hay không?
 \item Giá trị sensor thay đổi như thế nào giữa đầu và cuối vòng đời động cơ?
 \item ETL bằng Pandas và PySpark có cho kết quả giống nhau trên cùng input hay
       không?
-\item Mô hình dùng đặc trưng từ window 30 cycles đạt sai số bao nhiêu trên tập
-      test FD001?
+\item Giữa HGB126 (126 đặc trưng rolling) và HGB169 (126 đặc trưng rolling,
+      \texttt{cycle} và 42 đặc trưng lịch sử), biểu diễn nào ổn định hơn trên
+      cùng các dòng OOF và các mốc trong vòng đời FD001?
 \item Dự đoán RUL có thể chuyển thành cảnh báo sớm cho từng động cơ với chất
       lượng ra sao?
-\item \emph{(Bổ sung)} Mô hình huấn luyện trên FD001 hoạt động thế nào khi áp dụng
-      lên FD002--FD004?
+\item Mô hình huấn luyện trên FD001 hoạt động thế nào khi áp dụng lên FD002--FD004?
 \end{enumerate}
 
 \subsection{Phạm vi và cấu trúc báo cáo}
@@ -49,6 +49,13 @@ C-MAPSS là dữ liệu mô phỏng, nên mọi kết luận chỉ áp dụng tr
 phỏng này. Dữ liệu cũng không có chi phí bảo trì, thời gian ngừng máy hay cách
 quy đổi cycle sang giờ; do đó báo cáo dừng ở mức dự đoán RUL và mô tả cảnh báo,
 không đề xuất lịch bảo trì.
+
+\paragraph{Khai báo hỗ trợ công cụ.} Trong quá trình thực hiện báo cáo, công cụ
+AI/LLM được sử dụng để gợi ý cấu trúc, hỗ trợ viết và rà soát một số đoạn mã,
+notebook, kịch bản kiểm tra và văn bản. Công cụ không được dùng để bịa số liệu,
+thay thế việc chạy thực nghiệm hoặc tự quyết định kết luận. Người thực hiện trực
+tiếp kiểm tra mã nguồn, dữ liệu, artifact, trích dẫn và nội dung cuối cùng, đồng
+thời chịu trách nhiệm về toàn bộ kết quả được trình bày.
 
 Phần còn lại được tổ chức như sau. Mục~\ref{sec:data} mô tả dữ liệu và kiểm
 tra chất lượng. Mục~\ref{sec:theory} trình bày cơ sở lý thuyết.
@@ -69,7 +76,7 @@ vận hành và số dạng lỗi (Bảng~\ref{tab:data}).
 
 \begin{table}[H]
 \centering
-\caption{Quy mô và đặc điểm của bốn subset C-MAPSS.}
+\caption[Quy mô C-MAPSS]{Quy mô và đặc điểm của bốn subset C-MAPSS.}
 \label{tab:data}
 \small
 \begin{tabular}{l r r r r c c}
@@ -107,7 +114,7 @@ không cho biết tên đại lượng vật lý hay đơn vị, vì vậy báo 
 \begin{small}
 \setlength{\tabcolsep}{3pt}
 \begin{longtable}{@{}L{2.6cm}L{3.9cm}L{3.2cm}L{4.0cm}@{}}
-\caption{Từ điển dữ liệu của FD001.}\label{tab:data-dictionary}\\
+\caption[Từ điển dữ liệu FD001]{Từ điển dữ liệu của FD001.}\label{tab:data-dictionary}\\
 \toprule
 Cột & Ý nghĩa & Kiểu và miền giá trị & Cách sử dụng\\
 \midrule
@@ -155,7 +162,7 @@ trên toàn bộ train, còn \texttt{sensor\_6} chỉ có hai giá trị và kh�
 
 \begin{table}[H]
 \centering
-\caption{Tóm tắt các nhóm cột trên train FD001.}
+\caption[Nhóm cột train FD001]{Tóm tắt các nhóm cột trên train FD001.}
 \label{tab:column-profile}
 \begin{tabularx}{\linewidth}{L{3.2cm}r r X}
 \toprule Nhóm cột & Số cột & Thiếu & Nhận xét\\\midrule
@@ -168,7 +175,7 @@ Nhãn \texttt{rul} & 1 & 0 & Từ 0 đến 361 cycles; trung vị theo dòng là
 
 \begin{small}
 \begin{longtable}{l r l L{6.5cm}}
-\caption{Số giá trị khác nhau và miền giá trị của 21 sensor trên train FD001.}\label{tab:sensor-profile}\\
+\caption[Hồ sơ sensor FD001]{Số giá trị khác nhau và miền giá trị của 21 sensor trên train FD001.}\label{tab:sensor-profile}\\
 \toprule
 Sensor & Số giá trị & Min--max & Ghi chú\\
 \midrule
@@ -222,13 +229,14 @@ cách báo cáo xử lý.
 
 \begin{table}[H]
 \centering
-\caption{Đặc điểm dữ liệu và cách xử lý.}
+\caption[Chất lượng dữ liệu]{Đặc điểm dữ liệu và cách xử lý.}
 \label{tab:data-quality-actions}
 \begin{tabularx}{\linewidth}{L{3.6cm}L{4.4cm}X}
 \toprule Đặc điểm & Ảnh hưởng & Cách xử lý\\\midrule
 Không thiếu giá trị, khóa hợp lệ & Không cần điền dữ liệu. & Giữ nguyên dữ liệu; dừng nếu kiểm tra thất bại.\\
 Độ dài chuỗi khác nhau (128--362 cycles) & Động cơ sống lâu đóng góp nhiều window hơn. & Chia fold, gán trọng số và tính metric theo động cơ.\\
 Sensor hằng hoặc ít biến thiên & Tương quan và kiểm định không xác định. & Giữ trong bảng, đánh dấu ``không xác định''.\\
+Ngoại lệ hoặc nhiễu cảm biến & Chưa có ground truth để phân biệt tín hiệu bất thường với suy giảm thật. & Rolling statistics và Health Index chỉ mô tả/làm dịu dao động; không tự động xoá hoặc thay thế giá trị. Đánh giá bộ lọc riêng là hướng tiếp theo.\\
 Không có đơn vị vật lý & Không diễn giải được ý nghĩa vật lý của sensor. & Dùng tên ẩn danh; chênh lệch hiểu theo đơn vị gốc.\\
 Nhãn test tách riêng & Đọc sớm sẽ gây data leakage. & Chỉ đọc \texttt{RUL\_FD001.txt} sau khi đã ghi dự đoán test.\\
 \bottomrule

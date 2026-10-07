@@ -1,16 +1,16 @@
 \section{Thảo luận}
 \label{sec:discussion}
 
-Mục này giải thích các kết quả ở Mục~\ref{sec:results}. Ba câu hỏi được đặt ra:
-sai số của mô hình RUL đến từ đâu, vì sao gần một nửa cảnh báo bị trễ, và vì sao
-mô hình FD001 không chuyển được sang các subset khác. Các số liệu chẩn đoán dùng
+Mục này giải thích các kết quả ở Mục~\ref{sec:results}: sai số của mô hình RUL,
+thời điểm cảnh báo, sự khác biệt giữa hai biểu diễn HGB126/HGB169 và khả năng
+chuyển miền sang các subset khác. Các số liệu chẩn đoán dùng
 trong mục này được tính lại từ artifact đã có bằng
 \filepath{scripts/report_error_diagnostics.py}, không huấn luyện lại mô hình.
 
 \subsection{Sai số của mô hình RUL đến từ đâu}
 \label{sec:disc-error}
 Bảng~\ref{tab:oof-by-rul} và Hình~\ref{fig:oof-pred-true} chia sai số OOF của
-HGB trên train theo RUL thật. Mô
+HGB126 trên train theo RUL thật. Mô
 hình dự đoán tốt ở cuối vòng đời: MAE chỉ 3,67 cycles khi RUL thật không quá 30.
 Sai số tăng dần khi RUL lớn hơn, và thay đổi hẳn tính chất khi RUL vượt khoảng
 150 cycles. Ở vùng này, dự đoán trung bình gần như không đổi, quanh 145--147
@@ -20,7 +20,7 @@ gần mức đó.
 
 \begin{table}[H]
 \centering
-\caption{Sai số OOF của HGB trên 17.731 window train, chia theo RUL thật.
+\caption[Sai số OOF theo RUL]{Sai số OOF của HGB trên 17.731 window train, chia theo RUL thật.
 Sai số có dấu bằng dự đoán trừ thật.}
 \label{tab:oof-by-rul}
 \small
@@ -41,7 +41,7 @@ RUL thật (cycles) & Số window & MAE & Sai số có dấu trung bình & Dự 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.6\linewidth]{../outputs/diagnostics/figures/oof_pred_vs_true.png}
-\caption{RUL dự đoán OOF so với RUL thật. Đường cam là dự đoán trung bình theo
+\caption[RUL OOF so với thật]{RUL dự đoán OOF so với RUL thật. Đường cam là dự đoán trung bình theo
 từng khoảng 10 cycles: bám sát đường chéo khi RUL nhỏ, nhưng dừng quanh 145 cycles
 khi RUL thật lớn hơn khoảng 150.}
 \label{fig:oof-pred-true}
@@ -50,17 +50,18 @@ khi RUL thật lớn hơn khoảng 150.}
 Hiện tượng này phù hợp với hình dạng của tín hiệu. Hình~\ref{fig:hi-trajectories}
 cho thấy Health Index của các động cơ gần như đi ngang, chỉ dao động quanh một
 mức, trong phần lớn vòng đời và chỉ giảm rõ ở giai đoạn cuối. Khi động cơ còn
-khỏe, sensor chủ yếu phản ánh nhiễu đo và khác biệt ban đầu giữa các động cơ, nên
-rất khó phân biệt một động cơ còn 160 cycles với một động cơ còn 300 cycles. Phần
-sai số này vì vậy khó giảm bằng cách chỉnh mô hình, vì thông tin cần thiết gần
-như không có trong đầu vào. Nó cũng giải thích vì sao MAE cross-validation (20,21
+khỏe, sensor chủ yếu phản ánh dao động đo và khác biệt ban đầu giữa các động cơ,
+nên khó phân biệt một động cơ còn 160 cycles với một động cơ còn 300 cycles.
+Kết quả này phù hợp với giả thuyết rằng biểu diễn hiện tại chứa ít tín hiệu phân
+biệt RUL xa; dữ liệu hiện có chưa đủ để khẳng định một giới hạn thông tin cố định.
+Nó cũng giải thích vì sao MAE cross-validation (20,21
 cycles) cao hơn MAE test (15,35 cycles): 29,5\% số window train có RUL thật trên
 125, trong khi RUL thật của test chỉ từ 7 đến 145.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.6\linewidth]{../outputs/timeseries/figures/health_index_selected_engines.png}
-\caption{Health Index theo cycle của 10 động cơ train được chọn ở Mục~\ref{sec:arima-method}.
+\caption[Health Index của 10 động cơ]{Health Index theo cycle của 10 động cơ train được chọn ở Mục~\ref{sec:arima-method}.
 Chỉ số gần như đi ngang ở phần lớn vòng đời và giảm rõ ở giai đoạn cuối.}
 \label{fig:hi-trajectories}
 \end{figure}
@@ -90,7 +91,7 @@ cảnh báo muộn (Hình~\ref{fig:warning-lifetime}).
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.62\linewidth]{../outputs/diagnostics/figures/warning_vs_lifetime.png}
-\caption{Độ lệch của cảnh báo đầu tiên so với ngưỡng theo tuổi thọ của 100 động
+\caption[Cảnh báo theo tuổi thọ]{Độ lệch của cảnh báo đầu tiên so với ngưỡng theo tuổi thọ của 100 động
 cơ train. Cảnh báo trễ (tam giác cam) tập trung ở các động cơ hỏng trước khoảng
 cycle 230.}
 \label{fig:warning-lifetime}
@@ -101,8 +102,10 @@ RUL. Động cơ ngắn đời suy giảm nhanh hơn trung bình, nên tại cù
 RUL thật của chúng thấp hơn điều mô hình kỳ vọng. Kết quả là RUL dự đoán giảm
 xuống dưới 30 muộn hơn thực tế. Điều này nhất quán với sai số dương ở vùng RUL
 31--90 trong Bảng~\ref{tab:oof-by-rul}. Đặc trưng độ dốc trong window 30 cycles
-lẽ ra phải phản ánh tốc độ suy giảm, nhưng trên 30 cycles, xu hướng thật dễ bị
-nhiễu lấn át.
+lẽ ra phải phản ánh tốc độ suy giảm, nhưng trên 30 cycles, xu hướng thật có thể
+bị dao động ngắn hạn che khuất. Phân tích trailing mean chỉ cho thấy biến động
+được làm dịu trong mô tả tín hiệu; nó không chứng minh dữ liệu có nhiễu đo đã
+biết hoặc rằng smoothing chắc chắn cải thiện RUL.
 
 Từ góc độ ứng dụng, đây là loại lỗi nguy hiểm hơn cả: động cơ hỏng nhanh nhất lại
 là động cơ nhận cảnh báo muộn nhất. Một ngưỡng cố định 30 cycles vì vậy chưa đủ.
@@ -119,7 +122,7 @@ hình FD001 thất bại theo hai kiểu khác nhau.
 \begin{figure}[H]
 \centering
 \includegraphics[width=\linewidth]{../outputs/diagnostics/figures/transfer_shift.png}
-\caption{(a) Phân phối \texttt{sensor\_11}: FD003 nằm trong miền giá trị của FD001,
+\caption[Dịch chuyển phân phối sensor]{(a) Phân phối \texttt{sensor\_11}: FD003 nằm trong miền giá trị của FD001,
 còn FD002 tách thành nhiều cụm theo điều kiện vận hành, phần lớn nằm ngoài miền
 này (FD004 có dạng tương tự FD002). (b) Phân phối RUL thật và RUL dự đoán trên test
 của từng subset: mô hình FD001 cho dự đoán rất hẹp trên FD002 và FD004.}
@@ -128,7 +131,7 @@ của từng subset: mô hình FD001 cho dự đoán rất hẹp trên FD002 và
 
 \begin{table}[H]
 \centering
-\caption{Chẩn đoán dự đoán chuyển miền (window 10). ``Trong miền FD001'' là tỷ lệ
+\caption[Chẩn đoán chuyển miền]{Chẩn đoán dự đoán chuyển miền (window 10). ``Trong miền FD001'' là tỷ lệ
 trung bình giá trị test của 9 sensor có xu hướng nằm trong khoảng min--max của
 train FD001. TB: trung bình.}
 \label{tab:transfer-diagnostics}
@@ -171,14 +174,23 @@ Hai kiểu thất bại này cần hai cách xử lý khác nhau: FD002 và FD00
 luyện có dạng lỗi tương ứng hoặc đặc trưng phân biệt được dạng lỗi.
 
 \subsection{Vì sao thử nghiệm cải thiện không thành công}
-Ba hướng đã thử trong nested CV (đổi window, chỉnh siêu tham số, tăng trọng số
-vùng RUL thấp) đều chỉ thay đổi cách mô hình khai thác cùng một tập đặc trưng.
-Chúng không giải quyết hai nguyên nhân sai số đã nêu ở trên: nhãn không xác định
-được từ sensor ở đầu vòng đời, và mô hình không biết tốc độ suy giảm riêng của
-từng động cơ. Vì vậy, việc các cấu hình giảm được sai số ở vùng này lại làm xấu
-chỉ số khác là điều có thể dự đoán trước. Kết quả âm này định hướng lại nỗ lực:
-thay vì tiếp tục chỉnh mô hình, cần thay đổi cách định nghĩa nhãn và cách biểu
-diễn dữ liệu.
+Các hướng đã thử trong nested CV (đổi window, chỉnh siêu tham số và tăng trọng
+số vùng RUL thấp) chưa tìm được cấu hình mới vượt bộ tiêu chí đã chốt. Đợt HGB
+bổ sung cho thấy thêm window 10 có thể giảm RMSE trajectory nhưng làm xấu
+endpoint hoặc on-time; profile 30 cycles đầu còn làm RMSE tăng. Pilot
+similarity-based RUL cũng không đạt: RMSE 36,543--37,173 so với 28,835 của HGB
+169 trên cùng panel 3 fold, và bị dừng trước full study. Các kết quả này không
+chứng minh rằng mọi kiến trúc mới đều kém; chúng chỉ cho thấy các thay đổi đã
+được kiểm tra chưa giải quyết được hai nguyên nhân sai số chính: tín hiệu đầu
+vòng đời khó phân biệt RUL xa và tốc độ suy giảm khác nhau giữa các động cơ.
+
+Alignment audit cho thấy HGB169 tốt hơn HGB126 trên panel trajectory và endpoint
+chung, nên HGB169 được chọn làm predictor candidate chính trong phạm vi bằng
+chứng hiện có. Kết luận này có điều kiện: so sánh dựa trên dự đoán đã lưu,
+bootstrap không bao gồm bất định fit lại, và run lịch sử đã được kiểm tra trước;
+chưa có một lần refit mù độc lập để xác nhận. Vì vậy metric test của HGB126 vẫn
+được giữ như baseline lịch sử; báo cáo không dùng metric test của HGB169 để chọn
+predictor.
 
 \subsection{Ý nghĩa đối với xử lý dữ liệu lớn}
 Với 265.256 quan sát trên cả bốn subset, dữ liệu C-MAPSS vẫn vừa trong bộ nhớ
@@ -186,9 +198,31 @@ của một máy, nên Pandas đủ dùng. Giá trị của phần dữ liệu l
 cách tổ chức: kiểm tra contract trước khi xử lý, lưu dữ liệu theo lớp, và có một
 implementation ETL bằng PySpark cho kết quả giống hệt Pandas. Nhờ đó, khi dữ liệu
 tăng lên (nhiều đội động cơ, tần suất lấy mẫu cao hơn), phần ETL có thể chuyển
-sang Spark mà không phải kiểm chứng lại logic. Bước tiếp theo nên chuyển là tạo
-đặc trưng: bước này tính sáu thống kê cho 21 sensor trên mọi window của mọi động
-cơ, nên khối lượng tính toán tăng theo số quan sát, và hiện vẫn chạy bằng Pandas.
+sang Spark với bằng chứng parity sẵn có. Đợt bổ sung đã triển khai sáu thống kê
+cho 21 sensor bằng Spark và kiểm tra toàn bộ rolling features ở scale 1$\times$.
+Benchmark local có I/O được trình bày ở Bảng~\ref{tab:followup-benchmark}.
+
+Để tránh đồng nhất Big Data với riêng kích thước tập tin, Bảng~\ref{tab:big-data-5v}
+đối chiếu năm khía cạnh của bài toán với bằng chứng thực tế và giới hạn tương ứng.
+Đây là pipeline batch theo hướng Big Data; báo cáo không gán cho C-MAPSS hiện tại
+quy mô phân tán mà dữ liệu chưa có.
+
+\begin{table}[H]
+\centering
+\caption[Phạm vi Big Data theo 5V]{Đối chiếu 5V, bằng chứng và giới hạn của pipeline.}
+\label{tab:big-data-5v}
+\small
+\begin{tabularx}{\linewidth}{L{2.0cm}L{6.0cm}X}
+\toprule
+Khía cạnh & Bằng chứng trong báo cáo & Giới hạn hiện tại \\\midrule
+Volume & 265.256 quan sát từ bốn subset; dữ liệu raw khoảng 46 MB; kích thước bảng được ghi ở từng bước ETL. & Vẫn vừa bộ nhớ một máy; benchmark nhân bản chỉ đo chi phí kỹ thuật. \\
+Velocity & Pipeline xử lý batch theo từng subset, có thể chạy lại từ file raw và Parquet. & Chưa có streaming, ingest liên tục hoặc yêu cầu độ trễ thời gian thực. \\
+Variety & Có 21 sensor, 3 operational settings, khóa engine/cycle, chuỗi run-to-failure và nhãn RUL; bốn subset thể hiện các tổ hợp điều kiện vận hành và dạng lỗi khác nhau, được lưu qua text, Parquet, SQLite và bảng đặc trưng. & Các định dạng lưu trữ vẫn xuất phát từ cùng nguồn cảm biến dạng bảng; chưa có nhiều nguồn dị thể hoặc dữ liệu phi cấu trúc. \\
+Veracity & Contract schema, kiểm tra khóa và cycle, kiểm tra giá trị thiếu, hash và parity Pandas--PySpark. & Chưa kiểm chứng với lỗi cảm biến và dữ liệu thiếu của hệ thống thực. \\
+Value & RUL, cảnh báo sớm và đánh giá chuyển miền cho FD001--FD004. & Chưa có chi phí bảo trì, downtime hoặc KPI kinh tế. \\
+\bottomrule
+\end{tabularx}
+\end{table}
 
 \subsection{Giới hạn}
 \label{sec:limitations}
@@ -203,42 +237,57 @@ tập OOF đã dùng để chọn mô hình. Nhãn test FD001 đã được xem 
 nested CV, nên test không còn hoàn toàn độc lập với thử nghiệm đó. So sánh giữa
 window 10 và window 30 ở Mục~\ref{sec:res-transfer} không phải một thí nghiệm có
 kiểm soát. Các giải thích trong Mục~\ref{sec:disc-error}--\ref{sec:disc-transfer}
-là giả thuyết phù hợp với dữ liệu, chưa được kiểm chứng bằng thí nghiệm riêng.
+là giả thuyết phù hợp với dữ liệu; thí nghiệm bổ sung dưới đây kiểm tra nhãn,
+lịch sử và điều kiện vận hành nhưng chưa chứng minh cơ chế nhân quả.
 
-\paragraph{Về hạ tầng.} Benchmark chỉ đo một phép tổng hợp bằng Pandas trong bộ
-nhớ, hai lần mỗi mức; chưa đo PySpark, đọc ghi file hay chạy trên cụm máy.
+\paragraph{Về hạ tầng.} Benchmark bổ sung đo Pandas và PySpark local, gồm đọc ghi
+file. Spark ghi qua Arrow trên driver trong môi trường Windows; chưa đo distributed
+writer hoặc cụm nhiều máy. Dữ liệu nhân bản
+không làm tăng số mẫu khoa học độc lập.
+Việc công bố nhiều file qua staging và rollback không phải atomic transaction
+(giao dịch nguyên tử): chưa bảo đảm đọc/ghi đồng thời hoặc mất điện đột ngột. Đợt kiểm chứng mã
+nguồn ngày 07/10/2026 chạy trên Windows; Linux mới được đối chiếu dependency
+theo nền tảng và phiên bản từ lock, chưa chạy trực tiếp trong đợt này.
 
-\subsection{Hướng phát triển}
-Các hướng dưới đây được sắp theo mức độ liên quan tới các nguyên nhân sai số đã
-phân tích. Mỗi hướng đều nên được đánh giá bằng cùng protocol nested GroupKFold
-đã có, với tiêu chí chốt trước, để kết quả so sánh được với mô hình hiện tại.
+\subsection{Thí nghiệm bổ sung và hướng phát triển}
+\label{sec:followup}
+Ngày 29/09/2026, ba nghiên cứu nested GroupKFold 5$\times$3 được chạy theo
+protocol ghi trước khi fit. FD001 dùng window 30, kết hợp cap
+$R_{\max}\in\{110,125,140,\infty\}$ với bật/tắt 42 history features: độ lệch
+so với mean 30 cycles đầu và slope trên toàn bộ prefix đã quan sát. Ví dụ,
+feature ở cycle 40 không dùng cycle 41 trở đi. Chỉ cắt nhãn train, giữ nguyên
+nhãn validation/test. HGB giữ cấu hình baseline và tổng trọng số mỗi engine bằng 1.
 
-\paragraph{1. Cắt ngưỡng nhãn RUL.} Mục~\ref{sec:disc-error} cho thấy phần lớn sai
-số cross-validation nằm ở vùng RUL mà sensor không phân biệt được. Hướng trực
-tiếp nhất là huấn luyện với nhãn $\min(y_{i,t}, R_{\max})$, trong đó $R_{\max}$
-được chọn trong vòng trong của nested CV từ một vài giá trị như 110, 125 và 140
-cycles. Nhãn test giữ nguyên, không cắt. Thí nghiệm này kiểm tra trực tiếp giả
-thuyết ở Mục~\ref{sec:disc-error}: nếu giả thuyết đúng, MAE ở vùng RUL 61--125
-và số dự đoán cao trên test phải giảm.
+FD002/FD004 dùng window 10, so baseline với thêm settings và chuẩn hóa sensor
+theo sáu cụm điều kiện vận hành. Scaler, KMeans và mean/std theo cụm đều chỉ fit
+trên training engines của từng fold. Đây là đánh giá trong từng subset, không
+phải chuyển trực tiếp từ FD001. FD001 yêu cầu CI 95\% của delta low-RUL MAE và
+late rate đều dưới 0, overall MAE/burden không tăng; hai subset còn lại yêu cầu
+upper CI delta overall MAE dưới 0. Bootstrap dùng 10.000 lần lấy lại engine,
+có điều kiện theo dự đoán đã fit. Test lịch sử đã được xem, nên đây là follow-up
+khám phá; test không quyết định lựa chọn. Chi tiết cấu hình, CI và từng metric
+được lưu tại \filepath{experiments/FOLLOWUP_20260929.md}.
 
-\paragraph{2. Chuẩn hóa sensor theo điều kiện vận hành.} Mục~\ref{sec:disc-transfer}
-cho thấy thất bại trên FD002 và FD004 đến từ việc sensor nằm ngoài miền huấn
-luyện. Có thể phân cụm ba operational settings thành các điều kiện vận hành
-(fit trên train), rồi chuẩn hóa từng sensor theo trung bình và độ lệch chuẩn
-của điều kiện tương ứng trước khi tạo đặc trưng. Hai chỉ số trong
-Bảng~\ref{tab:transfer-diagnostics}, gồm tỷ lệ giá trị trong miền và độ lệch chuẩn
-dự đoán, có thể dùng để kiểm tra nhanh bước chuẩn hóa có tác dụng hay không,
-trước khi xem đến MAE.
+\input{sections/followup-tables}
 
-\paragraph{3. Đặc trưng về tốc độ suy giảm của từng động cơ.} Để giảm cảnh báo trễ
-ở động cơ suy giảm nhanh (Mục~\ref{sec:disc-warning}), mô hình cần thông tin dài
-hơn 30 cycles. Hai đặc trưng có thể bổ sung mà không gây data leakage là: chênh
-lệch giữa mức sensor hiện tại và mức trung bình 30 cycles đầu của chính động cơ
-đó (luôn có sẵn từ cycle 30), và độ dốc tính trên toàn bộ lịch sử đã quan sát.
-Chỉ số đánh giá chính của hướng này là tỷ lệ cảnh báo trễ, không phải MAE toàn
-bộ.
+Tiêu chí FD002/FD004 chỉ xác nhận giảm overall MAE. Cảnh báo trễ chưa giảm và
+outer NASA score FD004 xấu hơn; chưa đủ bằng chứng cải thiện toàn diện cho bảo trì.
 
-\paragraph{4. Đánh giá cảnh báo đầy đủ hơn.} Thay vì ngưỡng cố định 30 cycles, có
+Benchmark dùng cùng Parquet input, FD001 1$\times$/10$\times$, ba lượt với process
+riêng cho từng lượt, Spark local[4], heap 4 GiB và bốn partition. Pipeline gồm đọc, tổng hợp, rolling và ghi;
+startup được báo riêng trong artifact và không nằm trong cột Pipeline. Spark write time gồm cả chuyển Arrow về driver.
+Peak RSS lấy mẫu mỗi 50 ms gồm Python và JVM; không xóa OS cache. Ba lượt scale
+1$\times$ đều khớp toàn bộ 27.927 dòng feature với tolerance $10^{-7}$.
+
+Ở benchmark local, khi scale FD001 từ $1\times$ lên $10\times$, thời gian các
+stage sau startup của Pandas tăng từ 10,54 lên 111,68 giây, còn Spark tăng từ
+14,60 lên 32,68 giây. Nếu tính cả startup, tổng thời gian Spark tương ứng là
+20,07 và 38,11 giây; startup không được gộp vào cột Pipeline. Kết quả này chỉ
+cho thấy chi phí trong resource envelope đã đo và lý do cần giữ implementation
+Spark khi dữ liệu tăng, không phải bằng chứng Spark đã nhanh hơn trên cluster:
+phép đo dùng Spark local[4] và ghi qua driver.
+
+\paragraph{Đánh giá cảnh báo đầy đủ hơn.} Thay vì ngưỡng cố định 30 cycles, có
 thể chọn ngưỡng sao cho lead time đạt một mức tối thiểu với xác suất cho trước,
 dựa trên phân phối sai số OOF ở vùng RUL thấp, rồi kiểm tra trên vòng ngoài của
 nested CV. Các metric theo toàn bộ quỹ đạo như prognostic horizon và
@@ -246,13 +295,9 @@ $\alpha$--$\lambda$ accuracy~\cite{saxena2010metrics} cho biết mô hình bắt
 dự đoán đủ chính xác từ thời điểm nào, điều mà metric tại một điểm cắt không cho
 biết.
 
-\paragraph{5. Mô hình học trực tiếp từ chuỗi.} Khoảng cách RMSE so với
+\paragraph{Mô hình học trực tiếp từ chuỗi và cluster.} Khoảng cách RMSE so với
 CNN~\cite{li2018rul} gợi ý rằng sáu thống kê trên window có thể chưa đủ. Một mô
 hình CNN một chiều hoặc LSTM~\cite{zheng2017lstm} nên được so sánh với HGB trên
 cùng các fold và cùng cách xử lý nhãn, kèm theo chi phí huấn luyện, để biết phần
-cải thiện đến từ mô hình hay từ cách xử lý nhãn.
-
-\paragraph{6. Mở rộng phần xử lý phân tán.} Chuyển bước tạo đặc trưng sang
-PySpark, kiểm tra parity với Pandas như đã làm cho ETL, rồi đo thời gian toàn bộ
-pipeline, gồm cả đọc ghi file, trên dữ liệu FD001--FD004 nhân bản và trên cụm máy
-nếu có.
+cải thiện đến từ mô hình hay từ cách xử lý nhãn. Phần hạ tầng cần đo thêm
+distributed writer và pipeline trên cụm máy thực trước khi kết luận về mở rộng.

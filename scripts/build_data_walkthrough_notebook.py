@@ -17,6 +17,8 @@ from pathlib import Path
 
 import nbformat as nbf
 
+from cmapss.project import add_notebook_identity
+
 ROOT = Path(__file__).resolve().parents[1]
 TARGET = ROOT / "notebooks" / "00_data_pipeline_walkthrough.ipynb"
 cells: list = []
@@ -428,6 +430,7 @@ def main() -> None:
     notebook = nbf.v4.new_notebook(cells=cells)
     notebook.metadata["kernelspec"] = {"display_name": "Python 3 (ipykernel)", "language": "python", "name": "python3"}
     notebook.metadata["language_info"] = {"name": "python"}
+    add_notebook_identity(notebook)
     if args.execute:
         from nbclient import NotebookClient
 

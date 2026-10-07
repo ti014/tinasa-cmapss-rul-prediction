@@ -31,6 +31,8 @@ from cmapss.dashboard import (
     load_improvement_data,
     sensor_trajectory,
 )
+from cmapss.followup_results import load_followup_results
+from cmapss.project import FOLLOWUP_RUN
 
 
 ROOT = Path(__file__).resolve().parents[2]  # replaced by main(repo_root)
@@ -554,6 +556,28 @@ def page_cross_dataset(matrix: pd.DataFrame) -> None:
 
 
 def page_improvement(experiment: ImprovementData) -> None:
+    if (ROOT / FOLLOWUP_RUN / "completion.json").is_file():
+        st.subheader("Thí nghiệm bổ sung: nhãn RUL, lịch sử và điều kiện vận hành")
+        summary, paired_followup = load_followup_results(ROOT)
+        table = summary[["dataset", "selected_final", "baseline_outer_mae", "selected_outer_mae",
+                         "test_mae", "outer_gate_passed"]].copy()
+        table["selected_final"] = table.selected_final.replace({
+            "baseline": "Baseline", "cap_none_history_1": "History features",
+            "condition_normalized": "Chuẩn hóa theo điều kiện", "raw_settings": "Thêm settings"})
+        st.dataframe(table.rename(columns={"dataset": "Subset", "selected_final": "Phương án cuối",
+            "baseline_outer_mae": "Outer MAE baseline", "selected_outer_mae": "Outer MAE mới",
+            "test_mae": "Test MAE", "outer_gate_passed": "Đạt tiêu chí"}), hide_index=True, width="stretch")
+        st.caption(
+            "Outer CV: 5 fold theo engine; chọn cấu hình bằng 3 inner fold. "
+            "FD001 dùng window 30, FD002/FD004 dùng window 10 và huấn luyện trong từng subset. "
+            "Test lịch sử đã được xem; kết quả này là exploratory follow-up. "
+            "Ví dụ: giảm test MAE chưa đủ để thay baseline nếu outer gate không đạt."
+        )
+        st.caption("Tiêu chí FD002/FD004 chỉ xét overall MAE; cần đọc cùng cảnh báo và NASA score trong bảng chi tiết.")
+        with st.expander("Paired bootstrap 95% của thí nghiệm bổ sung"):
+            st.dataframe(summary, hide_index=True, width="stretch")
+            st.dataframe(paired_followup, hide_index=True, width="stretch")
+        st.divider()
     st.header("So sánh quy trình chọn model với baseline")
     st.write(
         "Mỗi động cơ ở vòng đánh giá ngoài được giữ riêng khỏi cả huấn luyện và chọn cấu hình. "
@@ -743,6 +767,17 @@ def _hero(data: DashboardData) -> None:
     )
 
 
+def _model_scope_note(data: DashboardData) -> None:
+    """Explain the persisted dashboard model versus the alignment candidate."""
+    if data.selected_model == "hist_gradient_boosting":
+        st.info(
+            "Dashboard đang đọc view legacy của HGB126 (126 rolling features). "
+            "HGB169 là predictor candidate có điều kiện từ alignment replay; "
+            "metric HGB169 nằm trong bảng alignment của báo cáo và chưa thay thế "
+            "metric test HGB126 trong dashboard này."
+        )
+
+
 def _guarded(render: Callable[[], None]) -> None:
     try:
         render()
@@ -788,4 +823,5 @@ def main(repo_root: str | Path | None = None) -> None:
     st.sidebar.markdown(f"Test engines: **{len(data.model_evaluation):,}**")
 
     _hero(data)
+    _model_scope_note(data)
     _guarded(pages[page])

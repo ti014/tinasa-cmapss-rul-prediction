@@ -24,6 +24,8 @@ from pathlib import Path
 
 import nbformat as nbf
 
+from cmapss.project import add_notebook_identity
+
 ROOT = Path(__file__).resolve().parents[1]
 NOTEBOOKS = ROOT / "notebooks"
 
@@ -54,6 +56,7 @@ class NotebookBuilder:
         notebook = nbf.v4.new_notebook(cells=self.cells)
         notebook.metadata["kernelspec"] = {"display_name": "Python 3 (ipykernel)", "language": "python", "name": "python3"}
         notebook.metadata["language_info"] = {"name": "python"}
+        add_notebook_identity(notebook)
         return notebook
 
 
@@ -513,12 +516,13 @@ transfer[["mean_engine_mae", "within_mae", "ratio"]]
     được tính lại từ `outer_predictions.parquet`.
     """)
     nb.code("""
-RUN = ROOT / "outputs" / "experiments" / "rul_improvement" / "20260928_rebuild"
+from cmapss.project import IMPROVEMENT_RUN
+RUN = ROOT / IMPROVEMENT_RUN
 outer = pd.read_parquet(RUN / "outer_predictions.parquet")
 ablation = pd.read_csv(RUN / "ablation_metrics.csv").set_index("stage")
 paired_stored = pd.read_csv(RUN / "paired_comparison.csv")
-decision = read_json("outputs/experiments/rul_improvement/20260928_rebuild/decision.json")
-run_info = read_json("outputs/experiments/rul_improvement/20260928_rebuild/run_info.json")
+decision = json.loads((RUN / "decision.json").read_text(encoding="utf-8"))
+run_info = json.loads((RUN / "run_info.json").read_text(encoding="utf-8"))
 resamples, seed = int(paired_stored["resamples"].iloc[0]), int(paired_stored["seed"].iloc[0])
 
 tables = {}
@@ -566,12 +570,41 @@ pd.read_csv(RUN / "test_comparison.csv")[["model", "mean_engine_mae", "rmse", "n
     nb.md("""
     ## Tóm tắt
 
-    - Bảy evaluation cross-dataset và toàn bộ bảng của thử nghiệm cải thiện tính lại
+    - Bảy evaluation cross-dataset và toàn bộ bảng của thử nghiệm cải thiện gốc tính lại
       khớp với artifact.
     - Transfer từ FD001 sang subset khác làm sai số tăng rõ rệt.
     - Nested CV không tìm được cấu hình tốt hơn baseline theo tiêu chí đã chốt trước;
       đây là negative result và được giữ nguyên trong báo cáo.
     """)
+    nb.md("""
+    ## Thí nghiệm bổ sung ngày 29/09/2026
+
+    FD001 kiểm tra capped RUL 110/125/140 và 42 history features; FD002/FD004
+    kiểm tra operational settings và chuẩn hóa theo sáu điều kiện vận hành.
+    Mỗi normalizer chỉ học từ training fold. Chọn cấu hình bằng 3 inner fold,
+    đánh giá bằng 5 outer fold theo engine. Ví dụ, giảm test MAE chưa đủ để thay
+    baseline nếu điều kiện cải thiện trên outer CV chưa đạt. Test đã được xem
+    trong nghiên cứu trước, nên đây là exploratory follow-up.
+    """)
+    nb.code("""
+from cmapss.followup_results import load_followup_results
+from cmapss.project import FOLLOWUP_RUN
+
+followup, paired_followup = load_followup_results(ROOT)
+for dataset in followup.dataset:
+    run = ROOT / FOLLOWUP_RUN / dataset
+    predictions = pd.read_parquet(run / "outer_predictions.parquet")
+    scores = {stage: engine_metrics(predictions.loc[predictions.stage.eq(stage)])
+              for stage in ("baseline", "selected")}
+    recalculated = paired_comparison(scores["baseline"], scores["selected"], 10000, 42)
+    pd.testing.assert_frame_equal(recalculated, pd.read_csv(run / "paired_comparison.csv"),
+                                  check_exact=False, rtol=1e-10)
+print("Paired comparison của cả ba thí nghiệm khớp với dự đoán đã lưu.")
+followup
+""")
+    nb.code("""
+paired_followup[["dataset", "metric", "delta", "ci_lower", "ci_upper"]]
+""")
     return nb.notebook()
 
 

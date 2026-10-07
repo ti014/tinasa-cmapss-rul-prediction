@@ -1,8 +1,31 @@
 # Báo cáo cuối kỳ
 
+**Học viên:** Phan Nguyễn Mai Phương · **MSHV:** 25002711.
+
 [Bản PDF](main.pdf) được biên dịch từ [main.tex](main.tex), cập nhật ngày
-28/09/2026. Báo cáo trình bày pipeline dự đoán RUL trên NASA C-MAPSS FD001 và
+07/10/2026. Báo cáo trình bày pipeline dự đoán RUL trên NASA C-MAPSS FD001 và
 ma trận đánh giá chuyển miền sang FD002--FD004 (window 10 cycles).
+
+Mục thảo luận đã bổ sung các nghiên cứu nested CV, HGB comparison, similarity
+pilot và benchmark local có I/O. Alignment audit trong
+`outputs/course_alignment/20261007` chấm HGB126 và HGB169 trên cùng panel; HGB169
+được ghi là predictor candidate chính, còn HGB126 và metric test của nó được giữ
+như baseline lịch sử. So sánh này là conditional trên dự đoán đã lưu, chưa phải
+blind refit độc lập; báo cáo không dùng metric test HGB169 để chọn predictor.
+Đã đồng bộ với đợt cải thiện mã nguồn ngày 07/10/2026: Mục 4.2 mô tả bảo vệ
+Bronze, staging/rollback, metadata công bố cuối và bằng chứng 426 kiểm thử đạt,
+một phần kiểm thử TCN bị bỏ qua vì thiếu torch. Mục 7.6 nêu giới hạn publication
+và kiểm chứng Windows/Linux. Chi tiết môi trường, dependency và runner dùng
+chung nằm trong [bằng chứng mã nguồn](../handoff/CODE_RELIABILITY_20261007.json).
+Phụ lục nguồn có ghi thêm chi tiết nhưng không được ghép vào PDF chính; các
+bằng chứng chính đã có trong thân PDF.
+Bảng `sections/followup-tables.tex` được sinh từ artifact bằng
+`scripts/build_followup_summary.py`; protocol và CI đầy đủ nằm trong
+[`experiments/FOLLOWUP_20260929.md`](../experiments/FOLLOWUP_20260929.md).
+Các metric alignment và sensitivity policy cảnh báo được lưu trong
+[`outputs/course_alignment/20261007`](../outputs/course_alignment/20261007),
+trong đó threshold 30/40 chỉ là policy cố định để mô tả độ nhạy, chưa phải
+policy bảo trì đã hiệu chuẩn.
 
 Ngày 28/09/2026, phần thân báo cáo được viết lại theo cấu trúc Giới thiệu --
 Dữ liệu -- Cơ sở lý thuyết -- Tổ chức, truy vấn và biến đổi dữ liệu -- Phương
@@ -10,7 +33,7 @@ pháp -- Kết quả -- Thảo luận -- Kết luận. Bản viết lại giữ 
 liệu, gom các giới hạn về Mục 7.6 thay vì lặp lại ở từng đoạn, và đưa thử
 nghiệm nested CV vào PDF (Mục 5.7 và 6.6).
 
-Mục 4 là section riêng về xử lý dữ liệu, trả lời năm câu hỏi: gom nhiều file
+Mục 4 là section riêng về xử lý dữ liệu, trả lời sáu câu hỏi: gom nhiều file
 thế nào (union có cột `split`), lưu ở đâu (Parquet, SQLite), truy vấn ra sao
 (SQL trên SQLite, Spark SQL và Pandas trên Parquet), biến đổi qua những bước nào
 (sáu bước, kèm kích thước bảng sau mỗi bước), cột nào vào mô hình, và quan hệ
@@ -84,10 +107,11 @@ Push-Location report
 Pop-Location
 ```
 
-Lần build ngày 28/09/2026 tạo PDF 49 trang (dưới giới hạn 50 trang), không có
-lỗi biên dịch, citation hoặc reference chưa phân giải, và không có
-overfull/underfull box. Tectonic vẫn ghi cảnh báo môi trường về đường dẫn font
-Windows; đây không phải lỗi nội dung.
+Lần build ngày 07/10/2026 tạo PDF 49 trang (dưới giới hạn 50 trang), không có
+lỗi biên dịch, citation hoặc reference chưa phân giải, và không có overfull hoặc
+underfull box. Tectonic vẫn ghi cảnh báo môi trường về đường dẫn font Windows;
+đây không phải lỗi nội dung. Phần bibliography dùng line spacing 1.0 và cỡ chữ
+nhỏ hơn phần thân để giữ toàn bộ tài liệu tham khảo trong giới hạn trang.
 
 ## Số liệu chẩn đoán cho phần Thảo luận
 

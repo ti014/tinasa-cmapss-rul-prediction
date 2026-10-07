@@ -14,8 +14,8 @@ from typing import Any
 
 import pandas as pd
 
+from cmapss.project import IMPROVEMENT_RUN
 
-IMPROVEMENT_RUN = Path("outputs/experiments/rul_improvement/20260927_full")
 TRAJECTORY_SENSOR_STATS = ("last", "mean")
 
 

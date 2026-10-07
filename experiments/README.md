@@ -1,5 +1,13 @@
 # Thử nghiệm cải thiện RUL FD001
 
+**Học viên:** Phan Nguyễn Mai Phương · **MSHV:** 25002711.
+
+Đợt bổ sung ngày 29/09 có báo cáo riêng:
+[capped RUL/history, operating conditions và benchmark](FOLLOWUP_20260929.md).
+Các kết quả gốc bên dưới vẫn được giữ để đối chiếu. Source snapshot lưu đủ 54
+file khớp manifest trước khi cập nhật code; verifier kiểm snapshot lịch sử và
+báo riêng các file hiện tại đã đổi, thay vì yêu cầu code mới giống code cũ.
+
 Runner so sánh window 10/20/30, 24 cấu hình HistGradientBoosting và ba phương án
 trọng số RUL. Mục tiêu là giảm sai số ở vùng RUL không quá 30 cycles, đồng thời
 kiểm soát sai số toàn bộ, cảnh báo trễ và thời gian báo sớm. Đợt đầy đủ
@@ -127,7 +135,7 @@ ngoài mẫu độc lập cho ứng viên đó. Không đổi tiêu chí sau khi
 `ablation_metrics.csv`, `paired_comparison.csv`, `test_comparison.csv` và
 `final_selection_metrics.csv`. [Validation](../outputs/experiments/rul_improvement/20260928_rebuild/validation.json)
 đã đối chiếu 511 fit records, bốn stage outer, paired CI và model đã lưu.
-Full suite đạt 188 tests. Dashboard có trang **Thử nghiệm cải thiện**, đọc cùng
+Full suite ngày 29/09 đạt 198 tests. Dashboard có trang **Thử nghiệm cải thiện**, đọc cùng
 artifact với báo cáo; AppTest đã kiểm tra trang mới và chuyển sang engine 98.
 
 ```powershell

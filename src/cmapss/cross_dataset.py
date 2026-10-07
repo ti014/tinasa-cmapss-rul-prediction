@@ -65,6 +65,7 @@ def prepare_dataset(
     feature_result = run_rolling_feature_pipeline(
         etl_dir / "silver" / "observations.parquet",
         window_cycles=window_cycles,
+        raw_dir=raw_dir,
     )
     write_rolling_feature_artifacts(feature_result, features_dir)
     return DatasetArtifacts(dataset_id, etl_dir, features_dir)

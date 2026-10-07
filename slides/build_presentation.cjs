@@ -1,4 +1,4 @@
-// Dựng deck thuyết trình 30 phút (20 slide) từ slides/slide_data.json và hình trong outputs/.
+// Dựng deck thuyết trình 18–20 phút (20 slide) từ slides/slide_data.json và hình trong outputs/.
 // Chạy trước: uv run --frozen python slides/extract_slide_data.py
 // Sau đó:     node slides/build_presentation.cjs  (cần pptxgenjs và sharp trong NODE_PATH)
 const fs = require("node:fs");
@@ -127,10 +127,12 @@ const M = D.modeling;
 const P = D.pipeline;
 const I = D.improvement;
 const DG = D.diagnostics;
+const A = D.alignment;
 const inr = (t) => pct(DG.transfer[t].inside_range, 0);
 const fd = Object.fromEntries(D.subsets.map((r) => [r.name, r]));
 const cvBy = Object.fromEntries(M.cv.map((r) => [r.model_name, r]));
 const tr = (s, t) => D.transfer.rows.find((r) => r.source === s && r.target === t);
+const fixedWarning = Object.fromEntries(A.warning_policies.map((r) => [`${r.model}_${r.threshold}`, r]));
 
 async function main() {
   // ---------------------------------------------------------------- 1. Bìa
@@ -143,8 +145,8 @@ async function main() {
     const items = [
       [String(fd.FD001.train_engines), "train engines FD001"],
       ["21", "sensor mỗi cycle"],
-      [String(P.feature_columns), "đặc trưng từ window 30"],
-      [vn(M.final.mean_engine_mae), "MAE (cycles) trên test"],
+      ["169", "features HGB169 · FD001"],
+      [vn(A.trajectory.hgb169.mean_engine_mae), "MAE trajectory candidate"],
     ];
     items.forEach(([v, l], i) => {
       const x = 0.8 + i * 2.9;
@@ -152,44 +154,48 @@ async function main() {
       T(s, l, { x, y: 4.88, w: 2.6, h: 0.35, fontSize: 13, color: C.ice });
     });
     T(s, "Phan Nguyễn Mai Phương · MSHV 25002711", { x: 0.8, y: 6.05, w: 8, h: 0.38, fontSize: 17, bold: true, color: C.white });
-    T(s, "Học viên cao học ngành Khoa học máy tính · Tháng 9/2026", { x: 0.8, y: 6.45, w: 8, h: 0.35, fontSize: 13, color: C.ice });
+    T(s, "Học viên cao học ngành Khoa học máy tính · Tháng 10/2026", { x: 0.8, y: 6.45, w: 8, h: 0.35, fontSize: 13, color: C.ice });
     s.addNotes(
-      "Thời lượng: 30 giây.\n" +
+      "Thời lượng: 20 giây.\n" +
         "Chào thầy/cô. Giới thiệu tên, môn học. Nêu một câu mục tiêu: xây dựng pipeline từ raw data đến dự đoán RUL và cảnh báo sớm, có thể kiểm tra và tái lập.\n" +
-        "Bốn con số ở dưới là khung của bài: 100 train engines, 21 sensor, 126 đặc trưng, MAE 15,3490 cycles trên 100 test engines.\n" +
-        "Nguồn: outputs/modeling/tables/final_metrics.json; outputs/features/run_info.json.",
+        "Bốn con số ở dưới là khung của bài: 100 train engines, 21 sensor, 169 đặc trưng của predictor candidate và MAE trajectory 17,0009 cycles trên panel OOF chung. Đây là kết quả alignment audit có điều kiện, không phải metric test độc lập sau refit.\n" +
+        "Metric test lịch sử của HGB126 được giữ riêng ở slide 14. Nguồn: outputs/course_alignment/20261007/summary.json; outputs/course_alignment/20261007/model_metrics.csv.",
     );
   }
 
   // ---------------------------------------------------------------- 2. Lộ trình
   {
-    const s = content(1, "Nội dung trình bày và ba câu hỏi nghiên cứu", "30 phút, 5 phần; kết luận ở cuối trả lời lần lượt từng câu hỏi", 2,
+    const s = content(1, "Nội dung trình bày và sáu câu hỏi nghiên cứu", "18–20 phút gồm demo dashboard; kết luận ở slide 19 trả lời lần lượt Q1–Q6", 2,
       "report/main.pdf; handoff/SPEECH_SCRIPT_VI.pdf",
-      "Thời lượng: 1 phút.\nĐọc nhanh 5 phần và thời lượng. Nhấn mạnh ba câu hỏi nghiên cứu; slide 19 sẽ trả lời lại từng câu bằng số liệu.\nQ1 gắn với yêu cầu trực quan hóa xu hướng suy giảm. Q2 gắn với dự đoán thời điểm cần bảo trì. Q3 gắn với biểu đồ cảnh báo sớm và câu hỏi tổng quát hóa.");
+      "Thời lượng: 25 giây.\nĐọc nhanh 5 phần và thời lượng. Nhấn mạnh sáu câu hỏi nghiên cứu; slide 19 sẽ trả lời lại từng câu bằng bằng chứng tương ứng. Demo dashboard dự kiến 3 phút ở cuối, chỉ trình diễn artifact đã tạo.\nQ1 kiểm tra dữ liệu; Q2 xu hướng sensor; Q3 parity ETL; Q4 so sánh HGB126/HGB169; Q5 cảnh báo; Q6 chuyển miền.");
     const rows = [
-      ["Bài toán và dữ liệu", "Slide 2–5", "6 phút"],
-      ["Pipeline Big Data", "Slide 6–7", "4 phút"],
-      ["Phân tích chuỗi thời gian", "Slide 8–11", "6 phút"],
-      ["Mô hình và đánh giá", "Slide 12–16", "8 phút"],
-      ["Mở rộng và kết luận", "Slide 17–20", "5 phút"],
+      ["Bài toán và dữ liệu", "Slide 2–5", "3 phút"],
+      ["Pipeline Big Data", "Slide 6–7", "3 phút"],
+      ["Phân tích chuỗi thời gian", "Slide 8–11", "3 phút"],
+      ["Mô hình và đánh giá", "Slide 12–16", "5 phút"],
+      ["Mở rộng và kết luận", "Slide 17–20", "3 phút"],
+      ["Demo dashboard", "Artifact đã tạo", "3 phút"],
     ];
     rows.forEach(([name, sl, t], i) => {
-      const y = 2.2 + i * 0.9;
-      circleNum(s, 0.6, y, 0.6, String(i + 1));
-      T(s, name, { x: 1.4, y: y + 0.02, w: 4.6, h: 0.34, fontSize: 18, bold: true, color: C.ink });
-      T(s, `${sl} · ${t}`, { x: 1.4, y: y + 0.36, w: 4.6, h: 0.26, fontSize: 12.5, color: C.slate });
+      const y = 2.12 + i * 0.68;
+      circleNum(s, 0.6, y, 0.48, String(i + 1), i === 5 ? C.amber : C.navy, C.white, 12);
+      T(s, name, { x: 1.25, y: y - 0.01, w: 4.8, h: 0.28, fontSize: 15.5, bold: true, color: C.ink });
+      T(s, `${sl} · ${t}`, { x: 1.25, y: y + 0.29, w: 4.8, h: 0.23, fontSize: 11.5, color: C.slate });
     });
     box(s, 6.75, 2.1, 5.98, 4.65, C.mist);
     T(s, "Câu hỏi nghiên cứu", { x: 7.1, y: 2.35, w: 5.3, h: 0.4, fontSize: 18, bold: true, color: C.navy });
     const qs = [
-      ["Q1", "Dữ liệu sensor có thể hiện xu hướng suy giảm theo vòng đời engine không?"],
-      ["Q2", "Từ 30 cycle gần nhất, RUL của engine chưa thấy được dự đoán với sai số bao nhiêu?"],
-      ["Q3", "Có thể phát cảnh báo trước khi RUL xuống dưới 30 cycles không, và model có dùng được cho subset khác không?"],
+      ["Q1", "FD001 có hợp lệ về schema, khóa và tính liên tục của cycle không?"],
+      ["Q2", "Sensor thay đổi thế nào giữa đầu và cuối vòng đời engine?"],
+      ["Q3", "ETL bằng Pandas và PySpark có cho kết quả giống nhau không?"],
+      ["Q4", "HGB126 hay HGB169 ổn định hơn trên cùng panel và các mốc vòng đời?"],
+      ["Q5", "RUL có chuyển thành cảnh báo sớm với chất lượng chấp nhận được không?"],
+      ["Q6", "Model huấn luyện trên FD001 hoạt động thế nào khi áp dụng FD002–FD004?"],
     ];
     qs.forEach(([q, t], i) => {
-      const y = 2.95 + i * 1.22;
-      circleNum(s, 7.1, y, 0.52, q, C.amber, C.white, 13);
-      T(s, t, { x: 7.85, y: y - 0.02, w: 4.6, h: 1.05, fontSize: 15, color: C.ink });
+      const y = 2.86 + i * 0.61;
+      circleNum(s, 7.1, y, 0.42, q, C.amber, C.white, 10.5);
+      T(s, t, { x: 7.72, y: y - 0.01, w: 4.62, h: 0.5, fontSize: 12.5, color: C.ink, valign: "middle" });
     });
   }
 
@@ -198,7 +204,7 @@ async function main() {
     const s = content(1, "Bài toán: ước lượng số cycle còn lại trước failure",
       "Đề tài 8 yêu cầu phát hiện dấu hiệu suy giảm và dự đoán thời điểm cần bảo trì từ dữ liệu cảm biến", 3,
       "references/context/assignment-brief.png; report/sections/problem-data.tex; data/CONTRACTS.md",
-      "Thời lượng: 1 phút 30 giây.\n" +
+      "Thời lượng: 35 giây.\n" +
         "Remaining Useful Life (RUL, tuổi thọ hữu ích còn lại) là số cycle vận hành còn lại trước failure. Đây là supervised regression.\n" +
         "Ví dụ: engine kết thúc ở cycle 200, tại cycle 170 thì RUL = 30 cycles. Đơn vị là cycle; dữ liệu không có thông tin quy đổi ra giờ hoặc ngày.\n" +
         "Bảng bên phải đối chiếu từng yêu cầu kỹ thuật của đề tài với phần đã làm và slide trình bày. Nói rõ: xử lý nhiễu được thực hiện qua thống kê trên window và Health Index; repository chưa dùng bộ lọc tín hiệu riêng.");
@@ -229,7 +235,7 @@ async function main() {
     const s = content(1, "NASA C-MAPSS: bốn subset, hai trục khác biệt",
       "Hai trục là số điều kiện vận hành và số fault mode; FD001 là protocol chính, FD002–FD004 dùng ở slide 18", 4,
       "data/raw/readme.txt; outputs/cross_dataset/FD00x/etl/run_info.json; data/CONTRACTS.md",
-      "Thời lượng: 1 phút 30 giây.\n" +
+      "Thời lượng: 50 giây.\n" +
         "C-MAPSS là dữ liệu mô phỏng động cơ turbofan của NASA. Mỗi subset có train (chạy đến failure), test (bị cắt trước failure) và file RUL_FD00x.txt chứa nhãn test.\n" +
         "FD001: 1 điều kiện vận hành, 1 fault mode (HPC degradation), 100 train và 100 test engines, 33.727 observations.\n" +
         "FD002 thêm 6 điều kiện vận hành; FD003 thêm fault mode Fan; FD004 có cả hai.\n" +
@@ -264,7 +270,7 @@ async function main() {
     const s = content(1, "Nhãn RUL tạo từ train; nhãn test chỉ mở sau khi đã dự đoán",
       "Ranh giới này ngăn data leakage (rò rỉ dữ liệu) từ test vào EDA, đặc trưng và chọn mô hình", 5,
       "data/CONTRACTS.md; outputs/etl/parity.json; outputs/modeling/run_info.json; outputs/modeling/tables/final_metrics.json",
-      "Thời lượng: 1 phút 30 giây.\n" +
+      "Thời lượng: 55 giây.\n" +
         "Train: mỗi engine chạy đến failure nên nhãn suy ra trực tiếp: RUL = cycle cuối − cycle hiện tại. FD001 có 20.631 nhãn train.\n" +
         "Test: chuỗi bị cắt trước failure. Không được lấy cycle cuối quan sát làm failure. Model tạo đúng một dự đoán tại cycle cuối quan sát của mỗi test engine; sau khi ghi final predictions mới ghép RUL_FD001.txt để chấm điểm. run_info ghi test_label_join.status = completed_after_final_predictions.\n" +
         "Bên phải: ba kiểm soát cho nhãn test. final_metrics.json ghi test_label_sha256 để đối chiếu file nhãn đã dùng.");
@@ -310,7 +316,7 @@ async function main() {
     const s = content(2, "Pipeline Bronze → Silver → Gold → đặc trưng → mô hình",
       "Mỗi bước ghi artifact kèm hash và run_info để truy vết và chạy lại", 6,
       "assets/diagrams/fd001-pipeline.drawio; handoff/DATA_WALKTHROUGH.md; outputs/*/run_info.json",
-      "Thời lượng: 2 phút.\n" +
+      "Thời lượng: 55 giây.\n" +
         "Đọc sơ đồ từ trái sang phải. Bronze là file raw. Reader kiểm tra đúng 26 trường, kiểu dữ liệu, khóa duy nhất và cycle liên tục; train và test được union theo dòng (Pandas concat hoặc PySpark unionByName), không phải join.\n" +
         "Silver lưu observations và train_targets dạng Parquet. Gold lưu engine_summary dạng Parquet và SQLite. Từ Silver, bước đặc trưng tạo trailing window 30 cycles.\n" +
         "Modeling dùng GroupKFold, refit và tạo 100 dự đoán test. Hai nhánh phụ EDA/thống kê và Health Index chỉ dùng train.\n" +
@@ -354,32 +360,34 @@ async function main() {
 
   // ---------------------------------------------------------------- 7. Big Data evidence
   {
-    const b = P.benchmark;
+    const b = D.stage_benchmark;
     const s = content(2, "Pandas và PySpark cho cùng kết quả tại ba boundary",
-      "Thử nghiệm khả năng mở rộng hiện chỉ đo Pandas in-memory; chưa có benchmark Spark hoặc cluster", 7,
-      "outputs/etl/parity.json; outputs/etl/benchmark.json; handoff/DATA_WALKTHROUGH.md",
-      "Thời lượng: 2 phút.\n" +
+      "Đã bổ sung parity 126 rolling features và benchmark local 1×/10×: đọc, tổng hợp, tạo feature, ghi file", 7,
+      "outputs/etl/parity.json; outputs/benchmarks/20260929/{measurements.csv,run_info.json}",
+      "Thời lượng: 1 phút 5 giây.\n" +
         "Bảng trái: cùng input, Pandas pipeline và PySpark pipeline cho cùng schema, khóa, số dòng và giá trị ở ba boundary; sai khác tuyệt đối lớn nhất bằng 0.\n" +
-        `Biểu đồ phải: nhân bản dữ liệu 1×, 10×, 100× rồi đo phép build_engine_summary bằng Pandas. 100× là ${vn(b[2].rows, 0)} dòng, lần chạy cold mất ${vn(b[2].seconds, 4)} giây.\n` +
-        "Giới hạn cần nói rõ: đây không phải benchmark PySpark, không đo I/O và không chạy trên cluster. PySpark hiện chạy local để kiểm tra parity. Không claim Airflow hoặc Power BI.");
+        "Biểu đồ phải: trung vị ba lượt đo trong process riêng, cùng input Parquet, 33.727 và 337.270 dòng. Pipeline gồm đọc, engine summary, rolling features, ghi file; startup Spark báo riêng. Peak RSS gồm Python và JVM.\n" +
+        "Spark local[4], bốn partition, driver/executor heap 4 GiB. Lượt heap mặc định bị OOM ở 10x được lưu riêng, không đưa vào median. Ghi Parquet qua PyArrow trên driver; thời gian Spark gồm cả toArrow. Chưa đo distributed writer hoặc cluster. Không xóa OS cache giữa lượt đo.");
     table(s, [
       ["Boundary", "Số dòng", "Sai khác lớn nhất", "Kết quả"],
       ...P.parity.map((p) => [p.name, vn(p.rows, 0), vn(p.max_abs_diff, 0), p.status === "passed" ? "Khớp" : p.status]),
     ], { x: 0.6, y: 2.2, w: 6.2, colW: [2.35, 1.2, 1.55, 1.1], rowH: 0.55, fontSize: 13 });
     box(s, 0.6, 4.65, 6.2, 1.75, C.mist);
     T(s, "Kiểm tra cùng một input bằng hai engine xử lý", { x: 0.85, y: 4.8, w: 5.8, h: 0.34, fontSize: 14, bold: true, color: C.navy });
-    T(s, "So khớp schema, khóa (split, engine_id, cycle), số dòng và giá trị số. PySpark chạy local; modeling và rolling features dùng Pandas/scikit-learn.",
+    T(s, "Rolling features: so toàn bộ 27.927 dòng × 126 features, tolerance 10⁻⁷. Cùng window 30, std ddof=1 và slope nhân quả theo từng engine.",
       { x: 0.85, y: 5.2, w: 5.75, h: 1.4, fontSize: 13, color: C.ink });
-    s.addChart(pres.charts.BAR, [{
-      name: "ms", labels: b.map((r) => `${r.scale}× · ${vn(r.rows, 0)} dòng`), values: b.map((r) => Math.round(r.seconds * 1000)),
-    }], {
-      x: 7.2, y: 2.1, w: 5.53, h: 3.9, barDir: "col", chartColors: [C.teal],
-      showTitle: true, title: "build_engine_summary · Pandas · lần chạy cold (mili giây)", titleFontSize: 12, titleColor: C.ink, titleFontFace: FONT,
-      showValue: true, dataLabelPosition: "outEnd", dataLabelFontSize: 13, dataLabelColor: C.ink, dataLabelFormatCode: "0",
+    s.addChart(pres.charts.BAR, ["pandas", "spark"].map((engine) => ({
+      name: engine === "pandas" ? "Pandas" : "PySpark local[4]",
+      labels: ["1× · 33.727 dòng", "10× · 337.270 dòng"],
+      values: [1, 10].map((scale) => Math.round(b.find((r) => r.engine === engine && r.scale === scale).pipeline_seconds)),
+    })), {
+      x: 7.2, y: 2.1, w: 5.53, h: 3.9, barDir: "col", barGrouping: "clustered", chartColors: [C.teal, C.amber],
+      showTitle: true, title: "Pipeline gồm I/O · trung vị 3 lượt (giây)", titleFontSize: 12, titleColor: C.ink, titleFontFace: FONT,
+      showValue: true, dataLabelPosition: "outEnd", dataLabelFontSize: 13, dataLabelColor: C.ink, dataLabelFontFace: FONT, dataLabelFormatCode: "0",
       catAxisLabelFontSize: 11, catAxisLabelColor: C.slate, valAxisLabelFontSize: 10, valAxisLabelColor: C.slate,
-      valGridLine: { color: "E3E8EC", size: 0.5 }, catGridLine: { style: "none" }, showLegend: false, catAxisLabelFontFace: FONT, valAxisLabelFontFace: FONT,
+      valGridLine: { color: "E3E8EC", size: 0.5 }, catGridLine: { style: "none" }, showLegend: true, legendPos: "b", legendFontSize: 11, catAxisLabelFontFace: FONT, valAxisLabelFontFace: FONT,
     });
-    T(s, `Số dòng tăng 100×, thời gian tăng khoảng ${vn(b[2].seconds / b[0].seconds, 0)}× (${vn(b[0].seconds, 4)} → ${vn(b[2].seconds, 4)} giây).`,
+    T(s, "Chưa gồm startup Spark. Ghi qua Arrow trên driver; chưa suy rộng hiệu năng sang cluster.",
       { x: 7.2, y: 6.1, w: 5.53, h: 0.6, fontSize: 13, bold: true, color: C.navy });
   }
 
@@ -389,7 +397,7 @@ async function main() {
     const s = content(3, "EDA: tuổi thọ phân tán rộng và 7 cột không đổi",
       "EDA chỉ dùng train để hiểu dữ liệu trước khi xây dựng đặc trưng", 8,
       "outputs/eda/figures/engine_lifetimes.png; outputs/eda/tables/constant_engine_counts.csv; lifetime_summary.csv",
-      "Thời lượng: 1 phút.\n" +
+      "Thời lượng: 30 giây.\n" +
         "Histogram và boxplot: tuổi thọ train từ 128 đến 362 cycles, trung vị 199, có vài engine dài bất thường ở đuôi phải.\n" +
         "Bảy cột không đổi trong cả 100 engine: sensor 1, 5, 10, 16, 18, 19 và setting_3. sensor_6 không đổi trong 38/100 engine.\n" +
         "Repository chưa làm feature selection dựa trên EDA; các cột này vẫn nằm trong 126 đặc trưng. Đây là quyết định có chủ đích để không dùng kết quả EDA làm bước chọn biến ngoài training fold.");
@@ -416,7 +424,7 @@ async function main() {
     const s = content(3, "Nhiều sensor thay đổi rõ khi engine tiến gần failure",
       `So sánh 30 cycle đầu và 30 cycle cuối trên cùng engine: ${st.n_reject}/${st.n_sensors} sensor có thay đổi sau hiệu chỉnh FDR`, 9,
       "outputs/eda/figures/sensor_trajectories_1.png; outputs/statistics/tables/sensor_inference.csv; report/sections/methodology.tex",
-      "Thời lượng: 1 phút 45 giây.\n" +
+      "Thời lượng: 40 giây.\n" +
         "Hai hình là quỹ đạo gốc của ba train engine có tuổi thọ 178, 199 và 229 cycles. sensor_4 tăng dần, sensor_7 giảm dần khi tiến gần failure; tín hiệu có nhiễu theo từng cycle.\n" +
         "Kiểm định: với mỗi train engine, lấy mean 30 cycle cuối trừ mean 30 cycle đầu. Bootstrap theo engine 10.000 lần cho khoảng tin cậy, Wilcoxon signed-rank cho p-value, Benjamini–Hochberg với q = 0,05 cho 21 sensor.\n" +
         "Kết quả: 15 sensor bác bỏ giả thuyết không; 6 sensor hằng số nên không kiểm định.\n" +
@@ -449,7 +457,7 @@ async function main() {
     const s = content(3, `Trailing window ${P.window} cycle biến chuỗi sensor thành ${P.feature_columns} đặc trưng`,
       "Mỗi dòng đặc trưng chỉ dùng quá khứ của chính engine đó; không dùng cycle tương lai hoặc engine khác", 10,
       "outputs/features/run_info.json; src/cmapss/features/rolling.py; handoff/DATA_WALKTHROUGH.md",
-      "Thời lượng: 1 phút 45 giây.\n" +
+      "Thời lượng: 45 giây.\n" +
         "Ví dụ tại cycle 170: window gồm cycles 141–170. Cycle 171 trở đi không được dùng.\n" +
         "Với mỗi sensor tính 6 thống kê: last, mean, sample std, min, max, slope tuyến tính. 21 × 6 = 126 cột.\n" +
         "29 cycle đầu mỗi engine chưa đủ window nên không tạo dòng; không padding. FD001 có 17.731 train windows và 10.196 test windows.\n" +
@@ -489,7 +497,7 @@ async function main() {
     const s = content(3, "Health Index gom 21 sensor thành một đường suy giảm",
       "PCA fit trên 90 train engines; ARIMA dự báo 30% cuối chuỗi của 10 engine giữ riêng", 11,
       "outputs/timeseries/figures/health_index_selected_engines.png; tables/forecast_metrics.csv; tables/baseline_metrics.csv",
-      "Thời lượng: 1 phút 30 giây.\n" +
+      "Thời lượng: 35 giây.\n" +
         "Health Index là PC1 sau StandardScaler; scaler, PCA và hướng PC1 fit trên 90 train engines, 10 engine còn lại chỉ được transform. Hình cho thấy chỉ số giảm dần và giảm nhanh ở cuối vòng đời: đây là biểu đồ xu hướng suy giảm mà đề tài yêu cầu.\n" +
         "ARIMA fit 70% đầu chuỗi, dự báo 30% cuối. MAE trung bình 0,4110, thấp hơn drift 0,7469 và last-value 0,9478 (thang Health Index, không phải cycle).\n" +
         "Giới hạn: ARIMA chỉ thấp hơn drift ở 7/10 engine; coverage khoảng dự đoán 95% dao động 21,43%–97,03%. Health Index forecast không phải RUL forecast; đây là phân tích phụ.");
@@ -513,7 +521,7 @@ async function main() {
     const s = content(4, "Đánh giá theo engine để tránh data leakage",
       "5-fold GroupKFold: mọi window của một engine nằm cùng một phía của phép chia", 12,
       "outputs/modeling/tables/evaluation_protocol.csv; outputs/modeling/run_info.json; report/sections/methodology.tex",
-      "Thời lượng: 1 phút 30 giây.\n" +
+      "Thời lượng: 45 giây.\n" +
         "Sơ đồ trái: 100 train engines chia thành 5 nhóm 20 engine. Mỗi fold dùng một nhóm làm validation, bốn nhóm còn lại để fit.\n" +
         "Vì sao không chia ngẫu nhiên theo dòng: hai window liền kề của cùng engine chồng lấn 29/30 cycle. Nếu một window ở train và window kề nó ở validation, metric sẽ lạc quan.\n" +
         "Bốn bước bên phải: chọn model bằng mean engine-level MAE; đặt trọng số để tổng trọng số mỗi engine bằng 1, engine dài không chi phối loss; refit trên toàn bộ 17.731 train windows; dự đoán một điểm cho mỗi test engine rồi mới ghép nhãn.");
@@ -543,47 +551,54 @@ async function main() {
     T(s, "Hai window liền kề trùng 29/30 cycle; chia ngẫu nhiên theo dòng làm metric lạc quan.", { x: 7.72, y: 6.07, w: 4.9, h: 0.65, fontSize: 12.5, color: C.ink, valign: "middle" });
   }
 
-  // ---------------------------------------------------------------- 13. Model selection
+  // ---------------------------------------------------------------- 13. Model alignment
   {
-    const hgb = cvBy.hist_gradient_boosting, ridge = cvBy.ridge_alpha_1, med = cvBy.median_baseline;
-    const s = content(4, "HistGradientBoosting có MAE thấp nhất trong cross-validation",
-      "Ba ứng viên được so sánh trên cùng 5 fold và cùng metric đã định trước", 13,
-      "outputs/modeling/tables/model_metrics.csv; outputs/modeling/run_info.json",
-      "Thời lượng: 1 phút 15 giây.\n" +
-        "Ba ứng viên: median baseline (dự đoán hằng), Ridge với StandardScaler trong pipeline, HistGradientBoostingRegressor.\n" +
-        `Mean engine MAE: median ${vn(med.mean_engine_mae, 4)}, Ridge ${vn(ridge.mean_engine_mae, 4)}, HGB ${vn(hgb.mean_engine_mae, 4)} cycles. HGB được chọn.\n` +
-        "Baseline cho biết mô hình học được nhiều hơn một dự đoán hằng. Kết luận chỉ áp dụng trong ba ứng viên và protocol này; không nói HGB là tốt nhất cho mọi dataset.\n" +
-        "Lưu ý: MAE CV (khoảng 20) và MAE test (khoảng 15) không so trực tiếp: CV chấm mọi train window từ cycle 30 đến failure, còn test chỉ chấm một điểm cắt mỗi engine.");
+    const t126 = A.trajectory.hgb126, t169 = A.trajectory.hgb169;
+    const e126 = A.endpoint.hgb126, e169 = A.endpoint.hgb169;
+    const s = content(4, "HGB169 là predictor candidate trên panel chung",
+      "HGB169 giảm MAE trajectory 3,2134 cycles; audit có điều kiện", 13,
+      "outputs/course_alignment/20261007/summary.json; outputs/course_alignment/20261007/paired_bootstrap_ci.csv",
+      "Thời lượng: 55 giây.\n" +
+        "Alignment audit chấm lại HGB126 và HGB169 trên cùng 17.731 dòng train, cùng khóa engine và cùng grouped folds. HGB126 gồm 126 rolling features; HGB169 thêm cycle và 42 history features, thành 169 features.\n" +
+        `Trajectory: MAE ${vn(t126.mean_engine_mae, 4)} → ${vn(t169.mean_engine_mae, 4)} và RMSE ${vn(t126.rmse, 4)} → ${vn(t169.rmse, 4)} cycles. Endpoint tại các mốc 0,5/0,7/0,9: MAE ${vn(e126.mean_engine_mae, 4)} → ${vn(e169.mean_engine_mae, 4)} cycles.\n` +
+        `Paired bootstrap trên prediction đã lưu: delta trajectory MAE ${vn(A.delta.trajectory_mae.value, 4)} cycles, CI 95% [${vn(A.delta.trajectory_mae.ci_lower, 4)}; ${vn(A.delta.trajectory_mae.ci_upper, 4)}]. Đây chưa phải refit mù và chưa bao gồm seed/model-selection uncertainty.\n` +
+        "Vì vậy HGB169 là predictor candidate chính trong phạm vi audit; HGB126 vẫn giữ vai trò baseline lịch sử để báo cáo metric test ở slide 14.");
     s.addChart(pres.charts.BAR, [{
-      name: "MAE", labels: [["Median baseline", med], ["Ridge (α = 1)", ridge], ["HistGradientBoosting", hgb]].map(([n, r]) => `${n} · ${vn(r.mean_engine_mae)}`),
-      values: [med, ridge, hgb].map((r) => Number(r.mean_engine_mae.toFixed(2))),
+      name: "HGB126 baseline", labels: ["Trajectory MAE", "Endpoint MAE"],
+      values: [Number(t126.mean_engine_mae.toFixed(2)), Number(e126.mean_engine_mae.toFixed(2))],
+    }, {
+      name: "HGB169 candidate", labels: ["Trajectory MAE", "Endpoint MAE"],
+      values: [Number(t169.mean_engine_mae.toFixed(2)), Number(e169.mean_engine_mae.toFixed(2))],
     }], {
-      x: 0.6, y: 2.05, w: 7.4, h: 4.75, barDir: "bar", chartColors: [C.teal],
-      showTitle: true, title: "Mean engine-level MAE, 5-fold GroupKFold (cycles)", titleFontSize: 13, titleColor: C.ink, titleFontFace: FONT,
-      showValue: false,
+      x: 0.6, y: 2.05, w: 7.4, h: 4.75, barDir: "col", barGrouping: "clustered", chartColors: [C.ice, C.teal],
+      showTitle: true, title: "MAE trên panel chung (cycles)", titleFontSize: 13, titleColor: C.ink, titleFontFace: FONT,
+      showValue: true, dataLabelPosition: "outEnd", dataLabelFontSize: 13, dataLabelColor: C.ink,
       catAxisLabelFontSize: 14, catAxisLabelColor: C.ink, catAxisLabelFontFace: FONT, valAxisHidden: true,
-      valGridLine: { style: "none" }, catGridLine: { style: "none" }, showLegend: false, catAxisOrientation: "maxMin", valAxisMinVal: 0, valAxisMaxVal: 50,
+      valGridLine: { style: "none" }, catGridLine: { style: "none" }, showLegend: true, legendPos: "b", legendFontSize: 12, legendFontFace: FONT, valAxisMinVal: 0, valAxisMaxVal: 25,
     });
     table(s, [
-      ["Model", "MAE ± std giữa fold"],
-      ["HistGradientBoosting", `${vn(hgb.mean_engine_mae)} ± ${vn(hgb.std_engine_mae)}`],
-      ["Ridge (α = 1)", `${vn(ridge.mean_engine_mae)} ± ${vn(ridge.std_engine_mae)}`],
-      ["Median baseline", `${vn(med.mean_engine_mae)} ± ${vn(med.std_engine_mae)}`],
-    ], { x: 8.4, y: 2.2, w: 4.33, colW: [2.33, 2.0], rowH: 0.5, fontSize: 13, highlight: 0 });
-    box(s, 8.4, 4.55, 4.33, 2.0, C.mist);
-    T(s, "CV và test chấm trên tập điểm khác nhau", { x: 8.6, y: 4.7, w: 4.0, h: 0.34, fontSize: 14, bold: true, color: C.navy });
-    T(s, "CV chấm mọi train window từ cycle 30 đến failure; test chỉ chấm một điểm cắt mỗi engine. Không so trực tiếp hai con số.", { x: 8.6, y: 5.15, w: 3.95, h: 1.3, fontSize: 13, color: C.ink });
+      ["Panel / chỉ số", "HGB126", "HGB169", "Delta"],
+      ["Trajectory MAE", vn(t126.mean_engine_mae), vn(t169.mean_engine_mae), vn(A.delta.trajectory_mae.value)],
+      ["Trajectory RMSE", vn(t126.rmse), vn(t169.rmse), vn(A.delta.trajectory_rmse.value)],
+      ["Endpoint MAE", vn(e126.mean_engine_mae), vn(e169.mean_engine_mae), vn(A.delta.endpoint_mae.value)],
+      ["Endpoint RMSE", vn(e126.rmse), vn(e169.rmse), vn(A.delta.endpoint_rmse.value)],
+    ], { x: 8.15, y: 2.1, w: 4.58, colW: [1.65, 0.95, 0.95, 1.03], rowH: 0.48, fontSize: 11.5, highlight: 2 });
+    box(s, 8.15, 4.65, 4.58, 1.95, C.mist);
+    T(s, "Cách đọc kết quả", { x: 8.38, y: 4.83, w: 4.0, h: 0.34, fontSize: 14, bold: true, color: C.navy });
+    T(s, "Âm ở cột Delta nghĩa là HGB169 thấp hơn HGB126. Hai panel dùng cùng engine, fold và prediction đã lưu; chưa có blind refit độc lập, còn historical test readout chỉ dùng để báo cáo.", { x: 8.38, y: 5.25, w: 4.0, h: 1.1, fontSize: 12.5, color: C.ink });
   }
 
   // ---------------------------------------------------------------- 14. Test result
   {
     const f = M.final;
-    const s = content(4, `Trên 100 test engines: MAE ${vn(f.mean_engine_mae)} cycles`,
-      "Mỗi engine đóng góp một dự đoán tại cycle cuối được quan sát; nhãn test chỉ được dùng ở bước này", 14,
+    const s = content(4, `Metric test lịch sử của HGB126: MAE ${vn(f.mean_engine_mae)} cycles`,
+      "HGB126 là baseline lịch sử; metric test được giữ riêng vì HGB169 chưa có refit mù độc lập",
+      14,
       "outputs/modeling/tables/final_metrics.json; outputs/modeling/figures/final_true_vs_predicted.png",
-      "Thời lượng: 1 phút 45 giây.\n" +
-        `Kết quả chính của báo cáo: mean engine MAE ${vn(f.mean_engine_mae, 4)} cycles, RMSE ${vn(f.rmse, 4)} cycles, NASA score ${vn(f.nasa_score, 4)}.\n` +
+      "Thời lượng: 1 phút 5 giây.\n" +
+        `Đây là metric test lịch sử của HGB126, không phải kết quả test độc lập của HGB169: mean engine MAE ${vn(f.mean_engine_mae, 4)} cycles, RMSE ${vn(f.rmse, 4)} cycles, NASA score ${vn(f.nasa_score, 4)}.\n` +
         `Bootstrap theo engine ${vn(M.bootstrap_resamples, 0)} lần: khoảng tin cậy 95% cho MAE là [${vn(M.ci_mae.ci_lower, 4)}; ${vn(M.ci_mae.ci_upper, 4)}].\n` +
+        "HGB169 được báo cáo ở slide 13 trên panel trajectory và endpoint chung; không trộn các metric đó với metric test lịch sử này.\n" +
         "Đọc hình: trục ngang là RUL thật, trục dọc là RUL dự đoán; điểm càng gần đường chéo càng đúng. Vùng RUL thấp bám sát đường chéo hơn vùng RUL cao.\n" +
         "Trên slide làm tròn 2 chữ số; số đầy đủ nằm trong notes và báo cáo. NASA score bất đối xứng, không có đơn vị cycle.");
     const cards = [
@@ -604,11 +619,11 @@ async function main() {
   // ---------------------------------------------------------------- 15. Error analysis
   {
     const w = M.worst;
-    const s = content(4, "Sai số lớn tập trung ở dự đoán cao hơn RUL thật",
+    const s = content(4, "Phân tích sai số của HGB126 baseline lịch sử",
       "Dự đoán cao hơn RUL thật tương ứng cảnh báo muộn; NASA score phạt loại sai số này nặng hơn", 15,
       "outputs/modeling/predictions/final_evaluation.parquet; outputs/modeling/figures/final_residuals_by_rul.png; outputs/diagnostics/error_diagnostics.json",
-      "Thời lượng: 1 phút 30 giây.\n" +
-        "Hình: residual = dự đoán − thật theo RUL thật. Residual dương nghĩa là model nghĩ engine còn sống lâu hơn thực tế.\n" +
+      "Thời lượng: 45 giây.\n" +
+        "Hình là residual của metric test lịch sử HGB126: residual = dự đoán − thật theo RUL thật. Residual dương nghĩa là model nghĩ engine còn sống lâu hơn thực tế.\n" +
         `${M.n_over} dự đoán cao hơn RUL thật, ${M.n_under} dự đoán thấp hơn. Sai số tăng khi RUL thật lớn: ở đầu vòng đời tín hiệu suy giảm còn yếu.\n` +
         `Ví dụ engine ${w.engine_id}: RUL thật ${vn(w.y_true, 0)}, dự đoán ${vn(w.y_pred, 4)}, sai ${vn(w.abs_error, 4)} cycles. Không loại engine này khỏi metric.\n` +
         `Mười trường hợp sai lớn nhất chiếm ${pct(DG.top10_nasa_share, 1)} NASA score. Trên OOF, khi RUL thật 150–200 dự đoán trung bình ${vn(DG.oof_mean_pred_150_200, 2)}; khi 200–400 là ${vn(DG.oof_mean_pred_200_400, 2)} cycles: model không phân biệt được các trạng thái còn khỏe (outputs/diagnostics/error_diagnostics.json).
@@ -634,54 +649,49 @@ async function main() {
   // ---------------------------------------------------------------- 16. Early warning
   {
     const wg = M.warning, tm = wg.timing, ld = wg.lead;
-    const s = content(4, `Cảnh báo sớm: báo động khi RUL dự đoán ≤ ${wg.threshold} cycles`,
-      "Trên dự đoán OOF của 100 train engines, mọi engine được cảnh báo trước failure; 49 engine cảnh báo sau ngưỡng thật", 16,
-      "outputs/modeling/tables/warning_summary.json; outputs/modeling/figures/warning_trajectory.png; outputs/diagnostics/error_diagnostics.json",
-      "Thời lượng: 2 phút.\n" +
-        "Đây là biểu đồ xu hướng cảnh báo sớm theo yêu cầu đề tài. Hình: engine 1, đường xanh là RUL thật, đường đỏ là RUL dự đoán OOF, đường cam là ngưỡng 30 cycles. Cảnh báo đầu tiên tại cycle 162, trước failure ở cycle 192 đúng 30 cycles.\n" +
-        `Trên 100 engine: ${tm.before_threshold} cảnh báo trước khi RUL thật chạm 30, ${tm.at_threshold} đúng ngưỡng, ${tm.after_threshold} sau ngưỡng nhưng vẫn trước failure; không engine nào thiếu cảnh báo.\n` +
-        `Lead time đến failure: trung vị ${vn(ld.median, 0)} cycles, khoảng tứ phân vị ${vn(ld.q25, 0)}–${vn(ld.q75, 0)}, miền ${vn(ld.min, 0)}–${vn(ld.max, 0)}.\n` +
-        `Cảnh báo trễ tập trung ở engine ngắn đời: 49 engine cảnh báo sau ngưỡng có tuổi thọ trung bình ${vn(DG.late_mean_life, 1)} cycles, so với ${vn(DG.early_mean_life, 1)} ở nhóm cảnh báo trước ngưỡng; tương quan Pearson giữa tuổi thọ và độ trễ là ${vn(DG.life_delay_r, 2)}.
-` +
-        "Giới hạn: OOF cũng đã dùng để chọn model, nên đây là mô tả nội bộ. Mọi train engine đều đi đến failure nên tỷ lệ cảnh báo sai cấp engine không xác định. Không có chi phí bảo trì nên chưa phải chính sách bảo trì.");
+    const s = content(4, "Warning policy phải được đánh giá riêng với predictor",
+      "Threshold 30: HGB126 51%, HGB169 45%; threshold 40: 94% và 96%", 16,
+      "outputs/course_alignment/20261007/warning_fixed_policies.csv; outputs/modeling/figures/warning_trajectory.png",
+      "Thời lượng: 1 phút 30 giây.\n" +
+        "Đây là biểu đồ xu hướng của HGB126 baseline ở threshold 30: đường xanh là RUL thật, đường đỏ là RUL dự đoán OOF, đường cam là ngưỡng 30 cycles. Cảnh báo đầu tiên tại cycle 162, trước failure ở cycle 192 đúng 30 cycles.\n" +
+        `Trên HGB126 threshold 30: ${tm.before_threshold} cảnh báo trước khi RUL thật chạm 30, ${tm.at_threshold} đúng ngưỡng, ${tm.after_threshold} sau ngưỡng nhưng vẫn trước failure. Lead time trung vị ${vn(ld.median, 0)} cycles.\n` +
+        "Bảng bên phải là fixed-policy sensitivity trên cùng 100 engine: threshold 30 và 40, persistence 1, lead requirement 30. HGB126 và HGB169 không được chọn lại bằng warning policy này.\n" +
+        "Không tuyên bố cải thiện toàn bộ quy trình: threshold 30 HGB169 kém đúng thời điểm hơn; threshold 40 HGB169 nhỉnh hơn nhưng burden tăng nhẹ. Chưa có chi phí bảo trì nên đây chưa phải chính sách triển khai.");
     img(s, "outputs/modeling/figures/warning_trajectory.png", 0.6, 2.05, 6.9, 6.9 * 720 / 1280, "Quỹ đạo RUL thật, RUL dự đoán OOF và ngưỡng cảnh báo của engine 1");
-    s.addChart(pres.charts.BAR, [{
-      name: "Engines", labels: ["Trước ngưỡng", "Đúng ngưỡng", "Sau ngưỡng"], values: [tm.before_threshold, tm.at_threshold, tm.after_threshold],
-    }], {
-      x: 7.8, y: 2.0, w: 4.93, h: 2.55, barDir: "col", chartColors: [C.teal],
-      showTitle: true, title: "Thời điểm cảnh báo đầu tiên so với RUL thật = 30 (số engine)", titleFontSize: 11, titleColor: C.ink, titleFontFace: FONT,
-      showValue: true, dataLabelPosition: "outEnd", dataLabelFontSize: 13, dataLabelColor: C.ink,
-      catAxisLabelFontSize: 12, catAxisLabelColor: C.ink, catAxisLabelFontFace: FONT, valAxisHidden: true,
-      valGridLine: { style: "none" }, catGridLine: { style: "none" }, showLegend: false, valAxisMaxVal: 60,
-    });
-    [["Trung vị lead time", `${vn(ld.median, 0)} cycles`], ["Tứ phân vị", `${vn(ld.q25, 0)}–${vn(ld.q75, 0)}`], ["Miền", `${vn(ld.min, 0)}–${vn(ld.max, 0)}`]].forEach(([l, v], i) => {
-      T(s, v, { x: 7.8 + i * 1.66, y: 4.65, w: 1.62, h: 0.5, fontSize: i === 0 ? 22 : 20, bold: true, color: C.navy });
-      T(s, l, { x: 7.8 + i * 1.66, y: 5.15, w: 1.62, h: 0.3, fontSize: 11, color: C.slate });
-    });
-    box(s, 7.8, 5.6, 4.93, 1.15, C.amberL);
+    const warningRows = [
+      ["Model", "Ngưỡng", "Đúng lúc", "Trễ/bỏ lỡ", "Burden"],
+      ["HGB126", "30", pct(fixedWarning.hgb126_30.on_time_rate, 0), pct(fixedWarning.hgb126_30.late_or_missed_rate, 0), pct(fixedWarning.hgb126_30.early_alarm_burden, 3)],
+      ["HGB169", "30", pct(fixedWarning.hgb169_30.on_time_rate, 0), pct(fixedWarning.hgb169_30.late_or_missed_rate, 0), pct(fixedWarning.hgb169_30.early_alarm_burden, 3)],
+      ["HGB126", "40", pct(fixedWarning.hgb126_40.on_time_rate, 0), pct(fixedWarning.hgb126_40.late_or_missed_rate, 0), pct(fixedWarning.hgb126_40.early_alarm_burden, 3)],
+      ["HGB169", "40", pct(fixedWarning.hgb169_40.on_time_rate, 0), pct(fixedWarning.hgb169_40.late_or_missed_rate, 0), pct(fixedWarning.hgb169_40.early_alarm_burden, 3)],
+    ];
+    table(s, warningRows, { x: 7.65, y: 2.05, w: 5.08, colW: [1.0, 0.75, 1.1, 1.15, 1.08], rowH: 0.46, fontSize: 10.5, highlight: 4 });
+    T(s, "Fixed-policy sensitivity trên cùng prediction panel", { x: 7.65, y: 4.55, w: 5.0, h: 0.3, fontSize: 13.5, bold: true, color: C.navy });
+    T(s, "Burden = tỷ lệ cảnh báo sớm; threshold chưa được hiệu chuẩn theo chi phí. Predictor selection và warning policy là hai quyết định riêng.", { x: 7.65, y: 4.95, w: 5.0, h: 0.7, fontSize: 12.5, color: C.ink });
+    box(s, 7.65, 5.75, 5.08, 0.92, C.amberL);
     T(s, [
-      { text: `Cảnh báo trễ tập trung ở engine ngắn đời: tuổi thọ TB ${vn(DG.late_mean_life, 1)} so với ${vn(DG.early_mean_life, 1)} cycles (r = ${vn(DG.life_delay_r, 2)}).`, options: { bold: true, breakLine: true } },
-      { text: "OOF đã dùng để chọn model; chưa có chi phí bảo trì.", options: {} },
-    ], { x: 7.98, y: 5.66, w: 4.6, h: 1.04, fontSize: 12, color: C.ink, valign: "middle", paraSpaceAfter: 4 });
+      { text: `HGB126 threshold 30: ${tm.before_threshold + tm.at_threshold}/${fd.FD001.test_engines} đúng lúc; median lead ${vn(ld.median, 0)} cycles.`, options: { bold: true, breakLine: true } },
+      { text: "Hình bên trái là mô tả nội bộ trên OOF.", options: {} },
+    ], { x: 7.88, y: 5.84, w: 4.6, h: 0.75, fontSize: 11.5, color: C.ink, valign: "middle", paraSpaceAfter: 3 });
     T(s, "Engine 1: cảnh báo tại cycle 162, failure tại cycle 192.", { x: 0.6, y: 2.05 + 6.9 * 720 / 1280 + 0.1, w: 6.9, h: 0.3, fontSize: 11.5, color: C.slate });
   }
 
   // ---------------------------------------------------------------- 17. Improvement
   {
-    const o = I.outer, inn = I.inner, dci = I.low_delta_ci;
-    const gain = (inn.baseline.low_mae - inn.hgb_08.low_mae) / inn.baseline.low_mae;
-    const s = content(5, "Thử cải thiện bằng nested CV: chưa đạt tiêu chí, giữ baseline",
-      `Window 10/20/30, ${I.n_hgb_candidates} cấu hình HGB, 3 cách đặt trọng số; test không dùng để chọn cấu hình`, 17,
-      "outputs/experiments/rul_improvement/20260927_full/ (ablation_metrics.csv, paired_comparison.csv, final_selection_metrics.csv, decision.json)",
-      "Thời lượng: 1 phút 45 giây.\n" +
+    const o = I.outer, dci = I.low_delta_ci;
+    const s = content(5, "Nested CV: kiểm tra cải thiện trên engine được giữ riêng",
+      "Kết quả gốc và thí nghiệm bổ sung; chỉ thay baseline khi đạt tiêu chí đã chốt trước", 17,
+      `${D.provenance.improvement_run}/; ${D.provenance.followup_run}/`,
+      "Thời lượng: 1 phút 15 giây.\n" +
         `Mục tiêu: giảm sai số khi RUL ≤ 30 và giảm cảnh báo trễ, không làm tăng MAE toàn bộ. Nested GroupKFold ${I.outer_splits}×${I.inner_splits}: vòng ngoài giữ riêng một nhóm engine để đánh giá; vòng trong chia phần còn lại thành 3 nhóm để chọn cấu hình.\n` +
-        `Vòng ngoài trên ${vn(o.baseline.rows, 0)} dòng: MAE RUL thấp ${vn(o.baseline.low_mae, 4)} → ${vn(o.weights.low_mae, 4)} cycles (Δ +${vn(dci[0], 4)}, CI 95% [${vn(dci[1], 4)}; ${vn(dci[2], 4)}]); cảnh báo trễ/bỏ lỡ ${o.baseline.late} → ${o.weights.late}. Không đạt tiêu chí, giữ baseline; test MAE vẫn 15,3490.\n` +
-        `Bảng dưới là inner CV dùng để chọn: hgb_08 giảm MAE RUL thấp khoảng ${vn(gain * 100)}% nhưng tăng MAE toàn bộ ${vn(inn.hgb_08.mae - inn.baseline.mae)} cycles. Đây là đánh đổi, không phải bằng chứng ngoài mẫu. Đợt sau cần chốt mức đánh đổi chấp nhận được trước khi thử.`);
+        `Vòng ngoài trên ${vn(o.baseline.rows, 0)} dòng: MAE RUL thấp ${vn(o.baseline.low_mae, 4)} → ${vn(o.weights.low_mae, 4)} cycles (Δ +${vn(dci[0], 4)}, CI 95% [${vn(dci[1], 4)}; ${vn(dci[2], 4)}]); cảnh báo trễ/bỏ lỡ ${o.baseline.late} → ${o.weights.late}. Không đạt tiêu chí, giữ baseline; metric test lịch sử HGB126 vẫn 15,3490.\n` +
+        "Bảng dưới là outer CV của đợt bổ sung: FD001 capped RUL/history, FD002/FD004 settings/condition normalization. FD002/FD004 là within-subset, không phải transfer. Test lịch sử đã được xem nên đây là exploratory follow-up.\n" +
+        D.followup.map((r) => `${r.dataset}: outer MAE ${vn(r.baseline_outer_mae, 4)} → ${vn(r.selected_outer_mae, 4)}, gate ${r.outer_gate_passed ? "đạt" : "chưa đạt"}; test MAE ${vn(r.test_mae, 4)}.`).join("\n"));
     T(s, "Nested GroupKFold", { x: 0.6, y: 2.1, w: 3.4, h: 0.34, fontSize: 15, bold: true, color: C.navy });
     const nest = [
-      [`${I.outer_splits} vòng ngoài`, "giữ riêng 20 engine để đánh giá", C.navy],
-      [`${I.inner_splits} vòng trong`, "chọn window, tham số, trọng số", C.teal],
-      ["So với baseline", `ΔMAE RUL ≤ 30: +${vn(dci[0], 4)}\nCI 95% [${vn(dci[1], 4)}; ${vn(dci[2], 4)}]`, C.amber],
+      [`${I.outer_splits} vòng ngoài`, "giữ riêng một nhóm engine", C.navy],
+      [`${I.inner_splits} vòng trong`, "chọn cấu hình chỉ từ train", C.teal],
+      ["CI nghiên cứu gốc", `ΔMAE RUL ≤ 30: +${vn(dci[0], 4)}\nCI 95% [${vn(dci[1], 4)}; ${vn(dci[2], 4)}]`, C.amber],
     ];
     nest.forEach(([a, b, col], i) => {
       const y = 2.6 + i * 1.35;
@@ -690,21 +700,19 @@ async function main() {
       T(s, b, { x: 0.8, y: y + 0.48, w: 3.1, h: 0.52, fontSize: 12, color: C.white });
       if (i < 2) arrow(s, 2.3, y + 1.07, 2.3, y + 1.33);
     });
-    T(s, "Vòng ngoài: đánh giá cả quy trình chọn", { x: 4.4, y: 2.1, w: 8.3, h: 0.34, fontSize: 14, bold: true, color: C.navy });
+    T(s, "FD001 gốc: thử window, tham số và trọng số", { x: 4.4, y: 2.1, w: 8.3, h: 0.34, fontSize: 14, bold: true, color: C.navy });
     table(s, [
       ["Chỉ số", "Baseline", "Quy trình chọn mới"],
       ["MAE toàn bộ (cycles)", vn(o.baseline.mae), vn(o.weights.mae)],
       ["MAE khi RUL ≤ 30 (cycles)", vn(o.baseline.low_mae, 4), vn(o.weights.low_mae, 4)],
       ["Cảnh báo trễ hoặc bỏ lỡ", `${o.baseline.late}/100`, `${o.weights.late}/100`],
     ], { x: 4.4, y: 2.5, w: 8.33, colW: [3.73, 2.3, 2.3], rowH: 0.4, fontSize: 12.5 });
-    T(s, "Inner CV trên toàn train: đánh đổi giữa các chỉ số", { x: 4.4, y: 4.35, w: 8.3, h: 0.34, fontSize: 14, bold: true, color: C.navy });
+    T(s, "Bổ sung 29/09: outer MAE của quy trình chọn (cycles)", { x: 4.4, y: 4.35, w: 8.3, h: 0.34, fontSize: 14, bold: true, color: C.navy });
     table(s, [
-      ["Ứng viên", "MAE toàn bộ", "MAE RUL ≤ 30", "Trễ/bỏ lỡ"],
-      ["Baseline", vn(inn.baseline.mae), vn(inn.baseline.low_mae), `${inn.baseline.late}/100`],
-      ["hgb_08", vn(inn.hgb_08.mae), vn(inn.hgb_08.low_mae), `${inn.hgb_08.late}/100`],
-      ["Trọng số RUL thấp cao", vn(inn.strong_low_rul.mae), vn(inn.strong_low_rul.low_mae), `${inn.strong_low_rul.late}/100`],
+      ["Dataset", "Baseline", "Quy trình chọn", "Tiêu chí"],
+      ...D.followup.map((r) => [r.dataset, vn(r.baseline_outer_mae), vn(r.selected_outer_mae), r.outer_gate_passed ? "Đạt" : "Chưa đạt"]),
     ], { x: 4.4, y: 4.75, w: 8.33, colW: [2.93, 1.8, 1.8, 1.8], rowH: 0.4, fontSize: 12.5 });
-    T(s, `hgb_08 giảm MAE RUL thấp khoảng ${vn(gain * 100)}% nhưng tăng MAE toàn bộ ${vn(inn.hgb_08.mae - inn.baseline.mae)} cycles.`,
+    T(s, "FD001: window 30; FD002/FD004: window 10, huấn luyện trong từng subset.",
       { x: 4.4, y: 6.45, w: 8.33, h: 0.35, fontSize: 13, bold: true, color: C.amber });
   }
 
@@ -716,7 +724,7 @@ async function main() {
     const s = content(5, "Model FD001 không chuyển trực tiếp sang FD002–FD004",
       `Cùng pipeline với window ${D.transfer.window}; MAE tăng ${vn(Math.min(...ratios), 1)}–${vn(Math.max(...ratios), 1)} lần khi đổi điều kiện vận hành hoặc fault mode`, 18,
       "outputs/cross_dataset/matrix.json; outputs/diagnostics/error_diagnostics.json",
-      "Thời lượng: 1 phút 30 giây.\n" +
+      "Thời lượng: 55 giây.\n" +
         "Câu hỏi: model FD001 có dùng được cho subset khác không. Chạy cùng pipeline với window 10 vì FD004 có test engine ngắn nhất chỉ 19 cycles. Không so các số này với MAE 15,3490 dùng window 30.\n" +
         `Cột xanh nhạt: train và test cùng subset (FD002 ${vn(within[0], 4)}, FD003 ${vn(within[1], 4)}, FD004 ${vn(within[2], 4)}). Cột cam: giữ model FD001 áp dụng sang test subset khác (${vn(cross[0], 4)}, ${vn(cross[1], 4)}, ${vn(cross[2], 4)}). FD001 nội bộ với window 10 là ${vn(tr("FD001", "FD001").mae, 4)}.\n` +
         `Chẩn đoán: với FD002 và FD004 chỉ khoảng ${inr("FD002")} và ${inr("FD004")} giá trị sensor test nằm trong miền train FD001, dự đoán gần như hằng số (độ lệch chuẩn ${vn(DG.transfer.FD002.pred_std, 1)} và ${vn(DG.transfer.FD004.pred_std, 1)}). FD003 có ${inr("FD003")} giá trị trong miền nhưng dự đoán lệch cao trung bình ${vn(DG.transfer.FD003.mean_signed_error, 1)} cycles.
@@ -746,31 +754,32 @@ async function main() {
   // ---------------------------------------------------------------- 19. Kết luận
   {
     const f = M.final, ld = M.warning.lead;
-    const s = content(5, "Trả lời ba câu hỏi nghiên cứu", "Kết luận chỉ áp dụng cho protocol và dữ liệu mô phỏng đã nêu", 19,
+    const s = content(5, "Trả lời sáu câu hỏi nghiên cứu", "Kết luận chỉ áp dụng cho protocol và dữ liệu mô phỏng đã nêu", 19,
       "report/sections/conclusion.tex; các artifact đã dẫn ở slide 9–18",
       "Thời lượng: 1 phút 15 giây.\n" +
-        "Q1: có. 15/21 sensor thay đổi giữa đầu và cuối vòng đời; Health Index giảm rõ ở cuối vòng đời.\n" +
-        `Q2: MAE ${vn(f.mean_engine_mae, 4)} cycles, CI 95% [${vn(M.ci_mae.ci_lower, 4)}; ${vn(M.ci_mae.ci_upper, 4)}] trên 100 test engines FD001, window 30.\n` +
-        `Q3: với ngưỡng 30 cycles, lead time trung vị ${vn(ld.median, 0)} cycles trên OOF, nhưng 49/100 cảnh báo đến sau ngưỡng thật. Model FD001 không chuyển trực tiếp sang subset khác.\n` +
+        "Q1: FD001 đạt kiểm tra schema, khóa và cycle; Q2: 15/21 sensor thay đổi giữa đầu và cuối vòng đời, Health Index giảm rõ ở cuối vòng đời.\n" +
+        "Q3: parity Pandas–PySpark đạt trên ba artifact với sai khác tuyệt đối tối đa bằng 0.\n" +
+        `Q4: HGB169 là predictor candidate chính có điều kiện; trajectory MAE ${vn(A.trajectory.hgb169.mean_engine_mae, 4)} so với ${vn(A.trajectory.hgb126.mean_engine_mae, 4)} của HGB126.\n` +
+        `Q5: warning policy threshold 30 đúng thời điểm ${pct(fixedWarning.hgb126_30.on_time_rate, 0)} với HGB126 và ${pct(fixedWarning.hgb169_30.on_time_rate, 0)} với HGB169; threshold 40 lần lượt ${pct(fixedWarning.hgb126_40.on_time_rate, 0)} và ${pct(fixedWarning.hgb169_40.on_time_rate, 0)}. Q6: FD001 không chuyển trực tiếp sang FD002–FD004.\n` +
         "Đóng góp Big Data: batch ETL nhiều file, Parquet Silver/Gold, parity Pandas–PySpark, artifact có hash và run_info.");
     const cols = [
-      ["Q1", "Xu hướng suy giảm", `${D.statistics.n_reject}/${D.statistics.n_sensors}`, "sensor thay đổi đầu/cuối vòng đời; Health Index giảm rõ ở cuối vòng đời"],
-      ["Q2", "Dự đoán RUL", `${vn(f.mean_engine_mae)}`, `cycles MAE trên 100 test engines; CI 95% [${vn(M.ci_mae.ci_lower)}; ${vn(M.ci_mae.ci_upper)}]`],
-      ["Q3", "Cảnh báo và chuyển miền", `${vn(ld.median, 0)}`, "cycles lead time trung vị (OOF); 49/100 cảnh báo sau ngưỡng; không chuyển trực tiếp sang FD002–FD004"],
+      ["Q1", "Dữ liệu hợp lệ", "Đạt", "Schema, khóa và cycle của FD001 qua kiểm tra"],
+      ["Q2", "Xu hướng sensor", `${D.statistics.n_reject}/${D.statistics.n_sensors}`, "sensor thay đổi đầu/cuối; Health Index giảm rõ"],
+      ["Q3", "Parity ETL", "0 sai khác", "Ba artifact Pandas–PySpark khớp tuyệt đối"],
+      ["Q4", "HGB comparison", `${vn(A.delta.trajectory_mae.value, 2)}`, "delta trajectory MAE; HGB169 là candidate có điều kiện"],
+      ["Q5", "Warning policy", "51% / 45%", "threshold 30: HGB126 / HGB169; policy tách khỏi predictor"],
+      ["Q6", "Chuyển miền", "Không", "FD001 cần huấn luyện lại hoặc domain adaptation"],
     ];
     cols.forEach(([q, h, v, d], i) => {
-      const x = 0.6 + i * 4.1;
-      box(s, x, 2.1, 3.9, 3.05, C.mist);
-      circleNum(s, x + 0.25, 2.3, 0.55, q, C.amber, C.white, 13);
-      T(s, h, { x: x + 0.95, y: 2.3, w: 2.8, h: 0.55, fontSize: 15, bold: true, color: C.navy, valign: "middle" });
-      T(s, v, { x: x + 0.25, y: 3.05, w: 3.4, h: 0.8, fontSize: 40, bold: true, color: C.navy });
-      T(s, d, { x: x + 0.25, y: 3.95, w: 3.45, h: 1.35, fontSize: 13, color: C.ink });
+      const colIndex = i % 3, rowIndex = Math.floor(i / 3), x = 0.6 + colIndex * 4.1, y = 2.05 + rowIndex * 2.15;
+      box(s, x, y, 3.9, 1.92, C.mist);
+      circleNum(s, x + 0.22, y + 0.2, 0.48, q, C.amber, C.white, 11);
+      T(s, h, { x: x + 0.85, y: y + 0.2, w: 2.8, h: 0.38, fontSize: 14, bold: true, color: C.navy, valign: "middle" });
+      T(s, v, { x: x + 0.22, y: y + 0.78, w: 3.4, h: 0.46, fontSize: 24, bold: true, color: C.navy });
+      T(s, d, { x: x + 0.22, y: y + 1.28, w: 3.42, h: 0.48, fontSize: 11.5, color: C.ink });
     });
-    box(s, 0.6, 5.45, 12.13, 1.05, C.navy);
-    T(s, [
-      { text: "Đóng góp Big Data: ", options: { bold: true, color: C.white } },
-      { text: "batch ETL nhiều file, Parquet Silver/Gold, parity Pandas–PySpark và artifact có hash, run_info để tái lập.", options: { color: C.ice } },
-    ], { x: 0.85, y: 5.45, w: 11.7, h: 1.05, fontSize: 15, valign: "middle" });
+    T(s, "Đóng góp Big Data: batch ETL nhiều file, Parquet Silver/Gold, parity Pandas–PySpark và artifact có hash, run_info để tái lập.",
+      { x: 0.6, y: 6.45, w: 12.1, h: 0.35, fontSize: 12.5, bold: true, color: C.navy });
   }
 
   // ---------------------------------------------------------------- 20. Giới hạn và hỏi đáp
@@ -783,13 +792,13 @@ async function main() {
       "Dữ liệu mô phỏng; FD001 chỉ có một điều kiện vận hành và một fault mode.",
       "Mỗi test engine chỉ được đánh giá tại một điểm cắt.",
       "Không có chi phí, downtime, intervention records: chưa tối ưu được lịch bảo trì.",
-      "PySpark chạy local để kiểm tra parity; benchmark chỉ đo Pandas.",
+      "Benchmark Pandas/PySpark chạy local; ghi qua driver, chưa đo cluster.",
     ];
     const next = [
-      "Cắt ngưỡng nhãn RUL, chọn ngưỡng trong vòng trong của nested CV.",
-      "Chuẩn hóa sensor theo điều kiện vận hành cho FD002 và FD004.",
-      "So sánh CNN 1D hoặc LSTM với HGB trên cùng fold và cùng cách xử lý nhãn.",
-      "Chuyển bước tạo đặc trưng sang PySpark, đo cả pipeline gồm I/O.",
+      "Refit mù HGB169 trên cùng protocol để xác nhận candidate bằng một lần chạy độc lập.",
+      "Hiệu chuẩn warning policy riêng với chi phí báo sớm, báo trễ và tiêu chí vận hành.",
+      "Đánh giá sai số theo toàn quỹ đạo trên engine chưa thấy và kèm khoảng không chắc chắn.",
+      "Benchmark PySpark trên cluster thực; benchmark local hiện chỉ là bằng chứng khả năng chạy.",
     ];
     const col = (x, head, items, color) => {
       T(s, head, { x, y: 1.75, w: 5.8, h: 0.4, fontSize: 17, bold: true, color });
@@ -797,13 +806,13 @@ async function main() {
         { x, y: 2.3, w: 5.7, h: 3.0, fontSize: 15, color: C.white, paraSpaceAfter: 10 });
     };
     col(0.6, "Giới hạn đã biết", lim, "F2B880");
-    col(6.95, "Hướng tiếp theo (đề xuất, chưa thực hiện)", next, C.ice);
+    col(6.95, "Đã bổ sung và hướng tiếp theo", next, C.ice);
     T(s, "Xin cảm ơn thầy/cô. Xin nhận câu hỏi.", { x: 0.6, y: 5.75, w: 12.1, h: 0.6, fontSize: 26, bold: true, color: C.white });
     T(s, "Dashboard: uv run --extra dashboard streamlit run app.py · Kịch bản demo: handoff/DEMO_SCRIPT.md", { x: 0.6, y: 6.45, w: 12.1, h: 0.35, fontSize: 13, color: C.ice });
     T(s, "20 / 20", { x: 11.93, y: 7.05, w: 0.8, h: 0.26, fontSize: 10, color: C.ice, align: "right", valign: "middle" });
     s.addNotes(
-      "Thời lượng: 45 giây, sau đó hỏi đáp.\n" +
-        "Nêu bốn giới hạn chính, không làm mạnh câu chữ. Bốn hướng tiếp theo lấy từ Mục 6.7 của báo cáo; là đề xuất, chưa triển khai. Hướng CNN/LSTM: RMSE báo cáo 20,54, Li và cộng sự (2018, Table 4) đạt 12,61 khi cắt nhãn ở 125 và 13,32 khi không cắt; hai kết quả không so trực tiếp.\n" +
+      "Thời lượng: 1 phút, sau đó hỏi đáp.\n" +
+        "HGB169 hiện là predictor candidate có điều kiện từ alignment audit; bước xác nhận cần refit mù độc lập. Warning policy phải được hiệu chuẩn riêng, vì threshold 30 và 40 cho trade-off khác nhau. Capped RUL, history features, condition normalization và benchmark local có I/O đã được kiểm tra; chưa mở thêm nhánh CNN/LSTM hoặc training mới.\n" +
         "Nếu còn thời gian hoặc cô yêu cầu: mở dashboard theo handoff/DEMO_SCRIPT.md (khoảng 4 phút); không chạy lại training khi trình bày.\n" +
         "Nguồn: report/sections/discussion.tex.");
   }

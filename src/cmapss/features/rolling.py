@@ -17,6 +17,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
+from cmapss.artifacts import default_raw_dir, staged_artifact_bundle
 from cmapss.data.contracts import SENSORS, SPLITS, ContractError
 from cmapss.data.validation import validate_columns, validate_integer, validate_observations
 from cmapss.features.contracts import (
@@ -39,6 +40,9 @@ class RollingFeatureResult:
     input_sha256: dict[str, str]
     source_path: str | None = None
     window_cycles: int = ROLLING_WINDOW_CYCLES
+    raw_dir: str | None = None
+    source_manifest_path: str | None = None
+    protected_raw_dirs: tuple[str, ...] = ()
 
     @property
     def row_counts(self) -> dict[str, int]:
@@ -225,9 +229,26 @@ def run_rolling_feature_pipeline(
     silver_observations: str | Path,
     *,
     window_cycles: int = ROLLING_WINDOW_CYCLES,
+    raw_dir: str | Path | None = None,
 ) -> RollingFeatureResult:
     """Đọc Silver observations và tạo rolling features trong bộ nhớ."""
-    input_path = Path(silver_observations)
+    input_path = Path(silver_observations).resolve()
+    manifest_path = input_path.parent.parent / "run_info.json"
+    source_manifest = None
+    if manifest_path.is_file():
+        candidate = json.loads(manifest_path.read_text(encoding="utf-8"))
+        if not isinstance(candidate, dict) or not isinstance(candidate.get("outputs", {}), dict):
+            raise ValueError(f"ETL manifest không hợp lệ: {manifest_path}")
+        observation_path = candidate.get("outputs", {}).get("silver_observations")
+        if (
+            candidate.get("pipeline") == "pandas"
+            and observation_path
+            and (manifest_path.parent / observation_path).resolve() == input_path
+        ):
+            source_manifest = candidate
+    raw_path = Path(
+        (source_manifest or {}).get("raw_dir") or raw_dir or default_raw_dir()
+    ).resolve()
     observations = read_silver_observations(input_path)
     features = build_rolling_features(observations, window_cycles=window_cycles)
     return RollingFeatureResult(
@@ -235,6 +256,9 @@ def run_rolling_feature_pipeline(
         input_sha256={input_path.name: _sha256(input_path)},
         source_path=str(input_path),
         window_cycles=window_cycles,
+        raw_dir=str(raw_path),
+        source_manifest_path=str(manifest_path) if source_manifest is not None else None,
+        protected_raw_dirs=(str(Path(raw_dir).resolve()),) if raw_dir is not None else (),
     )
 
 
@@ -256,20 +280,22 @@ def _json_safe(value: Any) -> Any:
 def write_rolling_feature_artifacts(
     result: RollingFeatureResult,
     output_dir: str | Path,
+    *,
+    raw_dir: str | Path | None = None,
 ) -> dict[str, Any]:
     """Ghi Gold rolling features và metadata M3.2."""
     output_path = Path(output_dir).resolve()
-    raw_path = Path("data/raw").resolve()
-    if output_path == raw_path or raw_path in output_path.parents:
-        raise ValueError("Feature output không được ghi vào data/raw để bảo vệ Bronze immutable")
-
-    gold_dir = output_path / "gold"
-    gold_dir.mkdir(parents=True, exist_ok=True)
+    raw_path = Path(result.raw_dir or raw_dir or default_raw_dir()).resolve()
+    protected_dirs = [raw_path, *(Path(path) for path in result.protected_raw_dirs)]
+    if raw_dir is not None:
+        protected_dirs.append(Path(raw_dir).resolve())
+    protected_files = [
+        Path(path) for path in (result.source_path, result.source_manifest_path) if path is not None
+    ]
     outputs = {
-        "gold_rolling_features": gold_dir / "rolling_features.parquet",
-        "run_info": output_path / "run_info.json",
+        "gold_rolling_features": Path("gold/rolling_features.parquet"),
+        "run_info": Path("run_info.json"),
     }
-    _write_parquet(result.features, outputs["gold_rolling_features"])
 
     feature_columns = list(ROLLING_FEATURE_COLUMNS[3:])
     payload: dict[str, Any] = {
@@ -277,6 +303,7 @@ def write_rolling_feature_artifacts(
         "pipeline": "pandas_rolling_features",
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
         "source_path": result.source_path,
+        "raw_dir": str(raw_path),
         "input_sha256": result.input_sha256,
         "window_cycles": result.window_cycles,
         "row_counts": result.row_counts,
@@ -297,7 +324,7 @@ def write_rolling_feature_artifacts(
             "joins_test_labels": False,
         },
         "outputs": {
-            name: str(path.relative_to(output_path))
+            name: str(path)
             for name, path in outputs.items()
             if name != "run_info"
         },
@@ -306,8 +333,13 @@ def write_rolling_feature_artifacts(
             "reason": "M3.2 chỉ tạo deterministic rolling features; scaler, feature selection và model fit thuộc mốc sau.",
         },
     }
-    outputs["run_info"].write_text(
-        json.dumps(payload, ensure_ascii=False, indent=2, default=_json_safe) + "\n",
-        encoding="utf-8",
-    )
+    with staged_artifact_bundle(
+        output_path, tuple(outputs.values()),
+        protected_dirs=protected_dirs, protected_files=protected_files,
+    ) as stage:
+        _write_parquet(result.features, stage / outputs["gold_rolling_features"])
+        (stage / outputs["run_info"]).write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2, default=_json_safe) + "\n",
+            encoding="utf-8",
+        )
     return payload

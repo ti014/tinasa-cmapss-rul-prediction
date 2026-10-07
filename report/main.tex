@@ -10,18 +10,18 @@
 \usepackage{listings}
 \usepackage{xurl}
 \usepackage[colorlinks=true,linkcolor=blue!45!black,citecolor=blue!45!black,urlcolor=blue!45!black]{hyperref}
-\hypersetup{pdftitle={Phân tích dữ liệu cảm biến, dự đoán RUL và cảnh báo sớm trên NASA C-MAPSS FD001--FD004},pdfauthor={}}
+\hypersetup{pdftitle={Phân tích dữ liệu cảm biến, dự đoán RUL và cảnh báo sớm trên NASA C-MAPSS FD001--FD004},pdfauthor={Phan Nguyễn Mai Phương -- 25002711}}
 \renewcommand{\contentsname}{Mục lục}
 \renewcommand{\listfigurename}{Danh mục hình}
 \renewcommand{\listtablename}{Danh mục bảng}
 \renewcommand{\figurename}{Hình}
 \renewcommand{\tablename}{Bảng}
 \renewcommand{\refname}{Tài liệu tham khảo}
-\newcommand{\reportdate}{28/09/2026}
+\newcommand{\reportdate}{07/10/2026}
 \newcommand{\filepath}[1]{\nolinkurl{#1}}
 \newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
 % Giữ bố cục học thuật nhưng đáp ứng giới hạn dưới 50 trang của báo cáo.
-\setstretch{1.25}
+\setstretch{1.18}
 \setlength{\parindent}{0.7cm}
 \setlength{\emergencystretch}{2em}
 \setlength{\headheight}{16pt}
@@ -76,7 +76,7 @@ Mã số học viên: & 25002711\\
 Ngành: & Khoa học máy tính
 \end{tabular}
 \vfill
-{\normalsize TP. Hồ Chí Minh, tháng 9 năm 2026\par}
+{\normalsize TP. Hồ Chí Minh, tháng 10 năm 2026\par}
 \end{titlepage}
 \hypersetup{pageanchor=true}
 \pagenumbering{roman}
@@ -88,29 +88,37 @@ C-MAPSS. Phân tích chính được thực hiện trên subset FD001; ba subset
 FD002--FD004 được dùng để kiểm tra khả năng chuyển miền của mô hình.
 
 Dữ liệu được kiểm tra schema và tính liên tục của cycle trước khi đi qua các
-lớp lưu trữ Bronze, Silver và Gold. Mỗi mẫu học là một trailing window 30
-cycles, được tóm tắt thành 126 đặc trưng. Ba mô hình (median baseline, Ridge và
-HistGradientBoosting) được so sánh bằng GroupKFold 5 fold theo động cơ; mô hình
-tốt nhất được huấn luyện lại trên toàn bộ train và đánh giá một lần trên 100
-động cơ test.
+lớp lưu trữ Bronze, Silver và Gold. Protocol lịch sử dùng trailing window 30
+cycles với 126 đặc trưng và chọn HistGradientBoosting (HGB126) bằng GroupKFold
+5 fold theo động cơ. Một alignment audit sau đó chấm lại HGB126 và HGB169 trên
+cùng 17.731 dòng, cùng khóa và cùng fold; HGB169 gồm 126 đặc trưng rolling,
+\texttt{cycle} và 42 đặc trưng lịch sử. Trên panel chung, HGB169 đạt MAE trung bình theo
+động cơ 17,0009 và RMSE 29,8068, so với 20,2143 và 33,6359 của HGB126.
 
-HistGradientBoosting đạt MAE 15,3490 cycles (khoảng tin cậy bootstrap 95\%:
-12,7286--18,0866), RMSE 20,5413 cycles và NASA score 1.513,2577. Khi chuyển dự
-đoán out-of-fold thành cảnh báo với ngưỡng $\mathrm{RUL}\leq30$ cycles, 44/100
-động cơ được cảnh báo trước ngưỡng, 7 đúng ngưỡng và 49 sau ngưỡng; thời gian
-báo trước có trung vị 30 cycles. Thử nghiệm nested cross-validation với window
-10/20/30, 24 cấu hình siêu tham số và ba phương án trọng số không tìm được cấu
-hình tốt hơn mô hình gốc theo tiêu chí đặt trước. Với window 10 cycles, mô hình
-huấn luyện trên FD001 có MAE 47,39--60,32 cycles khi áp dụng trực tiếp lên
-FD002--FD004, so với 21,93--28,33 cycles khi mỗi subset tự huấn luyện và đánh
-giá.
+HGB126 vẫn được giữ như baseline lịch sử với metric test tại điểm cắt: MAE
+15,3490 cycles (khoảng tin cậy bootstrap 95\%: 12,7286--18,0866), RMSE 20,5413
+cycles và NASA score 1.513,2577. Báo cáo không dùng metric test của HGB169 để
+chọn predictor; HGB169 chỉ được đối chiếu trên panel alignment đã lưu. Với cảnh báo, threshold 30
+cycles là sensitivity policy cố định: HGB126 có 51\% cảnh báo đúng thời điểm,
+còn HGB169 có 45\%; threshold 40 lần lượt là 94\% và 96\%. Đây là đánh giá
+nghiên cứu trên OOF, không phải policy bảo trì đã hiệu chuẩn.
+
+Thử nghiệm nested cross-validation với window 10/20/30, 24 cấu hình siêu tham
+số và ba phương án trọng số không tìm được cấu hình mới vượt bộ tiêu chí đã
+chốt; similarity-based RUL pilot cũng bị dừng sau khi thua HGB ở cả ba fold.
+Với window 10 cycles, mô hình huấn luyện trên FD001 có MAE 47,39--60,32 cycles
+khi áp dụng trực tiếp lên FD002--FD004, so với 21,93--28,33 cycles khi mỗi
+subset tự huấn luyện và đánh giá.
 
 Các phân tích phụ cho thấy 15/21 sensor thay đổi có ý nghĩa thống kê giữa đầu và
 cuối vòng đời sau hiệu chỉnh Benjamini--Hochberg; ARIMA trên Health Index có sai
 số dự báo thấp hơn hai baseline đơn giản trên 10 động cơ được chọn trước; ETL
-bằng Pandas và PySpark cho kết quả trùng khớp. Các kết quả chỉ áp dụng cho dữ
-liệu mô phỏng C-MAPSS. Dữ liệu không có chi phí bảo trì hay quy đổi cycle sang
-thời gian thực, nên báo cáo không đề xuất lịch bảo trì.
+bằng Pandas và PySpark cho kết quả trùng khớp. Ở khía cạnh Big Data, báo cáo
+chứng minh một pipeline batch có tổ chức, có kiểm tra tính đúng và có thể chuyển
+phần ETL sang Spark; dữ liệu hiện tại vẫn vừa một máy và Spark chỉ chạy local,
+nên không tuyên bố đã kiểm chứng trên cluster phân tán. Các kết quả chỉ áp dụng
+cho dữ liệu mô phỏng C-MAPSS. Dữ liệu không có chi phí bảo trì hay quy đổi cycle
+sang thời gian thực, nên báo cáo không đề xuất lịch bảo trì.
 
 \noindent\textbf{Từ khóa:} NASA C-MAPSS; RUL; bảo trì dự đoán; trailing window;
 GroupKFold; ETL; PySpark; Health Index; ARIMA.
@@ -144,5 +152,8 @@ GroupKFold; ETL; PySpark; Health Index; ARIMA.
 \phantomsection
 \addcontentsline{toc}{section}{Tài liệu tham khảo}
 \bibliographystyle{plainurl}
+\begin{spacing}{0.90}
+\scriptsize
 \bibliography{../references/bibliography}
+\end{spacing}
 \end{document}

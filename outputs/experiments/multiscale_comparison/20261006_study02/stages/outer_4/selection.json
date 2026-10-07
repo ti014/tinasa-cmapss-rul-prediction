@@ -1,0 +1,151 @@
+{
+  "outer_fold": 4,
+  "arms": {
+    "hgb_baseline169": {
+      "policy": {
+        "threshold": 40,
+        "persistence": 3
+      },
+      "inner_metrics": {
+        "procedure": "hgb_baseline169",
+        "endpoint_n_rows": 240,
+        "endpoint_n_engines": 80,
+        "endpoint_mean_window_mae": 10.97505238178305,
+        "endpoint_mean_engine_mae": 10.97505238178305,
+        "endpoint_rmse": 16.57501052964066,
+        "endpoint_nasa_score": 2354.5240656456062,
+        "endpoint_mean_engine_nasa": 9.810516940190027,
+        "trajectory_n_rows": 14186,
+        "trajectory_n_engines": 80,
+        "trajectory_mean_window_mae": 18.69888522304451,
+        "trajectory_mean_engine_mae": 17.500277749972263,
+        "trajectory_rmse": 29.736221791887168,
+        "trajectory_nasa_score": 10321370.3632514,
+        "trajectory_mean_engine_nasa": 424.8697332109672,
+        "on_time_rate": 0.9,
+        "on_time_count": 72,
+        "late_or_missed_rate": 0.1,
+        "missed_warning_count": 0,
+        "early_alarm_burden": 0.038283764670632825,
+        "mean_transitions": 1.15,
+        "mean_retractions": 0.075,
+        "engines_with_retractions": 5,
+        "median_lead_time": 35.0,
+        "min_lead_time": 24.0,
+        "max_lead_time": 52.0,
+        "n_engines": 80,
+        "numeric_controls_met": true,
+        "policy_threshold": 40,
+        "policy_persistence": 3
+      }
+    },
+    "hgb_multiscale10_30": {
+      "policy": {
+        "threshold": 40,
+        "persistence": 3
+      },
+      "inner_metrics": {
+        "procedure": "hgb_multiscale10_30",
+        "endpoint_n_rows": 240,
+        "endpoint_n_engines": 80,
+        "endpoint_mean_window_mae": 10.85110142813794,
+        "endpoint_mean_engine_mae": 10.85110142813794,
+        "endpoint_rmse": 16.663785247993804,
+        "endpoint_nasa_score": 2961.921520166892,
+        "endpoint_mean_engine_nasa": 12.341339667362055,
+        "trajectory_n_rows": 14186,
+        "trajectory_n_engines": 80,
+        "trajectory_mean_window_mae": 18.54433096064508,
+        "trajectory_mean_engine_mae": 17.44181021491331,
+        "trajectory_rmse": 29.591212155016823,
+        "trajectory_nasa_score": 10371726.414269261,
+        "trajectory_mean_engine_nasa": 433.3243776097387,
+        "on_time_rate": 0.9125,
+        "on_time_count": 73,
+        "late_or_missed_rate": 0.0875,
+        "missed_warning_count": 0,
+        "early_alarm_burden": 0.04050929683328464,
+        "mean_transitions": 1.275,
+        "mean_retractions": 0.1375,
+        "engines_with_retractions": 10,
+        "median_lead_time": 35.5,
+        "min_lead_time": 24.0,
+        "max_lead_time": 49.0,
+        "n_engines": 80,
+        "numeric_controls_met": true,
+        "policy_threshold": 40,
+        "policy_persistence": 3
+      }
+    },
+    "hgb_initial_profile42": {
+      "policy": {
+        "threshold": 40,
+        "persistence": 1
+      },
+      "inner_metrics": {
+        "procedure": "hgb_initial_profile42",
+        "endpoint_n_rows": 240,
+        "endpoint_n_engines": 80,
+        "endpoint_mean_window_mae": 11.965484720056736,
+        "endpoint_mean_engine_mae": 11.965484720056734,
+        "endpoint_rmse": 18.38848476652043,
+        "endpoint_nasa_score": 11661.495662880448,
+        "endpoint_mean_engine_nasa": 48.58956526200185,
+        "trajectory_n_rows": 14186,
+        "trajectory_n_engines": 80,
+        "trajectory_mean_window_mae": 19.375657409883146,
+        "trajectory_mean_engine_mae": 17.77086874255587,
+        "trajectory_rmse": 30.785520515742228,
+        "trajectory_nasa_score": 15975975.890947064,
+        "trajectory_mean_engine_nasa": 795.833045848417,
+        "on_time_rate": 0.9375,
+        "on_time_count": 75,
+        "late_or_missed_rate": 0.0625,
+        "missed_warning_count": 0,
+        "early_alarm_burden": 0.052055252591778255,
+        "mean_transitions": 1.45,
+        "mean_retractions": 0.225,
+        "engines_with_retractions": 16,
+        "median_lead_time": 37.0,
+        "min_lead_time": 25.0,
+        "max_lead_time": 63.0,
+        "n_engines": 80,
+        "numeric_controls_met": true,
+        "policy_threshold": 40,
+        "policy_persistence": 1
+      }
+    },
+    "selected_pipeline": {
+      "arm": "hgb_baseline169"
+    }
+  },
+  "procedure": {
+    "procedure_id": "hgb_baseline169",
+    "selected_procedure_id": "hgb_baseline169",
+    "baseline_procedure_id": "hgb_baseline169",
+    "fallback_used": true,
+    "arm_controls": {
+      "hgb_baseline169": {
+        "endpoint_controls_met": true,
+        "warning_controls_met": true,
+        "trajectory_improves": false,
+        "eligible": false
+      },
+      "hgb_multiscale10_30": {
+        "endpoint_controls_met": false,
+        "warning_controls_met": false,
+        "trajectory_improves": true,
+        "eligible": false
+      },
+      "hgb_initial_profile42": {
+        "endpoint_controls_met": false,
+        "warning_controls_met": false,
+        "trajectory_improves": false,
+        "eligible": false
+      }
+    },
+    "rule": "inner grouped OOF only; candidate requires strict trajectory RMSE improvement and endpoint MAE/NASA, calibrated on-time and early alarm burden no worse than hgb_baseline169; ties by trajectory RMSE, endpoint MAE, then arm ID; otherwise baseline fallback"
+  },
+  "test_labels_read": false,
+  "source_identity": "87452cb02c68dbead9a98b76eb98bcdd05ac1518b9c8d7ba9214d8357f1f7942"
+}

@@ -1,0 +1,119 @@
+{
+  "dataset_id": "FD001",
+  "selected_final": {
+    "name": "cap_none_history_1",
+    "window": 30,
+    "target_cap": null,
+    "history": true,
+    "settings": false,
+    "normalize_conditions": false
+  },
+  "outer_choices": [
+    {
+      "outer_fold": 1,
+      "name": "baseline",
+      "window": 30,
+      "target_cap": null,
+      "history": false,
+      "settings": false,
+      "normalize_conditions": false
+    },
+    {
+      "outer_fold": 2,
+      "name": "cap_110_history_1",
+      "window": 30,
+      "target_cap": 110,
+      "history": true,
+      "settings": false,
+      "normalize_conditions": false
+    },
+    {
+      "outer_fold": 3,
+      "name": "baseline",
+      "window": 30,
+      "target_cap": null,
+      "history": false,
+      "settings": false,
+      "normalize_conditions": false
+    },
+    {
+      "outer_fold": 4,
+      "name": "cap_110_history_1",
+      "window": 30,
+      "target_cap": 110,
+      "history": true,
+      "settings": false,
+      "normalize_conditions": false
+    },
+    {
+      "outer_fold": 5,
+      "name": "baseline",
+      "window": 30,
+      "target_cap": null,
+      "history": false,
+      "settings": false,
+      "normalize_conditions": false
+    }
+  ],
+  "n_features": 168,
+  "config": {
+    "outer_splits": 5,
+    "inner_splits": 3,
+    "seed": 42,
+    "bootstrap_resamples": 10000,
+    "fit_threads": 4,
+    "max_iter": 200
+  },
+  "identity": "cf9e56fcf52ba14eeed65d4b8ef33bbd5ec78a570caed71034056a6e6dcf44c9",
+  "test_label_joined": true,
+  "saved_model_predictions_match": true,
+  "python": "3.12.14",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "selection_protocol": "nested GroupKFold by engine; preprocessing fitted inside every training fold",
+  "test_label_join": {
+    "status": "completed_after_final_predictions",
+    "test_label_sha256": "a19c8ec94931949d0485bdc35118206e9c81c4547b422efb9cf86f4ceddbceca",
+    "final_metrics": {
+      "n_rows": 100,
+      "n_engines": 100,
+      "mean_window_mae": 13.046015524600907,
+      "mean_engine_mae": 13.046015524600907,
+      "rmse": 19.3132656976798,
+      "nasa_score": 2605.2798065429615
+    },
+    "bootstrap": {
+      "resamples": 10000,
+      "seed": 42,
+      "method": "engine_cluster_resampling_with_replacement; mean_engine_mae preserves duplicate engine draws",
+      "intervals": {
+        "mean_engine_mae": {
+          "ci_lower": 10.368741791845872,
+          "ci_upper": 15.925689520760539
+        },
+        "rmse": {
+          "ci_lower": 15.358967375665845,
+          "ci_upper": 23.197388706436776
+        },
+        "nasa_score": {
+          "ci_lower": 601.6821336790588,
+          "ci_upper": 5452.002961505362
+        }
+      }
+    }
+  },
+  "outputs": {
+    "final_evaluation": "predictions\\final_evaluation.parquet",
+    "final_metrics": "tables\\final_metrics.json",
+    "final_true_vs_predicted": "figures\\final_true_vs_predicted.png",
+    "final_residuals_by_rul": "figures\\final_residuals_by_rul.png"
+  },
+  "test_metrics": {
+    "n_rows": 100,
+    "n_engines": 100,
+    "mean_window_mae": 13.046015524600907,
+    "mean_engine_mae": 13.046015524600907,
+    "rmse": 19.3132656976798,
+    "nasa_score": 2605.2798065429615
+  },
+  "seconds": 170.8358547000098
+}

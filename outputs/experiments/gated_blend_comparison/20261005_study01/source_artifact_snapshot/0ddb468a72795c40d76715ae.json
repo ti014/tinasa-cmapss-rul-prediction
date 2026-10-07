@@ -1,0 +1,20 @@
+{
+  "hgb_cap125/fold_1": "fit_cache/469f422f03a73df742d7fdb8dc691591da07f8a3a2e6a9839b55e6a60f6f7db4.parquet",
+  "hgb_cap125/fold_2": "fit_cache/7b74e1c1a94e6e21f9eb7558d4854ab34537d0b86a1b7a80bab7245fabb5129a.parquet",
+  "hgb_cap125/fold_3": "fit_cache/a2324c44cda1dda335c950227c632a8cf6b77ac0d0beb08a6256e2212d4cbf9d.parquet",
+  "hgb_uncapped/fold_1": "fit_cache/e1285fa0e9ce11c9d5d7bda77cd9b6aec47719064a4c81433931206bfae2cb8b.parquet",
+  "hgb_uncapped/fold_2": "fit_cache/04724e05ed5cf649ad53abda46f3ed2a48424c4123e964335c05fbf674f81193.parquet",
+  "hgb_uncapped/fold_3": "fit_cache/48dcd7d51a93fc16b74024b48719724c0f521b332fed983e23d50fcc60b0b838.parquet",
+  "lgbm_cap125_leaves31_lr0.05_l20/fold_1": "fit_cache/53a3a1c9046fbc174e56f673e5e5ad9d7c0a4dc81d287d1767f09f11d145786b.parquet",
+  "lgbm_cap125_leaves31_lr0.05_l20/fold_2": "fit_cache/0d6e6660c8d1934d993304dc579be6efba24076d25bcfcaff5e1e0332c7f293c.parquet",
+  "lgbm_cap125_leaves31_lr0.05_l20/fold_3": "fit_cache/4de83e307c4cec6fc8df99d462909f9219a3fb0702405537e6df119296fc58fd.parquet",
+  "lgbm_cap125_leaves31_lr0.05_l210/fold_1": "fit_cache/5d1d18d243c24b16dd768d50f554f21a8ec621bf41f7dd0c6275be4fc311bbc4.parquet",
+  "lgbm_cap125_leaves31_lr0.05_l210/fold_2": "fit_cache/4178dbf5d4babd7cf6e1b509be74a6b0e3ccca5d476840525ac6aaa9d0ffbbe4.parquet",
+  "lgbm_cap125_leaves31_lr0.05_l210/fold_3": "fit_cache/dcf7c3e9a57fbb05b079afc6d35ad2782ed0da2dd22d5aaf30cb072fd0f119ac.parquet",
+  "lgbm_uncapped_leaves31_lr0.05_l20/fold_1": "fit_cache/2a81216241a10b44c893cbbe314124eccff4b411e670223ddeee57f2d3c32802.parquet",
+  "lgbm_uncapped_leaves31_lr0.05_l20/fold_2": "fit_cache/913ebde1bf9537253c5fa62ac133be993840170f3d0cd9ae7423e51df5fe9db8.parquet",
+  "lgbm_uncapped_leaves31_lr0.05_l20/fold_3": "fit_cache/942adfcae085333c5d44aeb540fd89367c3eaef69e52928953c4edaa492d2c39.parquet",
+  "lgbm_uncapped_leaves31_lr0.05_l210/fold_1": "fit_cache/7ba0a6a8336296aeff1cbab4fb733c9743916a7a164adf338342d8427264f73b.parquet",
+  "lgbm_uncapped_leaves31_lr0.05_l210/fold_2": "fit_cache/45943a1faae7759ba412310fd03a8c8f8b5cf3991e16fd951742d1ad8af9e220.parquet",
+  "lgbm_uncapped_leaves31_lr0.05_l210/fold_3": "fit_cache/5745acbd41c3ece91dfd7d909ee34d8bbc67e30c494b066e1fdf2bdcd9f8b9b5.parquet"
+}

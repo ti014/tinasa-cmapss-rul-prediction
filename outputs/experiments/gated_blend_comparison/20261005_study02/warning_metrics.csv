@@ -1,0 +1,5 @@
+procedure,on_time_rate,on_time_count,late_or_missed_rate,missed_warning_count,early_alarm_burden,mean_transitions,mean_retractions,engines_with_retractions,median_lead_time,min_lead_time,max_lead_time,n_engines
+gated_blend,0.96,96,0.04,0,0.05386986619864156,1.76,0.38,32,38.0,28.0,68.0,100
+hgb_cap125,0.94,94,0.06,0,0.05500275058075304,1.96,0.48,37,38.0,28.0,63.0,100
+hgb_uncapped,0.94,94,0.06,0,0.05215879218132075,1.74,0.37,30,37.0,25.0,68.0,100
+selected_pipeline,0.94,94,0.06,0,0.052043434270864136,1.74,0.37,31,37.0,25.0,68.0,100

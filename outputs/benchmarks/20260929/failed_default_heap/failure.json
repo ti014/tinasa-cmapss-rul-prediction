@@ -1,0 +1,1 @@
+{"status":"failed","stage":"Spark 10x repetition 1, Arrow export","error":"java.lang.OutOfMemoryError: Java heap space","heap":"default, not explicitly configured","included_in_final_summary":false}

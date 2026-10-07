@@ -1,0 +1,75 @@
+{
+  "status": "complete",
+  "author": "Phan Nguy\u1ec5n Mai Ph\u01b0\u01a1ng",
+  "student_id": "25002711",
+  "scales": [
+    1,
+    10
+  ],
+  "repetitions": 3,
+  "parity": {
+    "1": {
+      "features": {
+        "rows": 27927,
+        "columns": 129,
+        "all_cells_match": true
+      },
+      "summary": {
+        "rows": 200,
+        "columns": 5,
+        "all_cells_match": true
+      }
+    },
+    "2": {
+      "features": {
+        "rows": 27927,
+        "columns": 129,
+        "all_cells_match": true
+      },
+      "summary": {
+        "rows": 200,
+        "columns": 5,
+        "all_cells_match": true
+      }
+    },
+    "3": {
+      "features": {
+        "rows": 27927,
+        "columns": 129,
+        "all_cells_match": true
+      },
+      "summary": {
+        "rows": 200,
+        "columns": 5,
+        "all_cells_match": true
+      }
+    }
+  },
+  "python": "3.12.14",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "cpu_logical": 22,
+  "ram_bytes": 25092706304,
+  "spark_master": "local[4]",
+  "spark_partitions": 4,
+  "window": 30,
+  "spark_driver_memory": "4g",
+  "spark_executor_memory": "4g",
+  "rss_sampling_seconds": 0.05,
+  "os_cache_cleared": false,
+  "parquet_writer": "PyArrow on driver; Spark write_seconds includes toArrow collection",
+  "scope": "local replicated data; no distributed-cluster throughput claim",
+  "source_sha256": "9e031b0d6430512fbce9af344b3110aeeb17429d44f394f28e370130d13560f8",
+  "versions": {
+    "pandas": "2.3.3",
+    "numpy": "2.3.3",
+    "pyarrow": "23.0.1",
+    "pyspark": "4.0.1",
+    "psutil": "7.2.2"
+  },
+  "source_code_sha256": {
+    "scalability.py": "31900f9a06c1e3290e9c783f03a64eaae01c51d406bf826319e62e57a0e06399",
+    "rolling_spark.py": "078ee55ab35879fd6a38d136f530d30326762c99dfaf80420be94ae579baf02d",
+    "benchmark.py": "99bc568e3bbb11aceed4fb1167f91cf0fc140df76ab96c6afebe9454b80db3c5",
+    "pandas_pipeline.py": "8836a7a4b5b8885f54429896ee98692e4664829c9b35c9b19b0aad61a4a3cca6"
+  }
+}

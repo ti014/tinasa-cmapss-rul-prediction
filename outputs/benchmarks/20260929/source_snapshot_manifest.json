@@ -1,0 +1,23 @@
+{
+  "identity": {
+    "source_sha256": {
+      "src/cmapss/etl/scalability.py": "31900f9a06c1e3290e9c783f03a64eaae01c51d406bf826319e62e57a0e06399",
+      "src/cmapss/etl/rolling_spark.py": "078ee55ab35879fd6a38d136f530d30326762c99dfaf80420be94ae579baf02d",
+      "src/cmapss/etl/benchmark.py": "99bc568e3bbb11aceed4fb1167f91cf0fc140df76ab96c6afebe9454b80db3c5",
+      "src/cmapss/etl/pandas_pipeline.py": "8836a7a4b5b8885f54429896ee98692e4664829c9b35c9b19b0aad61a4a3cca6",
+      "src/cmapss/data/__init__.py": "c7791dfb10a988c02c2bf2875bcbd7293874b2ae4a23425d8dfa9b2ab9b8e93c",
+      "src/cmapss/data/contracts.py": "ff335fa5a5a7d11e28721ec0f7b6b7d78ab75b0e925401eddb94492674f61705",
+      "src/cmapss/data/readers.py": "571ff8d527aeafbaf0bb1f6970f4c609235c79ff2cf5f3eff437e3c6bc4c09cf",
+      "src/cmapss/data/targets.py": "ede1c56e261a47022acbbdd1dd0d3c5e192e36a45064422ccdbfb5d879e74e51",
+      "src/cmapss/data/validation.py": "d5b95241dfd7439f52a1508b9ae02c93d21ad14e503daaf10a3437269ec75e35",
+      "src/cmapss/features/__init__.py": "74070c92284812a3be177f8cc0d2320581892071faf6ffcee86fa601c6b7e936",
+      "src/cmapss/features/__main__.py": "c21f2c627798a812a130d723f72a5ff1873d996ead521b40470832fc7a5ffb83",
+      "src/cmapss/features/cli.py": "734d4d621a105b5a8d19d3e327af199fb93da61d43c12df42e789ece89f8d89c",
+      "src/cmapss/features/contracts.py": "b014e00c8233f9590c1208237000d763919fab369716c4b7b30b43e749006a17",
+      "src/cmapss/features/enhanced.py": "6782d3e6f98026f3cab3dca15e2edd7e1c5710825d62be5fcf877bdd5fd894ce",
+      "src/cmapss/features/rolling.py": "f14e1d2aee2ac3c8eb376ddf006af21f751a97f1ada6aa3f77a79dd61394b752"
+    },
+    "dependencies_sha256": "7cb230748abda6fa1555c91c19f23ea448c884c91794d47bdf00d74e6fa4d9ce"
+  },
+  "scope": "Four benchmark source hashes recorded by runner; transitive data/features hashes verified against the earlier frozen study; archived after measurement."
+}

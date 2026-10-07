@@ -1,0 +1,13 @@
+{
+  "status": "completed",
+  "scope": "final-inner subset replay, not full outer study or promotion",
+  "source_commit": "919450a2e773f030f1e943dbe952814b0c337f30",
+  "reference_linux_run": "20261005_full0750",
+  "selected_within_subset": "hgb_cap125_history",
+  "fresh_cv_fits": 9,
+  "test_labels_read": false,
+  "python_executable": "D:\\IUH\\BigData\\Final_Project\\.venv\\Scripts\\python.exe",
+  "module_source": "C:\\Users\\timewo\\.codex\\worktrees\\windows-linux-rul-replay\\Final_Project\\src\\cmapss\\modeling\\audit_study.py",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "elapsed_seconds": 80.16865039998083
+}

@@ -1,0 +1,114 @@
+{
+  "source_sha256": {
+    "src/cmapss/__init__.py": {
+      "matches": true,
+      "actual": "f05d1ad25e1739b47a4e8a759692ba0cbc771b2b8c5345b4644c5d1ebc5cc939",
+      "expected": "f05d1ad25e1739b47a4e8a759692ba0cbc771b2b8c5345b4644c5d1ebc5cc939"
+    },
+    "src/cmapss/data/__init__.py": {
+      "matches": true,
+      "actual": "064bdab3bf8b73c02dd976f7b0a325c8a06fa872dec5b33baf2ac4ae8832d714",
+      "expected": "064bdab3bf8b73c02dd976f7b0a325c8a06fa872dec5b33baf2ac4ae8832d714"
+    },
+    "src/cmapss/data/contracts.py": {
+      "matches": true,
+      "actual": "ff335fa5a5a7d11e28721ec0f7b6b7d78ab75b0e925401eddb94492674f61705",
+      "expected": "ff335fa5a5a7d11e28721ec0f7b6b7d78ab75b0e925401eddb94492674f61705"
+    },
+    "src/cmapss/data/readers.py": {
+      "matches": true,
+      "actual": "93cdfbbe312976bbf30a3e899705542f0d1403dc154ede51a1539ad7bc795487",
+      "expected": "93cdfbbe312976bbf30a3e899705542f0d1403dc154ede51a1539ad7bc795487"
+    },
+    "src/cmapss/data/targets.py": {
+      "matches": true,
+      "actual": "b07b0c76372abed17fc9a0bf78b2b4ab46aaead224d39cdb67074483c4a2c256",
+      "expected": "b07b0c76372abed17fc9a0bf78b2b4ab46aaead224d39cdb67074483c4a2c256"
+    },
+    "src/cmapss/data/validation.py": {
+      "matches": true,
+      "actual": "a296d6f9b6fdbcca565a50479f73a2145e4dd0efe0366f7f3a6f1be3181884df",
+      "expected": "a296d6f9b6fdbcca565a50479f73a2145e4dd0efe0366f7f3a6f1be3181884df"
+    },
+    "src/cmapss/features/__init__.py": {
+      "matches": true,
+      "actual": "37780d4c053834462a6e2bb55cae4187ada7833d9211ee69192d810654cffc99",
+      "expected": "37780d4c053834462a6e2bb55cae4187ada7833d9211ee69192d810654cffc99"
+    },
+    "src/cmapss/features/contracts.py": {
+      "matches": true,
+      "actual": "79e583992b8f16a9907192b8479d41b4f2d570897b81680b4e186becb28cede4",
+      "expected": "79e583992b8f16a9907192b8479d41b4f2d570897b81680b4e186becb28cede4"
+    },
+    "src/cmapss/features/rolling.py": {
+      "matches": true,
+      "actual": "6e263ece9495138954e54836a3971c755d3032a399cb9743b2bbe8aa93523c44",
+      "expected": "6e263ece9495138954e54836a3971c755d3032a399cb9743b2bbe8aa93523c44"
+    },
+    "src/cmapss/modeling/__init__.py": {
+      "matches": true,
+      "actual": "14a810d3ce0b023853685bc8f72bf4ca1f0943320c2b0a091d4fa8dbd7243e12",
+      "expected": "14a810d3ce0b023853685bc8f72bf4ca1f0943320c2b0a091d4fa8dbd7243e12"
+    },
+    "src/cmapss/modeling/metrics.py": {
+      "matches": true,
+      "actual": "f4ac5ff28667bc3343cf63a7866a6895d897a17f8ed9f445cf53de39215cc817",
+      "expected": "f4ac5ff28667bc3343cf63a7866a6895d897a17f8ed9f445cf53de39215cc817"
+    },
+    "src/cmapss/modeling/audit_study.py": {
+      "matches": true,
+      "actual": "7bfeedce2736a396b7ab404912107ffd506e9324550b308889249784eca419ba",
+      "expected": "7bfeedce2736a396b7ab404912107ffd506e9324550b308889249784eca419ba"
+    }
+  },
+  "inputs_sha256": {
+    "outputs/etl/silver/observations.parquet": {
+      "matches": true,
+      "actual": "9e031b0d6430512fbce9af344b3110aeeb17429d44f394f28e370130d13560f8",
+      "expected": "9e031b0d6430512fbce9af344b3110aeeb17429d44f394f28e370130d13560f8"
+    },
+    "outputs/etl/silver/train_targets.parquet": {
+      "matches": true,
+      "actual": "51da68e3be2b379e71c29cd7ac6ea34834722b372373dee2e36a04b63cf61905",
+      "expected": "51da68e3be2b379e71c29cd7ac6ea34834722b372373dee2e36a04b63cf61905"
+    }
+  },
+  "baseline_sha256": {
+    "outputs/modeling/models/selected_model.joblib": {
+      "matches": true,
+      "actual": "ff45d0f283b5b6665353b8412b72ca4866e3359a8655f95abe79da8bd67fca72",
+      "expected": "ff45d0f283b5b6665353b8412b72ca4866e3359a8655f95abe79da8bd67fca72"
+    },
+    "outputs/modeling/predictions/oof_predictions.parquet": {
+      "matches": true,
+      "actual": "c9952e7833b1b49f9877203bf4e1e40407f3e732e2238cf25556e8e216c2828d",
+      "expected": "c9952e7833b1b49f9877203bf4e1e40407f3e732e2238cf25556e8e216c2828d"
+    },
+    "outputs/modeling/predictions/final_evaluation.parquet": {
+      "matches": true,
+      "actual": "1f9d9bcb2f27c2634b0b4b59b59265361100f3289c274d33980352ddb07ee4d6",
+      "expected": "1f9d9bcb2f27c2634b0b4b59b59265361100f3289c274d33980352ddb07ee4d6"
+    },
+    "outputs/modeling/tables/fold_assignments.csv": {
+      "matches": true,
+      "actual": "1d6615cc85576dbcc71d8efc73cf6b32fc95ab1a8fb5e8e1a856ac24a1bb0d11",
+      "expected": "1d6615cc85576dbcc71d8efc73cf6b32fc95ab1a8fb5e8e1a856ac24a1bb0d11"
+    },
+    "outputs/modeling/tables/final_metrics.json": {
+      "matches": true,
+      "actual": "0ebe5ec1d026de41e7b09be3084b704c3c7ed133715e27a632e1df1101cc77e7",
+      "expected": "0ebe5ec1d026de41e7b09be3084b704c3c7ed133715e27a632e1df1101cc77e7"
+    }
+  },
+  "dependency_lock_matches": true,
+  "versions": {
+    "python": "3.12.14",
+    "sklearn": "1.9.1",
+    "numpy": "2.3.3",
+    "pandas": "2.3.3",
+    "joblib": "1.6.0"
+  },
+  "versions_match": true,
+  "package_source": "C:\\Users\\timewo\\.codex\\worktrees\\windows-linux-rul-replay\\Final_Project\\src\\cmapss\\modeling\\audit_study.py",
+  "passed": true
+}

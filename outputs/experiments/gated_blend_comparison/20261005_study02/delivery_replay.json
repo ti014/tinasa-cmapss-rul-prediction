@@ -1,0 +1,37 @@
+{
+  "author": {
+    "full_name": "Phan Nguyễn Mai Phương",
+    "student_id": "25002711"
+  },
+  "created_at_utc": "2026-10-05T10:35:03.964308+00:00",
+  "final_predictions_sha256": "6ea14cfd8e0047cf956c9d491674f2762cb46ab5f923f021022a1703bf5eb8be",
+  "frozen_test_features_sha256": "a2471638034b4fd381f7062b323b217ff6c5c5b61e533e619777c3d2e916c23f",
+  "imported_inference": "D:\\IUH\\BigData\\Final_Project\\src\\cmapss\\modeling\\gated_blend\\inference.py",
+  "model_fit_performed": false,
+  "procedures": {
+    "gated_blend": {
+      "exact": true,
+      "max_abs_delta": 0.0,
+      "n_rows": 100
+    },
+    "hgb_cap125": {
+      "exact": true,
+      "max_abs_delta": 0.0,
+      "n_rows": 100
+    },
+    "hgb_uncapped": {
+      "exact": true,
+      "max_abs_delta": 0.0,
+      "n_rows": 100
+    },
+    "selected_pipeline": {
+      "exact": true,
+      "max_abs_delta": 0.0,
+      "n_rows": 100
+    }
+  },
+  "raw_test_labels_read": false,
+  "repo_root": "D:/IUH/BigData/Final_Project",
+  "source_identity": "35c5ca253b77062f4f6065d0ef90b3c4a143fa7e5c256e2305ecc4afe7230d77",
+  "status": "passed"
+}

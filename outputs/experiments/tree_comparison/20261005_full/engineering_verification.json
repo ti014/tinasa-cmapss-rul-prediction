@@ -1,0 +1,22 @@
+{
+  "focused_tests_passed": 19,
+  "upstream_deprecation_warnings": 14,
+  "smoke_run": "20261005_smoke02",
+  "smoke_initial_seconds": 77.65918980000424,
+  "resume_seconds": 18.965241400001105,
+  "resumed_hash_checks": 77,
+  "resumed_artifacts_changed": [],
+  "cached_cv_fits": 36,
+  "final_models": 4,
+  "test_evaluated_after_freeze": true,
+  "scientific_promotion_disabled_for_smoke": true,
+  "source_identity": "352ac483682c8074ef164168b9c32839d6488e721d67a11c73a7e294794a9c2a",
+  "primary_focused_tests_passed": 19,
+  "primary_test_runtime_environment": "C:\\Users\\timewo\\.codex\\worktrees\\windows-linux-rul-replay\\Final_Project\\.venv-xgb",
+  "primary_pytest_collection_ignores": [
+    "rules",
+    "skills",
+    "vendor_imports"
+  ],
+  "verification_rechecked_for_source_hash": true
+}

@@ -1,0 +1,248 @@
+{
+  "arms": {
+    "hgb_cap125": {
+      "candidate_id": "hgb_cap125",
+      "inner_metrics": {
+        "candidate_id": "hgb_cap125",
+        "early_alarm_burden": 0.05736580158043161,
+        "endpoint_mean_engine_mae": 11.18271154559911,
+        "endpoint_mean_engine_nasa": 6.319817744585241,
+        "endpoint_mean_window_mae": 11.18271154559911,
+        "endpoint_n_engines": 80,
+        "endpoint_n_rows": 240,
+        "endpoint_nasa_score": 1516.7562587004577,
+        "endpoint_rmse": 16.203158399664837,
+        "engines_with_retractions": 20,
+        "late_or_missed_rate": 0.075,
+        "max_lead_time": 62.0,
+        "mean_retractions": 0.3625,
+        "mean_transitions": 1.725,
+        "median_lead_time": 39.0,
+        "min_lead_time": 27.0,
+        "missed_warning_count": 0,
+        "n_engines": 80,
+        "numeric_controls_met": true,
+        "on_time_count": 74,
+        "on_time_rate": 0.925,
+        "procedure": "hgb_cap125",
+        "trajectory_mean_engine_mae": 19.376115474844227,
+        "trajectory_mean_engine_nasa": 6011.967963003175,
+        "trajectory_mean_window_mae": 22.26350931790578,
+        "trajectory_n_engines": 80,
+        "trajectory_n_rows": 14178,
+        "trajectory_nasa_score": 156686587.18129274,
+        "trajectory_rmse": 37.007381172180544
+      },
+      "numeric_controls_met": true,
+      "policy": {
+        "persistence": 1,
+        "threshold": 40
+      },
+      "rule": "fixed HGB reference",
+      "spec": {
+        "candidate_id": "hgb_cap125",
+        "family": "hgb_cap125",
+        "learning_rate": 0.05,
+        "max_depth": null,
+        "min_child_weight_nominal": 0.001,
+        "model_kind": "hgb",
+        "num_leaves": 31,
+        "reg_lambda_nominal": 0.0,
+        "target_cap": 125
+      }
+    },
+    "hgb_uncapped": {
+      "candidate_id": "hgb_uncapped",
+      "inner_metrics": {
+        "candidate_id": "hgb_uncapped",
+        "early_alarm_burden": 0.054587716770136185,
+        "endpoint_mean_engine_mae": 12.328602938562348,
+        "endpoint_mean_engine_nasa": 18.138903640974366,
+        "endpoint_mean_window_mae": 12.328602938562346,
+        "endpoint_n_engines": 80,
+        "endpoint_n_rows": 240,
+        "endpoint_nasa_score": 4353.336873833849,
+        "endpoint_rmse": 18.42609339505339,
+        "engines_with_retractions": 25,
+        "late_or_missed_rate": 0.0375,
+        "max_lead_time": 68.0,
+        "mean_retractions": 0.4625,
+        "mean_transitions": 1.925,
+        "median_lead_time": 39.0,
+        "min_lead_time": 24.0,
+        "missed_warning_count": 0,
+        "n_engines": 80,
+        "numeric_controls_met": true,
+        "on_time_count": 77,
+        "on_time_rate": 0.9625,
+        "procedure": "hgb_uncapped",
+        "trajectory_mean_engine_mae": 19.31568220952517,
+        "trajectory_mean_engine_nasa": 1026.5594727551766,
+        "trajectory_mean_window_mae": 19.93327490094414,
+        "trajectory_n_engines": 80,
+        "trajectory_n_rows": 14178,
+        "trajectory_nasa_score": 21354738.67713061,
+        "trajectory_rmse": 31.62827562359712
+      },
+      "numeric_controls_met": true,
+      "policy": {
+        "persistence": 1,
+        "threshold": 40
+      },
+      "rule": "fixed HGB reference",
+      "spec": {
+        "candidate_id": "hgb_uncapped",
+        "family": "hgb_uncapped",
+        "learning_rate": 0.05,
+        "max_depth": null,
+        "min_child_weight_nominal": 0.001,
+        "model_kind": "hgb",
+        "num_leaves": 31,
+        "reg_lambda_nominal": 0.0,
+        "target_cap": null
+      }
+    },
+    "lgbm_cap125": {
+      "candidate_id": "lgbm_cap125_leaves31_lr0.05_l210",
+      "family": "lgbm_cap125",
+      "inner_metrics": {
+        "candidate_id": "lgbm_cap125_leaves31_lr0.05_l210",
+        "early_alarm_burden": 0.057948183490622654,
+        "endpoint_mean_engine_mae": 11.194536814107725,
+        "endpoint_mean_engine_nasa": 5.902836517401051,
+        "endpoint_mean_window_mae": 11.194536814107725,
+        "endpoint_n_engines": 80,
+        "endpoint_n_rows": 240,
+        "endpoint_nasa_score": 1416.680764176252,
+        "endpoint_rmse": 16.215712042113516,
+        "engines_with_retractions": 19,
+        "late_or_missed_rate": 0.0375,
+        "max_lead_time": 63.0,
+        "mean_retractions": 0.325,
+        "mean_transitions": 1.65,
+        "median_lead_time": 39.0,
+        "min_lead_time": 27.0,
+        "missed_warning_count": 0,
+        "n_engines": 80,
+        "numeric_controls_met": false,
+        "on_time_count": 77,
+        "on_time_rate": 0.9625,
+        "procedure": "lgbm_cap125",
+        "trajectory_mean_engine_mae": 19.394336268434138,
+        "trajectory_mean_engine_nasa": 5588.702295050652,
+        "trajectory_mean_window_mae": 22.309454091293002,
+        "trajectory_n_engines": 80,
+        "trajectory_n_rows": 14178,
+        "trajectory_nasa_score": 145324071.10341257,
+        "trajectory_rmse": 37.15635695851683
+      },
+      "n_evaluated": 2,
+      "n_feasible": 0,
+      "numeric_controls_met": false,
+      "policy": {
+        "persistence": 1,
+        "threshold": 40
+      },
+      "rule": "inner pooled trajectory RMSE, then endpoint MAE, then candidate ID; endpoint engine MAE and NASA <= corresponding HGB; unconstrained diagnostic winner if none is feasible",
+      "spec": {
+        "candidate_id": "lgbm_cap125_leaves31_lr0.05_l210",
+        "family": "lgbm_cap125",
+        "learning_rate": 0.05,
+        "max_depth": -1,
+        "min_child_weight_nominal": 0.001,
+        "model_kind": "lightgbm",
+        "num_leaves": 31,
+        "reg_lambda_nominal": 10.0,
+        "target_cap": 125
+      }
+    },
+    "lgbm_uncapped": {
+      "candidate_id": "lgbm_uncapped_leaves31_lr0.05_l20",
+      "family": "lgbm_uncapped",
+      "inner_metrics": {
+        "candidate_id": "lgbm_uncapped_leaves31_lr0.05_l20",
+        "early_alarm_burden": 0.05320554657281207,
+        "endpoint_mean_engine_mae": 12.172979420738983,
+        "endpoint_mean_engine_nasa": 22.34415525233362,
+        "endpoint_mean_window_mae": 12.172979420738983,
+        "endpoint_n_engines": 80,
+        "endpoint_n_rows": 240,
+        "endpoint_nasa_score": 5362.597260560069,
+        "endpoint_rmse": 18.12528261541288,
+        "engines_with_retractions": 23,
+        "late_or_missed_rate": 0.0625,
+        "max_lead_time": 69.0,
+        "mean_retractions": 0.3875,
+        "mean_transitions": 1.775,
+        "median_lead_time": 39.0,
+        "min_lead_time": 26.0,
+        "missed_warning_count": 0,
+        "n_engines": 80,
+        "numeric_controls_met": false,
+        "on_time_count": 75,
+        "on_time_rate": 0.9375,
+        "procedure": "lgbm_uncapped",
+        "trajectory_mean_engine_mae": 19.205817315601273,
+        "trajectory_mean_engine_nasa": 855.8596407729499,
+        "trajectory_mean_window_mae": 19.780130964851672,
+        "trajectory_n_engines": 80,
+        "trajectory_n_rows": 14178,
+        "trajectory_nasa_score": 17984718.574316442,
+        "trajectory_rmse": 31.234992376333185
+      },
+      "n_evaluated": 2,
+      "n_feasible": 0,
+      "numeric_controls_met": false,
+      "policy": {
+        "persistence": 1,
+        "threshold": 40
+      },
+      "rule": "inner pooled trajectory RMSE, then endpoint MAE, then candidate ID; endpoint engine MAE and NASA <= corresponding HGB; unconstrained diagnostic winner if none is feasible",
+      "spec": {
+        "candidate_id": "lgbm_uncapped_leaves31_lr0.05_l20",
+        "family": "lgbm_uncapped",
+        "learning_rate": 0.05,
+        "max_depth": -1,
+        "min_child_weight_nominal": 0.001,
+        "model_kind": "lightgbm",
+        "num_leaves": 31,
+        "reg_lambda_nominal": 0.0,
+        "target_cap": null
+      }
+    }
+  },
+  "outer_fold": 2,
+  "procedure": {
+    "arm_controls": {
+      "hgb_cap125": {
+        "eligible": false,
+        "numeric_controls_met": true,
+        "warning_controls_met": false
+      },
+      "hgb_uncapped": {
+        "eligible": true,
+        "numeric_controls_met": true,
+        "warning_controls_met": true
+      },
+      "lgbm_cap125": {
+        "eligible": false,
+        "numeric_controls_met": false,
+        "warning_controls_met": false
+      },
+      "lgbm_uncapped": {
+        "eligible": false,
+        "numeric_controls_met": false,
+        "warning_controls_met": false
+      }
+    },
+    "eligible": true,
+    "numeric_controls_met": true,
+    "procedure_id": "hgb_uncapped",
+    "rule": "inner pooled trajectory RMSE, then endpoint MAE, then arm ID; endpoint MAE/NASA and calibrated warning controls versus hgb_uncapped; LightGBM also requires corresponding-HGB family feasibility",
+    "selected_procedure_id": "hgb_uncapped",
+    "warning_controls_met": true
+  },
+  "selection_source": "inner OOF from fitting engines only",
+  "source_identity": "c10425d965e3f7d0411d14a56d15526ff33373c8e2ee077467b3aa38950ce90a",
+  "test_labels_read": false
+}

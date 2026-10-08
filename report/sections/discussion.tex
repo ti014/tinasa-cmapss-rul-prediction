@@ -127,10 +127,10 @@ tế và giới hạn tương ứng.
 \begin{tabularx}{\linewidth}{L{2.0cm}L{6.0cm}X}
 \toprule
 Khía cạnh & Bằng chứng trong báo cáo & Giới hạn hiện tại \\\midrule
-Volume & 265.256 quan sát từ bốn subset; dữ liệu raw khoảng 46 MB; benchmark nhân bản $10\times$. & Vẫn vừa bộ nhớ một máy; dữ liệu nhân bản chỉ đo chi phí kỹ thuật. \\
+Volume & 265.256 quan sát từ bốn subset; dữ liệu raw khoảng 46 MB; lưu trên HDFS; benchmark nhân bản $10\times$. & Vẫn vừa bộ nhớ một máy; dữ liệu nhân bản chỉ đo chi phí kỹ thuật. \\
 Velocity & Pipeline batch theo từng subset; khử nhiễu, bất thường và cảnh báo đều tính nhân quả theo cycle. & Chưa có streaming hoặc yêu cầu độ trễ thời gian thực. \\
 Variety & 21 sensor, 3 operational settings, chuỗi run-to-failure, nhãn RUL; lưu qua text, Parquet, SQLite. & Cùng một nguồn cảm biến dạng bảng; chưa có dữ liệu phi cấu trúc. \\
-Veracity & Contract schema, kiểm tra khóa và cycle, giá trị thiếu, hash, parity Pandas--PySpark, khử nhiễu EWMA. & Chưa kiểm chứng với lỗi cảm biến và dữ liệu thiếu của hệ thống thực. \\
+Veracity & Manifest MD5/SHA-256 của nguồn, contract schema, kiểm tra khóa và cycle, giá trị thiếu, parity Pandas--PySpark--MapReduce, khử nhiễu EWMA. & Chưa kiểm chứng với lỗi cảm biến và dữ liệu thiếu của hệ thống thực. \\
 Value & Phát hiện bất thường, dự đoán RUL và hai mức cảnh báo sớm. & Chưa có chi phí bảo trì, downtime hoặc KPI kinh tế. \\
 \bottomrule
 \end{tabularx}
@@ -151,9 +151,10 @@ quan sát và không có nhãn thời điểm bắt đầu suy giảm; phân tí
 (Bảng~\ref{tab:anomaly-sensitivity}) chỉ cho thấy kết luận ổn định theo tham số,
 không thay thế được phép đo này. EWMA được đánh giá bằng mức giảm dao động, không bằng tín hiệu sạch.
 
-\paragraph{Về hạ tầng.} Spark chạy \texttt{local[4]} trên Windows và ghi qua driver;
-chưa đo cluster nhiều máy hoặc HDFS. Dữ liệu nhân bản không làm tăng số mẫu khoa học
-độc lập.
+\paragraph{Về hạ tầng.} Phần ETL chính dùng Spark \texttt{local[4]} trên Windows và
+ghi qua driver. HDFS, YARN và MapReduce chạy trên cụm Hadoop một node trong Docker,
+đủ để kiểm chứng tính đúng của phép tính nhưng chưa đo được hiệu năng phân tán trên
+nhiều máy. Dữ liệu nhân bản không làm tăng số mẫu khoa học độc lập.
 
 \subsection{Hướng phát triển}
 \label{sec:followup}
@@ -186,7 +187,15 @@ JRE portable, ghi qua Arrow từ driver và kiểm tra parity với Pandas sau m
 Bài học: khi có hai implementation, phải đối chiếu từng giá trị chứ không chỉ số
 dòng; parity bằng 0 là bằng chứng mạnh hơn mọi lời mô tả.
 
-\paragraph{Khó khăn 4: dễ sa vào tối ưu mô hình.} Nhiều vòng thử cải thiện RUL
+\paragraph{Khó khăn 4: dựng Hadoop trong Docker.} Image \texttt{apache/hadoop:3.3.6}
+không có Python nên job Hadoop Streaming viết bằng Python không chạy được; cách xử
+lý là chuyển sang image 3.4.3. Lần chạy đầu, Spark client không đọc cấu hình của cụm
+nên ghi file với replication 3 trong khi chỉ có một DataNode, và \texttt{hdfs fsck}
+báo các block thiếu bản sao; cách xử lý là truyền \texttt{dfs.replication=1} cho
+Spark. Bài học: job báo thành công chưa đủ, cần kiểm tra trạng thái HDFS bằng
+\texttt{fsck} sau khi ghi.
+
+\paragraph{Khó khăn 5: dễ sa vào tối ưu mô hình.} Nhiều vòng thử cải thiện RUL
 (window, siêu tham số, trọng số, thêm đặc trưng lịch sử, similarity) tốn nhiều thời
 gian nhưng không đổi kết luận chính. Bài học: với bài toán bảo trì dự đoán, một
 pipeline dữ liệu đúng, cảnh báo dễ hiểu và giới hạn được nói rõ có giá trị hơn vài

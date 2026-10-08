@@ -28,7 +28,7 @@ INCLUDE = [
     "README.vi.md", "README.md", "app.py", "pyproject.toml", "uv.lock",
     "requirements.txt", "requirements-dev.txt", "requirements-etl.txt", "requirements-dashboard.txt",
     ".streamlit/config.toml",
-    "src", "notebooks", "scripts", "tests",
+    "src", "notebooks", "scripts", "tests", "infra",
     "data/raw", "data/CONTRACTS.md",
     "report/main.pdf", "report/main.tex", "report/README.md", "report/sections", "report/figures",
     "references/bibliography.bib", "references/README.md", "references/reading-guide.md",

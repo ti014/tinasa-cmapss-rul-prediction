@@ -254,8 +254,9 @@ học, khi chọn mô hình hay khi vẽ biểu đồ. Chỉ khi đã nộp bài
 \lookbox{Chỉ lần lượt 6 ô từ trái sang phải. Khi nói ``hai cách làm ra cùng kết quả'', chỉ dải vàng
 phía trên. Cuối cùng chỉ hai ô trắng phía dưới.}
 \say
-Ba lớp Đồng, Bạc, Vàng giống quy trình làm trang sức. \num{Đồng} là quặng thô: file text gốc của
-NASA, giữ nguyên không ai sửa. Trước khi vào kho, mọi dòng đều qua cửa kiểm tra giống kiểm hàng:
+Ba lớp Đồng, Bạc, Vàng giống quy trình làm trang sức. \num{Đồng} là quặng thô: file text gốc,
+được script tải thẳng từ trang dữ liệu của NASA, kiểm tra mã băm để chắc không sai một byte, rồi
+cất vào kho phân tán HDFS. Trước khi vào kho, mọi dòng đều qua cửa kiểm tra giống kiểm hàng:
 đủ 26 cột chưa, đúng kiểu số chưa, có dòng nào trùng không, các chuyến bay có liền mạch không.
 
 \num{Bạc} là kim loại đã lọc sạch: dữ liệu đã kiểm tra, lưu dạng Parquet, gọn và đọc nhanh.
@@ -267,21 +268,22 @@ và tìm bất thường. Mỗi bước đều để lại biên bản, nên ai 
 \nextslide{``Em làm dây chuyền này bằng hai công cụ khác nhau.''}
 
 % ---------------------------------------------------------------- 7
-\slidepage{07}{Pandas và PySpark}{55 giây}{5:10}
-\lookbox{Bên trái: chỉ cột ``Sai khác lớn nhất'' toàn số 0. Bên phải: chỉ cặp cột 10×, cột xanh
-112 và cột vàng 33.}
+\slidepage{07}{Pandas, PySpark và Hadoop}{55 giây}{5:10}
+\lookbox{Bên trái: chỉ cột ``Sai khác'' toàn số 0, nhấn vào hai dòng cuối có chữ HDFS, rồi ô xanh
+nhạt ``Cụm Hadoop''. Bên phải: chỉ cặp cột 10×, cột xanh 112 và cột vàng 33.}
 \say
-Em làm cùng một việc bằng hai công cụ. \num{Pandas} giống một đầu bếp giỏi làm một mình.
-\num{PySpark} giống một bếp có bốn đầu bếp chia nhau làm. Điều đầu tiên phải kiểm tra: hai bếp có
-nấu ra cùng một món không? Bảng bên trái trả lời: sai khác lớn nhất bằng \num{0}, giống nhau đến
-từng con số.
+Em làm cùng một việc bằng ba cách. \num{Pandas} giống một đầu bếp giỏi làm một mình.
+\num{PySpark} giống một bếp có bốn đầu bếp chia nhau làm. Còn \num{Hadoop} là cả một nhà hàng có
+kho riêng: dữ liệu cất trong kho HDFS, và MapReduce chia việc thành hai công đoạn, sơ chế rồi
+gom lại. Em dựng nhà hàng đó trong Docker và cho nó tính lại bảng tổng hợp động cơ. Hai dòng cuối
+của bảng: cả MapReduce lẫn Spark đọc từ HDFS đều ra \num{200 trên 200} động cơ, sai khác \num{0}.
 
-Biểu đồ bên phải là thời gian nấu. Khi ít khách, đầu bếp một mình nhanh hơn, vì bếp bốn người còn
-mất thời gian họp phân việc. Nhưng khi khách đông gấp \num{10 lần}, một mình mất khoảng
-\num{112 giây}, còn bếp bốn người chỉ mất khoảng \num{33 giây}, nhanh hơn khoảng \num{3,4 lần}.
-Đó là lý do khi dữ liệu lớn lên thì cần Spark.
-\extrabox{Đây là đo trên một máy, Spark chạy local với 4 luồng, chưa phải cụm nhiều máy. Rolling
-features cũng khớp toàn bộ 27.927 dòng giữa hai cách làm.}
+Biểu đồ bên phải: khi khách đông gấp \num{10 lần}, một mình mất khoảng \num{112 giây}, bếp bốn
+người chỉ mất khoảng \num{33 giây}, nhanh hơn khoảng \num{3,4 lần}. Đó là lý do khi dữ liệu lớn
+lên thì cần Spark.
+\extrabox{Cụm Hadoop chỉ có một máy nên dùng để chứng minh tính đúng, không để đo tốc độ. Job
+MapReduce chạy trên YARN với 3 map và 1 reduce; lệnh kiểm tra \texttt{fsck} báo HDFS ở trạng thái
+HEALTHY. Rolling features cũng khớp toàn bộ 27.927 dòng giữa Pandas và Spark.}
 \nextslide{``Trước khi phân tích sâu, em xem qua dữ liệu trông thế nào.''}
 
 % ---------------------------------------------------------------- 8
@@ -481,11 +483,11 @@ vàng ``Giới hạn''.}
 \say
 Bốn lần vấp. Một: dữ liệu không ghi lúc nào động cơ bắt đầu yếu, nên em so mỗi động cơ với chính nó
 lúc khỏe. Hai: dữ liệu theo thời gian rất dễ lộ đề, nên phải chia theo động cơ chứ không chia theo
-dòng. Ba: Spark trên Windows không chịu ghi file, em phải đi đường vòng và đối chiếu từng con số với
-Pandas. Bốn, và đây là bài học lớn nhất: em từng mất khá nhiều thời gian chỉ để giảm vài chuyến sai
+dòng. Ba: hạ tầng. Spark trên Windows không chịu ghi file, còn Hadoop trong Docker thì lần đầu báo
+chạy xong mà kho vẫn thiếu bản sao; em học được là chạy xong chưa đủ, phải kiểm tra lại kho. Bốn, và đây là bài học lớn nhất: em từng mất khá nhiều thời gian chỉ để giảm vài chuyến sai
 số, rồi nhận ra người vận hành cần \num{một cảnh báo dễ hiểu} hơn là một con số đẹp hơn.
 
-Giới hạn: đây là dữ liệu mô phỏng, chưa có chi phí bảo trì, và Spark mới chạy trên một máy.
+Giới hạn: đây là dữ liệu mô phỏng, chưa có chi phí bảo trì, và Hadoop, Spark mới chạy trên một máy.
 \nextslide{``Bây giờ em xin demo nhanh khoảng hai phút rưỡi.'' Bấm \texttt{Alt+Tab} sang trình duyệt.}
 
 % ================================================================ DEMO
@@ -573,7 +575,7 @@ chính nó và đo số cycle báo trước khi hỏng. Em chưa đo được t�
 định trước khi chạy, theo lệ thường của biểu đồ kiểm soát chất lượng: 3 sigma là mức mà nếu chỉ do
 dao động ngẫu nhiên thì rất hiếm khi vượt, còn 5 cycle liên tiếp để một cái gai lẻ không làm hệ thống
 la làng. Sau đó em có chạy lại cả lưới 2, 3, 4 sigma nhân với 3, 5, 10 cycle, tổng cộng 9 cấu hình
-(Bảng 17 trong báo cáo, và có trên dashboard). Kết quả là cấu hình nào cũng bắt đủ 100 trên 100 động
+(Bảng 18 trong báo cáo, và có trên dashboard). Kết quả là cấu hình nào cũng bắt đủ 100 trên 100 động
 cơ, và động cơ báo muộn nhất vẫn còn ít nhất 50 cycle mới hỏng. Cái thay đổi chỉ là đánh đổi. Hạ
 xuống 2 sigma, 3 cycle thì báo sớm hơn, trung vị 136 cycle, nhưng có 17 động cơ bị báo ngay sau đoạn
 tham chiếu, giống cái chuông báo cháy kêu khi mới bật bếp. Nâng lên 4 sigma, 10 cycle thì không còn
@@ -602,9 +604,19 @@ thọ, giống dự báo thời tiết hai tuần tới thì kém hơn dự báo
 mỗi lần có dữ liệu mới, nên những động cơ này sẽ được xếp lại nhiều lần trước khi đến hạn. Bài học em rút
 ra là không nên chốt lịch xa chỉ từ một lần dự đoán. Còn với 21 động cơ báo cần bảo trì ngay thì đúng cả 21.}
 
-\qa{Big Data nằm ở đâu khi dữ liệu nhỏ? (slide 6--7)}{Ở cách tổ chức: ETL nhiều file, lưu trữ phân lớp
-Parquet và SQLite, hai cách làm Pandas và PySpark khớp tuyệt đối, và Spark nhanh hơn khoảng 3,4 lần khi
-dữ liệu tăng 10 lần. Em chưa chạy trên cluster.}
+\qa{Big Data nằm ở đâu khi dữ liệu nhỏ? (slide 6--7)}{Ở cách tổ chức: thu thập có kiểm tra mã băm, ETL
+nhiều file, lưu trữ phân lớp Parquet, SQLite và HDFS, ba cách làm Pandas, PySpark và MapReduce khớp tuyệt
+đối, và Spark nhanh hơn khoảng 3,4 lần khi dữ liệu tăng 10 lần. Em chưa chạy trên cluster nhiều máy.}
+
+\qa{Hadoop nằm ở đâu trong bài? Sao chỉ có một node? (slide 7)}{Em dựng Hadoop 3.4.3 trong Docker, đúng
+kiểu Hadoop Sandbox của Chương 2: NameNode, DataNode cho HDFS và ResourceManager, NodeManager cho YARN.
+File raw được đưa lên HDFS. Job MapReduce viết bằng Python qua Hadoop Streaming tính số cycle, cycle đầu,
+cycle cuối của từng động cơ; Spark đọc HDFS, ghi tầng Silver dạng Parquet lên HDFS rồi tính lại. Cả hai
+khớp 200 trên 200 động cơ với Pandas. Một node là vì đề cương ghi không cần dựng cluster thật; nó chứng
+minh phép tính đúng trên HDFS, chứ không dùng để đo tốc độ. Ví dụ dễ hình dung: map giống chia đống phiếu
+khám cho từng người ghi ``động cơ số mấy, chuyến thứ mấy'', reduce giống gom phiếu theo từng động cơ rồi
+lấy chuyến lớn nhất là tuổi thọ. Dữ liệu 5,7 MB nằm gọn trong một block 128 MB; nếu lớn hơn, HDFS sẽ chia
+thành nhiều block và YARN chạy nhiều map song song.}
 
 \qa{Sao không dùng LSTM hay Transformer? (slide 17)}{Em đã thử nested CV, đặc trưng lịch sử,
 similarity, LightGBM và TCN; không hướng nào cải thiện đồng thời sai số và cảnh báo. Mô hình sâu hơn
@@ -629,6 +641,8 @@ Nội dung & Số liệu \\
 \midrule
 Dữ liệu FD001 & 100 động cơ train, 100 test; 20.631 dòng train, 13.096 dòng test; 21 sensor \\
 Pandas vs PySpark & Sai khác 0; ở 10×: Pandas 112 giây, Spark 33 giây (nhanh hơn 3,4 lần) \\
+Hadoop & 3.4.3 một node trong Docker; MapReduce trên YARN (3 map, 1 reduce) và Spark đọc HDFS đều khớp 200/200; fsck HEALTHY \\
+Thu thập & Tải từ data.nasa.gov, MD5 gói khớp, 12/12 file đúng SHA-256 \\
 Khử nhiễu EWMA & Span 10, $\alpha \approx 0{,}18$; giảm 83,6--86,4\% dao động, trung vị 86,3\% \\
 Window & 30 cycles, 21 × 6 = 126 đặc trưng; 17.731 window train, 10.196 window test \\
 Xu hướng & 15/21 sensor thay đổi có ý nghĩa; sensor 4, 7, 11, 12, 20 đổi cùng hướng ở 100/100 động cơ \\

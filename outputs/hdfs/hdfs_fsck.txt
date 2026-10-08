@@ -1,0 +1,75 @@
+FSCK started by hadoop (auth:SIMPLE) from /172.19.0.5 for path /cmapss at Thu Oct 08 20:01:02 UTC 2026
+
+/cmapss <dir>
+/cmapss/bronze <dir>
+/cmapss/bronze/fd001 <dir>
+/cmapss/bronze/fd001/test_FD001.txt 2228855 bytes, replicated: replication=1, 1 block(s):  OK
+0. BP-667357539-172.19.0.5-1791489517271:blk_1073741841_1017 len=2228855 Live_repl=1  [DatanodeInfoWithStorage[172.19.0.3:9866,DS-3f6a16f8-c151-4e8b-83da-5c53aeffc550,DISK]]
+
+/cmapss/bronze/fd001/train_FD001.txt 3515356 bytes, replicated: replication=1, 1 block(s):  OK
+0. BP-667357539-172.19.0.5-1791489517271:blk_1073741842_1018 len=3515356 Live_repl=1  [DatanodeInfoWithStorage[172.19.0.3:9866,DS-3f6a16f8-c151-4e8b-83da-5c53aeffc550,DISK]]
+
+/cmapss/gold <dir>
+/cmapss/gold/mapreduce_engine_summary <dir>
+/cmapss/gold/mapreduce_engine_summary/_SUCCESS 0 bytes, replicated: replication=1, 0 block(s):  OK
+
+/cmapss/gold/mapreduce_engine_summary/part-00000 3624 bytes, replicated: replication=1, 1 block(s):  OK
+0. BP-667357539-172.19.0.5-1791489517271:blk_1073741850_1026 len=3624 Live_repl=1  [DatanodeInfoWithStorage[172.19.0.3:9866,DS-3f6a16f8-c151-4e8b-83da-5c53aeffc550,DISK]]
+
+/cmapss/gold/spark_engine_summary <dir>
+/cmapss/gold/spark_engine_summary/_SUCCESS 0 bytes, replicated: replication=1, 0 block(s):  OK
+
+/cmapss/gold/spark_engine_summary/part-00000-7397af77-ed3d-4cd1-b1b2-eebcbd063ee4-c000.csv 3672 bytes, replicated: replication=1, 1 block(s):  OK
+0. BP-667357539-172.19.0.5-1791489517271:blk_1073741856_1032 len=3672 Live_repl=1  [DatanodeInfoWithStorage[172.19.0.3:9866,DS-3f6a16f8-c151-4e8b-83da-5c53aeffc550,DISK]]
+
+/cmapss/silver <dir>
+/cmapss/silver/observations <dir>
+/cmapss/silver/observations/_SUCCESS 0 bytes, replicated: replication=1, 0 block(s):  OK
+
+/cmapss/silver/observations/split=test <dir>
+/cmapss/silver/observations/split=test/part-00001-079caf7f-5ee1-4f81-9188-49755ab526bb.c000.snappy.parquet 338957 bytes, replicated: replication=1, 1 block(s):  OK
+0. BP-667357539-172.19.0.5-1791489517271:blk_1073741854_1030 len=338957 Live_repl=1  [DatanodeInfoWithStorage[172.19.0.3:9866,DS-3f6a16f8-c151-4e8b-83da-5c53aeffc550,DISK]]
+
+/cmapss/silver/observations/split=train <dir>
+/cmapss/silver/observations/split=train/part-00000-079caf7f-5ee1-4f81-9188-49755ab526bb.c000.snappy.parquet 521170 bytes, replicated: replication=1, 1 block(s):  OK
+0. BP-667357539-172.19.0.5-1791489517271:blk_1073741855_1031 len=521170 Live_repl=1  [DatanodeInfoWithStorage[172.19.0.3:9866,DS-3f6a16f8-c151-4e8b-83da-5c53aeffc550,DISK]]
+
+
+Status: HEALTHY
+ Number of data-nodes:	1
+ Number of racks:		1
+ Total dirs:			10
+ Total symlinks:		0
+
+Replicated Blocks:
+ Total size:	6611634 B
+ Total files:	9
+ Total blocks (validated):	6 (avg. block size 1101939 B)
+ Minimally replicated blocks:	6 (100.0 %)
+ Over-replicated blocks:	0 (0.0 %)
+ Under-replicated blocks:	0 (0.0 %)
+ Mis-replicated blocks:		0 (0.0 %)
+ Default replication factor:	1
+ Average block replication:	1.0
+ Missing blocks:		0
+ Corrupt blocks:		0
+ Missing replicas:		0 (0.0 %)
+ Blocks queued for replication:	0
+
+Erasure Coded Block Groups:
+ Total size:	0 B
+ Total files:	0
+ Total block groups (validated):	0
+ Minimally erasure-coded block groups:	0
+ Over-erasure-coded block groups:	0
+ Under-erasure-coded block groups:	0
+ Unsatisfactory placement block groups:	0
+ Average block group size:	0.0
+ Missing block groups:		0
+ Corrupt block groups:		0
+ Missing internal blocks:	0
+ Blocks queued for replication:	0
+FSCK ended at Thu Oct 08 20:01:02 UTC 2026 in 3 milliseconds
+
+
+The filesystem under path '/cmapss' is HEALTHY

@@ -1,0 +1,41 @@
+# Hadoop một node (HDFS + YARN) và một Spark client cho bước lưu trữ phân tán.
+# Khởi động: docker compose -f infra/hadoop/docker-compose.yml -p cmapss-hadoop up -d
+# Giao diện: NameNode http://localhost:9870, ResourceManager http://localhost:8088
+services:
+  namenode:
+    image: apache/hadoop:3.4.3
+    hostname: namenode
+    command: ["hdfs", "namenode"]
+    ports:
+      - "9870:9870"
+    env_file: ./config
+    environment:
+      ENSURE_NAMENODE_DIR: "/tmp/hadoop-root/dfs/name"
+
+  datanode:
+    image: apache/hadoop:3.4.3
+    hostname: datanode
+    command: ["hdfs", "datanode"]
+    env_file: ./config
+
+  resourcemanager:
+    image: apache/hadoop:3.4.3
+    hostname: resourcemanager
+    command: ["yarn", "resourcemanager"]
+    ports:
+      - "8088:8088"
+    env_file: ./config
+
+  nodemanager:
+    image: apache/hadoop:3.4.3
+    hostname: nodemanager
+    command: ["yarn", "nodemanager"]
+    env_file: ./config
+
+  spark:
+    image: apache/spark:4.0.1-python3
+    profiles: ["client"]
+    user: root
+    volumes:
+      - ../../src/cmapss/hdfs:/work:ro
+    working_dir: /work

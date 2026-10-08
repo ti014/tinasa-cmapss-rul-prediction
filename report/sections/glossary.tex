@@ -22,6 +22,9 @@ C-MAPSS & Commercial Modular Aero-Propulsion System Simulation, bộ dữ liệu
 Cycle & Một chu kỳ vận hành của động cơ; là đơn vị thời gian rời rạc của dữ liệu, không quy đổi được sang giờ hoặc ngày.\\
 Train / test & Train chứa lịch sử vận hành đến khi hỏng; test bị cắt trước khi hỏng và có file nhãn RUL riêng.\\
 Trailing window & Đoạn $w$ cycles liên tiếp gần nhất của một động cơ tính đến cycle đang xét; báo cáo dùng $w=30$.\\
+HDFS & Hadoop Distributed File System, hệ thống file phân tán: chia file thành block 128 MB lưu trên DataNode; NameNode giữ metadata.\\
+MapReduce & Mô hình tính toán hai pha: map sinh cặp khóa--giá trị, reduce tổng hợp các giá trị cùng khóa; chạy trên YARN.\\
+YARN & Thành phần quản lý tài nguyên của Hadoop, cấp phát và chạy các task map, reduce trên cụm.\\
 EWMA & Exponentially weighted moving average, trung bình trượt có trọng số mũ; báo cáo dùng span 10 để khử nhiễu sensor.\\
 GroupKFold & Cross-validation chia fold theo nhóm; ở đây mỗi nhóm là một động cơ, nên mọi window của một động cơ nằm cùng một fold.\\
 OOF & Out-of-fold: dự đoán cho một động cơ được tạo bởi mô hình không dùng động cơ đó khi huấn luyện.\\

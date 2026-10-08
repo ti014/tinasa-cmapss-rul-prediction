@@ -56,7 +56,7 @@ cd handoff
 ..\tmp\report-tools\tectonic\tectonic.exe SPEECH_SCRIPT_VI.tex
 ```
 
-Kiểm tra toàn bộ: `.venv\Scripts\python.exe -m pytest -q` (lần gần nhất: 440 đạt, 1 bỏ qua
+Kiểm tra toàn bộ: `.venv\Scripts\python.exe -m pytest -q` (lần gần nhất: 453 đạt, 1 bỏ qua
 vì máy không có `torch`).
 
 ## Các file khác trong thư mục này

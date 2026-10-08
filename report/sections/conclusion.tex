@@ -9,7 +9,8 @@ sau:
 \item Dữ liệu FD001 (20.631 dòng train, 13.096 dòng test) đạt mọi kiểm tra về
       schema, khóa và tính liên tục của cycle. ETL bằng PySpark khớp hoàn toàn với
       Pandas trên ba bảng Silver/Gold; ở scale $10\times$, Spark local nhanh hơn
-      Pandas khoảng 3,4 lần.
+      Pandas khoảng 3,4 lần. Trên cụm Hadoop một node, MapReduce và Spark đọc dữ
+      liệu từ HDFS cũng cho kết quả khớp tuyệt đối với Pandas.
 \item EWMA span 10 giảm khoảng 86\% dao động ngắn hạn của 14 sensor có thông tin
       mà vẫn giữ xu hướng suy giảm; window 30 cycles tổng hợp 21 sensor thành 126
       đặc trưng.

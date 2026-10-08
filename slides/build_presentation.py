@@ -61,6 +61,8 @@ FD = {row["name"]: row for row in D["subsets"]}
 WARN = {f"{r['model']}_{r['threshold']}": r for r in A["warning_policies"]}
 AN, AN_RAW, ACFG = DEG["anomaly_smoothed"], DEG["anomaly_raw_for_comparison"], DEG["anomaly_config"]
 MNT = json.loads((ROOT / "outputs/maintenance/summary.json").read_text(encoding="utf-8"))
+HDFS = json.loads((ROOT / "outputs/hdfs/summary.json").read_text(encoding="utf-8"))
+assert HDFS["mapreduce_vs_pandas"]["exact_match"] and HDFS["spark_vs_pandas"]["exact_match"]
 with (ROOT / "outputs/maintenance/tables/status_vs_actual.csv").open(encoding="utf-8") as file:
     MNT_CHECK = list(csv.reader(file))
 with (ROOT / "outputs/degradation/tables/anomaly_sensitivity.csv").open(encoding="utf-8") as file:
@@ -485,14 +487,15 @@ def slide_pipeline():
     s = content(2, 6, "Kiến trúc pipeline dữ liệu Bronze–Silver–Gold",
                 "Mỗi tầng lưu kết quả kèm mã băm và metadata, bảo đảm khả năng truy vết và tái lập",
                 "report/figures/pipeline.pdf; handoff/DATA_WALKTHROUGH.md; outputs/*/run_info.json",
-                "Thời lượng: 55 giây.\nBronze là file text gốc. Reader kiểm tra đúng 26 trường, kiểu dữ liệu, khóa duy nhất "
+                "Thời lượng: 55 giây.\nBronze là file text gốc, tải bằng script từ cổng dữ liệu NASA, kiểm tra MD5 và "
+                "SHA-256, đồng thời được đưa lên HDFS. Reader kiểm tra đúng 26 trường, kiểu dữ liệu, khóa duy nhất "
                 "và cycle liên tục; train và test được union theo dòng.\nSilver lưu observations và train_targets dạng "
                 "Parquet. Gold lưu engine_summary dạng Parquet và SQLite. Từ Silver, bước đặc trưng tạo window 30 cycle; "
                 "mô hình dùng GroupKFold, refit và tạo 100 dự đoán test.\nNhánh dưới bên trái là phân tích tín hiệu: khử "
                 "nhiễu, Health Index, bất thường, chỉ dùng train. Đây là phần thu thập, làm sạch, chuẩn hóa, tích hợp, "
                 "lưu trữ mà rubric chấm 40%.")
     steps = [
-        ("Bronze", "Text gốc", "train, test,\nRUL_FD00x"),
+        ("Bronze", "Text gốc + HDFS", "tải từ NASA,\nMD5 + SHA-256"),
         ("Kiểm tra", "Reader", "26 trường, kiểu,\nkhóa, cycle"),
         ("Silver", "Parquet", f"observations\n{vn(FD['FD001']['observations'], 0)} dòng"),
         ("Gold", "Parquet + SQLite", f"engine_summary\n{P['parity'][2]['rows']} dòng"),
@@ -501,7 +504,7 @@ def slide_pipeline():
     ]
     bw, gap, y, bh = 1.72, 0.236, 2.95, 1.65
     rect(s, 0.92 + 2 * (bw + gap) - 0.08, 2.5, 2 * bw + gap + 0.16, 0.34, GOLD_TINT)
-    text(s, 0.92 + 2 * (bw + gap) - 0.08, 2.5, 2 * bw + gap + 0.16, 0.34, "Đối chiếu Pandas–PySpark: sai khác 0", size=12,
+    text(s, 0.92 + 2 * (bw + gap) - 0.08, 2.5, 2 * bw + gap + 0.16, 0.34, "Pandas = PySpark = MapReduce", size=12,
          bold=True, color=GOLD_DARK, align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
     for i, (head, tool, body) in enumerate(steps):
         x = 0.92 + i * (bw + gap)
@@ -529,26 +532,32 @@ def slide_pipeline():
 def slide_parity():
     bench = {(r["engine"], int(r["scale"])): r for r in D["stage_benchmark"]}
     pandas10, spark10 = bench[("pandas", 10)]["pipeline_seconds"], bench[("spark", 10)]["pipeline_seconds"]
-    s = content(2, 7, "Đối chiếu hai cách triển khai Pandas và PySpark",
-                f"Kết quả trùng khớp ở mọi tầng dữ liệu; ở quy mô 10×, PySpark cục bộ nhanh hơn Pandas khoảng {vn(pandas10 / spark10, 1)} lần",
-                "outputs/etl/parity.json; outputs/benchmarks/20260929/measurements.csv",
+    s = content(2, 7, "Đối chiếu Pandas, PySpark và Hadoop",
+                f"Ba cách triển khai trùng khớp ở mọi tầng; ở quy mô 10×, PySpark nhanh hơn Pandas khoảng {vn(pandas10 / spark10, 1)} lần",
+                "outputs/etl/parity.json; outputs/hdfs/summary.json; outputs/benchmarks/20260929/measurements.csv",
                 "Thời lượng: 1 phút.\nBảng trái: cùng input, Pandas và PySpark cho cùng schema, khóa, số dòng và giá trị ở "
-                "ba boundary; sai khác tuyệt đối lớn nhất bằng 0. Rolling features cũng khớp toàn bộ 27.927 dòng với "
-                "tolerance 10^-7.\nBiểu đồ phải: trung vị ba lượt, gồm đọc Parquet, tổng hợp, rolling features và ghi file. "
-                f"Pandas tăng gần tuyến tính từ {vn(bench[('pandas', 1)]['pipeline_seconds'], 1)} lên {vn(pandas10, 1)} giây; "
-                f"Spark từ {vn(bench[('spark', 1)]['pipeline_seconds'], 1)} lên {vn(spark10, 1)} giây. Ở 1× Pandas nhanh hơn "
-                "vì Spark tốn chi phí khởi động.\nGiới hạn: Spark local[4] trên một máy Windows, ghi qua driver; chưa đo "
-                "cluster.")
+                "ba boundary; sai khác bằng 0. Hai dòng cuối là bảng engine_summary tính lại trên cụm Hadoop: một job "
+                "MapReduce chạy trên YARN và một job Spark đọc dữ liệu từ HDFS; cả hai khớp 200/200 động cơ.\nÔ dưới: cụm "
+                f"{HDFS['hadoop_version']} một node trong Docker; HDFS ở trạng thái HEALTHY.\nBiểu đồ phải: trung vị ba lượt. "
+                f"Pandas tăng từ {vn(bench[('pandas', 1)]['pipeline_seconds'], 1)} lên {vn(pandas10, 1)} giây; Spark từ "
+                f"{vn(bench[('spark', 1)]['pipeline_seconds'], 1)} lên {vn(spark10, 1)} giây.\nGiới hạn: một máy, chưa "
+                "phải cluster nhiều node.")
     names = {"silver_observations": "Silver observations", "silver_train_targets": "Silver train_targets",
              "gold_engine_summary": "Gold engine_summary"}
-    table(s, [["Boundary", "Số dòng", "Sai khác lớn nhất", "Kết quả"]] + [
+    hdfs_rows = [
+        ["Gold · MapReduce trên HDFS", vn(HDFS["mapreduce_vs_pandas"]["rows_candidate"], 0),
+         vn(HDFS["mapreduce_vs_pandas"]["mismatched_cells"], 0), "Khớp"],
+        ["Gold · Spark trên HDFS", vn(HDFS["spark_vs_pandas"]["rows_candidate"], 0),
+         vn(HDFS["spark_vs_pandas"]["mismatched_cells"], 0), "Khớp"],
+    ]
+    table(s, [["Bảng so với Pandas", "Số dòng", "Sai khác", "Kết quả"]] + [
         [names.get(p["name"], p["name"]), vn(p["rows"], 0), vn(p["max_abs_diff"], 0), "Khớp" if p["status"] == "passed" else p["status"]]
         for p in P["parity"]
-    ], 0.92, 2.5, [2.4, 1.15, 1.55, 1.0], row_h=0.5, size=12.5)
-    rect(s, 0.92, 4.7, 6.1, 1.85, TINT)
-    text(s, 1.15, 4.85, 5.7, 0.34, "Đối chiếu ở mức từng giá trị", size=14, bold=True, color=BLUE)
-    text(s, 1.15, 5.25, 5.7, 1.2, "Rolling features: so toàn bộ 27.927 dòng × 126 đặc trưng, tolerance 10⁻⁷. Cùng "
-         "window 30, độ lệch chuẩn mẫu và độ dốc tính theo từng động cơ.", size=13)
+    ] + hdfs_rows, 0.92, 2.45, [2.75, 1.05, 1.3, 1.0], row_h=0.42, size=12)
+    rect(s, 0.92, 5.1, 6.1, 1.45, TINT)
+    text(s, 1.15, 5.2, 5.7, 0.34, f"Cụm {HDFS['hadoop_version']} một node trong Docker", size=14, bold=True, color=BLUE)
+    text(s, 1.15, 5.58, 5.7, 0.95, f"Raw lên HDFS; MapReduce trên YARN: 3 map, 1 reduce; Spark ghi Silver Parquet "
+         f"{vn(HDFS['spark_silver_rows'], 0)} dòng lên HDFS; fsck: HEALTHY.", size=12.5)
     bar_chart(s, 7.3, 2.45, 5.12, 3.6, ["1× · 33.727 dòng", "10× · 337.270 dòng"],
               [("Pandas", [round(bench[("pandas", k)]["pipeline_seconds"]) for k in (1, 10)]),
                ("PySpark local[4]", [round(bench[("spark", k)]["pipeline_seconds"]) for k in (1, 10)])],
@@ -979,24 +988,25 @@ def slide_lessons():
                 "Thời lượng: 1 phút.\nMột: dữ liệu không ghi lúc bắt đầu hỏng, nên so mỗi động cơ với chính nó lúc khỏe và nói "
                 "rõ chưa đo được báo động giả.\nHai: dữ liệu chuỗi thời gian dễ rò rỉ khi chia tập; đơn vị chia phải là động "
                 "cơ, window và EWMA chỉ dùng quá khứ.\nBa: PySpark trên Windows thiếu winutils nên ghi qua Arrow, và luôn đối "
-                "chiếu từng giá trị với Pandas.\nBốn: dễ sa vào tối ưu mô hình; với bảo trì dự đoán, pipeline đúng và cảnh "
+                "chiếu từng giá trị với Pandas. Khi dựng Hadoop trong Docker, image 3.3.6 thiếu Python nên đổi sang 3.4.3; Spark "
+                "ghi với replication 3 trên một DataNode nên phải đặt replication 1, và kiểm tra lại bằng fsck.\nBốn: dễ sa vào tối ưu mô hình; với bảo trì dự đoán, pipeline đúng và cảnh "
                 "báo dễ hiểu quan trọng hơn vài cycle MAE.\nGiới hạn: dữ liệu mô phỏng, chưa có chi phí bảo trì, Spark chỉ "
-                "chạy local.")
+                "chạy trên một máy.")
     table(s, [
         ["Khó khăn", "Cách xử lý", "Bài học"],
         ["Thiếu nhãn thời điểm bất thường", "Lấy 30 cycle đầu của từng động cơ làm tham chiếu",
          "Xác định rõ trạng thái tham chiếu; nêu rõ phần chưa kiểm chứng được"],
         ["Rò rỉ dữ liệu khi chia tập", "GroupKFold theo động cơ; window, EWMA chỉ dùng quá khứ",
          "Với dữ liệu chuỗi thời gian, đơn vị phân chia là thực thể, không phải bản ghi"],
-        ["Giới hạn ghi file của PySpark trên Windows", "JRE portable, ghi qua Arrow, đối chiếu sau mỗi bước",
-         "Hai cách triển khai cần được đối chiếu ở mức từng giá trị"],
+        ["Hạ tầng: PySpark trên Windows, Hadoop trong Docker", "Ghi qua Arrow; dùng image Hadoop có Python; đặt replication 1 cho Spark",
+         "Đối chiếu từng giá trị giữa các cách triển khai; kiểm tra HDFS bằng fsck sau khi ghi"],
         ["Nguy cơ tập trung quá mức vào tối ưu mô hình", "Cố định tiêu chí đánh giá trước; tách thử nghiệm sang phần mở rộng",
          "Tính đúng đắn của pipeline và khả năng diễn giải cảnh báo được ưu tiên hơn mức giảm nhỏ của MAE"],
     ], 0.92, 2.5, [2.7, 4.3, 4.5], row_h=0.66, size=12)
     rect(s, 0.92, 5.95, 11.5, 0.6, GOLD_TINT)
     text(s, 1.15, 5.95, 11.05, 0.6, [[("Giới hạn: ", {"bold": True, "color": BLUE}),
-                                      ("dữ liệu mô phỏng; chưa có dữ liệu chi phí để tối ưu ngưỡng cảnh báo; PySpark mới chạy cục bộ, "
-                                       "chưa triển khai cluster hay streaming.", {})]], size=12.5, anchor=MSO_ANCHOR.MIDDLE)
+                                      ("dữ liệu mô phỏng; chưa có dữ liệu chi phí để tối ưu ngưỡng cảnh báo; Hadoop và Spark chạy trên một máy, "
+                                       "chưa triển khai cluster nhiều node hay streaming.", {})]], size=12.5, anchor=MSO_ANCHOR.MIDDLE)
 
 
 # ============================================================================ 20. Kết thúc

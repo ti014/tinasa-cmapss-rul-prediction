@@ -23,7 +23,9 @@ Gold gồm 200 dòng engine summary trong Parquet và SQLite. Mọi bảng đư�
 sau khi ghi để kiểm tra. Trên cả ba bảng, kết quả PySpark khớp hoàn toàn với
 Pandas về schema, khóa, số dòng và giá trị; sai khác tuyệt đối lớn nhất bằng 0.
 Rolling features 30 cycles tính bằng Spark cũng khớp toàn bộ 27.927 dòng của
-Pandas với tolerance $10^{-7}$.
+Pandas với tolerance $10^{-7}$. Trên cụm Hadoop một node, MapReduce và Spark đọc
+dữ liệu từ HDFS cũng cho bảng engine summary khớp tuyệt đối với Pandas (200/200
+động cơ, Mục~\ref{sec:dp-hdfs}).
 
 Bảng~\ref{tab:followup-benchmark} đo toàn bộ pipeline (đọc Parquet, tổng hợp,
 rolling features, ghi) khi nhân bản FD001 lên 10 lần. Thời gian Pandas tăng gần

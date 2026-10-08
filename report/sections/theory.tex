@@ -146,6 +146,22 @@ $p$ và trung bình trượt bậc $q$, $d$ là bậc sai phân và $\varepsilon
 trắng. Kiểm định ADF đánh giá tính dừng của chuỗi~\cite{statsmodelsADF}, còn
 kiểm định Ljung--Box kiểm tra phần dư sau khi fit còn tự tương quan hay không.
 
+\subsection{Hadoop: HDFS và MapReduce}
+\label{sec:theory-hadoop}
+HDFS (Hadoop Distributed File System, hệ thống file phân tán của Hadoop) chia mỗi
+file thành các block lớn, mặc định 128 MB, và lưu các block trên DataNode; NameNode
+chỉ giữ metadata, tức file nào gồm những block nào và block nằm ở đâu~\cite{shvachko2010hdfs}.
+Mỗi block có thể được nhân bản trên nhiều DataNode để chịu lỗi; số bản sao gọi là
+replication factor. MapReduce chia một phép tính thành hai pha~\cite{dean2008mapreduce}.
+Pha map đọc từng dòng và sinh cặp khóa--giá trị; pha reduce nhận mọi giá trị cùng
+một khóa, sau bước sắp xếp và chuyển dữ liệu (shuffle), để tổng hợp. Ví dụ, để tính
+tuổi thọ từng động cơ, map biến mỗi dòng quan sát thành cặp (động cơ, cycle), còn
+reduce lấy cycle lớn nhất của mỗi động cơ. YARN cấp phát tài nguyên và chạy các
+task map, reduce trên cụm. Hadoop Streaming cho phép viết mapper và reducer bằng bất
+kỳ chương trình nào đọc stdin và ghi stdout, ở đây là Python~\cite{hadoopStreaming}.
+Spark có thể dùng chính HDFS làm nơi lưu trữ, nhưng giữ dữ liệu trung gian trong bộ
+nhớ thay vì ghi xuống đĩa sau mỗi pha như MapReduce~\cite{zaharia2012rdd}.
+
 \subsection{Spark, Bronze--Silver--Gold và Parquet}
 Pipeline dùng PySpark ở chế độ \texttt{local[4]} để thực hiện các phép biến đổi
 trên dữ liệu có schema. DataFrame API hỗ trợ \texttt{unionByName} để gom các file

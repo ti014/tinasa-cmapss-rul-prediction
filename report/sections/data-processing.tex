@@ -11,13 +11,15 @@ có thể chạy lại từng bước trong notebook
 của pipeline và in kết quả trung gian.
 
 Theo vòng đời quản lý dữ liệu của môn học, pipeline được ánh xạ trực tiếp thành
-năm bước: \textbf{thu thập} các file C-MAPSS và lưu hash nguồn; \textbf{làm sạch}
+năm bước: \textbf{thu thập} gói C-MAPSS từ cổng dữ liệu mở của NASA bằng script,
+kiểm tra MD5 và SHA-256 rồi ghi manifest; \textbf{làm sạch}
 bằng schema contract, kiểm tra khóa, cycle và giá trị hữu hạn, rồi khử nhiễu sensor
 bằng EWMA; \textbf{chuẩn hóa} kiểu dữ liệu, tên cột, thứ tự khóa, và thang đo bằng
 StandardScaler trước khi tạo Health Index; \textbf{tích hợp} train/test bằng UNION,
 ghép nhãn theo khóa ba thành phần và tạo các bảng Silver--Gold; cuối cùng
 \textbf{lưu trữ} thành Parquet và SQLite để truy vấn bằng Pandas, SQL hoặc
-PySpark. Như vậy, mỗi bước đều có đầu vào, đầu ra và kiểm tra tương ứng thay vì
+PySpark, đồng thời đưa lên HDFS để xử lý bằng MapReduce và Spark
+(Mục~\ref{sec:dp-hdfs}). Như vậy, mỗi bước đều có đầu vào, đầu ra và kiểm tra tương ứng thay vì
 chỉ mô tả bước tạo đặc trưng.
 
 \begin{figure}[H]
@@ -27,6 +29,17 @@ chỉ mô tả bước tạo đặc trưng.
 Chữ trên mũi tên là phép biến đổi; nhãn test chỉ được đọc sau khi dự đoán đã được ghi.}
 \label{fig:data-flow}
 \end{figure}
+
+\subsection{Thu thập dữ liệu}
+\label{sec:dp-acquire}
+Dữ liệu được lấy từ cổng dữ liệu mở của NASA~\cite{nasaCmapssDataset} bằng module
+\texttt{cmapss.data.acquire}. Script tải gói \texttt{CMAPSSData.zip}, kiểm tra MD5
+của gói, giải nén 12 file dữ liệu của bốn subset, rồi so SHA-256 của từng file với
+giá trị đã ghi nhận. File đã có trong \filepath{data/raw} chỉ được giữ nguyên khi
+trùng nội dung; nếu khác, script dừng thay vì ghi đè. Lần chạy ngày 09/10/2026 cho
+thấy cả 12 file trùng với bản đang dùng, nghĩa là dữ liệu trong báo cáo đúng là bản
+gốc của nguồn. Nguồn, thời điểm tải, kích thước và hash của từng file được ghi vào
+\filepath{outputs/acquisition/manifest.json}, đóng vai trò hồ sơ của lớp Bronze.
 
 \subsection{Gom dữ liệu từ nhiều file}
 \label{sec:dp-union}
@@ -87,10 +100,85 @@ thay bộ cũ; nếu bước thay thế lỗi, bộ cũ được khôi phục. F
 (\texttt{run\_info.json}) được ghi sau cùng và lưu hash của dữ liệu đầu vào, nên mỗi
 bộ kết quả luôn đi kèm đúng phiên bản dữ liệu đã tạo ra nó.
 
-\paragraph{Kiểm thử.} Bộ kiểm thử tự động gồm 440 kiểm thử đạt (một kiểm thử bỏ
-qua vì môi trường thiếu \texttt{torch}), lần chạy ngày 08/10/2026. Các kiểm thử bao
-gồm schema, khóa, ranh giới window, công thức EWMA, quy tắc bất thường, lịch bảo
-trì và việc nhãn test chỉ được đọc sau khi đã ghi dự đoán.
+\paragraph{Kiểm thử.} Bộ kiểm thử tự động gồm 453 kiểm thử đạt (một kiểm thử bỏ
+qua vì môi trường thiếu \texttt{torch}), lần chạy ngày 09/10/2026. Các kiểm thử bao
+gồm kiểm tra checksum khi thu thập, schema, khóa, ranh giới window, mapper và
+reducer của job MapReduce, công thức EWMA, quy tắc bất thường, lịch bảo trì và việc
+nhãn test chỉ được đọc sau khi đã ghi dự đoán.
+
+\subsection{Lưu trữ phân tán trên HDFS}
+\label{sec:dp-hdfs}
+Để thể hiện bước lưu trữ và xử lý phân tán của Hadoop, pipeline có thêm một cụm
+Hadoop 3.4.3 một node chạy trong Docker (\filepath{infra/hadoop/docker-compose.yml}):
+NameNode và DataNode cho HDFS, ResourceManager và NodeManager cho YARN, cùng một
+Spark 4.0.1 client. Lệnh \texttt{python -m cmapss.hdfs} thực hiện bốn bước:
+\begin{enumerate}
+\item đưa hai file raw FD001 lên thư mục \texttt{/cmapss/bronze/fd001} của HDFS;
+\item chạy job MapReduce viết bằng Hadoop Streaming (\texttt{lifetime\_job.py}) trên
+      YARN để tính bảng Gold mỗi động cơ một dòng: số cycle, cycle đầu và cycle cuối;
+\item chạy Spark đọc raw từ HDFS, ghi lớp Silver dạng Parquet phân vùng theo
+      \texttt{split} vào \texttt{/cmapss/silver/observations}, rồi đọc lại Parquet
+      đó để tính cùng bảng Gold;
+\item tải hai bảng kết quả về và đối chiếu với bảng \texttt{engine\_summary} do ETL
+      Pandas tạo.
+\end{enumerate}
+
+\begin{lstlisting}[language=Python,caption={Mapper và reducer của job MapReduce (rút gọn từ
+\texttt{src/cmapss/hdfs/lifetime\_job.py}).},label={lst:mapreduce}]
+# map: one raw line -> "split:engine<TAB>cycle"; the zero-padded id keeps Hadoop's key order
+def map_lines(lines, source):
+    split = split_from_path(source)              # train_FD001.txt -> "train"
+    for line in lines:
+        fields = line.split()
+        yield "%s:%04d\t%d" % (split, int(fields[0]), int(fields[1]))
+
+# reduce: keys arrive sorted, so all cycles of one engine are consecutive
+def reduce_lines(lines):
+    current, cycles = None, []
+    for line in lines:
+        key, value = line.rstrip("\n").split("\t")
+        if key != current and current is not None:
+            yield summary(current, cycles)       # split, engine, n_cycles, min, max
+            cycles = []
+        current = key
+        cycles.append(int(value))
+    if current is not None:
+        yield summary(current, cycles)
+\end{lstlisting}
+
+Bảng~\ref{tab:hdfs} tóm tắt lần chạy ngày 09/10/2026. Hadoop chia input thành ba phần
+(input split) và chạy ba map task cùng một reduce task. Cả MapReduce và Spark đều cho
+bảng 200 động cơ khớp tuyệt đối với Pandas. Hình~\ref{fig:hdfs} là giao diện web của
+NameNode và YARN trong lần chạy này.
+
+\begin{table}[H]\centering\small
+\caption[Kết quả bước HDFS]{Kết quả bước HDFS trên cụm Hadoop một node (\filepath{outputs/hdfs/summary.json}).}
+\label{tab:hdfs}
+\begin{tabular}{L{3.6cm}L{10.2cm}}
+\toprule
+Hạng mục & Kết quả \\\midrule
+Bronze trên HDFS & 2 file, 5,74 MB, replication 1 \\
+MapReduce trên YARN & 3 map task, 1 reduce task; đọc 33.727 dòng, ghi 200 dòng; 22 giây \\
+Spark trên HDFS & Silver 33.727 dòng, 0 giá trị thiếu, Parquet phân vùng theo \texttt{split}; 14 giây \\
+Kiểm tra HDFS & \texttt{hdfs fsck /cmapss}: 6 block, 0 block thiếu bản sao, trạng thái HEALTHY \\
+Đối chiếu với Pandas & MapReduce và Spark đều khớp 200/200 động cơ, 0 ô lệch \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.88\linewidth]{../outputs/hdfs/figures/namenode_bronze.png}\\[6pt]
+\includegraphics[width=0.88\linewidth]{../outputs/hdfs/figures/yarn_applications.png}
+\caption[HDFS và YARN]{Trên: hai file raw FD001 trên HDFS, giao diện NameNode (replication 1,
+block 128 MB). Dưới: các job MapReduce đã hoàn thành trên YARN.}
+\label{fig:hdfs}
+\end{figure}
+
+Cụm chỉ có một node nên bước này không đo lợi ích hiệu năng của xử lý phân tán. Mục
+đích là chứng minh cùng dữ liệu và cùng phép tính chạy được trên HDFS, MapReduce và
+Spark, cho kết quả giống hệt Pandas. Với file lớn hơn 128 MB, HDFS sẽ chia file thành
+nhiều block trên nhiều DataNode và YARN chạy nhiều map task song song trên các block đó.
 
 \subsection{Truy vấn dữ liệu}
 \label{sec:dp-query}

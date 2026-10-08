@@ -31,8 +31,10 @@ chiếu kết quả. Cách gom, lưu trữ, truy vấn và biến đổi dữ li
 \toprule
 Bước & Công cụ & Đầu ra \\
 \midrule
+Thu thập & Python (urllib), MD5, SHA-256 & File raw và manifest nguồn \\
 Đọc và kiểm tra & Python, Pandas & Bảng quan sát đã kiểm tra, nhãn RUL train \\
 ETL & Pandas, PySpark, Parquet, SQLite & Lớp Silver/Gold, báo cáo parity \\
+Lưu trữ phân tán & Docker, Hadoop 3.4.3 (HDFS, YARN, MapReduce), Spark 4.0.1 & Bronze và Silver trên HDFS, bảng Gold từ MapReduce và Spark \\
 Khử nhiễu, bất thường & Pandas, scikit-learn & Tín hiệu EWMA, Health Index, cycle phát hiện bất thường \\
 Tạo đặc trưng & Pandas, PySpark & 126 đặc trưng window 30 cycles \\
 Mô hình & scikit-learn & GroupKFold, Ridge, HistGradientBoosting \\

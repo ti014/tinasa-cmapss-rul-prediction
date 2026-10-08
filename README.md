@@ -24,7 +24,8 @@ Main FD001 results:
 
 | Step | Result | Artifacts |
 |---|---|---|
-| Data pipeline | Schema, key and cycle checks; Silver/Gold Parquet and SQLite; Pandas and PySpark match exactly; at 10× scale local Spark is about 3.4× faster than Pandas | `outputs/etl/`, `outputs/benchmarks/` |
+| Data pipeline | Raw files downloaded from NASA with MD5/SHA-256 checks; schema, key and cycle checks; Silver/Gold Parquet and SQLite; Pandas and PySpark match exactly; at 10× scale local Spark is about 3.4× faster than Pandas | `outputs/acquisition/`, `outputs/etl/`, `outputs/benchmarks/` |
+| Distributed storage | Single-node Hadoop 3.4.3 in Docker: raw FD001 on HDFS; a MapReduce job on YARN and a Spark job reading HDFS both reproduce the Gold engine summary exactly (200/200 engines); `fsck` HEALTHY | `outputs/hdfs/`, `infra/hadoop/` |
 | Denoising | EWMA (span 10) removes about 86% of short-term fluctuation across 14 trending sensors | `outputs/degradation/` |
 | Time windows | 30-cycle window, 21 sensors × 6 statistics = 126 features | `outputs/features/` |
 | Trend and anomalies | 15/21 sensors change significantly between early and late life; the Health Index flags an anomaly in 100/100 train engines, median 121 cycles before failure | `outputs/statistics/`, `outputs/degradation/` |
@@ -274,7 +275,9 @@ ARIMA is an extended experiment and is not used for warnings.
 
 The Big Data component focuses on lifecycle and reproducibility rather than overstating dataset volume:
 
+- Scripted acquisition from the NASA portal with checksum verification.
 - Equivalent Pandas and PySpark ETL implementations.
+- HDFS storage with a MapReduce (Hadoop Streaming) job and a Spark job on a single-node Hadoop cluster in Docker.
 - Parquet as the analytical storage format.
 - SQLite as a portable local query and reporting layer.
 - Row-count, key, and aggregate parity checks between processing engines.
@@ -329,14 +332,18 @@ Current repository structure:
 ├── references/              # Bibliography, reading guide, papers, assignment context
 ├── notebooks/               # Executed: 00 data walkthrough, 01 EDA, 02 statistics, 03–06 result review
 ├── src/cmapss/              # data/, statistics/, etl/, features/, modeling/, timeseries/,
-│                            # degradation/ (EWMA, anomalies), maintenance/ (schedule), eda.py, validate.py,
+│                            # degradation/ (EWMA, anomalies), maintenance/ (schedule), hdfs/ (HDFS, MapReduce,
+│                            # Spark on HDFS), data/acquire.py (download + checksums), eda.py, validate.py,
 │                            # dashboard.py (artifact loaders), dashboard_app.py (Streamlit UI)
-├── scripts/                 # Notebook builders, report figures and improvement-study verification
+├── infra/hadoop/            # Docker Compose for the single-node Hadoop cluster and Spark client
+├── scripts/                 # Packaging, report figures and improvement-study verification
 ├── tests/                   # Data contract, CLI, EDA, statistics, ETL, features, modeling, timeseries, and reproducibility tests
 ├── outputs/validation/      # Data-validation reports
 ├── outputs/eda/             # EDA tables, figures, methods, and validation
 ├── outputs/statistics/      # Train-only sensor inference artifacts and validation
+├── outputs/acquisition/     # Download manifest: source URL, archive MD5, per-file SHA-256
 ├── outputs/etl/             # Silver/Gold Parquet, SQLite, metadata, benchmark
+├── outputs/hdfs/            # HDFS listing, fsck, MapReduce and Spark results, web UI screenshots
 ├── outputs/features/        # Gold rolling feature Parquet and metadata
 ├── outputs/modeling/        # Grouped CV, predictions, model artifact, final metrics
 ├── outputs/timeseries/      # Train-only PCA--ARIMA Health Index artifacts
@@ -456,7 +463,7 @@ After installing `requirements-dev.txt`, open the notebook from the repository r
 Select the `.venv` Python kernel and **Restart Kernel and Run All Cells**.
 This analyzes only train and recreates 12 CSV tables and 11 PNG figures.
 Validated fresh-kernel runs produced identical EDA artifacts in the same
-environment. The 2026-10-08 test run achieved **440 passed, 1 skipped**;
+environment. The 2026-10-09 test run achieved **453 passed, 1 skipped**;
 the TCN test is skipped because `torch` is unavailable. The 2026-09-29 run
 achieved **198 tests** and remains the historical evidence for data, statistics,
 ETL, feature, modeling, PCA--ARIMA, cross-dataset, dashboard, and end-to-end
@@ -515,6 +522,31 @@ Run the repeated-run statistics validation with:
 
 This is a local `PYTHONPATH` runtime audit, not a filesystem sandbox, CI
 enforcement, or verified branch protection.
+
+### Acquire the raw data
+
+`cmapss.data.acquire` downloads `CMAPSSData.zip` from the NASA open-data portal, checks the archive
+MD5 and the SHA-256 of every file, and writes `outputs/acquisition/manifest.json`. Existing files in
+`data/raw` are kept only when they are byte-identical; a different file stops the command instead of
+being overwritten.
+
+```powershell
+.venv\Scripts\python -m cmapss.data.acquire
+```
+
+### Run the HDFS, MapReduce and Spark stage
+
+Requires Docker. `infra/hadoop/docker-compose.yml` defines a single-node Hadoop 3.4.3 cluster
+(NameNode, DataNode, ResourceManager, NodeManager) and a Spark 4.0.1 client. The command puts the raw
+FD001 files on HDFS, runs a Hadoop Streaming MapReduce job on YARN and a Spark job that writes the
+Silver layer as Parquet back to HDFS, then compares both engine summaries with the Pandas Gold table:
+
+```powershell
+.venv\Scripts\python -m cmapss.hdfs            # add --keep-running to inspect http://localhost:9870
+```
+
+Evidence is written to `outputs/hdfs/` (summary, HDFS listing, `fsck` report, job log, tables and
+screenshots of the NameNode and YARN web UIs).
 
 ### Run the ETL
 

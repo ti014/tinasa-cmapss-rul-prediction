@@ -24,7 +24,8 @@ Kết quả chính trên FD001:
 
 | Bước | Kết quả | Artifact |
 |---|---|---|
-| Pipeline dữ liệu | Kiểm tra schema, khóa, cycle liên tục; Silver/Gold Parquet và SQLite; Pandas và PySpark khớp tuyệt đối; ở scale 10×, Spark local nhanh hơn Pandas khoảng 3,4 lần | `outputs/etl/`, `outputs/benchmarks/` |
+| Pipeline dữ liệu | Tải raw từ NASA có kiểm tra MD5/SHA-256; kiểm tra schema, khóa, cycle liên tục; Silver/Gold Parquet và SQLite; Pandas và PySpark khớp tuyệt đối; ở scale 10×, Spark local nhanh hơn Pandas khoảng 3,4 lần | `outputs/acquisition/`, `outputs/etl/`, `outputs/benchmarks/` |
+| Lưu trữ phân tán | Hadoop 3.4.3 một node trong Docker: raw FD001 trên HDFS; job MapReduce trên YARN và job Spark đọc HDFS đều tái tạo đúng bảng Gold (200/200 động cơ); `fsck` HEALTHY | `outputs/hdfs/`, `infra/hadoop/` |
 | Khử nhiễu | EWMA span 10 giảm khoảng 86% dao động ngắn hạn của 14 sensor có xu hướng | `outputs/degradation/` |
 | Cửa sổ thời gian | Window 30 cycles, 21 sensor × 6 thống kê = 126 đặc trưng | `outputs/features/` |
 | Xu hướng và bất thường | 15/21 sensor thay đổi có ý nghĩa giữa đầu và cuối vòng đời; Health Index phát hiện bất thường ở 100/100 động cơ train, trung vị 121 cycles trước khi hỏng | `outputs/statistics/`, `outputs/degradation/` |
@@ -272,7 +273,9 @@ Ma trận đại lượng cần ước lượng, đơn vị phân tích, cách c
 
 Thành phần Big Data tập trung vào vòng đời dữ liệu và khả năng tái lập, không phóng đại dung lượng của bộ dữ liệu:
 
+- Thu thập bằng script từ cổng dữ liệu NASA, có kiểm tra checksum.
 - Hai phiên bản ETL tương đương bằng Pandas và PySpark.
+- Lưu trữ trên HDFS, xử lý bằng job MapReduce (Hadoop Streaming) và job Spark trên cụm Hadoop một node trong Docker.
 - Parquet làm định dạng lưu trữ phân tích.
 - SQLite làm lớp truy vấn và báo cáo cục bộ, có tính di động.
 - Kiểm tra tương đương về số dòng, khóa và giá trị tổng hợp giữa hai công cụ xử lý.
@@ -318,14 +321,18 @@ Cấu trúc repository hiện tại:
 ├── references/              # Tài liệu tham khảo và bối cảnh assignment
 ├── notebooks/               # 00 walkthrough dữ liệu, 01 EDA, 02 thống kê, 03–06 rà soát kết quả (đã chạy)
 ├── src/cmapss/              # data/, statistics/, etl/, features/, modeling/, timeseries/,
-│                            # degradation/ (EWMA, bất thường), maintenance/ (lịch bảo trì), eda.py, validate.py,
+│                            # degradation/ (EWMA, bất thường), maintenance/ (lịch bảo trì), hdfs/ (HDFS, MapReduce,
+│                            # Spark trên HDFS), data/acquire.py (tải và kiểm tra checksum), eda.py, validate.py,
 │                            # dashboard.py (đọc artifact), dashboard_app.py (giao diện Streamlit)
-├── scripts/                 # Script sinh notebook, hình báo cáo và kiểm tra thử nghiệm cải thiện
+├── infra/hadoop/            # Docker Compose cho cụm Hadoop một node và Spark client
+├── scripts/                 # Đóng gói, hình báo cáo và kiểm tra thử nghiệm cải thiện
 ├── tests/                   # Kiểm thử data contract, CLI, EDA, thống kê, ETL, features, modeling, timeseries và tái lập
 ├── outputs/validation/      # Báo cáo kiểm tra dữ liệu hiện có
 ├── outputs/eda/             # Bảng, hình, phương pháp và kiểm tra EDA
 ├── outputs/statistics/      # Artifact suy luận sensor chỉ dùng train và validation
+├── outputs/acquisition/     # Manifest tải dữ liệu: nguồn, MD5 gói, SHA-256 từng file
 ├── outputs/etl/             # Parquet/SQLite Silver/Gold, metadata và benchmark
+├── outputs/hdfs/            # Danh sách file HDFS, fsck, kết quả MapReduce và Spark, ảnh giao diện web
 ├── outputs/features/        # Parquet Gold rolling features và metadata
 ├── outputs/modeling/        # Grouped CV, prediction, model artifact và final metrics
 ├── outputs/timeseries/      # Artifact Health Index và PCA--ARIMA train-only
@@ -443,7 +450,7 @@ Sau khi cài `requirements-dev.txt`, mở notebook từ thư mục gốc:
 Chọn kernel Python của `.venv` và **Restart Kernel and Run All Cells**.
 Notebook chỉ phân tích train và tạo lại 12 bảng CSV, 11 hình PNG.
 Các lần kiểm tra với kernel mới tạo tệp EDA giống nhau trong cùng môi trường.
-Bộ kiểm thử ngày 08/10/2026 đạt **440 passed, 1 skipped**; kiểm thử
+Bộ kiểm thử ngày 09/10/2026 đạt **453 passed, 1 skipped**; kiểm thử
 TCN được bỏ qua vì môi trường chưa có `torch`. Lần chạy ngày 29/09/2026 đạt
 **198 tests** và được giữ như bằng chứng lịch sử cho các nhánh dữ liệu, thống kê,
 ETL, đặc trưng, modeling, PCA--ARIMA, đánh giá liên subset, dashboard và tái lập
@@ -499,6 +506,30 @@ Có thể chạy lại kiểm tra thống kê bằng:
 
 Đây là audit cục bộ được nạp qua `PYTHONPATH`, không phải filesystem sandbox,
 CI enforcement hoặc branch protection.
+
+### Thu thập dữ liệu raw
+
+`cmapss.data.acquire` tải `CMAPSSData.zip` từ cổng dữ liệu mở của NASA, kiểm tra MD5 của gói và
+SHA-256 của từng file, rồi ghi `outputs/acquisition/manifest.json`. File đã có trong `data/raw` chỉ
+được giữ khi trùng từng byte; file khác nội dung làm lệnh dừng thay vì bị ghi đè.
+
+```powershell
+.venv\Scripts\python -m cmapss.data.acquire
+```
+
+### Chạy bước HDFS, MapReduce và Spark
+
+Cần Docker. `infra/hadoop/docker-compose.yml` dựng cụm Hadoop 3.4.3 một node (NameNode, DataNode,
+ResourceManager, NodeManager) và một Spark 4.0.1 client. Lệnh dưới đây đưa raw FD001 lên HDFS, chạy
+job MapReduce viết bằng Hadoop Streaming trên YARN và job Spark ghi lớp Silver dạng Parquet lên HDFS,
+rồi so hai bảng tổng hợp theo động cơ với bảng Gold của Pandas:
+
+```powershell
+.venv\Scripts\python -m cmapss.hdfs            # thêm --keep-running để xem http://localhost:9870
+```
+
+Bằng chứng được ghi vào `outputs/hdfs/` (tóm tắt, danh sách file trên HDFS, báo cáo `fsck`, log job,
+bảng kết quả và ảnh giao diện NameNode, YARN).
 
 ### Chạy ETL
 

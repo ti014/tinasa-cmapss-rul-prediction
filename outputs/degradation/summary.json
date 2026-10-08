@@ -1,0 +1,55 @@
+{
+  "author": "Phan Nguyễn Mai Phương — MSHV 25002711",
+  "input": {
+    "path": "data/raw/train_FD001.txt",
+    "sha256": "963b5e22825b34d8b21c69e1aeb4af3e647050eb672ee8834ba4b5d91d2de0f8"
+  },
+  "ewma_span": 10,
+  "sensors": [
+    "sensor_2",
+    "sensor_3",
+    "sensor_4",
+    "sensor_7",
+    "sensor_8",
+    "sensor_9",
+    "sensor_11",
+    "sensor_12",
+    "sensor_13",
+    "sensor_14",
+    "sensor_15",
+    "sensor_17",
+    "sensor_20",
+    "sensor_21"
+  ],
+  "noise_reduction_pct_median": 86.27534855806219,
+  "anomaly_config": {
+    "baseline_cycles": 30,
+    "z_threshold": 3.0,
+    "persistence": 5
+  },
+  "anomaly_smoothed": {
+    "n_engines": 100,
+    "n_detected": 100,
+    "lead_min": 67.0,
+    "lead_q1": 101.0,
+    "lead_median": 121.0,
+    "lead_q3": 149.25,
+    "lead_max": 289.0,
+    "n_lead_below_30": 0,
+    "detection_life_fraction_median": 0.3914905004013915
+  },
+  "anomaly_raw_for_comparison": {
+    "n_engines": 100,
+    "n_detected": 100,
+    "lead_min": 43.0,
+    "lead_q1": 60.0,
+    "lead_median": 72.5,
+    "lead_q3": 91.25,
+    "lead_max": 177.0,
+    "n_lead_below_30": 0,
+    "detection_life_fraction_median": 0.6169521967394308
+  },
+  "example_engine": 1,
+  "uses_rul_labels": false,
+  "reads_test_files": false
+}

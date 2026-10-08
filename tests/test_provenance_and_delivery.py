@@ -36,7 +36,7 @@ def test_historical_snapshot_survives_current_edits_but_rejects_tampering(tmp_pa
 
 def test_all_delivered_notebooks_identify_author():
     notebooks = list((ROOT / "notebooks").glob("*.ipynb"))
-    assert len(notebooks) == 6
+    assert len(notebooks) == 7
     for path in notebooks:
         notebook = nbformat.read(path, as_version=4)
         nbformat.validate(notebook)

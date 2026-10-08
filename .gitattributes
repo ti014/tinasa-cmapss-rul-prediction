@@ -10,3 +10,6 @@ outputs/benchmarks/**/source_snapshot/** -text
 *.parquet binary
 *.sqlite binary
 *.joblib binary
+# Các file chạy trong container Linux phải giữ xuống dòng LF.
+infra/** text eol=lf
+src/cmapss/hdfs/*.py text eol=lf

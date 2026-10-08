@@ -1,0 +1,58 @@
+{
+  "author": "Phan Nguyễn Mai Phương — MSHV 25002711",
+  "inputs": {
+    "train": {
+      "path": "data/raw/train_FD001.txt",
+      "sha256": "963b5e22825b34d8b21c69e1aeb4af3e647050eb672ee8834ba4b5d91d2de0f8"
+    },
+    "test": {
+      "path": "data/raw/test_FD001.txt",
+      "sha256": "3cda7109ce17bafb5443f2ac926cfcf88154b941b8c4cf95eb55d1ddd6f52851"
+    },
+    "predictions": {
+      "path": "outputs/modeling/predictions/final_predictions.parquet",
+      "sha256": "53b7a1e09e89efbeb90660e62974736d9eabdc48637fb979ad273ee8bf6bb033"
+    },
+    "labels": {
+      "path": "data/raw/RUL_FD001.txt",
+      "sha256": "a19c8ec94931949d0485bdc35118206e9c81c4547b422efb9cf86f4ceddbceca"
+    }
+  },
+  "rul_threshold": 30,
+  "ewma_span": 10,
+  "anomaly_config": {
+    "baseline_cycles": 30,
+    "z_threshold": 3.0,
+    "persistence": 5
+  },
+  "status_counts": {
+    "Cần bảo trì": 21,
+    "Theo dõi tăng cường": 59,
+    "Bình thường": 20
+  },
+  "n_anomaly_not_evaluable": 2,
+  "planning": {
+    "Ngay bây giờ": 21,
+    "1–25": 14,
+    "26–50": 8,
+    "51–100": 37,
+    "> 100": 20
+  },
+  "schedule_sha256": "74d1367839b0428dc38e1547d230a6558f01e141837820fe223c09fee9d67d6b",
+  "labels_read_after_schedule_written": true,
+  "evaluation": {
+    "n_engines": 100,
+    "n_actual_needs_maintenance": 25,
+    "n_flagged_needs_maintenance": 21,
+    "n_correct_needs_maintenance": 21,
+    "n_actual_needs_with_any_warning": 25,
+    "n_flagged_but_actual_above_threshold": 0,
+    "max_actual_rul_among_flagged": 29.0,
+    "cycles_to_maintenance_mae": 14.21,
+    "median_actual_rul_by_status": {
+      "Cần bảo trì": 16.0,
+      "Theo dõi tăng cường": 89.0,
+      "Bình thường": 114.0
+    }
+  }
+}

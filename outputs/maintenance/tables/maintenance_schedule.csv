@@ -1,0 +1,101 @@
+priority,engine_id,current_cycle,rul_pred,cycles_to_maintenance,maintenance_cycle,predicted_failure_cycle,anomaly_evaluable,anomaly_detected,anomaly_cycle,status
+1,34,203,6.1789,0,203,209,True,True,70,Cần bảo trì
+2,81,213,6.6710,0,213,219,True,True,80,Cần bảo trì
+3,76,205,6.8965,0,205,211,True,True,104,Cần bảo trì
+4,31,196,8.1032,0,196,204,True,True,66,Cần bảo trì
+5,68,187,8.7956,0,187,195,True,True,101,Cần bảo trì
+6,49,303,9.0748,0,303,312,True,True,133,Cần bảo trì
+7,20,184,9.8732,0,184,193,True,True,67,Cần bảo trì
+8,82,162,10.6211,0,162,172,True,True,52,Cần bảo trì
+9,35,198,13.9087,0,198,211,True,True,95,Cần bảo trì
+10,56,136,14.4761,0,136,150,True,True,46,Cần bảo trì
+11,42,156,15.1705,0,156,171,True,True,62,Cần bảo trì
+12,36,126,16.5074,0,126,142,True,True,76,Cần bảo trì
+13,66,147,17.9922,0,147,164,True,True,73,Cần bảo trì
+14,61,159,21.2008,0,159,180,True,True,85,Cần bảo trì
+15,24,186,22.5906,0,186,208,True,True,93,Cần bảo trì
+16,92,150,22.7707,0,150,172,True,True,79,Cần bảo trì
+17,52,189,22.8881,0,189,211,True,True,121,Cần bảo trì
+18,53,164,24.0554,0,164,188,True,True,55,Cần bảo trì
+19,64,168,26.0304,0,168,194,True,True,81,Cần bảo trì
+20,100,198,28.0423,0,198,226,True,True,97,Cần bảo trì
+21,41,123,29.6143,0,123,152,True,True,58,Cần bảo trì
+22,90,146,31.2191,1,147,177,True,True,67,Theo dõi tăng cường
+23,37,121,31.3637,1,122,152,True,True,64,Theo dõi tăng cường
+24,77,162,32.7631,2,164,194,True,True,71,Theo dõi tăng cường
+25,91,234,33.3640,3,237,267,True,True,59,Theo dõi tăng cường
+26,18,133,37.3757,7,140,170,True,True,69,Theo dõi tăng cường
+27,40,133,38.4593,8,141,171,True,True,57,Theo dõi tăng cường
+28,3,126,39.7262,9,135,165,True,True,88,Theo dõi tăng cường
+29,58,176,41.8000,11,187,217,True,True,75,Theo dõi tăng cường
+30,46,146,47.5968,17,163,193,True,True,74,Theo dõi tăng cường
+31,38,125,47.6097,17,142,172,True,True,58,Theo dõi tăng cường
+32,62,232,48.4962,18,250,280,True,True,139,Theo dõi tăng cường
+33,32,145,51.8120,21,166,196,True,True,74,Theo dõi tăng cường
+34,17,165,52.4491,22,187,217,True,True,77,Theo dõi tăng cường
+35,93,244,53.2897,23,267,297,True,True,81,Theo dõi tăng cường
+36,94,133,68.4825,38,171,201,True,True,78,Theo dõi tăng cường
+37,21,148,70.0409,40,188,218,True,True,99,Theo dõi tăng cường
+38,72,131,72.2471,42,173,203,True,True,70,Theo dõi tăng cường
+39,98,121,72.8301,42,163,193,True,True,64,Theo dõi tăng cường
+40,84,172,74.1603,44,216,246,True,True,63,Theo dõi tăng cường
+41,43,172,77.6420,47,219,249,True,True,73,Theo dõi tăng cường
+42,79,101,80.5914,50,151,181,True,True,55,Theo dõi tăng cường
+43,97,134,80.8510,50,184,214,True,True,86,Theo dõi tăng cường
+44,45,152,81.9302,51,203,233,True,True,103,Theo dõi tăng cường
+45,10,192,85.0486,55,247,277,True,True,109,Theo dõi tăng cường
+46,63,155,88.5517,58,213,243,True,True,140,Theo dõi tăng cường
+47,27,140,88.6238,58,198,228,True,True,73,Theo dõi tăng cường
+48,80,133,93.2856,63,196,226,True,True,97,Theo dõi tăng cường
+49,13,195,98.9251,68,263,293,True,True,122,Theo dõi tăng cường
+50,16,113,100.3782,70,183,213,True,True,47,Theo dõi tăng cường
+51,29,171,103.2484,73,244,274,True,True,137,Theo dõi tăng cường
+52,86,110,103.4294,73,183,213,True,True,91,Theo dõi tăng cường
+53,19,135,104.2414,74,209,239,True,True,91,Theo dõi tăng cường
+54,51,144,104.5581,74,218,248,True,True,97,Theo dõi tăng cường
+55,4,106,105.2097,75,181,211,True,True,59,Theo dõi tăng cường
+56,5,98,105.8949,75,173,203,True,True,73,Theo dõi tăng cường
+57,74,137,110.1510,80,217,247,True,True,93,Theo dõi tăng cường
+58,15,76,110.6771,80,156,186,True,True,64,Theo dõi tăng cường
+59,70,152,111.2795,81,233,263,True,True,113,Theo dõi tăng cường
+60,28,158,111.4630,81,239,269,True,True,113,Theo dõi tăng cường
+61,57,160,111.8974,81,241,271,True,True,47,Theo dõi tăng cường
+62,50,74,113.3071,83,157,187,True,True,66,Theo dõi tăng cường
+63,6,105,114.2123,84,189,219,True,True,69,Theo dõi tăng cường
+64,59,94,114.9856,84,178,208,True,True,90,Theo dõi tăng cường
+65,30,143,115.4790,85,228,258,True,True,114,Theo dõi tăng cường
+66,48,78,115.8884,85,163,193,True,True,72,Theo dõi tăng cường
+67,96,97,116.0918,86,183,213,True,True,87,Theo dõi tăng cường
+68,12,217,117.5591,87,304,334,True,True,150,Theo dõi tăng cường
+69,7,160,117.8237,87,247,277,True,True,102,Theo dõi tăng cường
+70,60,147,122.0359,92,239,269,True,True,100,Theo dõi tăng cường
+71,8,166,125.0839,95,261,291,True,True,60,Theo dõi tăng cường
+72,95,89,131.9005,101,190,220,True,True,65,Theo dõi tăng cường
+73,55,113,136.5717,106,219,249,True,True,76,Theo dõi tăng cường
+74,54,121,136.6440,106,227,257,True,True,112,Theo dõi tăng cường
+75,75,88,137.2003,107,195,225,True,True,88,Theo dõi tăng cường
+76,88,68,155.5686,125,193,223,True,True,39,Theo dõi tăng cường
+77,65,71,167.1868,137,208,238,True,True,68,Theo dõi tăng cường
+78,23,130,170.4768,140,270,300,True,True,99,Theo dõi tăng cường
+79,83,73,181.6740,151,224,254,True,True,54,Theo dõi tăng cường
+80,73,112,184.2864,154,266,296,True,True,82,Theo dõi tăng cường
+81,11,83,114.1825,84,167,197,True,False,,Bình thường
+82,47,73,114.6915,84,157,187,True,False,,Bình thường
+83,71,68,119.3639,89,157,187,True,False,,Bình thường
+84,26,76,122.7773,92,168,198,True,False,,Bình thường
+85,87,56,123.3764,93,149,179,True,False,,Bình thường
+86,14,46,123.8212,93,139,169,True,False,,Bình thường
+87,33,50,129.8273,99,149,179,True,False,,Bình thường
+88,44,54,130.7837,100,154,184,True,False,,Bình thường
+89,1,31,130.9711,100,131,161,False,False,,Bình thường
+90,67,71,131.2516,101,172,202,True,False,,Bình thường
+91,89,177,132.3397,102,279,309,True,False,,Bình thường
+92,9,55,134.5198,104,159,189,True,False,,Bình thường
+93,2,49,135.6308,105,154,184,True,False,,Bình thường
+94,69,54,141.6987,111,165,195,True,False,,Bình thường
+95,78,72,143.0083,113,185,215,True,False,,Bình thường
+96,85,34,148.2810,118,152,182,False,False,,Bình thường
+97,22,39,153.5543,123,162,192,True,False,,Bình thường
+98,99,97,155.0372,125,222,252,True,False,,Bình thường
+99,25,48,159.0225,129,177,207,True,False,,Bình thường
+100,39,37,159.7524,129,166,196,True,False,,Bình thường

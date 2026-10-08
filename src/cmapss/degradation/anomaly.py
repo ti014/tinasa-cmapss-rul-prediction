@@ -1,0 +1,82 @@
+"""Phát hiện dấu hiệu bất thường khi Health Index rời khỏi mức khỏe ban đầu."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+import numpy as np
+import pandas as pd
+
+from cmapss.data.contracts import ContractError
+
+
+@dataclass(frozen=True)
+class AnomalyConfig:
+    """Tham số được cố định trước khi chạy trên dữ liệu thật.
+
+    Attributes:
+        baseline_cycles: Số cycle đầu đời dùng làm mức khỏe tham chiếu.
+        z_threshold: Số độ lệch chuẩn Health Index phải giảm dưới mức tham chiếu.
+        persistence: Số cycle liên tiếp phải vượt ngưỡng trước khi báo, để một
+            dao động đơn lẻ không gây báo động.
+    """
+
+    baseline_cycles: int = 30
+    z_threshold: float = 3.0
+    persistence: int = 5
+
+
+def detect_anomalies(health_index: pd.DataFrame, config: AnomalyConfig, *, column: str) -> pd.DataFrame:
+    """Tìm cycle đầu tiên Health Index giảm bất thường so với đầu đời.
+
+    Với mỗi động cơ, mean và std của ``column`` trên ``baseline_cycles`` cycle
+    đầu là mức khỏe tham chiếu. ``z_t = (h_t - mean) / std``. Health Index giảm
+    khi động cơ suy giảm, nên cycle t vượt ngưỡng khi ``z_t <= -z_threshold``.
+    Báo bất thường tại cycle mà điều kiện đã giữ đủ ``persistence`` cycle liên
+    tiếp; phép kiểm tra chỉ dùng cycle hiện tại và quá khứ.
+
+    Returns:
+        Bảng mỗi động cơ một dòng: ``engine_id``, ``failure_cycle``,
+        ``detection_cycle`` (NA nếu không phát hiện), ``lead_cycles`` =
+        ``failure_cycle - detection_cycle`` và ``detected``.
+    """
+    required = {"engine_id", "cycle", column}
+    if not required.issubset(health_index.columns):
+        raise ContractError("COLUMNS", "detect_anomalies", f"cần các cột {sorted(required)}")
+    records = []
+    ordered = health_index.sort_values(["engine_id", "cycle"], kind="mergesort")
+    for engine_id, engine in ordered.groupby("engine_id", sort=True):
+        values = engine[column].to_numpy(dtype="float64")
+        cycles = engine["cycle"].to_numpy(dtype="int64")
+        if len(values) <= config.baseline_cycles:
+            raise ContractError(
+                "ANOMALY_BASELINE", f"engine {engine_id}", "chuỗi phải dài hơn đoạn tham chiếu"
+            )
+        baseline = values[: config.baseline_cycles]
+        mean = float(baseline.mean())
+        std = float(baseline.std(ddof=1))
+        if not np.isfinite(std) or std == 0.0:
+            raise ContractError("ANOMALY_BASELINE", f"engine {engine_id}", "std tham chiếu phải dương")
+        below = (values - mean) / std <= -config.z_threshold
+        below[: config.baseline_cycles] = False
+        run = 0
+        detection = None
+        for position, flag in enumerate(below):
+            run = run + 1 if flag else 0
+            if run >= config.persistence:
+                detection = int(cycles[position])
+                break
+        failure = int(cycles[-1])
+        records.append(
+            {
+                "engine_id": int(engine_id),
+                "failure_cycle": failure,
+                "baseline_mean": mean,
+                "baseline_std": std,
+                "detection_cycle": detection,
+                "lead_cycles": None if detection is None else failure - detection,
+                "detected": detection is not None,
+            }
+        )
+    result = pd.DataFrame.from_records(records)
+    return result.astype({"detection_cycle": "Int64", "lead_cycles": "Int64"})

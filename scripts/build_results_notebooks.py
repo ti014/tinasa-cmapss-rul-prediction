@@ -636,7 +636,9 @@ def build_degradation_maintenance() -> nbf.NotebookNode:
     """)
     nb.setup("""
     from cmapss.data.readers import read_observations, read_test_labels
-    from cmapss.degradation import INFORMATIVE_SENSORS, AnomalyConfig, detect_anomalies, ewma_smooth, noise_summary
+    from cmapss.degradation import (
+        INFORMATIVE_SENSORS, AnomalyConfig, detect_anomalies, ewma_smooth, noise_summary, sensitivity_grid,
+    )
     from cmapss.degradation.cli import EWMA_SPAN
     from cmapss.maintenance import (
         STATUS_ORDER,
@@ -727,7 +729,8 @@ def build_degradation_maintenance() -> nbf.NotebookNode:
     thành phần chính thứ nhất của PCA, đổi dấu để chỉ số giảm theo cycle, rồi chuẩn hóa
     về trung bình 0 và độ lệch chuẩn 1. Bước này không dùng nhãn RUL.
 
-    Mỗi động cơ được so với chính nó lúc khỏe. Gọi $\\mu_i, \\sigma_i$ là trung bình và
+    Mỗi động cơ được so sánh với chính nó ở giai đoạn vận hành ổn định đầu vòng đời.
+    Gọi $\\mu_i, \\sigma_i$ là trung bình và
     độ lệch chuẩn Health Index trong 30 cycle đầu; $z_{i,t} = (h_{i,t} - \\mu_i)/\\sigma_i$.
     Động cơ được báo bất thường tại cycle đầu tiên mà $z \\le -3$ đã giữ 5 cycle liên tiếp.
     """)
@@ -788,8 +791,32 @@ def build_degradation_maintenance() -> nbf.NotebookNode:
     """)
     nb.md("""
     Báo sớm hơn không tự động là tốt hơn. Mọi động cơ train đều đi đến hỏng và dữ liệu
-    không ghi lúc bắt đầu suy giảm, nên chưa đo được tỷ lệ báo động giả. Vì vậy đây là
-    cảnh báo mức 1: động cơ đã rời trạng thái khỏe, chưa nói còn bao lâu.
+    không ghi lúc bắt đầu suy giảm, nên chưa đo được tỷ lệ dương tính giả. Vì vậy đây là
+    cảnh báo mức 1: động cơ đã lệch khỏi trạng thái vận hành ổn định, chưa ước lượng
+    thời gian còn lại.
+
+    ### Phân tích độ nhạy của quy tắc
+
+    Ngưỡng $3\\sigma$ và 5 cycle liên tiếp là lựa chọn cố định trước. Ô dưới đây chạy lại
+    quy tắc trên lưới $z \\in \\{2, 3, 4\\}$ × số cycle liên tiếp $\\in \\{3, 5, 10\\}$.
+    Cột `n_early` đếm động cơ bị báo trong 10 cycle ngay sau đoạn tham chiếu (cycle 31–40);
+    báo động sớm như vậy nhiều khả năng do dao động, nên được dùng làm chỉ báo gián tiếp
+    cho độ nhạy quá mức khi không có nhãn bất thường.
+    """)
+    nb.code("""
+    sensitivity = sensitivity_grid(health_index, column="health_index")
+    stored_sensitivity = pd.read_csv(ROOT / "outputs/degradation/tables/anomaly_sensitivity.csv")
+    stored_ewma = stored_sensitivity[stored_sensitivity["signal"] == "ewma"].drop(columns="signal").reset_index(drop=True)
+    pd.testing.assert_frame_equal(sensitivity, stored_ewma, check_dtype=False)
+    sensitivity.assign(life_fraction_median=lambda d: (d["life_fraction_median"] * 100).round(1))
+    """)
+    nb.md("""
+    Cả 9 cấu hình đều phát hiện đủ 100 động cơ trước khi hỏng, nên lựa chọn tham số là
+    đánh đổi giữa thời gian báo trước và rủi ro báo quá sớm. Ngưỡng $2\\sigma$ với 3 cycle
+    báo 17 động cơ ngay trong cycle 31–40; ngưỡng $4\\sigma$ với 10 cycle không báo sớm
+    nhưng mất khoảng 22 cycle báo trước so với cấu hình đã chọn. Cấu hình $3\\sigma$, 5 cycle
+    nằm giữa: một trường hợp báo sớm, trung vị 121 cycle báo trước, lead time nhỏ nhất
+    67 cycle, vẫn lớn hơn ngưỡng cảnh báo mức 2 (30 cycle).
     """)
 
     nb.md("""

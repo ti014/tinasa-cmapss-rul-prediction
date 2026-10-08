@@ -63,6 +63,10 @@ AN, AN_RAW, ACFG = DEG["anomaly_smoothed"], DEG["anomaly_raw_for_comparison"], D
 MNT = json.loads((ROOT / "outputs/maintenance/summary.json").read_text(encoding="utf-8"))
 with (ROOT / "outputs/maintenance/tables/status_vs_actual.csv").open(encoding="utf-8") as file:
     MNT_CHECK = list(csv.reader(file))
+with (ROOT / "outputs/degradation/tables/anomaly_sensitivity.csv").open(encoding="utf-8") as file:
+    SENS = [row for row in csv.DictReader(file) if row["signal"] == "ewma"]
+SENS_LEAD_MIN = min(float(row["lead_min"]) for row in SENS)
+SENS_ALL_DETECTED = all(row["n_detected"] == row["n_engines"] for row in SENS)
 
 
 def vn(x: float, d: int = 2) -> str:
@@ -690,12 +694,14 @@ def slide_anomaly():
                 "Thời lượng: 1 phút 15 giây.\nĐây là phần phát hiện dấu hiệu bất thường của đề tài. Health Index gộp 21 sensor "
                 "đã khử nhiễu bằng StandardScaler rồi PCA một thành phần; chỉ số giảm khi động cơ suy giảm. Không dùng nhãn "
                 f"RUL.\nQuy tắc cố định trước: lấy trung bình và độ lệch chuẩn của {ACFG['baseline_cycles']} cycle đầu làm "
-                f"mức khỏe. Khi chỉ số giảm quá {vn(ACFG['z_threshold'], 0)} độ lệch chuẩn và giữ {ACFG['persistence']} cycle "
+                f"mức tham chiếu. Khi chỉ số giảm quá {vn(ACFG['z_threshold'], 0)} độ lệch chuẩn và giữ {ACFG['persistence']} cycle "
                 "liên tiếp thì báo. Yêu cầu liên tiếp để một gai đơn lẻ không gây báo động.\nHình trái, động cơ 1: báo ở "
                 f"cycle 84, hỏng ở cycle 192, tức trước 108 cycle. Hình phải: trung vị {vn(AN['lead_median'], 0)}, nhỏ nhất "
                 f"{vn(AN['lead_min'], 0)}, lớn nhất {vn(AN['lead_max'], 0)} cycle.\nCùng quy tắc trên tín hiệu gốc thì trung "
                 f"vị chỉ còn {vn(AN_RAW['lead_median'], 1)} cycle. Báo sớm hơn không tự động là tốt hơn: không có nhãn thời "
-                "điểm bắt đầu hỏng nên chưa đo được báo động giả.")
+                "điểm bắt đầu hỏng nên chưa đo được báo động giả.\nDải vàng phía dưới: em đã chạy lại quy tắc với 9 cấu "
+                "hình, 2/3/4 sigma nhân 3/5/10 cycle. Cả 9 đều bắt đủ 100 động cơ, động cơ báo muộn nhất vẫn còn ít nhất "
+                f"{vn(SENS_LEAD_MIN, 0)} cycle. Chọn tham số chỉ là đánh đổi giữa báo sớm và báo quá sớm.")
     picture(s, "outputs/degradation/figures/anomaly_health_index.png", 0.92, 2.45, 8.15, 3.1, align="left")
     cards = [
         (f"{AN['n_detected']}/{AN['n_engines']}", "động cơ được phát hiện trước hỏng hóc", BLUE, WHITE, ICE),
@@ -709,9 +715,11 @@ def slide_anomaly():
         text(s, 9.5, y + 0.06, 2.8, 0.48, value, size=24, bold=True, color=fg)
         text(s, 9.5, y + 0.53, 2.85, 0.38, label, size=10.5, color=sub)
     rect(s, 0.92, 5.7, 11.5, 0.85, GOLD_TINT)
-    text(s, 1.15, 5.74, 11.05, 0.78, f"Trên tín hiệu chưa khử nhiễu, trung vị giảm còn {vn(AN_RAW['lead_median'], 1)} cycle. Đây là cảnh báo mức 1: lệch khỏi "
-         "trạng thái vận hành ổn định. Giới hạn: chưa ước lượng được tỷ lệ dương tính giả do thiếu nhãn thời điểm bắt đầu suy giảm.",
-         size=12.5, anchor=MSO_ANCHOR.MIDDLE)
+    assert SENS_ALL_DETECTED
+    text(s, 1.15, 5.74, 11.05, 0.78, f"Độ nhạy: với 9 cấu hình (2/3/4σ × 3/5/10 cycle), quy tắc đều phát hiện {AN['n_engines']}/{AN['n_engines']} động cơ, "
+         f"lead time nhỏ nhất ≥ {vn(SENS_LEAD_MIN, 0)} cycle. Không khử nhiễu: trung vị còn {vn(AN_RAW['lead_median'], 1)} cycle. "
+         "Giới hạn: chưa ước lượng được tỷ lệ dương tính giả do thiếu nhãn thời điểm bắt đầu suy giảm.",
+         size=12, anchor=MSO_ANCHOR.MIDDLE)
 
 
 # ============================================================================ 13. Protocol

@@ -873,10 +873,38 @@ def page_anomaly(degradation: DegradationData) -> None:
         )
         st.altair_chart(histogram, width="stretch")
     with right:
-        _card("Quy tắc", f"So mỗi động cơ với chính nó lúc khỏe: báo khi Health Index giảm quá {config['z_threshold']:g} độ lệch chuẩn "
+        _card("Quy tắc", f"So mỗi động cơ với chính nó ở giai đoạn vận hành ổn định: báo khi Health Index giảm quá {config['z_threshold']:g} độ lệch chuẩn "
               f"so với {config['baseline_cycles']} cycles đầu, kéo dài {config['persistence']} cycles liên tiếp. Không dùng nhãn RUL.")
-        _card("Giới hạn", "Mọi động cơ train đều đi đến hỏng và không có nhãn thời điểm bắt đầu suy giảm, nên chưa đo được tỷ lệ báo "
-              "động giả. Đây là cảnh báo mức 1: động cơ đã rời trạng thái khỏe, chưa nói còn bao lâu.", kind="limit")
+        _card("Giới hạn", "Mọi động cơ train đều đi đến hỏng và không có nhãn thời điểm bắt đầu suy giảm, nên chưa đo được trực tiếp "
+              "tỷ lệ báo động giả. Đây là cảnh báo mức 1: động cơ đã lệch khỏi trạng thái vận hành ổn định, chưa ước lượng thời gian "
+              "còn lại.", kind="limit")
+    st.subheader("Độ nhạy của quy tắc theo ngưỡng z và số cycle liên tiếp")
+    signal_label = st.radio("Health Index", ["Sau khử nhiễu", "Tín hiệu gốc"], horizontal=True, key="an_sens_signal")
+    grid = degradation.sensitivity.loc[
+        degradation.sensitivity["signal"].eq("ewma" if signal_label == "Sau khử nhiễu" else "raw")
+    ]
+    table = pd.DataFrame(
+        {
+            "Ngưỡng z": grid["z_threshold"].map(lambda value: f"{value:g}σ"),
+            "Số cycle liên tiếp": grid["persistence"].astype(int),
+            "Phát hiện": grid["n_detected"].astype(int).astype(str) + "/" + grid["n_engines"].astype(int).astype(str),
+            "Lead time nhỏ nhất": grid["lead_min"].round(0).astype(int),
+            "Lead time trung vị": grid["lead_median"].round(1),
+            "% vòng đời lúc phát hiện": (grid["life_fraction_median"] * 100).round(1),
+            "Báo sớm (cycle 31–40)": grid["n_early"].astype(int),
+        }
+    )
+    chosen = grid["z_threshold"].eq(config["z_threshold"]) & grid["persistence"].eq(config["persistence"])
+    st.dataframe(
+        table.style.apply(lambda row: ["font-weight: 700"] * len(row) if chosen.loc[row.name] else [""] * len(row), axis=1)
+        .format({"Lead time trung vị": "{:.1f}", "% vòng đời lúc phát hiện": "{:.1f}"}),
+        hide_index=True, width="stretch",
+    )
+    st.caption(
+        "Dòng in đậm là cấu hình đang dùng. Không có nhãn bất thường, nên cột Báo sớm (số động cơ bị báo ngay sau đoạn tham chiếu) "
+        "là chỉ báo gián tiếp cho độ nhạy quá mức. Mọi cấu hình đều phát hiện đủ 100 động cơ; ngưỡng thấp báo sớm hơn nhưng "
+        "nhiều trường hợp báo quá sớm hơn, ngưỡng cao thì ngược lại."
+    )
     with st.expander("Hình kiểm định đầu/cuối vòng đời (outputs/statistics)"):
         _figure("outputs/statistics/figures/effect_size_ci.png", "Chênh lệch trung bình 30 cycles cuối và đầu, khoảng tin cậy 95%")
 

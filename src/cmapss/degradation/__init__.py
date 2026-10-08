@@ -5,7 +5,7 @@ và phát hiện dấu hiệu bất thường. Mọi phép tính chỉ dùng tra
 không dùng nhãn RUL và không tạo đặc trưng cho mô hình RUL.
 """
 
-from cmapss.degradation.anomaly import AnomalyConfig, detect_anomalies
+from cmapss.degradation.anomaly import AnomalyConfig, detect_anomalies, sensitivity_grid
 from cmapss.degradation.denoise import INFORMATIVE_SENSORS, ewma_smooth, noise_summary
 
 __all__ = [
@@ -14,4 +14,5 @@ __all__ = [
     "detect_anomalies",
     "ewma_smooth",
     "noise_summary",
+    "sensitivity_grid",
 ]

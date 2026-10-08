@@ -97,6 +97,9 @@ def test_degradation_data_has_raw_and_smoothed_signals() -> None:
     data = load_degradation_data(ROOT)
     assert len(data.sensors) == 14 and "sensor_11" in data.sensors
     assert data.signals["engine_id"].nunique() == 100
+    assert len(data.sensitivity) == 18 and set(data.sensitivity["signal"]) == {"ewma", "raw"}
+    chosen = data.sensitivity.query("signal == 'ewma' and z_threshold == 3.0 and persistence == 5").iloc[0]
+    assert chosen["lead_median"] == data.summary["anomaly_smoothed"]["lead_median"]
     view = engine_signal_view(data, 1, "sensor_11")
     assert set(view["Tín hiệu"]) == {"Tín hiệu gốc", "Sau EWMA"}
     with pytest.raises(ValueError):

@@ -45,7 +45,7 @@ khi RUL thật lớn hơn khoảng 150.}
 
 Hiện tượng này khớp với kết quả phát hiện bất thường ở Mục~\ref{sec:res-trend}:
 Health Index đi ngang trong khoảng 39\% đầu vòng đời (trung vị) rồi mới giảm rõ.
-Khi động cơ còn khỏe, sensor chủ yếu phản ánh dao động đo và khác biệt ban đầu giữa
+Ở giai đoạn vận hành ổn định, sensor chủ yếu phản ánh dao động đo và khác biệt ban đầu giữa
 các động cơ, nên khó phân biệt một động cơ còn 160 cycles với một động cơ còn 300
 cycles. Điều này cũng giải thích vì sao MAE cross-validation (20,21 cycles) cao hơn
 MAE test (15,35 cycles): 29,5\% số window train có RUL thật trên 125, trong khi RUL
@@ -86,12 +86,12 @@ tỷ lệ trễ từ 49\% xuống 6\% với chi phí báo sớm nhiều hơn kho
 downtime, mà dữ liệu không có.
 
 Hai mức cảnh báo bổ sung cho nhau. Mức một (bất thường trên Health Index) không cần
-nhãn và báo rất sớm, trung vị 121 cycles trước khi hỏng, nhưng chỉ nói ``động cơ đã
-rời trạng thái khỏe'' chứ không nói còn bao lâu. Mức hai (RUL dự đoán $\leq30$) cho
+nhãn và báo rất sớm, trung vị 121 cycles trước khi hỏng, nhưng chỉ cho biết động cơ
+đã lệch khỏi trạng thái vận hành ổn định, không ước lượng thời gian còn lại. Mức hai (RUL dự đoán $\leq30$) cho
 con số cụ thể để lên kế hoạch, nhưng có thể trễ với động cơ suy giảm nhanh. Trong
 vận hành, mức một có thể dùng để tăng tần suất theo dõi, còn mức hai dùng để đặt
 lịch bảo trì. Bảng~\ref{tab:maintenance-check} xác nhận cách chia này trên test:
-mức hai không báo nhầm động cơ nào, còn mức một rộng hơn (59 động cơ) và vẫn giữ
+mức hai không có trường hợp dương tính giả, còn mức một rộng hơn (59 động cơ) và vẫn giữ
 được 4 động cơ mà mức hai bỏ qua.
 
 \subsection{Vì sao mô hình FD001 không chuyển được sang subset khác}
@@ -140,13 +140,16 @@ Value & Phát hiện bất thường, dự đoán RUL và hai mức cảnh báo 
 \label{sec:limitations}
 \paragraph{Về dữ liệu.} C-MAPSS là dữ liệu mô phỏng; động cơ thực tế có lỗi cảm
 biến, dữ liệu thiếu và điều kiện vận hành phức tạp hơn. Dữ liệu không có chi phí
-bảo trì hay cách quy đổi cycle sang thời gian thực, nên báo cáo không đề xuất lịch
-bảo trì.
+bảo trì hay cách quy đổi cycle sang thời gian thực, nên lịch bảo trì ở
+Mục~\ref{sec:res-maintenance} chỉ tính bằng cycle với biên an toàn cố định 30 cycles,
+chưa tối ưu theo chi phí.
 
 \paragraph{Về đánh giá.} Metric test chỉ đo tại một điểm cắt mỗi động cơ. Kết quả
 cảnh báo dùng lại tập OOF đã dùng để chọn mô hình. Phát hiện bất thường không đo được
-tỷ lệ báo động giả vì không có động cơ khỏe đến cuối và không có nhãn thời điểm bắt
-đầu suy giảm. EWMA được đánh giá bằng mức giảm dao động, không bằng tín hiệu sạch.
+trực tiếp tỷ lệ báo động giả vì không có động cơ vận hành bình thường đến hết chuỗi
+quan sát và không có nhãn thời điểm bắt đầu suy giảm; phân tích độ nhạy
+(Bảng~\ref{tab:anomaly-sensitivity}) chỉ cho thấy kết luận ổn định theo tham số,
+không thay thế được phép đo này. EWMA được đánh giá bằng mức giảm dao động, không bằng tín hiệu sạch.
 
 \paragraph{Về hạ tầng.} Spark chạy \texttt{local[4]} trên Windows và ghi qua driver;
 chưa đo cluster nhiều máy hoặc HDFS. Dữ liệu nhân bản không làm tăng số mẫu khoa học
@@ -165,13 +168,14 @@ cơ suy giảm nhanh; (3) chạy pipeline Spark trên cụm nhiều máy với d
 
 \paragraph{Khó khăn 1: dữ liệu không có nhãn bất thường.} Đề tài yêu cầu phát hiện
 dấu hiệu bất thường, nhưng C-MAPSS không ghi lúc nào động cơ bắt đầu hỏng. Cách xử
-lý là so mỗi động cơ với chính nó lúc còn khỏe (30 cycles đầu) thay vì cần nhãn.
-Bài học: khi thiếu nhãn, hãy định nghĩa rõ ``bình thường'' trước rồi đo độ lệch so
-với nó, và nói rõ phần nào không đo được (ở đây là báo động giả).
+lý là so sánh mỗi động cơ với chính nó trong 30 cycles đầu, giai đoạn vận hành ổn
+định, thay vì dựa vào nhãn. Bài học: khi thiếu nhãn, cần xác định rõ trạng thái tham
+chiếu trước khi đo độ lệch, đồng thời nêu rõ đại lượng chưa kiểm chứng được (ở đây là
+tỷ lệ dương tính giả).
 
 \paragraph{Khó khăn 2: rò rỉ dữ liệu khi chia tập.} Nếu chia ngẫu nhiên theo dòng,
 các window gần như trùng nhau của cùng một động cơ sẽ nằm ở cả train và
-validation, làm sai số đẹp giả tạo. Cách xử lý là chia GroupKFold theo động cơ, tính
+validation, làm sai số validation thấp hơn thực tế. Cách xử lý là chia GroupKFold theo động cơ, tính
 window và EWMA chỉ từ quá khứ, và chỉ đọc nhãn test sau khi đã ghi dự đoán. Bài học:
 với dữ liệu chuỗi thời gian, đơn vị chia tập phải là thực thể (động cơ), không phải
 dòng.

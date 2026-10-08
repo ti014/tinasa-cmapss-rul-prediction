@@ -182,7 +182,50 @@ Health Index từ tín hiệu gốc thì trung vị thời gian báo trước ch
 ngưỡng $3\sigma$ nằm xa hơn. Báo sớm hơn không tự động là tốt hơn: vì mọi động cơ
 train đều đi đến hỏng và không có nhãn thời điểm bắt đầu suy giảm, báo cáo không
 đo được tỷ lệ báo động giả. Đây là tín hiệu cảnh báo mức một, cho biết động cơ đã
-rời trạng thái khỏe; con số RUL cụ thể đến từ mô hình ở mục kế tiếp.
+lệch khỏi trạng thái vận hành ổn định; ước lượng RUL cụ thể đến từ mô hình ở mục kế tiếp.
+
+\paragraph{Độ nhạy của quy tắc phát hiện.} Ngưỡng $3\sigma$ và 5 cycles liên tiếp
+được cố định trước khi chạy, nên cần kiểm tra kết luận có phụ thuộc mạnh vào lựa
+chọn này hay không. Bảng~\ref{tab:anomaly-sensitivity} chạy lại quy tắc trên Health
+Index sau khử nhiễu với lưới $z \in \{2, 3, 4\}$ và số cycle liên tiếp
+$k \in \{3, 5, 10\}$. Do không có nhãn bất thường, cột ``Báo sớm'' được dùng làm chỉ
+báo gián tiếp cho độ nhạy quá mức: số động cơ bị báo ngay trong 10 cycles sau đoạn
+tham chiếu (cycle 31--40), khi suy giảm thực sự khó có thể đã bắt đầu.
+
+\begin{table}[H]
+\centering\small
+\caption[Độ nhạy của quy tắc phát hiện bất thường]{Độ nhạy của quy tắc phát hiện bất thường trên Health Index sau
+EWMA, 100 động cơ train. Lead time là số cycle từ lúc phát hiện đến khi hỏng; tỷ lệ
+vòng đời là cycle phát hiện chia cho cycle hỏng (trung vị). Dòng in đậm là cấu hình
+được sử dụng.}
+\label{tab:anomaly-sensitivity}
+\begin{tabular}{rrrrrrr}
+\toprule
+$z$ & $k$ & Phát hiện & Lead time nhỏ nhất & Lead time trung vị & Tỷ lệ vòng đời & Báo sớm\\\midrule
+2 & 3 & 100/100 & 78 & 136,0 & 29,6\% & 17\\
+2 & 5 & 100/100 & 76 & 132,5 & 32,8\% & 8\\
+2 & 10 & 100/100 & 71 & 124,0 & 37,6\% & 0\\
+3 & 3 & 100/100 & 77 & 127,0 & 35,8\% & 2\\
+\textbf{3} & \textbf{5} & \textbf{100/100} & \textbf{67} & \textbf{121,0} & \textbf{39,1\%} & \textbf{1}\\
+3 & 10 & 100/100 & 62 & 110,5 & 44,4\% & 0\\
+4 & 3 & 100/100 & 62 & 114,5 & 42,8\% & 1\\
+4 & 5 & 100/100 & 60 & 109,0 & 45,0\% & 1\\
+4 & 10 & 100/100 & 50 & 98,5 & 49,2\% & 0\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Kết luận chính không phụ thuộc vào lựa chọn tham số: cả 9 cấu hình đều phát hiện
+đủ 100 động cơ, và lead time nhỏ nhất luôn từ 50 cycles trở lên, lớn hơn ngưỡng
+cảnh báo mức hai (30 cycles). Điều thay đổi là sự đánh đổi giữa thời gian báo trước
+và rủi ro báo quá sớm. Cấu hình $z = 2$, $k = 3$ cho trung vị lead time lớn nhất
+(136 cycles) nhưng báo 17 động cơ ngay sau đoạn tham chiếu. Cấu hình $z = 4$,
+$k = 10$ không có trường hợp báo sớm nhưng mất khoảng 22 cycles báo trước so với
+cấu hình được chọn. Cấu hình $z = 3$, $k = 5$ nằm giữa hai cực: một trường hợp báo
+sớm và trung vị 121 cycles. Cùng lưới tham số áp dụng trên Health Index từ tín hiệu
+gốc cũng phát hiện đủ 100 động cơ ở mọi cấu hình nhưng trung vị lead time chỉ từ 52
+đến 103 cycles (bảng đầy đủ trong
+\texttt{outputs/degradation/tables/anomaly\_sensitivity.csv}).
 
 \subsection{Dự đoán RUL}
 \label{sec:res-model}
@@ -236,8 +279,8 @@ NASA score & 1.513,2577 & [743,4999; 2.476,2743]\\\bottomrule
 Sai số phụ thuộc rõ vào RUL thật (Hình~\ref{fig:final-residuals}): MAE là 4,38
 cycles với 25 động cơ test có RUL thật từ 0 đến 30, 8,77 cycles với nhóm 31--60,
 và khoảng 21,3--21,5 cycles với các nhóm trên 60. Mô hình dự đoán tốt khi động cơ
-đã gần hỏng, tức đúng vùng quan trọng cho cảnh báo, và kém hơn khi động cơ còn
-khỏe. Mô hình có xu hướng dự đoán cao: 74/100 dự đoán cao hơn RUL thật; mười sai số
+đã gần hỏng, tức đúng vùng quan trọng cho cảnh báo, và kém hơn ở giai đoạn đầu vòng
+đời. Mô hình có xu hướng dự đoán cao: 74/100 dự đoán cao hơn RUL thật; mười sai số
 lớn nhất đều là dự đoán cao (lệch 37,6--57,5 cycles, ví dụ động cơ 23 có RUL thật
 113 nhưng được dự đoán 170,5) và chiếm khoảng 75,5\% tổng NASA score.
 

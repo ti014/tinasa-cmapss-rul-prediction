@@ -80,3 +80,49 @@ def detect_anomalies(health_index: pd.DataFrame, config: AnomalyConfig, *, colum
         )
     result = pd.DataFrame.from_records(records)
     return result.astype({"detection_cycle": "Int64", "lead_cycles": "Int64"})
+
+
+def sensitivity_grid(
+    health_index: pd.DataFrame,
+    *,
+    column: str,
+    z_thresholds: tuple[float, ...] = (2.0, 3.0, 4.0),
+    persistences: tuple[int, ...] = (3, 5, 10),
+    baseline_cycles: int = 30,
+    early_window: int = 10,
+) -> pd.DataFrame:
+    """Chạy lại ``detect_anomalies`` trên lưới ngưỡng z × số cycle liên tiếp.
+
+    Không có nhãn bất thường nên không đo được tỷ lệ dương tính giả trực tiếp.
+    Cột ``n_early`` đếm động cơ bị báo trong ``early_window`` cycle ngay sau đoạn
+    tham chiếu; báo động sớm như vậy nhiều khả năng do dao động chứ không phải
+    suy giảm thật, nên được dùng làm chỉ báo gián tiếp cho độ nhạy quá mức.
+
+    Returns:
+        Bảng mỗi cấu hình một dòng: ``z_threshold``, ``persistence``,
+        ``n_engines``, ``n_detected``, ``lead_min``, ``lead_median``,
+        ``life_fraction_median`` (cycle phát hiện / cycle hỏng) và ``n_early``.
+    """
+    rows = []
+    for z_threshold in z_thresholds:
+        for persistence in persistences:
+            config = AnomalyConfig(baseline_cycles=baseline_cycles, z_threshold=z_threshold, persistence=persistence)
+            events = detect_anomalies(health_index, config, column=column)
+            detected = events.loc[events["detected"]]
+            detection = detected["detection_cycle"].astype("float64")
+            leads = detected["lead_cycles"].astype("float64")
+            rows.append(
+                {
+                    "z_threshold": float(z_threshold),
+                    "persistence": int(persistence),
+                    "n_engines": int(len(events)),
+                    "n_detected": int(len(detected)),
+                    "lead_min": float(leads.min()) if len(detected) else float("nan"),
+                    "lead_median": float(leads.median()) if len(detected) else float("nan"),
+                    "life_fraction_median": float((detection / detected["failure_cycle"]).median())
+                    if len(detected)
+                    else float("nan"),
+                    "n_early": int((detection <= baseline_cycles + early_window).sum()),
+                }
+            )
+    return pd.DataFrame.from_records(rows)

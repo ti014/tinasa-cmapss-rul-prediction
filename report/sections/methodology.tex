@@ -68,8 +68,9 @@ chuẩn hóa về trung bình 0, độ lệch chuẩn 1. Bước này không dù
 
 \subsection{Phát hiện dấu hiệu bất thường}
 \label{sec:anomaly-method}
-Mỗi động cơ được so với chính nó lúc còn khỏe. Gọi $\mu_i$ và $\sigma_i$ là trung
-bình và độ lệch chuẩn HI trong 30 cycles đầu của động cơ $i$. Tại cycle $t>30$,
+Mỗi động cơ được so sánh với chính nó ở giai đoạn vận hành ổn định đầu vòng đời.
+Gọi $\mu_i$ và $\sigma_i$ là trung bình và độ lệch chuẩn HI trong 30 cycles đầu
+của động cơ $i$. Tại cycle $t>30$,
 \begin{equation}
  z_{i,t}=\frac{h_{i,t}-\mu_i}{\sigma_i}.
  \label{eq:anomaly-z}
@@ -80,7 +81,11 @@ khi chạy; yêu cầu liên tiếp giúp một gai đơn lẻ không gây báo 
 $\mu_i=0{,}94$ và $\sigma_i=0{,}07$ thì ngưỡng là $0{,}94-3\times0{,}07=0{,}73$.
 Kết quả được tóm tắt bằng số cycle từ lúc phát hiện đến khi hỏng. Vì mọi động cơ
 train đều đi đến hỏng và dữ liệu không ghi thời điểm bắt đầu suy giảm, phương pháp
-này không đo được tỷ lệ báo động giả.
+này không đo được trực tiếp tỷ lệ dương tính giả. Thay vào đó, quy tắc được chạy
+lại trên lưới ngưỡng $z\in\{2,3,4\}$ và số cycle liên tiếp $k\in\{3,5,10\}$; với
+mỗi cấu hình, báo cáo ghi số động cơ phát hiện được, lead time và số động cơ bị báo
+trong 10 cycles ngay sau đoạn tham chiếu, dùng làm chỉ báo gián tiếp cho độ nhạy
+quá mức (kết quả ở Bảng~\ref{tab:anomaly-sensitivity}).
 
 \subsection{Kiểm định xu hướng đầu/cuối vòng đời}
 \label{sec:paired-method}
@@ -115,7 +120,7 @@ Ba mô hình được so sánh:
 Mô hình được chọn bằng GroupKFold 5 fold theo \texttt{engine\_id}: mỗi fold có
 20 động cơ, và mọi window của một động cơ nằm cùng một fold. Chia ngẫu nhiên
 theo dòng sẽ đưa các window gần như trùng nhau của cùng động cơ vào cả train và
-validation, làm sai số validation thấp một cách giả tạo. Vì động cơ sống lâu có
+validation, làm sai số validation thấp hơn thực tế. Vì động cơ sống lâu có
 nhiều window hơn, trọng số mẫu được chuẩn hóa để tổng trọng số của mỗi động cơ
 bằng 1.
 

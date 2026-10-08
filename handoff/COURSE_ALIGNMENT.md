@@ -62,7 +62,7 @@ slide, dashboard và kịch bản dùng cùng một mô hình, một bảng cả
 | Mã nguồn tổ chức theo từng bước pipeline | `src/cmapss/` theo package; notebook 00 (dữ liệu) đến 06 (khử nhiễu, bảo trì) | **Đạt** |
 | Slide thuyết trình | `slides/cmapss_fd001_presentation.pptx` | **Đạt** |
 | Dữ liệu đã xử lý hoặc script tái tạo | `outputs/` và lệnh tái lập trong `FINAL_HANDOFF.md` | **Đạt** |
-| Một file zip theo cú pháp `Nhom<X>_TenDeTai_BaoCaoCuoiKy` | `scripts/package_submission.py --name ...` | **Chờ số X** từ giảng viên; bài làm cá nhân cần đăng ký với giảng viên |
+| Một file zip theo cú pháp `Nhom<X>_TenDeTai_BaoCaoCuoiKy` | `dist/Nhom4_PhanTichDuLieuIoTBaoTriDuDoan_BaoCaoCuoiKy.zip`, tạo bằng `scripts/package_submission.py` | **Đạt**; nhóm 4, bài làm cá nhân (cần đăng ký với giảng viên) |
 
 ### C. Đề cương môn học và CLO liên quan
 

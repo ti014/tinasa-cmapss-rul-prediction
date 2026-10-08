@@ -31,8 +31,9 @@ Mang theo bản PDF của slide trong USB, phòng khi máy chiếu không có Po
 ## Nộp bài
 
 Đề yêu cầu một file zip tên `Nhom<X>_TenDeTai_BaoCaoCuoiKy.zip`, gồm báo cáo, mã nguồn,
-slide và dữ liệu đã xử lý (hoặc script tạo lại dữ liệu). Việc đóng gói chưa làm; cần chốt
-tên file trước. Không đưa vào zip: `outputs/experiments/`, `tmp/`, `.venv/`,
+slide và dữ liệu đã xử lý (hoặc script tạo lại dữ liệu). File nộp là
+`dist/Nhom4_PhanTichDuLieuIoTBaoTriDuDoan_BaoCaoCuoiKy.zip`, tạo lại bằng `.venv\Scripts\python.exe scripts/package_submission.py`.
+Không đưa vào zip: các lần chạy thử nghiệm không dùng trong `outputs/experiments/`, `tmp/`, `.venv/`,
 `slides/node_modules/`, `slides/template/` và các file cấu hình cá nhân ở thư mục gốc
 (`auth.json`, `*.sqlite`, `config.toml`).
 

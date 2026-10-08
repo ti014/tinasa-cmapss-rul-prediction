@@ -11,9 +11,8 @@ reliability phần mềm được dẫn từ handoff ngày 07/10.
 Bản trình bày đầy đủ nằm ở Mục 4 của [báo cáo](../report/main.pdf), gồm sơ đồ
 luồng dữ liệu, sơ đồ quan hệ, truy vấn SQL/Spark SQL và code trích từ
 `src/cmapss`. Để chạy lại từng bước và xem kết quả trung gian, mở
-[`notebooks/00_data_pipeline_walkthrough.ipynb`](../notebooks/00_data_pipeline_walkthrough.ipynb);
-notebook được dựng lại bằng
-`.venv/Scripts/python.exe scripts/build_data_walkthrough_notebook.py --execute`.
+[`notebooks/00_data_pipeline_walkthrough.ipynb`](../notebooks/00_data_pipeline_walkthrough.ipynb)
+và chạy lần lượt các ô.
 
 ## Đối chiếu yêu cầu môn học
 

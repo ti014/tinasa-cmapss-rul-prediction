@@ -28,9 +28,16 @@ def main() -> None:
     run_info = json.loads((output / "run_info.json").read_text(encoding="utf-8"))
     assert run_info["test_label_joined"]
     source_proof = verify_source_snapshot(output, manifest, Path.cwd())
+    # The modeling figures were relabelled in Vietnamese after this run. They are
+    # presentation only, so the live copies are not compared; the snapshot copies
+    # and every model, prediction and table file still are.
+    relabelled_figures = []
     for name, digest in manifest["baseline_sha256"].items():
-        assert hashlib.sha256((Path("outputs/modeling") / name).read_bytes()).hexdigest() == digest, name
         assert hashlib.sha256((output / "baseline_snapshot" / name).read_bytes()).hexdigest() == digest, name
+        if Path(name).parent.name == "figures":
+            relabelled_figures.append(Path(name).as_posix())
+            continue
+        assert hashlib.sha256((Path("outputs/modeling") / name).read_bytes()).hexdigest() == digest, name
     for name, digest in manifest["identity"]["inputs"].items():
         assert hashlib.sha256(Path(name).read_bytes()).hexdigest() == digest, name
     folds = pd.read_csv(output / "outer_assignments.csv")
@@ -101,6 +108,7 @@ def main() -> None:
              "outer_engines": 100, "rows_per_stage": 17731, "stages": 4,
              "validated_fit_records": len(cache_records), "paired_ci_recomputed": True,
              "saved_model_predictions_match": True, "test_predictions": 100,
+             "relabelled_figures_not_compared": relabelled_figures,
              "source_verification": source_proof}
     (output / "validation.json").write_text(json.dumps(proof, indent=2)+"\n", encoding="utf-8")
     print(json.dumps(proof, indent=2))

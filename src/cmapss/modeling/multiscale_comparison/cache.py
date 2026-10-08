@@ -1,4 +1,7 @@
-"""Checksum-bound process workers; validation engines never enter fitting."""
+"""Cached HGB fit tasks run in worker processes.
+
+Each cache entry is keyed by the source matrix checksum, arm, config and engine split.
+"""
 
 from __future__ import annotations
 
@@ -26,7 +29,7 @@ ALL_FEATURES = tuple(dict.fromkeys(column for columns in FEATURE_COLUMNS_BY_ARM.
 
 @lru_cache(maxsize=2)
 def _load(path: str, identity: str, file_hash: str) -> tuple[pd.DataFrame, str]:
-    """Load immutable union matrix once in each process."""
+    """Load and validate the frozen train matrix once per process."""
     if not identity:
         raise ValueError("source identity must be nonempty")
     frame = pd.read_parquet(path)
@@ -45,13 +48,13 @@ def _load(path: str, identity: str, file_hash: str) -> tuple[pd.DataFrame, str]:
 
 
 def load_frozen_features(path: Path, identity: str) -> pd.DataFrame:
-    """Return a private copy, invalidating cached values when bytes change."""
+    """Return a copy of the frozen matrix; the cache is keyed by file checksum."""
     path = Path(path).resolve()
     return _load(str(path), identity, _file_digest(path))[0].copy(deep=True)
 
 
 def _validate(predictions: pd.DataFrame, validation: pd.DataFrame, arm_id: str) -> None:
-    """Reject cached misalignment, target changes and nonfinite outputs."""
+    """Check keys, raw truth, arm ID and finiteness of cached predictions."""
     if not predictions[list(KEY)].reset_index(drop=True).equals(validation[list(KEY)].reset_index(drop=True)):
         raise ValueError("cache validation keys differ")
     if not np.array_equal(predictions.y_true, validation.rul):
@@ -63,7 +66,7 @@ def _validate(predictions: pd.DataFrame, validation: pd.DataFrame, arm_id: str) 
 def run_fit_task(feature_path: Path, arm_id: str, fit_ids: tuple[int, ...],
                  validation_ids: tuple[int, ...], config: StudyConfig,
                  cache_dir: Path, identity: str) -> str:
-    """Fit one fixed arm and cache predictions with exact source/data binding."""
+    """Fit one arm on ``fit_ids``, predict ``validation_ids`` and return the cached parquet path."""
     spec = feature_spec(arm_id)
     if len(set(fit_ids)) != len(fit_ids) or len(set(validation_ids)) != len(validation_ids):
         raise ValueError("engine IDs must not repeat")

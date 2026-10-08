@@ -1,4 +1,4 @@
-"""Frozen protocol and candidate contracts for the TCN comparison."""
+"""Config and candidate specs for the TCN comparison."""
 
 from __future__ import annotations
 
@@ -14,9 +14,7 @@ Family = Literal["tcn_uncapped", "tcn_cap125"]
 class TCNConfig:
     """Configuration for the causal residual TCN study.
 
-    The scientific defaults are deliberately small enough to run on CPU while
-    retaining the declared four blocks and 32 hidden channels.  ``epochs`` is
-    the only training budget parameter; it is frozen before a run starts.
+    Defaults (4 blocks, 32 channels) are small enough to train on CPU.
     """
 
     sequence_length: int = 30
@@ -54,18 +52,17 @@ class TCNConfig:
 
     @property
     def scientific(self) -> bool:
-        """Keep this exploratory scaffold ineligible for scientific promotion.
+        """Always False: the TCN runner is exploratory.
 
-        The current runner lacks the matched endpoint panel, warning-policy
-        safeguards and source/model receipts required by the accepted gate.
-        More epochs alone cannot make the run a confirmed comparison.
+        It has no matched endpoint panel, warning-policy checks or model
+        receipts, so its results are never eligible for promotion.
         """
         return False
 
 
 @dataclass(frozen=True)
 class TCNSpec:
-    """One declared target-label treatment."""
+    """One target-label treatment (uncapped or capped at 125)."""
 
     candidate_id: str
     family: Family
@@ -80,7 +77,7 @@ class TCNSpec:
 
 
 def specs() -> tuple[TCNSpec, ...]:
-    """Return the two predeclared TCN arms."""
+    """Return the two TCN arms."""
     return (TCNSpec("tcn_uncapped", "tcn_uncapped", None),
             TCNSpec("tcn_cap125", "tcn_cap125", 125))
 

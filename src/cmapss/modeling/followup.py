@@ -1,8 +1,7 @@
-"""Predeclared nested studies for capped targets, history and operating regimes.
+"""Nested CV studies for capped targets, history features and operating regimes.
 
-Run with ``python -m cmapss.modeling.followup --datasets FD001 FD002 FD004``.
-Every run freezes inputs, source and candidates before fitting. Test labels are
-read only after the final model and endpoint predictions have been written.
+Usage: ``python -m cmapss.modeling.followup --datasets FD001 FD002 FD004``.
+Test labels are read only after the final model and test predictions are saved.
 """
 
 from __future__ import annotations
@@ -37,7 +36,7 @@ from cmapss.project import FOLLOWUP_RUN
 
 @dataclass(frozen=True)
 class StudyConfig:
-    """Nested evaluation settings frozen in each study manifest."""
+    """Nested CV settings, recorded in the study manifest."""
 
     outer_splits: int = 5
     inner_splits: int = 3
@@ -54,7 +53,7 @@ class StudyConfig:
 
 
 def study_candidates(dataset_id: str) -> tuple[FeatureRecipe, ...]:
-    """Return the complete fixed search space declared before observing results."""
+    """Fixed candidate list for a dataset."""
     if dataset_id == "FD001":
         return tuple(
             FeatureRecipe(
@@ -86,7 +85,7 @@ def _join_targets(features: pd.DataFrame, targets: pd.DataFrame) -> pd.DataFrame
 
 
 class FeatureStore:
-    """Cache causal raw representations; learned normalization remains fold-local."""
+    """Cache raw features; condition normalization is always fitted inside a fold."""
 
     def __init__(self, observations: pd.DataFrame, targets: pd.DataFrame) -> None:
         self.observations = observations.loc[observations.split.eq("train")].copy()
@@ -94,7 +93,7 @@ class FeatureStore:
         self.raw: dict[tuple[int, bool, bool], pd.DataFrame] = {}
 
     def features(self, recipe: FeatureRecipe) -> pd.DataFrame:
-        """Build a representation with no learned preprocessing once per study."""
+        """Features without fitted preprocessing, built once and cached."""
         if recipe.normalize_conditions:
             raise ValueError("Normalized features must be constructed inside a fold")
         key = (recipe.window, recipe.history, recipe.settings)
@@ -105,7 +104,7 @@ class FeatureStore:
     def fold_features(
         self, recipe: FeatureRecipe, train_ids: set[int], validation_ids: set[int], seed: int,
     ) -> tuple[pd.DataFrame, pd.DataFrame, OperatingConditionNormalizer | None]:
-        """Fit preprocessing on training IDs and transform the requested engine groups."""
+        """Fit preprocessing on train engines and return train/validation features."""
         if train_ids & validation_ids:
             raise ValueError("Training and validation engines overlap")
         normalizer = None
@@ -123,7 +122,7 @@ class FeatureStore:
 
 @dataclass
 class RecipeModel:
-    """Persist the feature recipe, learned preprocessing and fitted regressor together."""
+    """Feature recipe, fitted normalizer and regressor saved as one object."""
 
     recipe: FeatureRecipe
     estimator: HistGradientBoostingRegressor
@@ -131,7 +130,7 @@ class RecipeModel:
     feature_columns: tuple[str, ...]
 
     def predict(self, observations: pd.DataFrame) -> pd.DataFrame:
-        """Return one prediction per available trailing window with its original keys."""
+        """One prediction per window, keyed by split/engine_id/cycle."""
         features = build_recipe_features(observations, self.recipe, normalizer=self.normalizer)
         result = features.loc[:, list(KEY)].copy()
         result["model_name"] = self.recipe.name
@@ -144,7 +143,7 @@ class RecipeModel:
 def fit_recipe(
     train: pd.DataFrame, recipe: FeatureRecipe, normalizer: OperatingConditionNormalizer | None, config: StudyConfig,
 ) -> RecipeModel:
-    """Fit with capped training labels while keeping the source targets unchanged."""
+    """Fit the regressor; the RUL cap applies to a copy of the labels."""
     columns = tuple(column for column in train if "__" in column)
     target = train.rul.to_numpy(dtype="float64", copy=True)
     if recipe.target_cap is not None:
@@ -160,7 +159,7 @@ def fit_pair(
     store: FeatureStore, recipe: FeatureRecipe, train_ids: set[int], validation_ids: set[int],
     config: StudyConfig, cache: Path, identity: str,
 ) -> pd.DataFrame:
-    """Cache fitted-fold predictions using source, data, config and engine identities."""
+    """Fit one fold and return validation predictions, cached by a hash of the fold setup."""
     if train_ids & validation_ids:
         raise ValueError("Training and validation engines overlap")
     record = {"identity": identity, "recipe": asdict(recipe), "train_engines": sorted(train_ids), "validation_engines": sorted(validation_ids)}
@@ -194,7 +193,7 @@ def fit_pair(
 
 
 def select_record(records: list[dict[str, Any]], dataset_id: str) -> int:
-    """Use the selection rule recorded in the journal, without consulting outer data."""
+    """Index of the selected candidate, using inner-CV metrics only."""
     if dataset_id == "FD001":
         baseline = next(record for record in records if record["candidate_id"] == "baseline")
         return _select_candidate(records, baseline)
@@ -205,7 +204,7 @@ def inner_selection(
     store: FeatureStore, frame: pd.DataFrame, candidates: tuple[FeatureRecipe, ...], dataset_id: str,
     config: StudyConfig, output: Path, identity: str, outer_fold: int,
 ) -> tuple[FeatureRecipe, pd.DataFrame]:
-    """Select from grouped inner predictions and save all candidate scores."""
+    """Score every candidate with inner GroupKFold and pick one."""
     splits = list(GroupKFold(config.inner_splits).split(frame, frame.rul, frame.engine_id))
     records: list[dict[str, Any]] = []
     for recipe in candidates:
@@ -228,7 +227,7 @@ def freeze_manifest(
     repo: Path, output: Path, dataset_id: str, observations: Path, targets: Path,
     candidates: tuple[FeatureRecipe, ...], config: StudyConfig,
 ) -> str:
-    """Freeze relevant source and input bytes, and refuse incompatible resumes."""
+    """Hash source files, inputs and config; refuse to resume if any of them changed."""
     source_paths = sorted(path for folder in ("data", "features", "modeling") for path in (repo / "src/cmapss" / folder).glob("*.py"))
     input_paths = [observations, targets]
     if dataset_id == "FD001" and config.outer_splits == 5:
@@ -257,7 +256,7 @@ def freeze_manifest(
 
 
 def run_study(dataset_id: str, repo: Path, output: Path, config: StudyConfig, *, evaluate_test: bool = True) -> dict[str, Any]:
-    """Run one nested study and write a complete, independently inspectable artifact set."""
+    """Run the nested study for one dataset and write all artifacts to ``output``."""
     started = time.perf_counter()
     source = repo / ("outputs/etl" if dataset_id == "FD001" else f"outputs/cross_dataset/{dataset_id}/etl")
     observation_path, target_path = source / "silver/observations.parquet", source / "silver/train_targets.parquet"
@@ -348,7 +347,7 @@ def run_study(dataset_id: str, repo: Path, output: Path, config: StudyConfig, *,
 
 
 def main() -> None:
-    """Execute each requested dataset sequentially with the same frozen protocol."""
+    """Run the study for each requested dataset."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--datasets", nargs="+", choices=("FD001", "FD002", "FD004"), default=["FD001", "FD002", "FD004"])
     parser.add_argument("--output-root", type=Path, default=FOLLOWUP_RUN)

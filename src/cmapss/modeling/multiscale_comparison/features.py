@@ -1,9 +1,7 @@
-"""Build fixed causal HGB feature arms on one common observation key panel.
+"""Build the three causal HGB feature arms on a shared key panel.
 
-The baseline is the unchanged audit representation. Window10 statistics and
-the first30 sensor profile are separate additions to that baseline. No
-parameter is fitted across engines, and targets or future observations are
-never accepted by the observation contract.
+The baseline reuses the audit study features. The other arms add rolling-10
+statistics or a first-30-cycle sensor profile. Nothing is fitted across engines.
 """
 
 from __future__ import annotations
@@ -29,19 +27,9 @@ _GROUP_KEY = ("split", "engine_id")
 
 
 def feature_columns(arm: str) -> tuple[str, ...]:
-    """Return the frozen model-column order for one predeclared arm.
+    """Return the model feature columns of an arm, in fitting order.
 
-    ``cycle`` is both a key and a model feature; it is stored once in the
-    DataFrame and occurs exactly once in the returned feature order.
-
-    Args:
-        arm: One of the three fixed HGB arm identifiers.
-
-    Returns:
-        Unique, label-free model feature names in fitting order.
-
-    Raises:
-        ValueError: The arm name is not predeclared.
+    ``cycle`` is both a key and a feature; it appears once.
     """
     try:
         return tuple(FEATURE_COLUMNS_BY_ARM[arm])
@@ -50,12 +38,12 @@ def feature_columns(arm: str) -> tuple[str, ...]:
 
 
 def _stored_columns(arm: str) -> list[str]:
-    """Keep every key and model column once, with keys stored first."""
+    """Keys first, then model columns, each once."""
     return list(dict.fromkeys((*KEY, *feature_columns(arm))))
 
 
 def _initial_profile(observations: pd.DataFrame) -> pd.DataFrame:
-    """Compute each engine's first30 sensor mean and sample standard deviation."""
+    """Per-engine sensor mean and sample std (ddof=1) over cycles 1..30."""
     initial = observations.loc[observations.cycle.le(30)]
     grouped = initial.groupby(list(_GROUP_KEY), sort=True)[list(SENSORS)]
     means = grouped.mean()
@@ -70,7 +58,7 @@ def _initial_profile(observations: pd.DataFrame) -> pd.DataFrame:
 
 
 def _validate_arm(frame: pd.DataFrame, arm: str, keys: pd.DataFrame) -> None:
-    """Reject a missing, reordered or nonfinite feature matrix before fitting."""
+    """Check column order, keys and finiteness of one arm."""
     if list(frame.columns) != _stored_columns(arm):
         raise ValueError(f"feature schema mismatch for {arm}")
     actual_keys = frame.loc[:, list(KEY)].reset_index(drop=True)
@@ -83,32 +71,16 @@ def _validate_arm(frame: pd.DataFrame, arm: str, keys: pd.DataFrame) -> None:
 
 
 def build_feature_arms(observations: pd.DataFrame) -> dict[str, pd.DataFrame]:
-    """Construct three causal representations on all baseline cycle>=30 rows.
+    """Build the three arms on all rows with cycle >= 30.
 
-    The 169-feature baseline has the exact values and column dtypes of the
-    existing audit representation on canonical observations. The multi-scale arm appends
-    126 trailing10 sensor statistics. The initial-profile arm instead appends
-    42 sensor means/sample standard deviations from cycles1..30. Every arm
-    has exactly the same keys; adding a shorter window never adds or drops
-    evaluation rows.
+    - ``hgb_baseline169``: identical to the audit study features (169).
+    - ``hgb_multiscale10_30``: baseline + 126 trailing-10 sensor stats (295).
+    - ``hgb_initial_profile42``: baseline + 42 first-30-cycle sensor mean/std (211).
 
-    Args:
-        observations: Label-free observations with a complete continuous
-            prefix from cycle1 and at least30 cycles for each engine/split.
-
-    Returns:
-        ``hgb_baseline169`` (169 model features),
-        ``hgb_multiscale10_30`` (295), and ``hgb_initial_profile42`` (211).
-        Keys are stored first and ``cycle`` is not duplicated.
-
-    Raises:
-        ContractError: Observation schema, keys or numeric values are invalid.
-        ValueError: A first30 prefix is incomplete, keys fail alignment, or a
-            feature is not finite.
-
-    Example:
-        If sensor1 equals cycle, the cycle30 row has a trailing10 mean of25.5
-        and an initial30 mean of15.5. Changing cycle31 leaves that row intact.
+    All arms share the same keys, so the shorter window does not change the
+    evaluated rows. Each engine needs at least 30 contiguous cycles from cycle 1.
+    Example: if sensor1 equals cycle, the cycle-30 row has a trailing-10 mean
+    of 25.5 and an initial-30 mean of 15.5.
     """
     validate_observations(observations, source="multiscale feature observations")
     ordered = observations.sort_values(list(KEY), kind="mergesort").reset_index(drop=True)
@@ -141,7 +113,7 @@ def build_feature_arms(observations: pd.DataFrame) -> dict[str, pd.DataFrame]:
 
 
 def build_arm_features(observations: pd.DataFrame, arm: str) -> pd.DataFrame:
-    """Build one predeclared arm while applying the same common-panel checks."""
+    """Build a single arm (all arms are built so the shared-key checks still run)."""
     feature_columns(arm)
     return build_feature_arms(observations)[arm]
 

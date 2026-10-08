@@ -37,19 +37,7 @@ def _read_table(path: Path, dtypes: dict[str, str]) -> pd.DataFrame:
 
 
 def read_observations(path: str | Path, *, split: Split) -> pd.DataFrame:
-    """Đọc và kiểm tra file 26 cột; thêm split, giữ nguyên thứ tự dòng.
-
-    Args:
-        path: File observations không header.
-        split: Nguồn của file, phải là train hoặc test.
-
-    Returns:
-        DataFrame gồm split, engine_id, cycle, 3 settings và 21 sensors.
-
-    Raises:
-        ContractError: Schema, kiểu dữ liệu, khóa hoặc cycle không hợp lệ.
-        OSError: Không đọc được file.
-    """
+    """Đọc và kiểm tra file 26 cột không header; thêm cột split, giữ thứ tự dòng."""
     path = Path(path)
     if split not in SPLITS:
         raise ContractError("SPLIT", path.name, "split phải là train hoặc test")
@@ -61,20 +49,9 @@ def read_observations(path: str | Path, *, split: Split) -> pd.DataFrame:
 
 
 def read_test_labels(path: str | Path) -> pd.DataFrame:
-    """Đọc riêng test labels; dòng thứ i thuộc test engine i.
+    """Đọc file nhãn test (một cột RUL); dòng thứ i thuộc test engine i.
 
-    Chỉ gọi khi kiểm tra tính toàn vẹn hoặc đánh giá cuối. Hàm không đọc
-    observations, không join nhãn và không thuộc luồng huấn luyện.
-
-    Args:
-        path: File một cột RUL nguyên, không âm, không header.
-
-    Returns:
-        DataFrame gồm split, engine_id và rul.
-
-    Raises:
-        ContractError: Schema hoặc giá trị nhãn không hợp lệ.
-        OSError: Không đọc được file.
+    Trả về cột split, engine_id, rul. Chỉ dùng cho đánh giá cuối, không dùng khi huấn luyện.
     """
     path = Path(path)
     labels = _read_table(path, {"rul": "int64"})

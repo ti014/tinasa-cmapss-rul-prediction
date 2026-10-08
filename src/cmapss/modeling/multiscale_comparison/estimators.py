@@ -1,4 +1,4 @@
-"""Persisted HGB predictors for the three predeclared causal feature arms."""
+"""HGB regressor fit and predict for the three feature arms."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ from cmapss.modeling.lightgbm_comparison.estimators import engine_total_one_weig
 
 @dataclass
 class FittedHGB:
-    """Keep the feature order and all learned state required for inference."""
+    """Fitted HGB model with its feature order and fit metadata."""
 
     arm_id: str
     feature_columns: tuple[str, ...]
@@ -26,7 +26,7 @@ class FittedHGB:
     weight_metadata: dict[str, Any]
 
     def predict(self, frame: pd.DataFrame) -> np.ndarray:
-        """Predict on causal features without consulting a label column."""
+        """Predict raw RUL from the arm's feature columns."""
         values = frame.loc[:, list(self.feature_columns)].to_numpy(dtype="float64")
         if not np.isfinite(values).all():
             raise ValueError("nonfinite inference features")
@@ -41,7 +41,7 @@ def fit_predictor(train: pd.DataFrame, arm_id: str, config: StudyConfig) -> Fitt
     """Fit raw RUL with one total unit of sample weight per engine.
 
     For example, engines with 100 and 200 rows receive row weights 1/100 and
-    1/200 respectively. Feature order comes only from the declared arm.
+    1/200 respectively.
     """
     spec = feature_spec(arm_id)
     if train.empty or not train.split.eq("train").all() or "rul" not in train:

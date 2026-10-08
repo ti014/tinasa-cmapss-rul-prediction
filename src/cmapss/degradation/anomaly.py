@@ -12,13 +12,10 @@ from cmapss.data.contracts import ContractError
 
 @dataclass(frozen=True)
 class AnomalyConfig:
-    """Tham số được cố định trước khi chạy trên dữ liệu thật.
+    """Tham số của quy tắc phát hiện bất thường.
 
-    Attributes:
-        baseline_cycles: Số cycle đầu đời dùng làm mức khỏe tham chiếu.
-        z_threshold: Số độ lệch chuẩn Health Index phải giảm dưới mức tham chiếu.
-        persistence: Số cycle liên tiếp phải vượt ngưỡng trước khi báo, để một
-            dao động đơn lẻ không gây báo động.
+    `persistence` là số cycle liên tiếp phải vượt ngưỡng trước khi báo, để một
+    dao động đơn lẻ không gây báo động.
     """
 
     baseline_cycles: int = 30
@@ -32,13 +29,10 @@ def detect_anomalies(health_index: pd.DataFrame, config: AnomalyConfig, *, colum
     Với mỗi động cơ, mean và std của ``column`` trên ``baseline_cycles`` cycle
     đầu là mức khỏe tham chiếu. ``z_t = (h_t - mean) / std``. Health Index giảm
     khi động cơ suy giảm, nên cycle t vượt ngưỡng khi ``z_t <= -z_threshold``.
-    Báo bất thường tại cycle mà điều kiện đã giữ đủ ``persistence`` cycle liên
-    tiếp; phép kiểm tra chỉ dùng cycle hiện tại và quá khứ.
+    Báo bất thường khi điều kiện giữ đủ ``persistence`` cycle liên tiếp.
 
-    Returns:
-        Bảng mỗi động cơ một dòng: ``engine_id``, ``failure_cycle``,
-        ``detection_cycle`` (NA nếu không phát hiện), ``lead_cycles`` =
-        ``failure_cycle - detection_cycle`` và ``detected``.
+    Trả về mỗi động cơ một dòng, gồm ``detection_cycle`` (NA nếu không phát hiện)
+    và ``lead_cycles = failure_cycle - detection_cycle``.
     """
     required = {"engine_id", "cycle", column}
     if not required.issubset(health_index.columns):
@@ -91,17 +85,12 @@ def sensitivity_grid(
     baseline_cycles: int = 30,
     early_window: int = 10,
 ) -> pd.DataFrame:
-    """Chạy lại ``detect_anomalies`` trên lưới ngưỡng z × số cycle liên tiếp.
+    """Chạy lại ``detect_anomalies`` trên lưới ngưỡng z và số cycle liên tiếp.
 
-    Không có nhãn bất thường nên không đo được tỷ lệ dương tính giả trực tiếp.
-    Cột ``n_early`` đếm động cơ bị báo trong ``early_window`` cycle ngay sau đoạn
-    tham chiếu; báo động sớm như vậy nhiều khả năng do dao động chứ không phải
-    suy giảm thật, nên được dùng làm chỉ báo gián tiếp cho độ nhạy quá mức.
-
-    Returns:
-        Bảng mỗi cấu hình một dòng: ``z_threshold``, ``persistence``,
-        ``n_engines``, ``n_detected``, ``lead_min``, ``lead_median``,
-        ``life_fraction_median`` (cycle phát hiện / cycle hỏng) và ``n_early``.
+    Không có nhãn bất thường nên không đo trực tiếp được tỷ lệ dương tính giả.
+    ``n_early`` đếm động cơ bị báo trong ``early_window`` cycle ngay sau đoạn tham
+    chiếu; báo sớm như vậy thường do dao động, nên dùng làm chỉ báo gián tiếp cho
+    độ nhạy quá mức. ``life_fraction_median`` là trung vị cycle phát hiện / cycle hỏng.
     """
     rows = []
     for z_threshold in z_thresholds:

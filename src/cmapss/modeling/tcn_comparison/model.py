@@ -68,7 +68,7 @@ def build_model(*, n_sensors: int, config: TCNConfig) -> Any:
 
 @dataclass
 class FittedTCN:
-    """Trained TCN plus scaler and immutable candidate metadata."""
+    """Trained TCN with its sensor scaler and candidate spec."""
 
     spec: TCNSpec
     config: TCNConfig
@@ -77,7 +77,7 @@ class FittedTCN:
     state_dict: dict[str, Any]
 
     def predict(self, values: np.ndarray, *, batch_size: int | None = None) -> np.ndarray:
-        """Predict finite RUL values without accessing labels."""
+        """Predict RUL for inputs shaped (n_windows, n_sensors, sequence_length)."""
         torch, _, _ = _torch()
         transformed = self.scaler.transform(values)
         self.model.eval()
@@ -100,7 +100,7 @@ def fit_model(
     config: TCNConfig,
     fit_engine_ids: set[int],
 ) -> FittedTCN:
-    """Fit one candidate using engine-total-one weighted MSE."""
+    """Fit one candidate with MSE weighted so each engine has total weight 1."""
     torch, _, _ = _torch()
     if not fit_engine_ids:
         raise ValueError("fit_engine_ids cannot be empty")

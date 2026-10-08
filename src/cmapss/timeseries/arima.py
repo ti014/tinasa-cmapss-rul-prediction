@@ -73,7 +73,7 @@ def _fit_arima_model(
     values: np.ndarray,
     order: tuple[int, int, int],
 ) -> tuple[Any, int]:
-    """Fit ARIMA, ghi nhận warnings và yêu cầu optimizer hội tụ."""
+    """Fit ARIMA, đếm warnings; báo lỗi nếu optimizer không hội tụ."""
     with warnings.catch_warnings(record=True) as caught:
         warnings.simplefilter("always")
         fitted = ARIMA(
@@ -129,7 +129,7 @@ def evaluate_arima_forecast(
 
 
 def _diagnostics(values: np.ndarray) -> dict[str, float | int]:
-    """Tính ADF trên fit segment và Ljung--Box trên residual."""
+    """Kiểm định ADF trên fit segment."""
     with warnings.catch_warnings(record=True):
         warnings.simplefilter("always")
         adf_result = adfuller(values, autolag="AIC")

@@ -1,7 +1,6 @@
-"""Reload copied HGB models and a frozen gate for label-free inference.
+"""Load the saved HGB models and gate for inference without labels.
 
-Inference checks model and metadata digests before deserializing the verified
-base estimators. The gate is loaded from JSON rather than retrained.
+Model and metadata SHA-256 digests are checked before unpickling.
 """
 
 from __future__ import annotations
@@ -23,7 +22,6 @@ from .gating import blend_vectors
 
 
 def _sha(path: Path) -> str:
-    """Hash an artifact before deserializing a copied model."""
     digest = hashlib.sha256()
     with path.open("rb") as stream:
         for chunk in iter(lambda: stream.read(1024 * 1024), b""):
@@ -33,15 +31,7 @@ def _sha(path: Path) -> str:
 
 @dataclass
 class SavedBlend:
-    """Hold the two verified HGB estimators and an already selected gate.
-
-    Attributes:
-        models: Copied capped and uncapped fitted estimators.
-        gate: Final-inner gate specification, including a diagnostic gate.
-        selected_procedure_id: Inner-selected uncapped fallback or gated blend.
-        policies: Frozen policies for subsequent warning generation.
-        feature_columns: Required causal input columns in their fitted order.
-    """
+    """Saved base models, gate and the procedure chosen on inner validation."""
 
     models: dict[str, FittedTree]
     gate: GateSpec
@@ -50,17 +40,9 @@ class SavedBlend:
     feature_columns: tuple[str, ...]
 
     def predict(self, frame: pd.DataFrame, procedure: str = "selected_pipeline") -> np.ndarray:
-        """Predict without requiring labels or future observations.
+        """Predict RUL in input row order.
 
-        Args:
-            frame: Current-observation causal features on the original scale.
-            procedure: A base arm, gated_blend, or the frozen selected_pipeline.
-
-        Returns:
-            Raw RUL predictions in the input row order.
-
-        Raises:
-            ValueError: The procedure is unknown or features fail base validation.
+        `procedure` is a base arm name, "gated_blend", or "selected_pipeline".
         """
         selected = self.selected_procedure_id if procedure == "selected_pipeline" else procedure
         if selected in self.models:
@@ -72,18 +54,7 @@ class SavedBlend:
 
 
 def load_inference(output_dir: str | Path) -> SavedBlend:
-    """Load an inference artifact only after verifying its copied model bytes.
-
-    Args:
-        output_dir: Derived-study folder containing inference.json and models.
-
-    Returns:
-        Restored label-free inference object with final-inner policies.
-
-    Raises:
-        ValueError: Model bytes, feature/schema/spec or procedure are inconsistent.
-        FileNotFoundError: A required saved artifact is missing.
-    """
+    """Load inference.json and the models under `output_dir`, verifying checksums."""
     folder = Path(output_dir).resolve()
     metadata = json.loads((folder / "inference.json").read_text(encoding="utf-8"))
     if metadata.get("schema_version") != 1 or metadata.get("test_labels_read") is not False:

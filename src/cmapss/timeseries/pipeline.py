@@ -42,7 +42,7 @@ from matplotlib import pyplot as plt  # noqa: E402
 
 @dataclass(frozen=True)
 class TimeseriesConfig:
-    """Cấu hình PCA--ARIMA đã chốt trong active plan."""
+    """Cấu hình PCA--ARIMA."""
 
     n_engines: int = TIMESERIES_N_ENGINES
     train_fraction: float = TIMESERIES_TRAIN_FRACTION
@@ -76,7 +76,7 @@ def _json_safe(value: Any) -> Any:
 
 
 def _plot_health_index(health_index: pd.DataFrame, selected: pd.DataFrame, path: Path) -> None:
-    """Vẽ Health Index của 10 engine đã chọn."""
+    """Vẽ Health Index của các engine đã chọn."""
     fig, ax = plt.subplots(figsize=(11, 6))
     selected_ids = selected["engine_id"].tolist()
     for engine_id in selected_ids:

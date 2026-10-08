@@ -1,8 +1,7 @@
-"""Đối chứng tree-based cho nghiên cứu dự đoán RUL theo engine.
+"""So sánh HGB và LightGBM cho bài toán dự đoán RUL theo engine.
 
-Package này giữ hợp đồng dữ liệu và worker fitting tách khỏi chính sách chọn
-mô hình của study.  Các worker chỉ được đọc ma trận train đã đóng băng và
-trả prediction của một fold disjoint-engine.
+Worker chỉ đọc ma trận train đã đóng băng và trả prediction cho một fold
+có tập engine tách rời.
 """
 
 from .contracts import FEATURES, StudyConfig, TreeSpec, specs

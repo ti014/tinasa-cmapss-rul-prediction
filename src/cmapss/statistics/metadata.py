@@ -63,7 +63,7 @@ def run_info(
     inference: pd.DataFrame,
     config: SensorInferenceConfig,
 ) -> dict[str, Any]:
-    """Tạo metadata lần chạy cho workflow M2.3a."""
+    """Metadata của lần chạy: input, phiên bản thư viện, git commit, cấu hình."""
     return {
         "input": relative_posix(project_root, train_path),
         "input_sha256": input_sha256,
@@ -104,7 +104,7 @@ def validation_payload(
     input_sha256_after: str,
     config: SensorInferenceConfig,
 ) -> dict[str, Any]:
-    """Tạo biên bản validation cho hai CSV và input raw."""
+    """Kết quả validation cho hai CSV và file raw đầu vào."""
     return {
         "status": "passed",
         "scope": "M2.3a artifact validation for train-only sensor inference",

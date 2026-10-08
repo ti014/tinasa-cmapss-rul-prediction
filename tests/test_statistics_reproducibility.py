@@ -1,4 +1,4 @@
-"""Kiểm tra runtime guard cho validation tái lập M2.4."""
+"""Kiểm tra runtime guard cho validation tái lập thống kê."""
 
 from __future__ import annotations
 

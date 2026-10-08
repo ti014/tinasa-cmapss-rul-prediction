@@ -1,9 +1,7 @@
-"""Inner-only selection and paired readouts for the gated HGB study.
+"""Gate selection on inner OOF rows and paired outer readouts for the gated HGB study.
 
-The prediction gate itself lives in :mod:`gating`.  This module owns the
-selection contract: every gate is scored on the same inner OOF rows as the two
-HGB references, warning policies are calibrated from those rows only, and the
-outer readout never changes a frozen choice.
+Gates and warning policies are chosen on inner OOF rows only; outer results
+never change that choice.
 """
 
 from __future__ import annotations
@@ -33,7 +31,6 @@ INTERVAL_SCOPE = (
 
 
 def _require_finite(frame: pd.DataFrame | pd.Series, columns: tuple[str, ...]) -> None:
-    """Require named metrics to exist and contain finite numeric values."""
     missing = set(columns) - set(frame.index if isinstance(frame, pd.Series) else frame.columns)
     if missing:
         raise ValueError(f"missing required metrics: {sorted(missing)}")
@@ -47,24 +44,22 @@ def _require_finite(frame: pd.DataFrame | pd.Series, columns: tuple[str, ...]) -
 
 
 def _validate_predictions(predictions: pd.DataFrame) -> pd.DataFrame:
-    """Use the audited tree validator for raw train trajectory vectors."""
     return tree_analysis._validate_predictions(predictions)
 
 
 def candidate_readout(predictions: pd.DataFrame, cfg: StudyConfig) -> dict[str, Any]:
-    """Return audited endpoint-panel and full-trajectory metrics."""
+    """Endpoint-panel and full-trajectory metrics."""
     return tree_analysis.candidate_readout(predictions, cfg)
 
 
 def calibrate_policy(
     predictions: pd.DataFrame, cfg: StudyConfig,
 ) -> tuple[audit.WarningPolicy, pd.DataFrame]:
-    """Calibrate the declared 15-policy warning grid on inner OOF rows."""
+    """Calibrate the 15-policy warning grid on inner OOF rows."""
     return tree_analysis.calibrate_policy(predictions, cfg)
 
 
 def _control_mask(records: pd.DataFrame, reference: pd.Series, cfg: StudyConfig) -> pd.Series:
-    """Apply the point-inner endpoint and warning safeguards."""
     return (
         records.endpoint_mean_engine_mae.le(
             float(reference.endpoint_mean_engine_mae) + cfg.endpoint_mae_margin
@@ -84,13 +79,11 @@ def _control_mask(records: pd.DataFrame, reference: pd.Series, cfg: StudyConfig)
 def select_gate_candidate(
     records: pd.DataFrame, reference: pd.Series, cfg: StudyConfig,
 ) -> dict[str, Any]:
-    """Select a gate using inner point controls and a strict RMSE improvement.
+    """Pick the lowest-RMSE gate that passes the controls and beats the reference RMSE.
 
-    ``diagnostic_candidate_id`` is retained separately from the selected
-    candidate.  It is the minimum-RMSE gate satisfying endpoint and warning
-    controls even when it does not improve trajectory RMSE.  If no gate is
-    feasible, the unconstrained RMSE winner is reported only as a diagnostic;
-    ``diagnostic_unconstrained`` is then true and it cannot be promoted.
+    ``diagnostic_candidate_id`` is the lowest-RMSE gate that passes the controls,
+    even without an RMSE gain. If no gate passes, it is the unconstrained RMSE
+    winner, ``diagnostic_unconstrained`` is true and it cannot be selected.
     """
     required = ("candidate_id",) + NUMERIC_METRICS + WARNING_METRICS
     if any(column not in records for column in required):
@@ -136,11 +129,10 @@ def select_gate_candidate(
 
 
 def choose_procedure(arm_records: pd.DataFrame, cfg: StudyConfig) -> dict[str, Any]:
-    """Choose gated blend or fall back to the fixed uncapped HGB reference.
+    """Choose gated_blend if it passes every inner control, else hgb_uncapped.
 
-    ``hgb_cap125`` is accepted for reporting but is never a promotion option.
-    The final gate row must already represent the diagnostic gate selected from
-    inner OOF records; no outer metric is consulted here.
+    ``hgb_cap125`` is reported but never selected. The gated_blend row must
+    already be the diagnostic gate chosen on inner OOF rows.
     """
     if "procedure" not in arm_records:
         raise ValueError("procedure column is required")
@@ -176,10 +168,8 @@ def choose_procedure(arm_records: pd.DataFrame, cfg: StudyConfig) -> dict[str, A
             "eligible": bool(procedure == "gated_blend" and endpoint and warning and numeric and improves),
         }
     selected = "gated_blend" if checks["gated_blend"]["eligible"] else "hgb_uncapped"
-    # The accepted protocol normally passes the HGB reference policy through
-    # the row (for example an outer fold may use 40/3).  Keep 40/1 only as a
-    # compatibility default for synthetic callers that do not carry policy
-    # columns; the runner must never invent a policy after inner selection.
+    # The runner passes the reference policy in the row (e.g. 40/3). The 40/1
+    # default is only for synthetic callers without policy columns.
     fallback_policy = {
         "threshold": int(records.loc["hgb_uncapped"].get("policy_threshold", 40)),
         "persistence": int(records.loc["hgb_uncapped"].get("policy_persistence", 1)),
@@ -202,7 +192,7 @@ def choose_procedure(arm_records: pd.DataFrame, cfg: StudyConfig) -> dict[str, A
 def paired_comparisons(
     predictions: pd.DataFrame, events: pd.DataFrame, cfg: StudyConfig,
 ) -> pd.DataFrame:
-    """Return paired engine bootstrap comparisons with duplicate multiplicity."""
+    """Paired engine-bootstrap comparisons; resampled engines keep multiplicity."""
     tables = tree_analysis._engine_tables(predictions, events, cfg)
     pairs = [("hgb_uncapped", "gated_blend"), ("hgb_uncapped", "selected_pipeline")]
     if "hgb_cap125" in tables:
@@ -215,12 +205,10 @@ def paired_comparisons(
     ], ignore_index=True)
 
 
-# Short alias for callers that describe the operation as gate selection.
 select_gate = select_gate_candidate
 
 
 def _gate_controls(comparison: pd.DataFrame) -> dict[str, bool]:
-    """Apply the fixed confidence-bound signs used by the HGB study."""
     rows = comparison.set_index("metric")
     return {
         "trajectory_rmse_improved": bool(rows.loc["trajectory_rmse", "ci_upper"] < 0),
@@ -234,7 +222,7 @@ def _gate_controls(comparison: pd.DataFrame) -> dict[str, bool]:
 def write_readouts(
     predictions: pd.DataFrame, events: pd.DataFrame, cfg: StudyConfig, output: str | Path,
 ) -> dict[str, Any]:
-    """Write aggregate, engine, region and paired readouts for outer predictions."""
+    """Write aggregate, engine, warning, region and paired CSVs plus decision.json."""
     expected = set(READOUT_ARMS)
     if "procedure" not in predictions or set(predictions.procedure) != expected:
         raise ValueError("outer readouts require hgb references, gated_blend and selected_pipeline")

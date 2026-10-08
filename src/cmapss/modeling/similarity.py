@@ -1,9 +1,8 @@
-"""CPU similarity based RUL estimator for the bounded FD001 pilot.
+"""Similarity-based RUL estimator for FD001.
 
-The estimator stores causal 30-cycle, six-block sensor profiles from the
-run-to-failure training engines.  A query is matched to at most one window per
-donor engine; the donor RUL values are then averaged with inverse-distance
-weights.  This module deliberately contains no experiment orchestration.
+Each window is the last 30 cycles summarized as six 5-cycle block means. A query
+is matched to at most one window per donor engine, and the donor RULs are
+averaged with inverse-distance weights.
 """
 
 from __future__ import annotations
@@ -32,7 +31,7 @@ def _ordered(frame: pd.DataFrame) -> pd.DataFrame:
 
 
 def _check_prefix(frame: pd.DataFrame, *, name: str) -> None:
-    """Require every engine to contain exactly cycles 1..N."""
+    """Each engine must contain exactly cycles 1..N."""
     for ident, group in frame.groupby(["split", "engine_id"], sort=False):
         cycles = group["cycle"].to_numpy(dtype=np.int64)
         expected = np.arange(1, len(cycles) + 1, dtype=np.int64)
@@ -67,7 +66,7 @@ def _engine_key(frame: pd.DataFrame) -> pd.Series:
 
 @dataclass
 class SimilarityModel:
-    """Persisted state for similarity-based RUL prediction."""
+    """Fitted similarity library and scaler."""
 
     window: int
     block_size: int
@@ -95,7 +94,6 @@ class SimilarityModel:
 
     @property
     def library_features(self) -> np.ndarray:
-        """Alias retained for inspection and validation of persisted models."""
         return self.library_matrix
 
     @property
@@ -119,7 +117,7 @@ class SimilarityModel:
         ).astype(np.int64, copy=False)
 
     def query_keys(self, observations: pd.DataFrame) -> pd.DataFrame:
-        """Return canonical query endpoints (cycle >= 30)."""
+        """Keys of the query windows (cycle >= 30)."""
         return self._query(observations)[0]
 
     def predict_with_matches(
@@ -128,7 +126,7 @@ class SimilarityModel:
         *,
         neighbors: Iterable[int] = (5, 10),
     ) -> tuple[pd.DataFrame, dict[int, np.ndarray], pd.DataFrame]:
-        """Predict each requested k and return the ten best donor traces."""
+        """Predict for each k and also return the ten closest donor matches."""
         ks = tuple(dict.fromkeys(int(k) for k in neighbors))
         if not ks or any(k < 1 or k > 10 for k in ks):
             raise ValueError("neighbors must contain positive k values no larger than 10")
@@ -199,7 +197,6 @@ class SimilarityModel:
         return keys, outputs, matches
 
     def predict(self, observations: pd.DataFrame, *, neighbors: Iterable[int] = (5, 10)) -> dict[int, np.ndarray]:
-        """Return predictions keyed by donor count."""
         _keys, predictions, _matches = self.predict_with_matches(observations, neighbors=neighbors)
         return predictions
 
@@ -221,7 +218,7 @@ def fit_similarity(
     batch_size: int = 128,
     fit_threads: int = 4,
 ) -> SimilarityModel:
-    """Fit the CPU similarity library from train-only observations and targets."""
+    """Fit the scaler and window library on train engines only."""
     if batch_size < 1 or not 1 <= fit_threads <= 4:
         raise ValueError("batch_size must be positive and fit_threads must be in 1..4")
     validate_observations(observations, source="similarity fit observations")
@@ -237,10 +234,8 @@ def fit_similarity(
     engine_labels = observations["engine_id"].to_numpy()
     counts = pd.Series(engine_labels).value_counts().to_dict()
     sample_weight = np.array([1.0 / counts[int(e)] for e in engine_labels], dtype=np.float64)
-    # sklearn's weighted variance implementation can emit a RuntimeWarning
-    # while taking sqrt of a tiny negative round-off value for constant
-    # sensors. We clamp that value immediately below and keep the warning
-    # local to this documented numerical edge case.
+    # Constant sensors can give a tiny negative weighted variance, so sklearn
+    # warns on sqrt. The variance is clamped right below.
     with warnings.catch_warnings():
         warnings.filterwarnings(
             "ignore",
@@ -249,9 +244,6 @@ def fit_similarity(
             module=r"sklearn\.preprocessing\._data",
         )
         scaler.fit(raw, sample_weight=sample_weight)
-    # Weighted one-pass variance can be a tiny negative number for a constant
-    # sensor because of floating-point cancellation. Clamp only that numeric
-    # artifact before deriving the keep mask and transform scale.
     scaler.var_ = np.maximum(np.asarray(scaler.var_, dtype=np.float64), 0.0)
     scaler.scale_ = np.sqrt(scaler.var_)
     keep = np.asarray(scaler.var_ > 1e-16, dtype=bool)

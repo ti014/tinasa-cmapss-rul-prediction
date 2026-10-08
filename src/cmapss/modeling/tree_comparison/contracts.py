@@ -1,4 +1,4 @@
-"""Hợp đồng cố định cho nghiên cứu HGB/XGBoost trên cùng 169 features."""
+"""Feature, cấu hình và grid candidate cho so sánh HGB/XGBoost trên 169 feature."""
 
 from __future__ import annotations
 
@@ -22,10 +22,10 @@ ModelKind = Literal["hgb", "xgboost"]
 
 @dataclass(frozen=True)
 class StudyConfig:
-    """Cấu hình tài nguyên, split và tiêu chí báo cáo của tree study.
+    """Cấu hình split, tài nguyên và tiêu chí chọn mô hình.
 
-    Các giá trị mặc định là cấu hình khoa học đầy đủ.  ``max_workers`` chỉ
-    điều khiển lập lịch process; không thay đổi sample weights hay split.
+    Giá trị mặc định là cấu hình đầy đủ. ``max_workers`` chỉ ảnh hưởng việc
+    lập lịch process, không đổi kết quả.
     """
 
     outer_splits: int = 5
@@ -47,7 +47,6 @@ class StudyConfig:
     early_alarm_burden_margin: float = 0.0
 
     def __post_init__(self) -> None:
-        """Reject malformed configs before workers are started."""
         positive = {
             "outer_splits": self.outer_splits,
             "inner_splits": self.inner_splits,
@@ -77,7 +76,7 @@ class StudyConfig:
 
     @property
     def scientific(self) -> bool:
-        """Cho biết config còn giữ nguyên protocol đầy đủ đã tuyên bố."""
+        """True nếu config trùng với cấu hình đầy đủ mặc định."""
         return (
             self.outer_splits == 5 and self.inner_splits == 3 and self.seed == 42
             and self.bootstrap_resamples >= 10_000 and self.hgb_max_iter == 200
@@ -92,7 +91,7 @@ class StudyConfig:
         )
 
     def audit_config(self):
-        """Chuyển phần cấu hình dùng chung sang ``AuditStudyConfig`` cũ."""
+        """Chuyển các trường dùng chung sang ``AuditStudyConfig``."""
         from cmapss.modeling.audit_study import AuditStudyConfig
 
         return AuditStudyConfig(
@@ -112,14 +111,14 @@ class StudyConfig:
 
 @dataclass(frozen=True)
 class TreeSpec:
-    """Mô tả một candidate đã khai báo trước, không chứa trạng thái fit."""
+    """Tham số của một candidate (chưa fit)."""
 
     candidate_id: str
     family: Family
     model_kind: ModelKind
     target_cap: int | None
-    # HGB candidates use the frozen audit parameters below; XGBoost candidates
-    # override them with the declared 3/5/7, .03/.1 and 1/10 grid.
+    # HGB giữ các giá trị mặc định bên dưới; XGBoost lấy max_depth 3/5/7,
+    # learning_rate 0.03/0.1 và reg_lambda 1/10.
     max_depth: int | None = None
     learning_rate: float = 0.05
     reg_lambda_nominal: float = 0.0
@@ -147,10 +146,9 @@ class TreeSpec:
 
 
 def specs(config: StudyConfig | None = None) -> tuple[TreeSpec, ...]:
-    """Trả 2 HGB candidate cố định và 24 XGBoost candidates.
+    """Trả 2 candidate HGB và 24 candidate XGBoost.
 
-    ``config`` được nhận để giữ API runner nhất quán; grid là protocol cố định
-    và không bị thay đổi bởi số process hay dry-run resource settings.
+    ``config`` không được dùng, chỉ để khớp interface mà runner gọi.
     """
     del config
     hgb = (

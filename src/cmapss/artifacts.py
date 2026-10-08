@@ -1,7 +1,6 @@
-"""Ghi bộ artifact qua staging, bảo vệ input và rollback khi publication lỗi.
+"""Ghi bộ artifact qua thư mục staging, rollback nếu publish lỗi.
 
-Thay nhiều file không phải atomic transaction cho reader đồng thời. Helper
-này bảo đảm lỗi ghi/publish được xử lý không để lại bộ artifact trộn phiên bản.
+Mục tiêu là không để lại bộ artifact trộn phiên bản cũ và mới khi có lỗi.
 """
 
 from __future__ import annotations
@@ -146,28 +145,15 @@ def staged_artifact_bundle(
     protected_dirs: Sequence[str | Path] = (),
     protected_files: Sequence[str | Path] = (),
 ) -> Iterator[Path]:
-    """Ghi staging rồi publish đúng thứ tự, metadata phải đứng cuối.
+    """Yield thư mục staging; khi thoát, publish các file theo thứ tự ``relative_paths``.
 
-    Args:
-        output_dir: Thư mục artifact. Các file ngoài relative_paths được giữ.
-        relative_paths: File writer sở hữu, theo thứ tự publication.
-        protected_dirs: Bronze thực tế, bổ sung cho Bronze mặc định của project.
-        protected_files: Input files và manifest không được ghi đè.
+    Nên đặt file metadata cuối danh sách để nó chỉ xuất hiện khi dữ liệu đã đủ.
+    File trong ``output_dir`` không thuộc ``relative_paths`` được giữ nguyên.
+    Nếu rollback cũng lỗi, raise ArtifactRollbackError và giữ workspace để khôi
+    phục tay. Không xử lý nhiều writer đồng thời.
 
-    Yields:
-        Thư mục staging để caller ghi đủ artifact trước publication.
-
-    Raises:
-        ValueError: Đích vi phạm boundary hoặc staging chưa đầy đủ.
-        OSError: Ghi, backup hoặc publication lỗi; rollback đã hoàn tất.
-        ArtifactRollbackError: Rollback cũng lỗi, workspace được giữ lại.
-
-    Example:
         >>> with staged_artifact_bundle(output, ['data.parquet', 'run_info.json']) as stage:
         ...     write_data_and_manifest(stage)
-
-    Không bảo đảm reader đồng thời, nhiều writer đồng thời hoặc mất điện đột
-    ngột. Backup được giữ nếu rollback lỗi; không nuốt lỗi publication.
     """
     output = Path(output_dir).resolve()
     paths = tuple(Path(path) for path in relative_paths)

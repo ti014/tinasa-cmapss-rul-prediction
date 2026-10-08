@@ -41,13 +41,11 @@ def fit_health_index(
     *,
     fit_engine_ids: Iterable[int] | None = None,
 ) -> HealthIndexResult:
-    """Fit scaler/PCA trên permitted train engines và trả Health Index.
+    """Fit scaler/PCA trên train engines và trả Health Index (PC1 chuẩn hóa).
 
-    Test observations vẫn có thể tồn tại trong input Silver, nhưng luôn bị
-    loại trước khi fit và không xuất hiện trong output. Khi ``fit_engine_ids``
-    được truyền, chỉ các engine đó được dùng để fit transformer và xác định
-    hướng/scale; các engine còn lại chỉ được transform. Cơ chế này giữ phần
-    suffix của engine holdout ngoài ranh giới fit của temporal evaluation.
+    Test observations bị loại trước khi fit. Nếu có ``fit_engine_ids``, chỉ các
+    engine đó dùng để fit và chọn hướng/scale; engine còn lại chỉ được transform,
+    để engine dùng cho forecast không rò rỉ vào transformer.
     """
     validate_observations(observations, source="timeseries observations")
     train = (
@@ -123,11 +121,10 @@ def select_validation_engines(
     *,
     n_engines: int,
 ) -> pd.DataFrame:
-    """Chọn engine đại diện theo fold và lifetime quantiles trước forecast.
+    """Chọn engine đại diện theo fold và lifetime.
 
-    Mỗi fold nhận quota cân bằng; trong từng fold, các engine được chọn tại
-    vị trí lifetime cách đều trong thứ tự tăng dần. Quy tắc chỉ dùng metadata
-    train và không nhìn vào forecast hoặc metric forecast.
+    Mỗi fold nhận quota gần bằng nhau; trong fold, lấy các engine ở vị trí cách
+    đều theo lifetime tăng dần. Chỉ dùng metadata train, không dùng kết quả forecast.
     """
     validate_observations(observations, source="timeseries engine selection")
     required_folds = {"split", "engine_id", "fold"}

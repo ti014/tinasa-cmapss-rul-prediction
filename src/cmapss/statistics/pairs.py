@@ -26,7 +26,6 @@ _INTEGER_PAIR_COLUMNS = (
 
 
 def _require_train_pairs_source(observations: pd.DataFrame) -> None:
-    """Kiểm tra observations trước khi tạo cặp đầu/cuối."""
     validate_observations(observations, source="paired sensor observations")
     if not observations["split"].eq("train").fillna(False).all():
         raise ContractError(
@@ -55,7 +54,6 @@ def _require_train_pairs_source(observations: pd.DataFrame) -> None:
 
 
 def _pair_frame(rows: list[dict[str, object]]) -> pd.DataFrame:
-    """Tạo DataFrame cặp với dtype cố định cho serialization về sau."""
     pairs = pd.DataFrame(rows, columns=ENGINE_SENSOR_PAIR_COLUMNS)
     return pairs.astype(
         {
@@ -70,25 +68,12 @@ def _pair_frame(rows: list[dict[str, object]]) -> pd.DataFrame:
 
 
 def build_engine_sensor_pairs(observations: pd.DataFrame) -> pd.DataFrame:
-    """Tạo một cặp mean đầu/cuối cho mỗi engine train và sensor.
+    """Mean 30 cycle đầu và 30 cycle cuối cho mỗi (engine train, sensor).
 
-    Hàm cố định window ở 30 cycles theo protocol đã chốt. Cycle đầu/cuối được
-    xác định từ thứ tự cycle trong từng engine, không từ vị trí dòng input.
-
-    Args:
-        observations: Bảng observations train có schema data contract đầy đủ.
-
-    Returns:
-        DataFrame theo `ENGINE_SENSOR_PAIR_COLUMNS`, có thứ tự engine tăng dần
-        rồi `SENSORS`; mỗi dòng biểu diễn một `(engine_id, sensor)` hợp lệ.
-
-    Raises:
-        ContractError: Khi observations không hợp lệ, không chỉ có train,
-            không bắt đầu ở cycle 1, hoặc một engine có dưới 60 cycles.
-
-    Examples:
-        Một sensor có giá trị bằng cycle trong engine dài 60 cycles tạo mean
-        đầu 15,5, mean cuối 45,5 và difference 30.
+    `difference = late_mean - early_mean`. Đầu/cuối xác định theo giá trị
+    `cycle`, không theo vị trí dòng. Mỗi engine cần ít nhất 60 cycles.
+    Ví dụ: sensor có giá trị bằng cycle, engine dài 60 cycles cho mean đầu
+    15,5, mean cuối 45,5, difference 30.
     """
     _require_train_pairs_source(observations)
     rows: list[dict[str, object]] = []
@@ -135,18 +120,7 @@ def build_engine_sensor_pairs(observations: pd.DataFrame) -> pd.DataFrame:
 
 
 def validate_engine_sensor_pairs(pairs: pd.DataFrame) -> None:
-    """Kiểm tra contract của bảng cặp engine/sensor đã tạo.
-
-    Validator giữ bảng ở dạng canonical để các artifact và bước suy luận tiếp
-    theo không ghép nhầm engine, bỏ sensor hoặc thay đổi chiều chênh lệch.
-
-    Args:
-        pairs: Bảng cặp có schema `ENGINE_SENSOR_PAIR_COLUMNS`.
-
-    Raises:
-        ContractError: Khi schema, khóa, phạm vi train, window, thứ tự, số liệu
-            hoặc công thức difference không phù hợp contract.
-    """
+    """Kiểm tra schema, khóa, thứ tự, window và công thức difference của bảng cặp."""
     validate_columns(pairs, ENGINE_SENSOR_PAIR_COLUMNS, _PAIR_SOURCE)
     if not pairs["split"].eq("train").fillna(False).all():
         raise ContractError("TRAIN_ONLY", _PAIR_SOURCE, "bảng cặp chỉ thuộc split train")

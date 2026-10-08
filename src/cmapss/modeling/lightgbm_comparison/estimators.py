@@ -1,4 +1,4 @@
-"""Fitting state cho HGB và LightGBM tree comparison."""
+"""Fit HGB và LightGBM với sample weight chuẩn hóa theo engine."""
 
 from __future__ import annotations
 
@@ -14,10 +14,9 @@ from .contracts import FEATURES, StudyConfig, TreeSpec
 
 
 def engine_total_one_weights(frame: pd.DataFrame) -> np.ndarray:
-    """Tạo sample weights sao cho tổng trọng số mỗi engine bằng một.
+    """Sample weight sao cho tổng trọng số của mỗi engine bằng 1.
 
-    Trọng số này được dùng nguyên vẹn cho cả HGB và LightGBM.  Với một engine
-    có 100 dòng, mỗi dòng nhận trọng số ``1/100``.
+    Ví dụ engine có 100 dòng thì mỗi dòng nhận ``1/100``.
     """
     if frame.empty or "engine_id" not in frame or frame["engine_id"].isna().any():
         raise ValueError("engine weights require nonempty rows with engine_id")
@@ -30,7 +29,7 @@ def engine_total_one_weights(frame: pd.DataFrame) -> np.ndarray:
 
 @dataclass
 class FittedTree:
-    """Model cùng trạng thái feature cần thiết để tái sử dụng an toàn."""
+    """Model đã fit kèm danh sách feature và tham số thực tế."""
 
     spec: TreeSpec
     feature_columns: tuple[str, ...]
@@ -39,7 +38,7 @@ class FittedTree:
     weight_metadata: dict[str, float | int | str]
 
     def predict(self, frame: pd.DataFrame) -> np.ndarray:
-        """Dự đoán từ feature columns đã đóng băng, không đọc nhãn."""
+        """Dự đoán trên đúng các cột feature đã dùng khi fit."""
         missing = [column for column in self.feature_columns if column not in frame]
         if missing:
             raise ValueError(f"missing inference features: {missing[:3]}")
@@ -54,7 +53,7 @@ class FittedTree:
 
 
 def _build_lgbm(spec: TreeSpec, config: StudyConfig, effective: dict[str, float | int | str | None]) -> Any:
-    """Construct LGBMRegressor lazily so HGB-only imports remain usable."""
+    """Import lightgbm khi cần, để chạy HGB không bắt buộc cài lightgbm."""
     try:
         from lightgbm import LGBMRegressor
     except ImportError as error:  # pragma: no cover - environment-dependent
@@ -84,11 +83,12 @@ def _build_lgbm(spec: TreeSpec, config: StudyConfig, effective: dict[str, float 
 
 
 def fit_predictor(train: pd.DataFrame, spec: TreeSpec, config: StudyConfig) -> FittedTree:
-    """Fit one tree candidate on disjoint-engine training rows.
+    """Fit một candidate trên các dòng train.
 
-    Target caps are applied to fitting labels only.  The caller retains raw
-    ``rul`` in validation rows, so endpoint and trajectory metrics remain on
-    the same reporting scale for all candidates.
+    Cap chỉ áp vào nhãn khi fit; validation vẫn giữ ``rul`` gốc nên mọi
+    candidate được đo trên cùng thang. Với LightGBM, ``min_child_weight`` và
+    ``reg_lambda`` được nhân với ``n_engines / n_rows`` vì tổng trọng số bằng
+    số engine chứ không bằng số dòng.
     """
     required = {"engine_id", "rul", *FEATURES}
     missing = sorted(required.difference(train.columns))

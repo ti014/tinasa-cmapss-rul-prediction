@@ -1,6 +1,5 @@
-"""Hợp đồng feature và candidate cho study HGB multi-scale.
+"""Danh sách feature của ba arm trong study HGB multi-scale.
 
-Ba arm được khai báo tường minh để runner không tự suy diễn feature set:
 
 * ``hgb_baseline169``: rolling 30 cycles, ``cycle`` và history 30 cycles;
 * ``hgb_multiscale10_30``: baseline và thêm rolling 10 cycles;
@@ -59,7 +58,7 @@ FEATURE_COLUMNS_BY_ARM: dict[ArmId, tuple[str, ...]] = {
 
 @dataclass(frozen=True)
 class FeatureSpec:
-    """Mô tả feature arm đã khai báo trước, không chứa trạng thái fit."""
+    """Danh sách feature và metadata của một arm."""
 
     arm_id: ArmId
     feature_columns: tuple[str, ...]
@@ -82,7 +81,7 @@ class FeatureSpec:
 
 
 def feature_specs() -> tuple[FeatureSpec, ...]:
-    """Trả đúng ba arm theo protocol, theo thứ tự baseline trước."""
+    """Ba arm, baseline đứng đầu."""
     return (
         FeatureSpec("hgb_baseline169", BASELINE_FEATURES, 169, "baseline169", (30,)),
         FeatureSpec("hgb_multiscale10_30", BASELINE_FEATURES + WINDOW10_FEATURES, 295,
@@ -93,7 +92,7 @@ def feature_specs() -> tuple[FeatureSpec, ...]:
 
 
 def feature_spec(arm_id: str) -> FeatureSpec:
-    """Lấy một arm theo ID và từ chối ID ngoài protocol."""
+    """Lấy arm theo ID; ID không có báo ``ValueError``."""
     for spec in feature_specs():
         if spec.arm_id == arm_id:
             return spec

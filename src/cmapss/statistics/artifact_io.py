@@ -47,7 +47,7 @@ _INFERENCE_STRING_COLUMNS = (
 
 
 def resolve_path(project_root: Path, path: str | Path) -> Path:
-    """Trả đường dẫn tuyệt đối hoặc đường dẫn tương đối theo project root."""
+    """Path tuyệt đối giữ nguyên; path tương đối tính theo project root."""
     candidate = Path(path)
     return candidate if candidate.is_absolute() else project_root / candidate
 
@@ -61,7 +61,7 @@ def relative_posix(project_root: Path, path: Path) -> str:
 
 
 def sha256_file(path: Path) -> str:
-    """Tính SHA-256 theo chunk để không đọc toàn bộ file vào bộ nhớ."""
+    """SHA-256 của file, đọc theo chunk 1 MB."""
     digest = sha256()
     with path.open("rb") as file:
         for chunk in iter(lambda: file.read(1024 * 1024), b""):
@@ -70,7 +70,7 @@ def sha256_file(path: Path) -> str:
 
 
 def write_json(path: Path, payload: dict[str, Any]) -> None:
-    """Ghi JSON UTF-8 ổn định cho run metadata và validation."""
+    """Ghi JSON UTF-8, indent 2."""
     path.write_text(
         json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=False) + "\n",
         encoding="utf-8",
@@ -96,7 +96,7 @@ def read_engine_sensor_pairs(path: Path) -> pd.DataFrame:
 
 
 def read_sensor_inference(path: Path, config: SensorInferenceConfig) -> pd.DataFrame:
-    """Đọc lại CSV inference và validate round-trip theo cấu hình M2.0."""
+    """Đọc lại CSV inference và validate round-trip."""
     inference = pd.read_csv(
         path,
         float_precision="round_trip",

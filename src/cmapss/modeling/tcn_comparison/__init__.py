@@ -1,8 +1,6 @@
-"""TCN comparison study for the FD001 RUL task.
+"""TCN comparison study on raw FD001 sensor sequences.
 
-The package is intentionally isolated from the published model registry.  It
-uses raw sensor sequences and imports PyTorch lazily, so the existing tree
-pipeline remains usable when PyTorch is unavailable.
+PyTorch is imported lazily, so the tree pipeline works without it.
 """
 
 from .contracts import TCNConfig, TCNSpec, specs

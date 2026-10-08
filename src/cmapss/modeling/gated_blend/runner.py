@@ -1,8 +1,8 @@
-"""Derive a nested smooth-gate study from verified, immutable HGB artifacts.
+"""Run the nested gated HGB study on top of an existing LightGBM/HGB study run.
 
-No fitting function is called. Forty-six CV prediction caches and two final
-HGB models are reused. Each fold's choice is frozen before its outer prediction
-values are read; test labels are opened only after exact final-model replay.
+No model is fitted: 46 cached CV predictions and the 2 final HGB models are reused.
+Each fold's choice is saved before its outer predictions are read, and test labels
+are read only after the final predictions are written.
 """
 
 from __future__ import annotations
@@ -48,7 +48,6 @@ PROTOCOL = "experiments/GATED_BLEND_PROTOCOL.md"
 
 
 def _sha(path: Path) -> str:
-    """Hash a required artifact using bounded memory."""
     digest = hashlib.sha256()
     with path.open("rb") as stream:
         for chunk in iter(lambda: stream.read(1024 * 1024), b""):
@@ -57,7 +56,6 @@ def _sha(path: Path) -> str:
 
 
 def _read_json(path: Path) -> dict[str, Any]:
-    """Require an object rather than silently accepting a malformed receipt."""
     result = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(result, dict):
         raise ValueError(f"JSON object required: {path}")
@@ -65,14 +63,14 @@ def _read_json(path: Path) -> dict[str, Any]:
 
 
 def _write_json(path: Path, payload: Any) -> None:
-    """Publish JSON atomically, retrying brief Windows reader-handle conflicts."""
+    """Write JSON atomically via a temp file and os.replace."""
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(".tmp.json")
     temporary.write_text(json.dumps(audit._json_value(payload), sort_keys=True,
                                     ensure_ascii=False, indent=2, allow_nan=False) + "\n",
                          encoding="utf-8")
-    # A concurrent Windows reader can briefly deny replacing the old file.
-    # Retain atomic publication and propagate persistent failures after 1.62s.
+    # On Windows a reader holding the file can block os.replace for a moment;
+    # retry for about 1.6 s before giving up.
     delays = (.02, .04, .08, .16, .32, .5, .5)
     for attempt in range(len(delays) + 1):
         try:
@@ -85,7 +83,7 @@ def _write_json(path: Path, payload: Any) -> None:
 
 
 def _resolve(root: Path, value: str | Path) -> Path:
-    """Resolve portable repository descendants and reject path escape."""
+    """Resolve a path under the repo root; reject paths outside it."""
     path = Path(value)
     resolved = (root / path).resolve() if not path.is_absolute() else path.resolve()
     if not resolved.is_relative_to(root):
@@ -94,14 +92,13 @@ def _resolve(root: Path, value: str | Path) -> Path:
 
 
 def _versions() -> dict[str, str]:
-    """Record versions needed to reproduce base deserialization and scoring."""
     packages = ("numpy", "pandas", "scikit-learn", "lightgbm", "pyarrow", "joblib",
                 "scipy", "threadpoolctl")
     return {"python": platform.python_version(), **{name: version(name) for name in packages}}
 
 
 def _source_files(root: Path) -> tuple[str, ...]:
-    """Collect the new package, AST import closure and declared entrypoints."""
+    """Source files of this package, their cmapss import closure, script and protocol."""
     pending = [path.relative_to(root).as_posix()
                for path in (root / "src/cmapss/modeling/gated_blend").glob("*.py")]
     pending.extend(["scripts/run_gated_blend_study.py", PROTOCOL])
@@ -146,7 +143,7 @@ def _source_files(root: Path) -> tuple[str, ...]:
 
 
 def _frame_digest(frame: pd.DataFrame) -> str:
-    """Reproduce the source cache hash including column order and dtypes."""
+    """Same frame hash as the source study (includes column order and dtypes)."""
     digest = hashlib.sha256()
     digest.update(repr(tuple(frame.columns)).encode("utf-8"))
     digest.update(repr(tuple(str(dtype) for dtype in frame.dtypes)).encode("utf-8"))
@@ -155,7 +152,7 @@ def _frame_digest(frame: pd.DataFrame) -> str:
 
 
 def _guard_source(root: Path, source: Path) -> dict[str, Any]:
-    """Require a complete verified source and exact current/snapshot identity."""
+    """Check that the source run is complete, verified and unchanged on disk."""
     manifest = _read_json(source / "manifest.json")
     identity = manifest["identity"]
     computed = hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()
@@ -219,7 +216,7 @@ def _guard_source(root: Path, source: Path) -> dict[str, Any]:
 def _validate_frozen_frames(
     source: Path, manifest: dict[str, Any],
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, str]:
-    """Read only guarded train truth, label-free test features and split keys."""
+    """Load the source's frozen train/test features and outer fold assignments."""
     columns = manifest["identity"]["feature_columns"]
     train = pd.read_parquet(source / "frozen_train_features.parquet")
     test = pd.read_parquet(source / "frozen_test_features.parquet")
@@ -245,7 +242,7 @@ def _inventory(
     root: Path, source: Path, manifest: dict[str, Any], train: pd.DataFrame,
     assignments: pd.DataFrame, frame_digest: str,
 ) -> tuple[dict[str, Any], set[Path]]:
-    """Require exactly 46 HGB CV tasks and two final models before selection."""
+    """Map the 46 HGB CV caches and 2 final models of the source run; verify each one."""
     source_id, identity = manifest["source_identity"], manifest["identity"]
     candidates = {item["candidate_id"]: item for item in identity["candidates"]
                   if item["candidate_id"] in BASE_ARMS}
@@ -379,7 +376,7 @@ def _inventory(
             or any(receipt.get("models_sha256", {}).get(arm) != _sha(source / "models" / arm / "model.joblib")
                    for arm in BASE_ARMS)):
         raise ValueError("source final-prediction receipt checksum/order mismatch")
-    # Freeze the provenance chain, not any prior model-selection or test scores.
+    # Snapshot provenance files only, not earlier selection or test scores.
     for field, snapshot in (("source_sha256", "source_snapshot"), ("inputs_sha256", "input_snapshot")):
         for name in identity[field]:
             artifacts.update((_resolve(root, name), source / snapshot / name))
@@ -396,7 +393,7 @@ def _inventory(
 
 
 def _artifact_snapshot_paths(names: Iterable[str]) -> dict[str, str]:
-    """Map original artifact paths to short stable, collision-checked basenames."""
+    """Map artifact paths to short hashed file names for the snapshot folder."""
     paths = tuple(names)
     if len(set(paths)) != len(paths):
         raise ValueError("source artifact snapshot names must be unique")
@@ -412,7 +409,7 @@ def _freeze(
     inventory: dict[str, Any], artifacts: set[Path], config: StudyConfig,
     evaluate_test: bool, labels: Path,
 ) -> dict[str, Any]:
-    """Snapshot source, protocol and every used artifact before inner selection."""
+    """Create the output run and snapshot sources and used artifacts before selection."""
     if output.exists():
         raise ValueError("run output already exists; choose a fresh run ID (no unsafe resume)")
     allowed = root / "outputs/experiments/gated_blend_comparison"
@@ -466,7 +463,7 @@ def _freeze(
 
 
 def _assert_immutable(root: Path, output: Path, manifest: dict[str, Any]) -> None:
-    """Check both current source/artifact bytes and their frozen snapshots."""
+    """Check current files and their snapshots against the manifest checksums."""
     identity = manifest["identity"]
     artifact_paths = identity["source_artifact_snapshot_paths"]
     if artifact_paths != _artifact_snapshot_paths(identity["source_artifacts_sha256"]):
@@ -483,7 +480,7 @@ def _assert_immutable(root: Path, output: Path, manifest: dict[str, Any]) -> Non
 
 
 def _load_cached_prediction(root: Path, record: dict[str, Any], train: pd.DataFrame) -> pd.DataFrame:
-    """Read one reused vector and independently validate exact truth and errors."""
+    """Load one cached prediction and check its keys, truth and error columns."""
     prediction_path = _resolve(root, record["prediction_path"])
     metadata = _read_json(_resolve(root, record["metadata_path"]))
     if _sha(prediction_path) != metadata["prediction_sha256"]:
@@ -508,7 +505,6 @@ def _load_cached_prediction(root: Path, record: dict[str, Any], train: pd.DataFr
 
 
 def _progress(output: Path, stage: str, **values: Any) -> None:
-    """Persist readable stage progress without implying new model fitting."""
     payload = {"stage": stage, "updated_at_utc": datetime.now(timezone.utc).isoformat(),
                "fresh_fits": 0, **values}
     _write_json(output / "progress.json", payload)
@@ -519,7 +515,7 @@ def _inner_stage(
     root: Path, source: Path, output: Path, manifest: dict[str, Any], inventory: dict[str, Any],
     train: pd.DataFrame, outer_fold: int, config: StudyConfig,
 ) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
-    """Score/calibrate every declared gate on fitting-engine OOF rows only."""
+    """Score and calibrate every gate on inner OOF rows, then save the selection."""
     _assert_immutable(root, output, manifest)
     stage_name = f"outer_{outer_fold}" if outer_fold else "final_inner"
     stage = output / "stages" / stage_name
@@ -609,7 +605,7 @@ def _outer_fold(
     root: Path, output: Path, inventory: dict[str, Any], train: pd.DataFrame,
     choices: dict[str, dict[str, Any]], selection: dict[str, Any], fold: int, config: StudyConfig,
 ) -> tuple[list[pd.DataFrame], list[pd.DataFrame]]:
-    """Read outer vector values only after that fold's immutable selection exists."""
+    """Score one outer fold; requires that fold's saved selection."""
     saved = _read_json(output / "stages" / f"outer_{fold}" / "selection.json")
     if saved != audit._json_value(selection):
         raise ValueError("outer scoring requires the previously frozen inner selection")
@@ -645,7 +641,7 @@ def _save_final_inference(
     root: Path, source: Path, output: Path, manifest: dict[str, Any], test: pd.DataFrame,
     choices: dict[str, dict[str, Any]], selection: dict[str, Any], inventory: dict[str, Any],
 ) -> pd.DataFrame:
-    """Copy final models and prove exact original and new prediction replay."""
+    """Copy final models, write inference.json and check predictions replay exactly."""
     base_info = {}
     for record in inventory["final_model_records"]:
         arm = record["candidate_id"]
@@ -711,7 +707,7 @@ def _save_final_inference(
 def _evaluate_final_test(
     output: Path, predictions: pd.DataFrame, labels_path: Path,
 ) -> dict[str, Any]:
-    """Open reporting labels only after verified frozen choices and all vectors."""
+    """Score final predictions on test labels after re-checking every frozen artifact."""
     receipt = _read_json(output / "final_predictions_receipt.json")
     for filename, field in (("final_predictions.parquet", "predictions_sha256"),
                              ("selection.json", "selection_sha256"),
@@ -762,22 +758,10 @@ def run_gated_blend_study(
     output_dir: str | Path = DEFAULT_OUTPUT, test_labels_path: str | Path = "data/raw/RUL_FD001.txt",
     config: StudyConfig | None = None, evaluate_test: bool = True,
 ) -> dict[str, Any]:
-    """Derive the full nested study using 48 verified fits and no fresh fitting.
+    """Run the full gated study from `source_run_dir` into a new `output_dir`.
 
-    Args:
-        repo_root: Repository containing the immutable verified source study.
-        source_run_dir: Complete rigorous LightGBM study containing both HGBs.
-        output_dir: Fresh isolated derived-study run; existing folders rejected.
-        test_labels_path: Raw reporting labels, read after saved-model replay.
-        config: Frozen sixteen-gate contract or separate engineering smoke.
-        evaluate_test: Whether to perform reporting-only final test scoring.
-
-    Returns:
-        Completed receipt with conditional outer decision and explicit reuse counts.
-
-    Raises:
-        ValueError: A provenance, split, vector, inference or ordering guard fails.
-        FileNotFoundError: A required source artifact or protocol is absent.
+    Reuses the 48 source fits. `output_dir` must not exist. Test labels are only
+    used for reporting. Returns the run_info payload.
     """
     root = Path(repo_root).resolve() if repo_root is not None else Path(__file__).resolve().parents[4]
     source, output, labels = (_resolve(root, item) for item in (source_run_dir, output_dir, test_labels_path))
@@ -845,11 +829,7 @@ def run_gated_blend_study(
 
 
 def main(argv: list[str] | None = None) -> None:
-    """Expose the immutable derived study and distinct engineering smoke CLI.
-
-    Args:
-        argv: Optional command-line arguments; defaults to process arguments.
-    """
+    """CLI entry point; `--dry-run` runs a small smoke grid."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", type=Path)
     parser.add_argument("--source-run-dir", default=DEFAULT_SOURCE)

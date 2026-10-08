@@ -17,16 +17,9 @@ def _validate_train(observations: pd.DataFrame) -> None:
 
 
 def make_train_targets(observations: pd.DataFrame) -> pd.DataFrame:
-    """Tạo bảng khóa và raw RUL từ toàn bộ lịch sử train, không cap RUL.
+    """Tính RUL = max_cycle - cycle cho từng dòng train, không cap.
 
-    Args:
-        observations: Observations train đầy đủ đến khi hỏng, trước khi lọc window.
-
-    Returns:
-        Bảng split, engine_id, cycle, rul; giữ số dòng và thứ tự đầu vào.
-
-    Raises:
-        ContractError: Observations sai contract hoặc chứa split test.
+    Cần lịch sử train đầy đủ (trước khi lọc window). Giữ số dòng và thứ tự đầu vào.
     """
     _validate_train(observations)
     targets = observations.loc[:, list(KEY)].copy()

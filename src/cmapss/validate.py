@@ -22,19 +22,10 @@ def validate_dataset(
     dataset_id: str = "FD001",
     check_test_labels: bool = False,
 ) -> dict[str, Any]:
-    """Kiểm tra hai file observations; chỉ đọc nhãn test khi được yêu cầu.
+    """Kiểm tra file train/test và trả kết quả kèm checksum nguồn.
 
-    Args:
-        raw_dir: Thư mục chứa các file C-MAPSS nguyên bản.
-        dataset_id: Subset C-MAPSS cần kiểm tra.
-        check_test_labels: Kiểm tra riêng cấu trúc nhãn, không join hoặc xuất giá trị.
-
-    Returns:
-        Số dòng, số engine, checksum nguồn và kết quả kiểm tra.
-
-    Raises:
-        ContractError: Một kiểm tra dữ liệu không đạt.
-        OSError: Không đọc được file đầu vào.
+    Nhãn test chỉ được đọc khi ``check_test_labels=True``, và chỉ kiểm tra cấu
+    trúc, không join vào observations.
     """
     dataset_id = dataset_id.upper()
     if dataset_id not in DATASET_IDS:

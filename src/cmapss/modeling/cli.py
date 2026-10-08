@@ -19,12 +19,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--rolling-features",
         default="outputs/features/gold/rolling_features.parquet",
-        help="Gold rolling features Parquet từ M3.2",
+        help="Gold rolling features Parquet (outputs/features/gold)",
     )
     parser.add_argument(
         "--train-targets",
         default="outputs/etl/silver/train_targets.parquet",
-        help="Silver train targets Parquet từ M3.1",
+        help="Silver train targets Parquet (outputs/etl/silver)",
     )
     parser.add_argument(
         "--test-labels",

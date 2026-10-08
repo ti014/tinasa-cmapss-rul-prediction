@@ -1,4 +1,4 @@
-"""Benchmark tái lập ETL trên dữ liệu nhân bản, tách khỏi khoa học FD001."""
+"""Benchmark ETL Pandas trên dữ liệu nhân bản 1x/10x/100x."""
 
 from __future__ import annotations
 
@@ -33,9 +33,9 @@ def replicate_observations(
     observations: pd.DataFrame,
     scale: int,
 ) -> pd.DataFrame:
-    """Nhân bản observations với engine ID mới cho benchmark.
+    """Nhân bản observations `scale` lần, mỗi bản có engine ID mới.
 
-    Bản sao chỉ tồn tại trong bộ nhớ và không được đưa vào artifact khoa học.
+    Bản sao chỉ nằm trong bộ nhớ, không ghi ra artifact.
     """
     if scale < 1:
         raise ValueError("scale phải >= 1")

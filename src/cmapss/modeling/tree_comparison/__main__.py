@@ -1,4 +1,4 @@
-"""Execute the isolated tree comparison with ``python -m``."""
+"""Entry point for ``python -m cmapss.modeling.tree_comparison``."""
 
 from cmapss.modeling.tree_comparison.runner import main
 

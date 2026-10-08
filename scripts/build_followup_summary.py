@@ -159,7 +159,7 @@ uv run --frozen python scripts/verify_followup.py --run outputs/experiments/foll
 # JAVA_HOME trỏ tới Java 17 trước khi chạy benchmark.
 uv run --frozen python -m cmapss.etl.scalability --work-dir tmp/new_benchmark --output outputs/benchmarks/new_run
 uv run --frozen python scripts/build_followup_summary.py
-uv run --frozen python scripts/build_results_notebooks.py --execute
+uv run --frozen jupyter nbconvert --to notebook --execute --inplace notebooks/0[3-6]_*.ipynb
 uv run --frozen python slides/extract_slide_data.py
 pnpm --dir slides install --frozen-lockfile
 pnpm --dir slides build

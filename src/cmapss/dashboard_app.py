@@ -1,9 +1,7 @@
-"""Streamlit UI for the C-MAPSS FD001 RUL study.
+"""Streamlit UI for the C-MAPSS FD001 study.
 
-Pages only render persisted artifacts loaded through ``cmapss.dashboard``. The
-UI never fits a model, reads raw test labels, or changes the evaluation
-protocol. Entry point: ``app.py`` at the repository root, which calls
-``main(repo_root)``.
+Pages render artifacts loaded through ``cmapss.dashboard``. Started from
+``app.py`` at the repository root, which calls ``main(repo_root)``.
 """
 
 from __future__ import annotations
@@ -175,7 +173,6 @@ def _model_label(name: str) -> str:
 
 def _rul_trajectory_chart(frame: pd.DataFrame, series: dict[str, str], *, marker_cycle: float | None = None) -> alt.Chart:
     """Line chart of RUL columns against cycle with the 30-cycle warning threshold."""
-
     long = frame[["cycle", *series]].rename(columns=series).melt("cycle", var_name="Đường", value_name="RUL")
     names = list(series.values())
     colors = [PALETTE["true"], PALETTE["pred"], PALETTE["alt"], PALETTE["muted"]][: len(names)]

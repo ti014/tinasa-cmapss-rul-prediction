@@ -318,3 +318,83 @@ def sensor_trajectory(exploration: ExplorationData, engine_id: int, sensors: lis
     columns = {f"{sensor}__{stat}": sensor for sensor in sensors if f"{sensor}__{stat}" in engine.columns}
     long = engine[["cycle", *columns]].rename(columns=columns).melt("cycle", var_name="sensor", value_name="value")
     return long.sort_values(["sensor", "cycle"]).reset_index(drop=True)
+
+
+# ---------------------------------------------------------------------------
+# Khử nhiễu, bất thường và lịch bảo trì (Đề tài 8)
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class DegradationData:
+    """Artifact của ``python -m cmapss.degradation`` trên train FD001."""
+
+    summary: dict[str, Any]
+    noise: pd.DataFrame
+    events: pd.DataFrame
+    signals: pd.DataFrame
+
+    @property
+    def sensors(self) -> list[str]:
+        return [column.removesuffix("__raw") for column in self.signals.columns if column.endswith("__raw")]
+
+
+def load_degradation_data(repo_root: str | Path = ".") -> DegradationData:
+    """Đọc tín hiệu gốc/EWMA, Health Index và cycle phát hiện bất thường."""
+
+    base = Path(repo_root).resolve() / "outputs" / "degradation"
+    return DegradationData(
+        summary=_read_json(base / "summary.json"),
+        noise=_read_checked(base / "tables" / "noise_summary.csv", {"sensor", "diff_std_raw", "diff_std_smoothed", "reduction_pct"}),
+        events=_read_checked(
+            base / "tables" / "anomaly_events.csv",
+            {"engine_id", "failure_cycle", "baseline_mean", "baseline_std", "detection_cycle", "lead_cycles", "detected"},
+        ),
+        signals=_read_checked(
+            base / "tables" / "signals.parquet", {"engine_id", "cycle", "health_index_raw", "health_index_ewma"}
+        ),
+    )
+
+
+def engine_signal_view(data: DegradationData, engine_id: int, sensor: str) -> pd.DataFrame:
+    """Dạng dài (cycle, Tín hiệu, value) của một sensor trước và sau EWMA."""
+
+    if sensor not in data.sensors:
+        raise ValueError(f"sensor không có trong artifact khử nhiễu: {sensor}")
+    engine = data.signals.loc[data.signals["engine_id"] == engine_id, ["cycle", f"{sensor}__raw", f"{sensor}__ewma"]]
+    renamed = engine.rename(columns={f"{sensor}__raw": "Tín hiệu gốc", f"{sensor}__ewma": "Sau EWMA"})
+    return renamed.melt("cycle", var_name="Tín hiệu", value_name="value").sort_values(["Tín hiệu", "cycle"])
+
+
+@dataclass(frozen=True)
+class MaintenanceData:
+    """Artifact của ``python -m cmapss.maintenance`` cho 100 động cơ test."""
+
+    summary: dict[str, Any]
+    schedule: pd.DataFrame
+    planning: pd.DataFrame
+    check: pd.DataFrame
+    test_health_index: pd.DataFrame
+    test_anomaly: pd.DataFrame
+
+
+def load_maintenance_data(repo_root: str | Path = ".") -> MaintenanceData:
+    """Đọc lịch bảo trì, kế hoạch, bảng kiểm tra và Health Index của động cơ test.
+
+    Bảng kiểm tra là artifact đã tính sẵn; dashboard không mở file nhãn test gốc.
+    """
+
+    base = Path(repo_root).resolve() / "outputs" / "maintenance"
+    tables = base / "tables"
+    return MaintenanceData(
+        summary=_read_json(base / "summary.json"),
+        schedule=_read_checked(
+            tables / "maintenance_schedule.csv",
+            {"priority", "engine_id", "current_cycle", "rul_pred", "cycles_to_maintenance", "maintenance_cycle",
+             "predicted_failure_cycle", "anomaly_detected", "anomaly_cycle", "status"},
+        ),
+        planning=_read_checked(tables / "maintenance_planning.csv", {"window"}),
+        check=_read_checked(tables / "status_vs_actual.csv", {"status"}),
+        test_health_index=_read_checked(tables / "test_health_index.parquet", {"engine_id", "cycle", "health_index"}),
+        test_anomaly=_read_checked(tables / "test_anomaly_status.csv", {"engine_id", "anomaly_evaluable", "threshold"}),
+    )

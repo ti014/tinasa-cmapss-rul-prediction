@@ -15,6 +15,9 @@ from cmapss.dashboard import (
     load_dashboard_data,
     load_exploration_data,
     load_improvement_data,
+    load_degradation_data,
+    load_maintenance_data,
+    engine_signal_view,
     sensor_trajectory,
 )
 
@@ -90,9 +93,28 @@ def test_cross_dataset_matrix_has_within_and_transfer_rows() -> None:
     assert (matrix["mae_ci_lower"] <= matrix["mean_engine_mae"]).all()
 
 
+def test_degradation_data_has_raw_and_smoothed_signals() -> None:
+    data = load_degradation_data(ROOT)
+    assert len(data.sensors) == 14 and "sensor_11" in data.sensors
+    assert data.signals["engine_id"].nunique() == 100
+    view = engine_signal_view(data, 1, "sensor_11")
+    assert set(view["Tín hiệu"]) == {"Tín hiệu gốc", "Sau EWMA"}
+    with pytest.raises(ValueError):
+        engine_signal_view(data, 1, "sensor_1")
+
+
+def test_maintenance_data_covers_every_test_engine() -> None:
+    data = load_maintenance_data(ROOT)
+    assert len(data.schedule) == 100 and data.schedule["engine_id"].is_unique
+    assert data.schedule["priority"].tolist() == list(range(1, 101))
+    assert int(data.check.drop(columns="status").to_numpy().sum()) == 100
+    assert data.summary["labels_read_after_schedule_written"] is True
+    assert data.test_health_index["engine_id"].nunique() == 100
+
+
 @pytest.mark.parametrize(
     "page",
-    ["Tổng quan", "Dữ liệu & EDA", "Đánh giá RUL", "Cảnh báo sớm", "Cross-dataset", "Thử nghiệm cải thiện", "Health Index / ARIMA", "Provenance"],
+    ["Tổng quan", "Dữ liệu & EDA", "Khử nhiễu", "Xu hướng & bất thường", "Dự đoán RUL", "Cảnh báo sớm", "Lịch bảo trì", "Thử nghiệm mở rộng", "Provenance"],
 )
 def test_every_dashboard_page_renders_without_exception(page: str) -> None:
     testing = pytest.importorskip("streamlit.testing.v1")

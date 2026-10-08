@@ -595,6 +595,13 @@ báo sớm nhiều hơn.}
 \qa{Mức theo dõi tăng cường có quá rộng không? (slide 16)}{Có, 41 trên 59 động cơ ở mức này còn trên 60
 cycles. Mức này dùng để tăng tần suất kiểm tra, không dùng để lên lịch can thiệp.}
 
+\qa{Có động cơ nào bị xếp lịch bảo trì sau khi đã hỏng không? (slide 16)}{Có, em nói thẳng luôn: 12
+trên 100 động cơ có ngày bảo trì dự kiến muộn hơn lúc hỏng thật, từ 4 đến 27 cycle. Nhưng cả 12 chiếc đều
+còn ít nhất 77 cycle nữa mới hỏng, tức là toàn những động cơ còn xa. Ở vùng đó mô hình hay đoán dư tuổi
+thọ, giống dự báo thời tiết hai tuần tới thì kém hơn dự báo ngày mai. Trong vận hành, lịch được tính lại
+mỗi lần có dữ liệu mới, nên những động cơ này sẽ được xếp lại nhiều lần trước khi đến hạn. Bài học em rút
+ra là không nên chốt lịch xa chỉ từ một lần dự đoán. Còn với 21 động cơ báo cần bảo trì ngay thì đúng cả 21.}
+
 \qa{Big Data nằm ở đâu khi dữ liệu nhỏ? (slide 6--7)}{Ở cách tổ chức: ETL nhiều file, lưu trữ phân lớp
 Parquet và SQLite, hai cách làm Pandas và PySpark khớp tuyệt đối, và Spark nhanh hơn khoảng 3,4 lần khi
 dữ liệu tăng 10 lần. Em chưa chạy trên cluster.}
@@ -631,7 +638,7 @@ Mô hình & HistGradientBoosting, GroupKFold 5 fold; MAE CV 20,21 (Ridge 23,99) 
 Kết quả test & MAE 15,35 (CI 95\%: 12,73--18,09); RMSE 20,54; NASA 1.513; MAE 4,38 khi RUL thật $\leq$ 30 \\
 Cảnh báo ngưỡng 30 & 44 trước, 7 đúng lúc, 49 trễ, 0 bỏ lỡ; lead time trung vị 30 \\
 Cảnh báo ngưỡng 40 & Kịp thời 94\% (ngưỡng 30: 51\%); trễ 6\% \\
-Lịch bảo trì & 21 cần bảo trì, 59 theo dõi, 20 bình thường; 21/21 đúng; 14 đến hạn trong 25 cycle tới \\
+Lịch bảo trì & 21 cần bảo trì, 59 theo dõi, 20 bình thường; 21/21 đúng; 14 đến hạn trong 25 cycle tới; 12 động cơ có lịch muộn hơn lúc hỏng 4--27 cycle (RUL thật đều $\geq$ 77) \\
 Ví dụ động cơ 1 & Bất thường cycle 84; cảnh báo RUL cycle 162; hỏng cycle 192 \\
 Ví dụ động cơ 90 & Cycle 146; RUL dự đoán 31,2; bảo trì cycle 147; bất thường từ cycle 67 \\
 Chuyển miền & MAE 47,39--60,32 (huấn luyện nội bộ: 21,93--28,33) \\

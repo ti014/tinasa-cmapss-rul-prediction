@@ -51,7 +51,7 @@ slide, dashboard và kịch bản dùng cùng một mô hình, một bảng cả
 | Tổng hợp theo time window | Window nhân quả 30 cycles, 126 đặc trưng; parity Pandas–PySpark | **Đạt** |
 | Phát hiện dấu hiệu bất thường | `src/cmapss/degradation/anomaly.py`: Health Index giảm quá 3σ so với 30 cycles đầu, 5 cycles liên tiếp; 100/100 động cơ train, trung vị 121 cycles trước khi hỏng; phân tích độ nhạy 9 cấu hình (2/3/4σ × 3/5/10 cycles) đều phát hiện 100/100, lead time nhỏ nhất ≥ 50 cycles (Bảng 17); Mục 5.3 và 6.3 | **Đạt**; giới hạn: chưa đo trực tiếp được tỷ lệ báo động giả |
 | Trực quan hóa xu hướng suy giảm | Quỹ đạo sensor, kiểm định đầu/cuối, Health Index, quỹ đạo cảnh báo | **Đạt** |
-| Dự đoán thời điểm cần bảo trì | `src/cmapss/maintenance/`: lịch cho 100 động cơ test; 21/21 báo cần bảo trì là đúng; Mục 6.6 | **Đạt** trong phạm vi FD001 và điểm cắt test |
+| Dự đoán thời điểm cần bảo trì | `src/cmapss/maintenance/`: lịch cho 100 động cơ test; 21/21 báo cần bảo trì là đúng; Mục 6.6 | **Đạt** trong phạm vi FD001 và điểm cắt test; giới hạn: 12 động cơ còn xa hỏng (RUL thật ≥ 77) có lịch muộn hơn lúc hỏng 4–27 cycles |
 | Báo cáo dự đoán kèm biểu đồ xu hướng cảnh báo sớm | `outputs/maintenance/tables/maintenance_schedule.csv`, `fleet_status.png`, `maintenance_planning.png`, `warning_trajectory.png`; slide 15–16; trang dashboard Lịch bảo trì | **Đạt** |
 
 ### B. Yêu cầu nộp bài

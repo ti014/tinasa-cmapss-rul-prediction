@@ -428,7 +428,14 @@ do là ngưỡng $3\sigma$ của Health Index phát hiện suy giảm từ kho�
 nên mức này phù hợp để tăng tần suất kiểm tra, chưa phải để lên lịch can thiệp.
 Ngược lại, lịch cũng có thể quá lạc quan với từng động cơ: động cơ 23 được dự đoán
 cần bảo trì ở cycle 270, trong khi RUL thật 113 cho thấy thời điểm đó vào khoảng
-cycle 213 (Mục~\ref{sec:res-errors}).
+cycle 213 (Mục~\ref{sec:res-errors}). Tính trên cả 100 động cơ, 12 động cơ có cycle
+bảo trì dự kiến muộn hơn thời điểm hỏng thật từ 4 đến 27 cycles (7 động cơ ở mức
+theo dõi tăng cường, 5 động cơ ở mức bình thường). Cả 12 động cơ đều có RUL thật từ
+77 cycles trở lên, tức là lỗi này xảy ra ở các động cơ còn xa thời điểm hỏng, nơi
+mô hình dự đoán dư RUL (Mục~\ref{sec:res-errors}). Trong vận hành, lịch được tính lại
+mỗi khi có dữ liệu mới, nên với các động cơ này lịch sẽ được cập nhật nhiều lần trước
+khi đến hạn; tuy nhiên kết quả cho thấy không nên chốt lịch bảo trì xa chỉ từ một lần
+dự đoán.
 
 \subsection{Thử nghiệm mở rộng}
 \label{sec:res-extended}

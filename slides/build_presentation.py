@@ -303,9 +303,9 @@ def slide_cover():
          color=GOLD_DARK, align=PP_ALIGN.CENTER)
     items = [
         (str(FD["FD001"]["train_engines"]), "động cơ train FD001"),
-        (f"{vn(DEG['noise_reduction_pct_median'], 0)}%", "dao động giảm sau khử nhiễu"),
-        (vn(AN["lead_median"], 0), "cycle báo bất thường trước hỏng"),
-        (vn(M["final"]["mean_engine_mae"]), "MAE RUL trên test (cycle)"),
+        (f"{vn(DEG['noise_reduction_pct_median'], 0)}%", "mức giảm độ dao động (EWMA)"),
+        (vn(AN["lead_median"], 0), "cycle phát hiện trước hỏng hóc"),
+        (vn(M["final"]["mean_engine_mae"]), "MAE trên tập kiểm tra (cycle)"),
     ]
     for i, (value, label) in enumerate(items):
         x = 1.2 + i * 2.8
@@ -331,8 +331,8 @@ GOLD_DARK = "B37800"
 
 # ============================================================================ 2. Lộ trình
 def slide_agenda():
-    s = content(1, 2, "Nội dung trình bày theo đúng thứ tự pipeline",
-                "Dữ liệu và pipeline trước, phân tích tín hiệu sau, cuối cùng là dự đoán và cảnh báo",
+    s = content(1, 2, "Cấu trúc bài trình bày",
+                "Trình bày theo trình tự pipeline quản lý dữ liệu: xử lý, phân tích tín hiệu, dự đoán và cảnh báo",
                 "report/main.pdf; handoff/SPEECH_SCRIPT_VI.pdf",
                 "Thời lượng: 25 giây.\nĐọc nhanh sáu phần. Thứ tự bám quy trình của môn học: thu thập, làm sạch, lưu trữ "
                 "trước; rồi khử nhiễu, xu hướng và bất thường; sau cùng là dự đoán RUL và cảnh báo. Năm câu hỏi bên phải "
@@ -341,7 +341,7 @@ def slide_agenda():
         ("Bài toán và dữ liệu", "Slide 3–5"), ("Pipeline dữ liệu", "Slide 6–8"),
         ("Khử nhiễu và cửa sổ thời gian", "Slide 9–10"), ("Xu hướng và bất thường", "Slide 11–12"),
         ("Dự đoán RUL, cảnh báo, lịch bảo trì", "Slide 13–16"), ("Mở rộng và kết luận", "Slide 17–19"),
-        ("Demo dashboard", "Khoảng 3 phút"),
+        ("Demo dashboard", "Khoảng 2,5 phút"),
     ]
     for i, (name, where) in enumerate(rows):
         y = 2.5 + i * 0.58
@@ -349,13 +349,13 @@ def slide_agenda():
         text(s, 1.55, y - 0.02, 4.8, 0.28, name, size=15, bold=True)
         text(s, 1.55, y + 0.26, 4.8, 0.24, where, size=11, color=SLATE)
     rect(s, 6.75, 2.5, 5.67, 4.1, TINT)
-    text(s, 7.05, 2.68, 5.1, 0.4, "Năm câu hỏi", size=18, bold=True, color=BLUE)
+    text(s, 7.05, 2.68, 5.1, 0.4, "Câu hỏi nghiên cứu", size=18, bold=True, color=BLUE)
     questions = [
-        "Dữ liệu có hợp lệ và ETL Pandas–PySpark có cho cùng kết quả không?",
-        "Khử nhiễu giảm được bao nhiêu dao động; dữ liệu tổng hợp theo window ra sao?",
-        "Sensor suy giảm theo xu hướng nào; có phát hiện bất thường trước khi hỏng không?",
-        "Dự đoán RUL chính xác bao nhiêu trên tập test độc lập?",
-        "Dự đoán RUL chuyển thành cảnh báo sớm và lịch bảo trì ra sao?",
+        "Dữ liệu có đạt ràng buộc chất lượng; hai cách triển khai ETL có tương đương?",
+        "Mức giảm nhiễu đạt được; dữ liệu được tổng hợp theo cửa sổ thời gian thế nào?",
+        "Xu hướng biến đổi của tín hiệu; khả năng phát hiện bất thường trước hỏng hóc?",
+        "Độ chính xác dự đoán RUL trên tập kiểm tra độc lập?",
+        "Hiệu quả của cảnh báo sớm và lịch bảo trì dựa trên dự đoán?",
     ]
     for i, question in enumerate(questions):
         y = 3.22 + i * 0.66
@@ -365,14 +365,14 @@ def slide_agenda():
 
 # ============================================================================ 3. Bài toán
 def slide_problem():
-    s = content(1, 3, "Bài toán: phát hiện suy giảm và dự đoán thời điểm cần bảo trì",
-                "Mỗi yêu cầu kỹ thuật của Đề tài 8 có một slide bằng chứng riêng",
+    s = content(1, 3, "Phát biểu bài toán",
+                "Phát hiện dấu hiệu suy giảm và dự đoán thời điểm bảo trì từ dữ liệu cảm biến; đối chiếu yêu cầu Đề tài 8",
                 "references/context/assignment-brief.png; report/sections/problem-data.tex",
                 "Thời lượng: 40 giây.\nRemaining Useful Life (RUL, tuổi thọ hữu ích còn lại) là số cycle vận hành còn lại "
                 "trước khi hỏng. Ví dụ động cơ hỏng ở cycle 200 thì tại cycle 170 có RUL bằng 30. Đơn vị là cycle; dữ liệu "
                 "không quy đổi ra giờ.\nBảng bên phải đối chiếu từng yêu cầu của đề tài với slide trình bày: khử nhiễu ở "
                 "slide 9, window ở slide 10, xu hướng ở slide 11, bất thường ở slide 12, cảnh báo ở slide 15 và lịch bảo trì ở slide 16.")
-    text(s, 0.92, 2.5, 5.3, 0.32, "Ví dụ trên một động cơ train", size=15, bold=True, color=BLUE)
+    text(s, 0.92, 2.5, 5.3, 0.32, "Định nghĩa RUL", size=15, bold=True, color=BLUE)
     x0, x1, y = 1.0, 5.6, 3.4
     tx = x0 + (x1 - x0) * 170 / 200
     rect(s, x0, y, x1 - x0, 0.2, ICE, rounded=False)
@@ -381,26 +381,26 @@ def slide_problem():
     dot.fill.solid(); dot.fill.fore_color.rgb = rgb(RED); dot.line.fill.background()
     text(s, x0 - 0.1, y + 0.32, 1.0, 0.28, "cycle 1", size=11, color=SLATE)
     text(s, tx - 0.5, y - 0.42, 1.0, 0.3, "t = 170", size=12, bold=True, color=GOLD_DARK, align=PP_ALIGN.CENTER)
-    text(s, x1 - 0.6, y + 0.32, 1.2, 0.5, "hỏng\ncycle 200", size=11, color=RED, align=PP_ALIGN.CENTER)
-    text(s, 0.92, 4.35, 5.4, 0.45, "RUL(t) = cycle hỏng − t", size=22, bold=True, color=BLUE)
+    text(s, x1 - 0.6, y + 0.32, 1.2, 0.5, "hỏng hóc\ncycle 200", size=11, color=RED, align=PP_ALIGN.CENTER)
+    text(s, 0.92, 4.35, 5.4, 0.45, "RUL(t) = T − t", size=22, bold=True, color=BLUE)
     text(s, 0.92, 4.85, 5.4, 0.4, "RUL(170) = 200 − 170 = 30 cycle", size=16, bold=True, color=GOLD_DARK)
-    text(s, 0.92, 5.4, 5.3, 1.1, "Đầu vào: chuỗi 21 sensor theo cycle. Đầu ra: dấu hiệu bất thường, số RUL và cảnh báo "
-         "khi RUL dự đoán ≤ 30 cycle.", size=14)
+    text(s, 0.92, 5.4, 5.3, 1.1, "T: cycle hỏng hóc của động cơ. Đầu vào: chuỗi 21 tín hiệu cảm biến theo cycle. Đầu ra: dấu "
+         "hiệu bất thường, ước lượng RUL và mức cảnh báo.", size=14)
     table(s, [
-        ["Yêu cầu của đề tài", "Cách đáp ứng", "Slide"],
+        ["Yêu cầu của đề tài", "Phương pháp thực hiện", "Slide"],
         ["Xử lý chuỗi thời gian cảm biến", "Kiểm tra schema, khóa, cycle liên tục; ETL Pandas–PySpark", "6, 7"],
         ["Xử lý nhiễu tín hiệu", "EWMA span 10 theo từng động cơ, chỉ dùng quá khứ", "9"],
         ["Chuẩn hóa, tổng hợp theo window", "StandardScaler cho Health Index; window 30 → 126 đặc trưng", "10"],
         ["Phát hiện dấu hiệu bất thường", "Health Index giảm quá 3σ so với 30 cycle đầu", "12"],
-        ["Trực quan xu hướng suy giảm", "Quỹ đạo sensor, kiểm định đầu/cuối, Health Index", "11, 12"],
+        ["Trực quan hóa xu hướng suy giảm", "Quỹ đạo sensor, kiểm định đầu/cuối, Health Index", "11, 12"],
         ["Dự đoán thời điểm bảo trì, cảnh báo sớm", "Lịch bảo trì cho 100 động cơ test; hai mức cảnh báo", "15, 16"],
     ], 6.55, 2.5, [2.25, 3.0, 0.62], row_h=0.58, size=11.5)
 
 
 # ============================================================================ 4. Dữ liệu
 def slide_data():
-    s = content(1, 4, "NASA C-MAPSS: bốn subset, phân tích chính trên FD001",
-                "Hai trục khác biệt là số điều kiện vận hành và số dạng lỗi; FD002–FD004 chỉ dùng ở slide 17",
+    s = content(1, 4, "Bộ dữ liệu NASA C-MAPSS",
+                "Bốn subset khác nhau về số điều kiện vận hành và số dạng lỗi; FD001 là đối tượng phân tích chính",
                 "data/raw/readme.txt; outputs/cross_dataset/FD00x/etl/run_info.json",
                 "Thời lượng: 45 giây.\nC-MAPSS là dữ liệu mô phỏng động cơ turbofan của NASA, có tên trong gợi ý dữ liệu "
                 "của đề tài. Mỗi subset có train (chạy đến khi hỏng), test (bị cắt trước khi hỏng) và file nhãn RUL test.\n"
@@ -419,7 +419,7 @@ def slide_data():
         text(s, x + 0.22, 4.2, 2.4, 0.62,
              f"{row['train_engines']} train / {row['test_engines']} test\n{vn(row['observations'], 0)} quan sát", size=13,
              color=sub)
-    text(s, 0.92, 5.2, 8, 0.34, "Một dòng quan sát có 26 trường", size=15, bold=True, color=BLUE)
+    text(s, 0.92, 5.2, 8, 0.34, "Cấu trúc một bản ghi quan sát (26 trường)", size=15, bold=True, color=BLUE)
     cx = 0.92
     for label, width, color in (("engine_id", 1.35, BLUE), ("cycle", 1.0, BLUE), ("setting_1 … setting_3", 2.55, TEAL),
                                 ("sensor_1 … sensor_21", 6.36, GOLD)):
@@ -427,14 +427,14 @@ def slide_data():
         text(s, cx, 5.6, width, 0.48, label, size=13, bold=True, color=INK if color == GOLD else WHITE,
              align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
         cx += width + 0.08
-    text(s, 0.92, 6.2, 11.5, 0.35, "Khóa trong một subset: (split, engine_id, cycle). Không có giá trị thiếu.",
+    text(s, 0.92, 6.2, 11.5, 0.35, "Khóa chính: (split, engine_id, cycle). Dữ liệu không có giá trị thiếu.",
          size=13, color=SLATE)
 
 
 # ============================================================================ 5. Nhãn
 def slide_labels():
-    s = content(1, 5, "Nhãn RUL tạo từ train; nhãn test chỉ mở sau khi đã dự đoán",
-                "Ranh giới này ngăn data leakage (rò rỉ dữ liệu) từ test vào phân tích và chọn mô hình",
+    s = content(1, 5, "Xây dựng nhãn RUL và ranh giới tập kiểm tra",
+                "Nhãn tập kiểm tra chỉ được sử dụng sau khi đã lưu kết quả dự đoán, nhằm tránh rò rỉ dữ liệu (data leakage)",
                 "data/CONTRACTS.md; outputs/modeling/run_info.json; outputs/modeling/tables/final_metrics.json",
                 "Thời lượng: 45 giây.\nTrain: mỗi động cơ chạy đến khi hỏng nên RUL = cycle cuối − cycle hiện tại; FD001 có "
                 "20.631 nhãn train.\nTest: chuỗi bị cắt trước khi hỏng. Mô hình tạo đúng một dự đoán tại cycle cuối quan sát "
@@ -448,7 +448,7 @@ def slide_labels():
         if full:
             dot = s.shapes.add_shape(MSO_SHAPE.OVAL, Inches(x1 - 0.15), Inches(y + 0.07), Inches(0.36), Inches(0.36))
             dot.fill.solid(); dot.fill.fore_color.rgb = rgb(RED); dot.line.fill.background()
-            text(s, x1 - 0.5, y + 0.5, 1.0, 0.28, "hỏng", size=11.5, color=RED, align=PP_ALIGN.CENTER)
+            text(s, x1 - 0.5, y + 0.5, 1.0, 0.28, "hỏng hóc", size=11.5, color=RED, align=PP_ALIGN.CENTER)
         else:
             dash = s.shapes.add_connector(MSO_CONNECTOR.STRAIGHT, Inches(x1), Inches(y + 0.25), Inches(x1 + 1.8),
                                           Inches(y + 0.25))
@@ -456,21 +456,21 @@ def slide_labels():
             dot = s.shapes.add_shape(MSO_SHAPE.OVAL, Inches(x1 - 0.13), Inches(y + 0.1), Inches(0.3), Inches(0.3))
             dot.fill.solid(); dot.fill.fore_color.rgb = rgb(GOLD); dot.line.fill.background()
             text(s, x1 - 1.6, y + 0.5, 1.8, 0.28, "cycle cuối quan sát", size=11.5, color=GOLD_DARK, align=PP_ALIGN.RIGHT)
-            text(s, x1 + 0.3, y + 0.5, 1.6, 0.28, "chưa biết lúc hỏng", size=11.5, color=SLATE, align=PP_ALIGN.RIGHT)
+            text(s, x1 + 0.3, y + 0.5, 1.6, 0.28, "chưa biết thời điểm hỏng", size=11.5, color=SLATE, align=PP_ALIGN.RIGHT)
 
-    lane(2.55, "Train", f"{FD['FD001']['train_engines']} động cơ chạy đến khi hỏng", True)
-    lane(3.85, "Test", f"{FD['FD001']['test_engines']} động cơ bị cắt trước khi hỏng", False)
+    lane(2.55, "Train", f"{FD['FD001']['train_engines']} động cơ vận hành đến hỏng hóc", True)
+    lane(3.85, "Test", f"{FD['FD001']['test_engines']} động cơ bị cắt trước hỏng hóc", False)
     rect(s, 0.92, 5.1, 7.4, 1.45, TINT)
     text(s, 1.15, 5.25, 7.0, 1.2, [
         [("Train: ", {"bold": True, "color": BLUE}), (f"RUL(t) = cycle cuối − t → {vn(P['parity'][1]['rows'], 0)} nhãn", {})],
         [("Test: ", {"bold": True, "color": BLUE}),
-         ("1 dự đoán mỗi động cơ tại cycle cuối → ghi file → mới ghép RUL_FD001.txt", {})],
+         ("một dự đoán tại cycle cuối của mỗi động cơ; ghép RUL_FD001.txt sau khi đã lưu dự đoán", {})],
     ], size=14.5, space_after=8)
     rect(s, 8.7, 2.5, 3.72, 4.05, BLUE)
-    text(s, 8.95, 2.68, 3.3, 0.35, "Kiểm soát nhãn test", size=16, bold=True, color=WHITE)
-    for i, (head, body) in enumerate((("Không dùng", "trong EDA, đặc trưng, chọn mô hình"),
-                                      ("Ghép muộn", "sau khi đã ghi dự đoán test"),
-                                      ("Có dấu vết", "run_info ghi trạng thái ghép; SHA-256 của file nhãn"))):
+    text(s, 8.95, 2.68, 3.3, 0.35, "Kiểm soát nhãn tập kiểm tra", size=16, bold=True, color=WHITE)
+    for i, (head, body) in enumerate((("Không sử dụng", "trong EDA, xây dựng đặc trưng và lựa chọn mô hình"),
+                                      ("Ghép sau dự đoán", "nhãn chỉ được ghép khi dự đoán đã được lưu"),
+                                      ("Truy vết được", "metadata ghi trạng thái ghép nhãn và mã băm SHA-256"))):
         yy = 3.2 + i * 1.1
         text(s, 8.95, yy, 3.3, 0.4, head, size=19, bold=True, color=GOLD)
         text(s, 8.95, yy + 0.42, 3.3, 0.6, body, size=12.5, color=ICE)
@@ -478,8 +478,8 @@ def slide_labels():
 
 # ============================================================================ 6. Pipeline
 def slide_pipeline():
-    s = content(2, 6, "Pipeline Bronze → Silver → Gold → đặc trưng → mô hình",
-                "Mỗi bước ghi artifact kèm hash và run_info để truy vết và chạy lại",
+    s = content(2, 6, "Kiến trúc pipeline dữ liệu Bronze–Silver–Gold",
+                "Mỗi tầng lưu kết quả kèm mã băm và metadata, bảo đảm khả năng truy vết và tái lập",
                 "report/figures/pipeline.pdf; handoff/DATA_WALKTHROUGH.md; outputs/*/run_info.json",
                 "Thời lượng: 55 giây.\nBronze là file text gốc. Reader kiểm tra đúng 26 trường, kiểu dữ liệu, khóa duy nhất "
                 "và cycle liên tục; train và test được union theo dòng.\nSilver lưu observations và train_targets dạng "
@@ -497,7 +497,7 @@ def slide_pipeline():
     ]
     bw, gap, y, bh = 1.72, 0.236, 2.95, 1.65
     rect(s, 0.92 + 2 * (bw + gap) - 0.08, 2.5, 2 * bw + gap + 0.16, 0.34, GOLD_TINT)
-    text(s, 0.92 + 2 * (bw + gap) - 0.08, 2.5, 2 * bw + gap + 0.16, 0.34, "Pandas = PySpark (sai khác 0)", size=12,
+    text(s, 0.92 + 2 * (bw + gap) - 0.08, 2.5, 2 * bw + gap + 0.16, 0.34, "Đối chiếu Pandas–PySpark: sai khác 0", size=12,
          bold=True, color=GOLD_DARK, align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
     for i, (head, tool, body) in enumerate(steps):
         x = 0.92 + i * (bw + gap)
@@ -509,7 +509,7 @@ def slide_pipeline():
         text(s, x + 0.12, y + 0.85, bw - 0.2, 0.75, body, size=11.5, color=WHITE if dark else INK)
         if i < 5:
             arrow(s, x + bw + 0.02, y + bh / 2, x + bw + gap - 0.02, y + bh / 2)
-    for col, head, sub, width in ((1, "Khử nhiễu → Health Index → bất thường", "chỉ dùng train · slide 9–12", 4.3),
+    for col, head, sub, width in ((1, "Khử nhiễu → Health Index → bất thường", "chỉ dùng tập train · slide 9–12", 4.3),
                                   (5, "Cảnh báo, lịch bảo trì", "slide 13–16", 2.9)):
         cx = 0.92 + col * (bw + gap) + bw / 2
         x = min(max(cx - width / 2, 0.92), 12.42 - width)
@@ -525,8 +525,8 @@ def slide_pipeline():
 def slide_parity():
     bench = {(r["engine"], int(r["scale"])): r for r in D["stage_benchmark"]}
     pandas10, spark10 = bench[("pandas", 10)]["pipeline_seconds"], bench[("spark", 10)]["pipeline_seconds"]
-    s = content(2, 7, "Pandas và PySpark khớp; Spark nhanh hơn khi dữ liệu tăng",
-                f"Ở scale 10×, PySpark local nhanh hơn Pandas khoảng {vn(pandas10 / spark10, 1)} lần trên toàn pipeline",
+    s = content(2, 7, "Đối chiếu hai cách triển khai Pandas và PySpark",
+                f"Kết quả trùng khớp ở mọi tầng dữ liệu; ở quy mô 10×, PySpark cục bộ nhanh hơn Pandas khoảng {vn(pandas10 / spark10, 1)} lần",
                 "outputs/etl/parity.json; outputs/benchmarks/20260929/measurements.csv",
                 "Thời lượng: 1 phút.\nBảng trái: cùng input, Pandas và PySpark cho cùng schema, khóa, số dòng và giá trị ở "
                 "ba boundary; sai khác tuyệt đối lớn nhất bằng 0. Rolling features cũng khớp toàn bộ 27.927 dòng với "
@@ -542,14 +542,14 @@ def slide_parity():
         for p in P["parity"]
     ], 0.92, 2.5, [2.4, 1.15, 1.55, 1.0], row_h=0.5, size=12.5)
     rect(s, 0.92, 4.7, 6.1, 1.85, TINT)
-    text(s, 1.15, 4.85, 5.7, 0.34, "Đối chiếu từng giá trị, không chỉ số dòng", size=14, bold=True, color=BLUE)
+    text(s, 1.15, 4.85, 5.7, 0.34, "Đối chiếu ở mức từng giá trị", size=14, bold=True, color=BLUE)
     text(s, 1.15, 5.25, 5.7, 1.2, "Rolling features: so toàn bộ 27.927 dòng × 126 đặc trưng, tolerance 10⁻⁷. Cùng "
          "window 30, độ lệch chuẩn mẫu và độ dốc tính theo từng động cơ.", size=13)
     bar_chart(s, 7.3, 2.45, 5.12, 3.6, ["1× · 33.727 dòng", "10× · 337.270 dòng"],
               [("Pandas", [round(bench[("pandas", k)]["pipeline_seconds"]) for k in (1, 10)]),
                ("PySpark local[4]", [round(bench[("spark", k)]["pipeline_seconds"]) for k in (1, 10)])],
               [BLUE, GOLD], title="Thời gian pipeline gồm I/O (giây)")
-    text(s, 7.3, 6.12, 5.12, 0.45, "Chưa gồm thời gian khởi động Spark; chạy local, chưa phải cluster.", size=12,
+    text(s, 7.3, 6.12, 5.12, 0.45, "Không gồm thời gian khởi động Spark; đo trên một máy, chưa phải cluster.", size=12,
          bold=True, color=BLUE)
 
 
@@ -557,8 +557,8 @@ def slide_parity():
 def slide_eda():
     E = D["eda"]
     life = E["lifetime"]
-    s = content(2, 8, "Khám phá dữ liệu: tuổi thọ phân tán rộng, 7 cột không đổi",
-                "EDA chỉ dùng train để hiểu dữ liệu trước khi khử nhiễu và tạo đặc trưng",
+    s = content(2, 8, "Phân tích khám phá dữ liệu",
+                "Tuổi thọ động cơ dao động từ 128 đến 362 cycle; bảy cột không biến thiên trên toàn bộ tập train",
                 "outputs/eda/figures/engine_lifetimes.png; outputs/eda/tables/constant_engine_counts.csv",
                 "Thời lượng: 30 giây.\nTuổi thọ train từ 128 đến 362 cycle, trung vị 199, lệch phải vì có vài động cơ sống "
                 "rất lâu.\nBảy cột không đổi trong cả 100 động cơ: sensor 1, 5, 10, 16, 18, 19 và setting_3. Vì vậy bước khử "
@@ -569,7 +569,7 @@ def slide_eda():
                                         ("Dài nhất", life["max"]))):
         stat(s, 0.92 + i * 1.85, 5.25, 1.8, vn(value, 2 if value % 1 else 0), f"{label} (cycle)", size=26)
     rect(s, 8.7, 2.5, 3.72, 4.05, TINT)
-    text(s, 8.92, 2.66, 3.3, 0.35, "Không đổi trong cả 100 động cơ", size=14.5, bold=True, color=BLUE)
+    text(s, 8.92, 2.66, 3.3, 0.35, "Cột hằng trên 100/100 động cơ", size=14.5, bold=True, color=BLUE)
     for i, name in enumerate(E["always_constant"]):
         x, y = 8.92 + (i % 2) * 1.7, 3.15 + (i // 2) * 0.52
         rect(s, x, y, 1.6, 0.42, TEAL if name.startswith("setting") else SLATE)
@@ -577,15 +577,15 @@ def slide_eda():
     partial = E["partially_constant"][0]
     text(s, 8.92, 5.3, 3.3, 0.4, f"{partial['measurement']} không đổi ở {partial['constant_engines']}/100 động cơ.",
          size=12.5)
-    text(s, 8.92, 5.75, 3.3, 0.7, "Khử nhiễu dùng 14 sensor còn lại có xu hướng theo vòng đời.", size=12.5, color=SLATE)
+    text(s, 8.92, 5.75, 3.3, 0.7, "Khử nhiễu được áp dụng cho 14 sensor còn lại.", size=12.5, color=SLATE)
 
 
 # ============================================================================ 9. Khử nhiễu
 def slide_denoise():
     reductions = [float(r["reduction_pct"]) for r in NOISE.values()]
     s4 = NOISE["sensor_4"]
-    s = content(3, 9, f"Khử nhiễu EWMA giảm khoảng {vn(DEG['noise_reduction_pct_median'], 0)}% dao động, giữ xu hướng",
-                f"Làm mượt từng sensor trong từng động cơ, span {DEG['ewma_span']}; giá trị tại cycle t chỉ dùng cycle t và trước đó",
+    s = content(3, 9, "Khử nhiễu tín hiệu bằng EWMA",
+                f"Độ dao động ngắn hạn giảm khoảng {vn(DEG['noise_reduction_pct_median'], 0)}% (trung vị trên 14 sensor); xu hướng suy giảm được bảo toàn",
                 "outputs/degradation/figures/denoise_before_after.png; outputs/degradation/tables/noise_summary.csv",
                 "Thời lượng: 1 phút.\nĐây là bước xử lý nhiễu tín hiệu mà đề tài yêu cầu. Đường xám là tín hiệu gốc của động "
                 "cơ train 1, nhảy mạnh giữa hai cycle liền kề. Đường xanh là sau EWMA span 10.\nCông thức: s_t = α·x_t + "
@@ -608,15 +608,15 @@ def slide_denoise():
     text(s, 1.15, 5.6, 11.0, 0.9, [
         [("Công thức: ", {"bold": True, "color": BLUE}), ("sₜ = α·xₜ + (1 − α)·sₜ₋₁,  α = 2 / (span + 1) ≈ 0,18", {})],
         [("Vai trò: ", {"bold": True, "color": BLUE}),
-         ("tín hiệu EWMA đi vào Health Index và phát hiện bất thường (slide 12); mô hình RUL dùng window 30 trên tín hiệu gốc.", {})],
+         ("tín hiệu EWMA là đầu vào của Health Index và phát hiện bất thường (slide 12); mô hình RUL dùng đặc trưng cửa sổ trên tín hiệu gốc.", {})],
     ], size=13.5, space_after=4)
 
 
 # ============================================================================ 10. Window
 def slide_window():
     fr = P["feature_rows"]
-    s = content(3, 10, f"Window {P['window']} cycle tổng hợp 21 sensor thành {P['feature_columns']} đặc trưng",
-                "Mỗi dòng đặc trưng chỉ dùng quá khứ của chính động cơ đó; không dùng cycle tương lai hay động cơ khác",
+    s = content(3, 10, "Tổng hợp đặc trưng theo cửa sổ thời gian",
+                f"Cửa sổ trượt nhân quả {P['window']} cycle; 21 sensor × 6 thống kê = {P['feature_columns']} đặc trưng",
                 "outputs/features/run_info.json; src/cmapss/features/rolling.py",
                 "Thời lượng: 45 giây.\nVí dụ tại cycle 170: window gồm cycle 141–170; cycle 171 trở đi không được dùng.\nVới "
                 "mỗi sensor tính 6 thống kê: giá trị cuối, trung bình, độ lệch chuẩn, min, max và độ dốc. 21 × 6 = 126 cột. "
@@ -631,10 +631,10 @@ def slide_window():
     text(s, x0 + 34.5 * cw - 0.45, y0 - 0.34, 0.9, 0.3, "t = 170", size=12, bold=True, color=GOLD_DARK, align=PP_ALIGN.CENTER)
     text(s, x0 + 5 * cw, y0 + 0.5, 30 * cw, 0.3, "window: cycle 141–170", size=12.5, bold=True, color=BLUE,
          align=PP_ALIGN.CENTER)
-    text(s, x0 + 35 * cw - 0.7, y0 + 0.5, 5 * cw + 0.7, 0.3, "171+: không dùng", size=11.5, color=SLATE, align=PP_ALIGN.RIGHT)
-    text(s, 0.92, 3.8, 7.5, 0.4, "21 sensor × 6 thống kê = 126 cột", size=18, bold=True, color=BLUE)
-    for i, (head, body) in enumerate((("last", "trạng thái hiện tại"), ("mean", "mức trung bình"), ("std", "độ dao động"),
-                                      ("min", "cận dưới"), ("max", "cận trên"), ("slope", "xu hướng tăng/giảm"))):
+    text(s, x0 + 35 * cw - 0.7, y0 + 0.5, 5 * cw + 0.7, 0.3, "171+: không sử dụng", size=11.5, color=SLATE, align=PP_ALIGN.RIGHT)
+    text(s, 0.92, 3.8, 7.5, 0.4, "21 sensor × 6 thống kê = 126 đặc trưng", size=18, bold=True, color=BLUE)
+    for i, (head, body) in enumerate((("last", "giá trị tại cycle t"), ("mean", "giá trị trung bình"), ("std", "độ lệch chuẩn mẫu"),
+                                      ("min", "giá trị nhỏ nhất"), ("max", "giá trị lớn nhất"), ("slope", "hệ số góc hồi quy"))):
         x, y = 0.92 + (i % 3) * 2.5, 4.3 + (i // 3) * 0.9
         rect(s, x, y, 2.36, 0.78, TINT)
         text(s, x + 0.15, y + 0.07, 2.1, 0.34, head, size=15, bold=True, color=TEAL)
@@ -646,16 +646,16 @@ def slide_window():
     text(s, 8.95, 3.15, 3.25, 3.3, [
         "• ETL chuẩn hóa schema và kiểu dữ liệu.",
         "• StandardScaler fit trong training fold (Ridge) và trước PCA (Health Index).",
-        "• HGB dùng thang đo gốc: cây quyết định không phụ thuộc thang đo.",
-        "• Mean và slope trên 30 cycle cũng làm dịu dao động.",
+        "• HGB dùng thang đo gốc do mô hình cây bất biến với phép biến đổi đơn điệu.",
+        "• Các thống kê trên cửa sổ có tác dụng làm trơn bổ sung.",
     ], size=13, color=WHITE, space_after=8)
 
 
 # ============================================================================ 11. Xu hướng
 def slide_trend():
     st = D["statistics"]
-    s = content(4, 11, "Nhiều sensor thay đổi rõ khi động cơ tiến gần lúc hỏng",
-                f"So sánh 30 cycle đầu và 30 cycle cuối trên cùng động cơ: {st['n_reject']}/{st['n_sensors']} sensor thay đổi sau hiệu chỉnh FDR",
+    s = content(4, 11, "Xu hướng suy giảm của tín hiệu cảm biến",
+                f"{st['n_reject']}/{st['n_sensors']} sensor thay đổi có ý nghĩa thống kê giữa 30 cycle đầu và cuối vòng đời (Wilcoxon, hiệu chỉnh FDR)",
                 "outputs/eda/figures/sensor_trajectories_1.png; outputs/statistics/tables/sensor_inference.csv",
                 "Thời lượng: 45 giây.\nHai hình là quỹ đạo gốc của ba động cơ train dài 178, 199 và 229 cycle: sensor_4 tăng "
                 "dần, sensor_7 giảm dần khi tiến gần lúc hỏng. Đây là biểu đồ xu hướng suy giảm theo thời gian.\nKiểm định: "
@@ -675,17 +675,17 @@ def slide_trend():
         text(s, 6.05, y + 0.3, 6.3, 0.36, body, size=13)
     rect(s, 5.4, 5.15, 3.2, 1.4, BLUE)
     text(s, 5.62, 5.2, 2.9, 0.7, f"{st['n_reject']}/{st['n_sensors']}", size=38, bold=True, color=WHITE)
-    text(s, 5.62, 5.9, 2.9, 0.6, "sensor thay đổi có ý nghĩa sau hiệu chỉnh", size=12, color=ICE)
+    text(s, 5.62, 5.9, 2.9, 0.6, "sensor thay đổi có ý nghĩa thống kê (q = 0,05)", size=12, color=ICE)
     rect(s, 8.8, 5.15, 3.62, 1.4, TINT)
-    text(s, 9.0, 5.25, 3.25, 1.25, "Sensor 4, 7, 11, 12, 20 đổi cùng hướng ở 100/100 động cơ. "
+    text(s, 9.0, 5.25, 3.25, 1.25, "Sensor 4, 7, 11, 12, 20 thay đổi cùng chiều ở 100/100 động cơ; "
          f"{st['n_degenerate']} sensor hằng không kiểm định được.", size=12.5, anchor=MSO_ANCHOR.MIDDLE)
 
 
 # ============================================================================ 12. Bất thường
 def slide_anomaly():
-    s = content(4, 12, f"Phát hiện bất thường ở {AN['n_detected']}/{AN['n_engines']} động cơ trước khi hỏng",
-                f"So mỗi động cơ với chính nó lúc khỏe: báo khi Health Index giảm quá {vn(ACFG['z_threshold'], 0)}σ so với "
-                f"{ACFG['baseline_cycles']} cycle đầu, kéo dài {ACFG['persistence']} cycle",
+    s = content(4, 12, "Phát hiện dấu hiệu bất thường dựa trên Health Index",
+                f"Ngưỡng {vn(ACFG['z_threshold'], 0)}σ so với {ACFG['baseline_cycles']} cycle đầu, duy trì {ACFG['persistence']} cycle: "
+                f"phát hiện {AN['n_detected']}/{AN['n_engines']} động cơ, trung vị {vn(AN['lead_median'], 0)} cycle trước hỏng hóc",
                 "outputs/degradation/figures/anomaly_health_index.png; outputs/degradation/summary.json",
                 "Thời lượng: 1 phút 15 giây.\nĐây là phần phát hiện dấu hiệu bất thường của đề tài. Health Index gộp 21 sensor "
                 "đã khử nhiễu bằng StandardScaler rồi PCA một thành phần; chỉ số giảm khi động cơ suy giảm. Không dùng nhãn "
@@ -698,10 +698,10 @@ def slide_anomaly():
                 "điểm bắt đầu hỏng nên chưa đo được báo động giả.")
     picture(s, "outputs/degradation/figures/anomaly_health_index.png", 0.92, 2.45, 8.15, 3.1, align="left")
     cards = [
-        (f"{AN['n_detected']}/{AN['n_engines']}", "động cơ được phát hiện trước khi hỏng", BLUE, WHITE, ICE),
-        (vn(AN["lead_median"], 0), f"cycle báo trước (trung vị); tứ phân vị {vn(AN['lead_q1'], 0)}–{vn(AN['lead_q3'], 0)}",
+        (f"{AN['n_detected']}/{AN['n_engines']}", "động cơ được phát hiện trước hỏng hóc", BLUE, WHITE, ICE),
+        (vn(AN["lead_median"], 0), f"cycle phát hiện trước hỏng hóc (trung vị); IQR {vn(AN['lead_q1'], 0)}–{vn(AN['lead_q3'], 0)}",
          TINT, BLUE, SLATE),
-        (f"{vn(AN['detection_life_fraction_median'] * 100, 0)}%", "vòng đời là lúc có dấu hiệu (trung vị)", TINT, BLUE, SLATE),
+        (f"{vn(AN['detection_life_fraction_median'] * 100, 0)}%", "vòng đời tại thời điểm phát hiện (trung vị)", TINT, BLUE, SLATE),
     ]
     for i, (value, label, fill, fg, sub) in enumerate(cards):
         y = 2.5 + i * 1.03
@@ -709,8 +709,8 @@ def slide_anomaly():
         text(s, 9.5, y + 0.06, 2.8, 0.48, value, size=24, bold=True, color=fg)
         text(s, 9.5, y + 0.53, 2.85, 0.38, label, size=10.5, color=sub)
     rect(s, 0.92, 5.7, 11.5, 0.85, GOLD_TINT)
-    text(s, 1.15, 5.74, 11.05, 0.78, f"Không khử nhiễu: trung vị chỉ {vn(AN_RAW['lead_median'], 1)} cycle. Đây là cảnh báo mức 1: "
-         "động cơ đã rời trạng thái khỏe, chưa nói còn bao lâu. Chưa đo được báo động giả vì không có nhãn lúc bắt đầu hỏng.",
+    text(s, 1.15, 5.74, 11.05, 0.78, f"Trên tín hiệu chưa khử nhiễu, trung vị giảm còn {vn(AN_RAW['lead_median'], 1)} cycle. Đây là cảnh báo mức 1: lệch khỏi "
+         "trạng thái vận hành ổn định. Giới hạn: chưa ước lượng được tỷ lệ dương tính giả do thiếu nhãn thời điểm bắt đầu suy giảm.",
          size=12.5, anchor=MSO_ANCHOR.MIDDLE)
 
 
@@ -750,8 +750,8 @@ def slide_protocol():
 def slide_rul():
     f = M["final"]
     cv = {r["model_name"]: r for r in M["cv"]}
-    s = content(5, 13, f"Dự đoán RUL: MAE {vn(f['mean_engine_mae'])} cycle trên 100 động cơ test",
-                "Chọn mô hình bằng GroupKFold 5 fold theo động cơ, sau đó đánh giá một lần trên test",
+    s = content(5, 13, "Mô hình dự đoán RUL",
+                f"HistGradientBoosting, lựa chọn bằng GroupKFold 5 fold theo động cơ; MAE trên tập kiểm tra: {vn(f['mean_engine_mae'])} cycle",
                 "outputs/modeling/tables/{model_metrics.csv,final_metrics.json}; figures/final_true_vs_predicted.png",
                 "Thời lượng: 1 phút 10 giây.\nCách đánh giá: GroupKFold 5 fold theo động cơ, mọi window của một động cơ nằm cùng một phía; chia ngẫu nhiên theo dòng sẽ làm metric đẹp giả tạo vì hai window liền kề trùng 29/30 cycle. Mỗi động cơ có tổng trọng số bằng 1.\nBảng trên: so sánh ba mô hình bằng GroupKFold. HGB có MAE 20,21 cycle, thấp hơn Ridge "
                 "3,78 cycle và thấp hơn median baseline hơn một nửa.\nTrên test: MAE "
@@ -768,10 +768,10 @@ def slide_rul():
          vn(cv["hist_gradient_boosting"]["std_engine_mae"])],
     ], 0.92, 2.5, [3.0, 1.2, 1.5], row_h=0.42, size=12.5, highlight=3, align_right_from=1)
     cards = [
-        (vn(f["mean_engine_mae"]), "MAE test (cycle)", f"CI 95%: {vn(M['ci_mae']['ci_lower'])}–{vn(M['ci_mae']['ci_upper'])}",
+        (vn(f["mean_engine_mae"]), "MAE (cycle)", f"CI 95%: {vn(M['ci_mae']['ci_lower'])}–{vn(M['ci_mae']['ci_upper'])}",
          BLUE, WHITE, ICE),
-        (vn(f["rmse"]), "RMSE (cycle)", "phạt sai số lớn mạnh hơn", TINT, BLUE, SLATE),
-        (vn(f["nasa_score"], 0), "NASA score", "phạt dự đoán trễ nặng hơn", TINT, BLUE, SLATE),
+        (vn(f["rmse"]), "RMSE (cycle)", "nhạy với sai số lớn", TINT, BLUE, SLATE),
+        (vn(f["nasa_score"], 0), "NASA score", "phạt nặng hơn khi ước lượng cao", TINT, BLUE, SLATE),
     ]
     for i, (value, label, desc, fill, fg, sub) in enumerate(cards):
         x = 0.92 + i * 1.95
@@ -786,8 +786,8 @@ def slide_rul():
 def slide_errors():
     w = M["worst"]
     total = M["n_over"] + M["n_under"]
-    s = content(5, 14, "Sai số nhỏ khi gần hỏng, lớn khi động cơ còn khỏe",
-                "Dự đoán cao hơn thật nghĩa là cảnh báo muộn; NASA score phạt loại sai số này nặng hơn",
+    s = content(5, 14, "Phân tích sai số dự đoán",
+                "Sai số giảm khi RUL nhỏ; mô hình có xu hướng ước lượng cao, tương ứng với cảnh báo muộn",
                 "outputs/modeling/figures/final_residuals_by_rul.png; outputs/diagnostics/error_diagnostics.json",
                 "Thời lượng: 45 giây.\nHình: sai số bằng dự đoán trừ thật, theo RUL thật. MAE chỉ 4,38 cycle với 25 động cơ "
                 "có RUL thật ≤ 30, tức đúng vùng cần cảnh báo; khoảng 21 cycle khi RUL trên 60.\n"
@@ -796,15 +796,15 @@ def slide_errors():
                 f"lớn nhất chiếm {vn(DG['top10_nasa_share'] * 100, 1)}% NASA score.\nNguyên nhân: khi động cơ còn khỏe, "
                 "Health Index đi ngang nên khó phân biệt còn 160 hay 300 cycle; trên OOF dự đoán dừng quanh 145 cycle.")
     picture(s, "outputs/modeling/figures/final_residuals_by_rul.png", 0.92, 2.45, 5.9, 4.1, align="left")
-    text(s, 7.3, 2.5, 5.1, 0.34, "Hướng sai số trên 100 động cơ test", size=15, bold=True, color=BLUE)
+    text(s, 7.3, 2.5, 5.1, 0.34, "Phân bố dấu của sai số (100 động cơ kiểm tra)", size=15, bold=True, color=BLUE)
     width = 5.1
     rect(s, 7.3, 2.95, width * M["n_over"] / total, 0.55, GOLD, rounded=False)
     rect(s, 7.3 + width * M["n_over"] / total, 2.95, width * M["n_under"] / total, 0.55, TEAL, rounded=False)
-    text(s, 7.42, 2.95, 2.6, 0.55, f"{M['n_over']} cao hơn thật", size=14, bold=True, color=INK, anchor=MSO_ANCHOR.MIDDLE)
-    text(s, 7.3 + width * M["n_over"] / total, 2.95, width * M["n_under"] / total, 0.55, f"{M['n_under']} thấp hơn",
+    text(s, 7.42, 2.95, 2.6, 0.55, f"{M['n_over']} ước lượng cao", size=14, bold=True, color=INK, anchor=MSO_ANCHOR.MIDDLE)
+    text(s, 7.3 + width * M["n_over"] / total, 2.95, width * M["n_under"] / total, 0.55, f"{M['n_under']} thấp",
          size=12, bold=True, color=WHITE, align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
     rect(s, 7.3, 3.75, 5.12, 1.85, TINT)
-    text(s, 7.52, 3.88, 4.7, 0.34, f"Sai lớn nhất: động cơ {w['engine_id']}", size=14, bold=True, color=BLUE)
+    text(s, 7.52, 3.88, 4.7, 0.34, f"Sai số lớn nhất: động cơ {w['engine_id']}", size=14, bold=True, color=BLUE)
     for i, (label, value) in enumerate((("RUL thật", vn(w["y_true"], 0)), ("Dự đoán", vn(w["y_pred"], 1)),
                                         ("Sai số", vn(w["abs_error"], 1)))):
         text(s, 7.52 + i * 1.6, 4.3, 1.55, 0.6, value, size=24, bold=True, color=GOLD_DARK if i == 2 else BLUE)
@@ -818,8 +818,8 @@ def slide_warning():
     wg = M["warning"]
     tm, ld = wg["timing"], wg["lead"]
     w30, w40 = WARN["hgb126_30"], WARN["hgb126_40"]
-    s = content(5, 15, "Hai mức cảnh báo sớm: bất thường trước, RUL ≤ 30 sau",
-                "Ngưỡng 30: không bỏ lỡ động cơ nào, lead time trung vị 30 cycle, nhưng 49% cảnh báo bị trễ",
+    s = content(5, 15, "Cơ chế cảnh báo sớm hai mức",
+                "Ngưỡng RUL ≤ 30: không bỏ sót động cơ, lead time trung vị 30 cycle; 49% cảnh báo muộn so với ngưỡng",
                 "outputs/modeling/figures/warning_trajectory.png; outputs/course_alignment/20261007/warning_fixed_policies.csv",
                 "Thời lượng: 1 phút 30 giây.\nĐây là biểu đồ xu hướng cảnh báo sớm, sản phẩm đặc thù của đề tài. Đường xanh "
                 "là RUL thật, đường đỏ là RUL dự đoán OOF, đường cam là ngưỡng 30 cycle; động cơ 1 được cảnh báo ở cycle "
@@ -831,21 +831,21 @@ def slide_warning():
                 "lần. Chọn ngưỡng thật cần chi phí bảo trì, dữ liệu không có.\nGhép hai mức trên động cơ 1: cycle 84 bất "
                 "thường, cycle 162 RUL ≤ 30, cycle 192 hỏng.")
     _, py, _, ph = picture(s, "outputs/modeling/figures/warning_trajectory.png", 0.92, 2.45, 6.35, 3.6, align="left")
-    text(s, 0.92, py + ph + 0.06, 6.35, 0.3, "Động cơ train 1: cảnh báo RUL ở cycle 162, hỏng ở cycle 192.", size=11,
+    text(s, 0.92, py + ph + 0.06, 6.35, 0.3, "Động cơ train 1: cảnh báo mức 2 tại cycle 162; hỏng hóc tại cycle 192.", size=11,
          color=SLATE)
     table(s, [
-        ["Ngưỡng RUL", "Kịp thời", "Trễ", "Báo sớm"],
+        ["Ngưỡng RUL", "Kịp thời", "Muộn", "Báo sớm"],
         ["≤ 30 cycle", f"{vn(w30['on_time_rate'] * 100, 0)}%", f"{vn(w30['late_or_missed_rate'] * 100, 0)}%",
          f"{vn(w30['early_alarm_burden'] * 100, 1)}%"],
         ["≤ 40 cycle", f"{vn(w40['on_time_rate'] * 100, 0)}%", f"{vn(w40['late_or_missed_rate'] * 100, 0)}%",
          f"{vn(w40['early_alarm_burden'] * 100, 1)}%"],
     ], 7.6, 2.5, [1.4, 1.1, 0.95, 1.37], row_h=0.42, size=12.5, highlight=1, align_right_from=1)
-    text(s, 7.6, 3.82, 4.82, 0.45, "Kịp thời: còn ≥ 30 cycle khi cảnh báo. Báo sớm: tỷ lệ cycle bị cảnh báo khi RUL thật "
-         "còn trên 30.", size=10.5, color=SLATE)
+    text(s, 7.6, 3.82, 4.82, 0.45, "Kịp thời: lead time ≥ 30 cycle. Báo sớm: tỷ lệ cycle có cảnh báo khi RUL thực tế "
+         "lớn hơn 30.", size=10.5, color=SLATE)
     rect(s, 7.6, 4.4, 4.82, 2.15, TINT)
     text(s, 7.82, 4.5, 4.4, 0.32, "Hai mức cảnh báo trên động cơ 1", size=14, bold=True, color=BLUE)
     events = [("84", "Mức 1 · Health Index bất thường", GOLD), ("162", "Mức 2 · RUL dự đoán ≤ 30", BLUE),
-              ("192", "Động cơ hỏng", RED)]
+              ("192", "Hỏng hóc", RED)]
     for i, (cycle, label, color) in enumerate(events):
         y = 4.95 + i * 0.5
         rect(s, 7.82, y, 0.95, 0.38, color)
@@ -857,9 +857,9 @@ def slide_warning():
 # ============================================================================ 16. Lịch bảo trì
 def slide_maintenance():
     ev, counts, plan = MNT["evaluation"], MNT["status_counts"], MNT["planning"]
-    s = content(5, 16, "Báo cáo dự đoán thời điểm cần bảo trì cho 100 động cơ test",
-                f"{ev['n_correct_needs_maintenance']}/{ev['n_flagged_needs_maintenance']} động cơ báo cần bảo trì là đúng; "
-                f"không báo nhầm động cơ nào còn trên 30 cycle",
+    s = content(5, 16, "Báo cáo dự đoán thời điểm bảo trì",
+                f"{ev['n_correct_needs_maintenance']}/{ev['n_flagged_needs_maintenance']} động cơ được xếp mức cần bảo trì có RUL thực tế ≤ 30; "
+                f"không có trường hợp dương tính giả",
                 "outputs/maintenance/tables/maintenance_schedule.csv; outputs/maintenance/summary.json",
                 "Thời lượng: 1 phút 15 giây.\nĐây là sản phẩm đặc thù của đề tài: mỗi động cơ test có một dòng gồm cycle "
                 "hiện tại, RUL dự đoán, cycle dự kiến cần bảo trì (lúc RUL dự đoán chạm 30) và trạng thái. Ví dụ động cơ 90 "
@@ -880,15 +880,15 @@ def slide_maintenance():
         rect(s, x, 5.4, 2.35, 1.15, fill)
         text(s, x + 0.18, 5.47, 2.0, 0.55, value, size=26, bold=True, color=fg)
         text(s, x + 0.18, 6.02, 2.05, 0.45, label, size=11.5, color=sub)
-    text(s, 8.65, 2.5, 3.77, 0.34, "Kiểm tra bằng nhãn test", size=14, bold=True, color=BLUE)
+    text(s, 8.65, 2.5, 3.77, 0.34, "Đối chiếu với RUL thực tế", size=14, bold=True, color=BLUE)
     head, *body = MNT_CHECK
     table(s, [["Trạng thái", *head[1:]]] + [[row[0], *row[1:]] for row in body],
           8.65, 2.92, [1.62, 0.72, 0.72, 0.71], row_h=0.42, size=11, highlight=1, align_right_from=1)
     rect(s, 8.65, 4.85, 3.77, 1.7, BLUE)
     text(s, 8.85, 4.95, 3.4, 1.55, [
         [(f"{ev['n_correct_needs_maintenance']}/{ev['n_actual_needs_maintenance']}", {"bold": True, "color": GOLD, "size": 22}),
-         ("  động cơ cần bảo trì được báo đúng", {"color": WHITE})],
-        [("4 động cơ còn lại đến hạn sau 1–8 cycle, vẫn ở mức theo dõi.", {"color": ICE})],
+         ("  động cơ có RUL thực tế ≤ 30 được xếp mức cần bảo trì", {"color": WHITE})],
+        [("4 trường hợp còn lại được xếp đến hạn sau 1–8 cycle, ở mức theo dõi tăng cường.", {"color": ICE})],
     ], size=12, space_after=6)
 
 
@@ -901,8 +901,8 @@ def slide_extended():
     o = I["outer"]
     t126, t169 = A["trajectory"]["hgb126"]["mean_engine_mae"], A["trajectory"]["hgb169"]["mean_engine_mae"]
     ts = D["timeseries"]
-    s = content(6, 17, "Thử nghiệm mở rộng: hiểu giới hạn, không đổi kết luận chính",
-                f"Mô hình FD001 không dùng trực tiếp được cho điều kiện vận hành khác (window {D['transfer']['window']})",
+    s = content(6, 17, "Các thử nghiệm mở rộng",
+                f"Khả năng tổng quát hóa sang FD002–FD004 (cửa sổ {D['transfer']['window']} cycle) và các phương án cải tiến; kết luận chính không đổi",
                 "outputs/cross_dataset/matrix.json; outputs/experiments/; outputs/course_alignment/20261007/summary.json",
                 "Thời lượng: 1 phút.\nBiểu đồ: cùng pipeline với window 10 vì FD004 có động cơ test ngắn nhất 19 cycle. Cột "
                 "xanh là huấn luyện và test trong cùng subset; cột vàng là giữ mô hình FD001 áp dụng sang subset khác. MAE "
@@ -912,16 +912,16 @@ def slide_extended():
                 f"42 đặc trưng lịch sử giảm MAE OOF {vn(t126)} → {vn(t169)} nhưng tỷ lệ cảnh báo kịp thời ở ngưỡng 30 giảm "
                 f"51% → 45%; ARIMA dự báo Health Index MAE {vn(ts['mae']['ARIMA'], 2)} nhưng chỉ tốt hơn drift ở 7/10 động cơ.")
     bar_chart(s, 0.92, 2.45, 6.5, 4.1, targets,
-              [("Train và test cùng subset", [round(v, 1) for v in within]),
-               ("Mô hình FD001 → subset khác", [round(v, 1) for v in cross])],
-              [BLUE, GOLD], title="MAE trên test (cycle)", max_value=72)
+              [("Huấn luyện nội bộ", [round(v, 1) for v in within]),
+               ("Áp dụng mô hình FD001", [round(v, 1) for v in cross])],
+              [BLUE, GOLD], title="MAE trên tập kiểm tra (cycle)", max_value=72)
     items = [
         ("Nested CV: window, siêu tham số, trọng số",
-         f"Quy trình chọn quay về cấu hình gốc; cảnh báo trễ {o['baseline']['late']} → {o['weights']['late']}/100."),
+         f"Quy trình lựa chọn hội tụ về cấu hình gốc; số cảnh báo muộn {o['baseline']['late']} → {o['weights']['late']}/100."),
         ("Thêm 42 đặc trưng lịch sử (169 đặc trưng)",
-         f"MAE OOF {vn(t126)} → {vn(t169)}, nhưng kịp thời ở ngưỡng 30 giảm 51% → 45%."),
+         f"MAE OOF {vn(t126)} → {vn(t169)}; tỷ lệ cảnh báo kịp thời (ngưỡng 30) giảm 51% → 45%."),
         ("ARIMA dự báo Health Index",
-         f"MAE {vn(ts['mae']['ARIMA'])} < drift {vn(ts['mae']['drift'])}; chỉ tốt hơn ở 7/10 động cơ."),
+         f"MAE {vn(ts['mae']['ARIMA'])} so với {vn(ts['mae']['drift'])} của phương pháp drift; vượt trội ở 7/10 động cơ."),
     ]
     for i, (head, body) in enumerate(items):
         y = 2.5 + i * 1.37
@@ -933,8 +933,8 @@ def slide_extended():
 # ============================================================================ 18. Kết luận
 def slide_conclusion():
     f = M["final"]
-    s = content(6, 18, "Trả lời năm câu hỏi",
-                "Kết luận chỉ áp dụng cho dữ liệu mô phỏng C-MAPSS FD001 và protocol đã nêu",
+    s = content(6, 18, "Kết luận",
+                "Trả lời năm câu hỏi nghiên cứu; kết luận giới hạn trong dữ liệu mô phỏng C-MAPSS FD001",
                 "report/sections/conclusion.tex; các artifact đã dẫn ở slide 6–16",
                 "Thời lượng: 1 phút.\nQ1: dữ liệu đạt mọi kiểm tra; Pandas và PySpark khớp tuyệt đối.\nQ2: EWMA giảm khoảng "
                 "86% dao động; window 30 tạo 126 đặc trưng.\nQ3: 15/21 sensor thay đổi; Health Index phát hiện bất thường ở "
@@ -942,13 +942,13 @@ def slide_conclusion():
                 f"{vn(f['mean_engine_mae'])} cycle, nhỏ nhất ở vùng gần hỏng.\nQ5: không bỏ lỡ, lead time trung vị 30 cycle, "
                 "nhưng 49% trễ; ngưỡng 40 giảm trễ xuống 6%. Lịch bảo trì báo cần bảo trì 21 động cơ, đúng cả 21.\nSản phẩm: lịch dự đoán thời điểm cần bảo trì kèm biểu đồ xu hướng cảnh báo sớm.")
     cards = [
-        ("Q1", "Pipeline dữ liệu", "0 sai khác", "Pandas = PySpark; Spark nhanh hơn ~3,4× ở 10×"),
-        ("Q2", "Khử nhiễu, window", f"−{vn(DEG['noise_reduction_pct_median'], 0)}%", "dao động sau EWMA; 126 đặc trưng window 30"),
+        ("Q1", "Pipeline dữ liệu", "0 sai khác", "Pandas và PySpark trùng khớp; PySpark nhanh hơn ~3,4× ở quy mô 10×"),
+        ("Q2", "Khử nhiễu, window", f"−{vn(DEG['noise_reduction_pct_median'], 0)}%", "độ dao động sau EWMA; 126 đặc trưng cửa sổ 30 cycle"),
         ("Q3", "Xu hướng, bất thường", f"{AN['n_detected']}/{AN['n_engines']}",
-         f"động cơ báo bất thường, trung vị {vn(AN['lead_median'], 0)} cycle trước khi hỏng"),
-        ("Q4", "Dự đoán RUL", f"{vn(f['mean_engine_mae'])}", "MAE test (cycle); 4,38 khi RUL thật ≤ 30"),
-        ("Q5", "Cảnh báo, lịch bảo trì", f"{MNT['evaluation']['n_correct_needs_maintenance']}/{MNT['evaluation']['n_flagged_needs_maintenance']} đúng",
-         "báo cần bảo trì; không bỏ lỡ; lead time trung vị 30 cycle"),
+         f"động cơ được phát hiện, trung vị {vn(AN['lead_median'], 0)} cycle trước hỏng hóc"),
+        ("Q4", "Dự đoán RUL", f"{vn(f['mean_engine_mae'])}", "MAE trên tập kiểm tra (cycle); 4,38 khi RUL ≤ 30"),
+        ("Q5", "Cảnh báo, lịch bảo trì", f"{MNT['evaluation']['n_correct_needs_maintenance']}/{MNT['evaluation']['n_flagged_needs_maintenance']}",
+         "dự báo cần bảo trì chính xác; không bỏ sót; lead time trung vị 30 cycle"),
     ]
     for i, (q, head, value, desc) in enumerate(cards):
         x, y = 0.92 + (i % 3) * 3.9, 2.5 + (i // 3) * 2.1
@@ -966,7 +966,7 @@ def slide_conclusion():
 # ============================================================================ 19. Khó khăn
 def slide_lessons():
     s = content(6, 19, "Khó khăn, bài học và giới hạn",
-                "Bốn khó khăn chính trong quá trình làm và điều rút ra từ mỗi khó khăn",
+                "Các vấn đề phát sinh trong quá trình thực hiện, cách xử lý và bài học rút ra",
                 "report/sections/discussion.tex (Mục Khó khăn và bài học rút ra)",
                 "Thời lượng: 1 phút.\nMột: dữ liệu không ghi lúc bắt đầu hỏng, nên so mỗi động cơ với chính nó lúc khỏe và nói "
                 "rõ chưa đo được báo động giả.\nHai: dữ liệu chuỗi thời gian dễ rò rỉ khi chia tập; đơn vị chia phải là động "
@@ -976,19 +976,19 @@ def slide_lessons():
                 "chạy local.")
     table(s, [
         ["Khó khăn", "Cách xử lý", "Bài học"],
-        ["Không có nhãn bất thường", "So mỗi động cơ với 30 cycle đầu của chính nó",
-         "Định nghĩa rõ trạng thái bình thường; nói rõ phần chưa đo được"],
+        ["Thiếu nhãn thời điểm bất thường", "Lấy 30 cycle đầu của từng động cơ làm tham chiếu",
+         "Xác định rõ trạng thái tham chiếu; nêu rõ phần chưa kiểm chứng được"],
         ["Rò rỉ dữ liệu khi chia tập", "GroupKFold theo động cơ; window, EWMA chỉ dùng quá khứ",
-         "Với chuỗi thời gian, đơn vị chia là thực thể, không phải dòng"],
-        ["PySpark trên Windows", "JRE portable, ghi qua Arrow, parity sau mỗi bước",
-         "Hai implementation phải khớp từng giá trị"],
-        ["Dễ sa vào tối ưu mô hình", "Chốt tiêu chí trước, gom thử nghiệm vào phần mở rộng",
-         "Pipeline đúng và cảnh báo dễ hiểu quan trọng hơn vài cycle MAE"],
+         "Với dữ liệu chuỗi thời gian, đơn vị phân chia là thực thể, không phải bản ghi"],
+        ["Giới hạn ghi file của PySpark trên Windows", "JRE portable, ghi qua Arrow, đối chiếu sau mỗi bước",
+         "Hai cách triển khai cần được đối chiếu ở mức từng giá trị"],
+        ["Nguy cơ tập trung quá mức vào tối ưu mô hình", "Cố định tiêu chí đánh giá trước; tách thử nghiệm sang phần mở rộng",
+         "Tính đúng đắn của pipeline và khả năng diễn giải cảnh báo được ưu tiên hơn mức giảm nhỏ của MAE"],
     ], 0.92, 2.5, [2.7, 4.3, 4.5], row_h=0.66, size=12)
     rect(s, 0.92, 5.95, 11.5, 0.6, GOLD_TINT)
     text(s, 1.15, 5.95, 11.05, 0.6, [[("Giới hạn: ", {"bold": True, "color": BLUE}),
-                                      ("dữ liệu mô phỏng; chưa có chi phí bảo trì nên chưa tối ưu được ngưỡng; Spark chạy "
-                                       "local, chưa có cluster hay streaming.", {})]], size=12.5, anchor=MSO_ANCHOR.MIDDLE)
+                                      ("dữ liệu mô phỏng; chưa có dữ liệu chi phí để tối ưu ngưỡng cảnh báo; PySpark mới chạy cục bộ, "
+                                       "chưa triển khai cluster hay streaming.", {})]], size=12.5, anchor=MSO_ANCHOR.MIDDLE)
 
 
 # ============================================================================ 20. Kết thúc
@@ -996,12 +996,12 @@ def slide_end():
     slide = PRS.slides.add_slide(LAYOUT["Slide End"])
     title = slide.placeholders[0]
     title.left, title.top, title.width, title.height = Inches(0.69), Inches(2.0), Inches(6.2), Inches(2.2)
-    title.text = "Xin cảm ơn thầy/cô đã lắng nghe"
+    title.text = "Trân trọng cảm ơn quý thầy cô đã lắng nghe"
     p = title.text_frame.paragraphs[0]
     p.alignment = PP_ALIGN.LEFT
     p.runs[0].font.size, p.runs[0].font.bold, p.runs[0].font.name = Pt(36), True, FONT
     p.runs[0].font.color.rgb = rgb(BLUE)
-    text(slide, 0.69, 4.3, 6.2, 0.5, "Xin nhận câu hỏi và phản biện", size=20, color=INK)
+    text(slide, 0.69, 4.3, 6.2, 0.5, "Kính mời quý thầy cô đặt câu hỏi", size=20, color=INK)
     text(slide, 0.69, 5.2, 6.2, 0.7, [
         [("Demo dashboard: ", {"bold": True, "color": BLUE}), ("uv run --extra dashboard streamlit run app.py", {})],
         [("Phan Nguyễn Mai Phương · MSHV 25002711", {"color": SLATE})],

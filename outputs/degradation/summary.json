@@ -49,6 +49,7 @@
     "n_lead_below_30": 0,
     "detection_life_fraction_median": 0.6169521967394308
   },
+  "sensitivity_table": "tables/anomaly_sensitivity.csv",
   "example_engine": 1,
   "uses_rul_labels": false,
   "reads_test_files": false

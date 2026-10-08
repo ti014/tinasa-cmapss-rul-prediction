@@ -633,8 +633,12 @@ Reads only `data/raw/train_FD001.txt` and uses no RUL labels:
 ```
 
 The command writes `outputs/degradation/`: the noise-reduction table, anomaly onset
-cycles for the 100 train engines, per-cycle raw/EWMA signals and Health Index, and
-two figures.
+cycles for the 100 train engines, a sensitivity table for the anomaly rule
+(`tables/anomaly_sensitivity.csv`: z threshold 2/3/4 × persistence 3/5/10 on the raw
+and EWMA Health Index), per-cycle raw/EWMA signals and Health Index, and two figures.
+All nine configurations flag 100/100 engines with at least 50 cycles of lead time;
+they differ only in how early they fire and how many engines fire right after the
+baseline window.
 
 ### Run the maintenance schedule
 
@@ -686,7 +690,7 @@ a query string, for example `http://localhost:8501/?page=Lịch bảo trì`.
 | Tổng quan (overview) | `outputs/modeling`, `outputs/degradation`, `outputs/maintenance` | Four headline numbers, 7-step pipeline, suggested demo order |
 | Dữ liệu & EDA | `outputs/eda`, `outputs/features` | Lifetime distribution, sensor–RUL Spearman, sensor trajectories |
 | Khử nhiễu (denoising) | `outputs/degradation` | Raw versus EWMA signal per engine/sensor, noise reduction |
-| Xu hướng & bất thường (trend & anomalies) | `outputs/degradation`, `outputs/statistics` | Health Index, 3σ threshold, anomaly onset, lead-time distribution |
+| Xu hướng & bất thường (trend & anomalies) | `outputs/degradation`, `outputs/statistics` | Health Index, 3σ threshold, anomaly onset, lead-time distribution, sensitivity grid |
 | Dự đoán RUL (RUL prediction) | `outputs/modeling` | CV model comparison, one test engine, OOF trajectories |
 | Cảnh báo sớm (early warning) | `outputs/modeling/tables` | 30-cycle threshold, timing classes, warning trajectory |
 | Lịch bảo trì (maintenance schedule) | `outputs/maintenance` | 100-engine table, planning chart, per-engine detail, label check |

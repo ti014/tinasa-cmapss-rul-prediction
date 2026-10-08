@@ -333,6 +333,7 @@ class DegradationData:
     noise: pd.DataFrame
     events: pd.DataFrame
     signals: pd.DataFrame
+    sensitivity: pd.DataFrame
 
     @property
     def sensors(self) -> list[str]:
@@ -352,6 +353,10 @@ def load_degradation_data(repo_root: str | Path = ".") -> DegradationData:
         ),
         signals=_read_checked(
             base / "tables" / "signals.parquet", {"engine_id", "cycle", "health_index_raw", "health_index_ewma"}
+        ),
+        sensitivity=_read_checked(
+            base / "tables" / "anomaly_sensitivity.csv",
+            {"signal", "z_threshold", "persistence", "n_engines", "n_detected", "lead_min", "lead_median", "life_fraction_median", "n_early"},
         ),
     )
 

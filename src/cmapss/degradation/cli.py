@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 from cmapss.data.readers import read_observations
-from cmapss.degradation.anomaly import AnomalyConfig, detect_anomalies
+from cmapss.degradation.anomaly import AnomalyConfig, detect_anomalies, sensitivity_grid
 from cmapss.degradation.denoise import INFORMATIVE_SENSORS, ewma_smooth, noise_summary
 from cmapss.timeseries.health_index import fit_health_index
 
@@ -130,6 +130,13 @@ def main(argv: list[str] | None = None) -> int:
 
     noise.to_csv(out / "tables/noise_summary.csv", index=False)
     events.to_csv(out / "tables/anomaly_events.csv", index=False)
+    # Độ nhạy của quy tắc: lưới z 2/3/4 × 3/5/10 cycle liên tiếp, trên HI gốc và HI sau EWMA.
+    sensitivity = pd.concat(
+        [sensitivity_grid(hi, column="health_index").assign(signal=name)
+         for name, hi in (("ewma", hi_smooth), ("raw", hi_raw))],
+        ignore_index=True,
+    )
+    sensitivity.to_csv(out / "tables/anomaly_sensitivity.csv", index=False)
     # Tín hiệu theo cycle cho dashboard: sensor gốc/EWMA và Health Index hai phiên bản.
     keys = ["engine_id", "cycle"]
     raw_sorted = raw.sort_values(keys, kind="mergesort").reset_index(drop=True)
@@ -156,6 +163,7 @@ def main(argv: list[str] | None = None) -> int:
                            "z_threshold": config.z_threshold, "persistence": config.persistence},
         "anomaly_smoothed": _lead_stats(events),
         "anomaly_raw_for_comparison": _lead_stats(events_raw),
+        "sensitivity_table": "tables/anomaly_sensitivity.csv",
         "example_engine": EXAMPLE_ENGINE,
         "uses_rul_labels": False,
         "reads_test_files": False,

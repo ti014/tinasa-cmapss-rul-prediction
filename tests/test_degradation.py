@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 
 from cmapss.data.contracts import ContractError
-from cmapss.degradation import AnomalyConfig, detect_anomalies, ewma_smooth, noise_summary
+from cmapss.degradation import AnomalyConfig, detect_anomalies, ewma_smooth, noise_summary, sensitivity_grid
 
 
 def _frame(values_by_engine: dict[int, list[float]]) -> pd.DataFrame:
@@ -82,3 +82,16 @@ def test_rejects_short_or_flat_baseline() -> None:
     flat = _frame({1: [1.0] * 40}).rename(columns={"x": "hi"})
     with pytest.raises(ContractError):
         detect_anomalies(flat, config, column="hi")
+
+
+def test_sensitivity_grid_tracks_persistence_and_early_alarms() -> None:
+    # Giảm bắt đầu ngay cycle 31; đủ 3/5/10 cycle liên tiếp tại cycle 33/35/40.
+    grid = sensitivity_grid(
+        _health_index(30, 20), column="hi", z_thresholds=(2.0, 3.0), persistences=(3, 5, 10), early_window=5
+    )
+    assert len(grid) == 6 and grid["n_detected"].eq(1).all()
+    by_p = grid.loc[grid["z_threshold"].eq(3.0)].set_index("persistence")
+    assert by_p["lead_median"].to_dict() == {3: 17.0, 5: 15.0, 10: 10.0}
+    # Cửa sổ sớm là cycle 31-35: cấu hình 3 và 5 cycle bị tính là báo sớm, 10 cycle thì không.
+    assert by_p["n_early"].to_dict() == {3: 1, 5: 1, 10: 0}
+    assert by_p.loc[10, "life_fraction_median"] == pytest.approx(40 / 50)

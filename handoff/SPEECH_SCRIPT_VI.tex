@@ -348,7 +348,8 @@ cho 21 cảm biến. Sáu cảm biến hằng thì không kiểm định đượ
 % ---------------------------------------------------------------- 12
 \slidepage{12}{Phát hiện dấu hiệu bất thường}{1 phút 20 giây}{9:25}
 \lookbox{Hình trái: \textbf{vùng xám} $\rightarrow$ \textbf{đường đứt} $\rightarrow$ \textbf{vạch
-cam} (cycle 84) $\rightarrow$ \textbf{vạch đen} (cycle 192). Hình phải: histogram. Cuối: ba ô bên phải.}
+cam} (cycle 84) $\rightarrow$ \textbf{vạch đen} (cycle 192). Hình phải: histogram. Sau đó: ba ô bên
+phải. Cuối cùng: \textbf{dải vàng} phía dưới (độ nhạy).}
 \say
 Theo dõi 21 cảm biến cùng lúc thì rối mắt, nên em gộp chúng thành \num{một điểm sức khỏe}, gọi là
 Health Index, giống như gộp cả tờ xét nghiệm thành một câu ``khỏe'' hay ``yếu''. Điểm này giảm dần
@@ -361,10 +362,16 @@ lúc động cơ còn khỏe. Đường đứt là mức lệch quá \num{3 lầ
 liền}.
 
 Động cơ 1 bị phát hiện ở chuyến \num{84}, vạch cam, trong khi nó hỏng ở chuyến \num{192}: báo trước
-\num{108 chuyến}. Trên cả 100 động cơ, \num{không sót cái nào}, trung bình báo trước \num{121
-chuyến}. Đây là \num{đèn vàng}: động cơ bắt đầu yếu, nên để ý.
+\num{108 chuyến}. Trên cả 100 động cơ, \num{không sót cái nào}, và một nửa số động cơ được báo trước
+hơn \num{121 chuyến}. Đây là \num{đèn vàng}: động cơ bắt đầu yếu, nên để ý.
+
+Dải vàng phía dưới trả lời câu hỏi ``con số 3 và 5 có phải chọn cho đẹp không''. Em đã thử đủ
+\num{9 cách đặt}, từ khắt khe đến dễ dãi; cách nào cũng bắt đủ 100 động cơ, và động cơ báo muộn nhất
+vẫn còn ít nhất \num{50 chuyến} mới hỏng.
 \extrabox{Nếu không lọc nhiễu, con số chỉ còn 72,5 chuyến, vì nhiễu làm vùng bình thường rộng ra.
-Giới hạn: mọi động cơ trong dữ liệu đều hỏng, nên chưa đo được tỷ lệ báo động giả.}
+Đặt ngưỡng dễ dãi (2 sigma, 3 chuyến) thì báo sớm hơn nhưng 17 động cơ bị báo ngay sau 30 chuyến
+đầu, nhiều khả năng là báo hơi vội. Giới hạn: mọi động cơ trong dữ liệu đều hỏng, nên chưa đo được
+trực tiếp tỷ lệ báo động giả.}
 \nextslide{``Đèn vàng cho biết động cơ yếu, nhưng chưa nói còn bao lâu. Đó là việc của mô hình.''}
 
 % ---------------------------------------------------------------- 13
@@ -562,6 +569,17 @@ không chỉnh theo kết quả.}
 chính nó và đo số cycle báo trước khi hỏng. Em chưa đo được tỷ lệ báo động giả vì mọi động cơ train
 đều đi đến hỏng. Trên test, mức theo dõi không bỏ sót động cơ nào cần bảo trì, nhưng còn rộng.}
 
+\qa{Vì sao chọn 3 sigma và 5 cycle liên tiếp? Đổi số khác thì sao? (slide 12)}{Hai con số này em cố
+định trước khi chạy, theo lệ thường của biểu đồ kiểm soát chất lượng: 3 sigma là mức mà nếu chỉ do
+dao động ngẫu nhiên thì rất hiếm khi vượt, còn 5 cycle liên tiếp để một cái gai lẻ không làm hệ thống
+la làng. Sau đó em có chạy lại cả lưới 2, 3, 4 sigma nhân với 3, 5, 10 cycle, tổng cộng 9 cấu hình
+(Bảng 17 trong báo cáo, và có trên dashboard). Kết quả là cấu hình nào cũng bắt đủ 100 trên 100 động
+cơ, và động cơ báo muộn nhất vẫn còn ít nhất 50 cycle mới hỏng. Cái thay đổi chỉ là đánh đổi. Hạ
+xuống 2 sigma, 3 cycle thì báo sớm hơn, trung vị 136 cycle, nhưng có 17 động cơ bị báo ngay sau đoạn
+tham chiếu, giống cái chuông báo cháy kêu khi mới bật bếp. Nâng lên 4 sigma, 10 cycle thì không còn
+báo quá sớm, nhưng mất khoảng 22 cycle báo trước. 3 sigma, 5 cycle nằm giữa: chỉ 1 trường hợp báo
+quá sớm, trung vị 121 cycle. Nói gọn: kết luận không phụ thuộc vào con số em chọn.}
+
 \qa{Vì sao chia GroupKFold theo động cơ? (slide 13)}{Hai window liền kề của cùng động cơ trùng 29 trên 30
 cycle. Chia ngẫu nhiên theo dòng sẽ đưa các window gần như giống nhau vào cả hai phía, làm sai số đẹp
 giả tạo.}
@@ -608,6 +626,7 @@ Khử nhiễu EWMA & Span 10, $\alpha \approx 0{,}18$; giảm 83,6--86,4\% dao �
 Window & 30 cycles, 21 × 6 = 126 đặc trưng; 17.731 window train, 10.196 window test \\
 Xu hướng & 15/21 sensor thay đổi có ý nghĩa; sensor 4, 7, 11, 12, 20 đổi cùng hướng ở 100/100 động cơ \\
 Bất thường & 100/100 động cơ; trung vị 121 cycles trước khi hỏng (72,5 nếu không khử nhiễu); khoảng 39\% vòng đời \\
+Độ nhạy bất thường & 9 cấu hình (2/3/4$\sigma$ × 3/5/10 cycle) đều 100/100; lead time nhỏ nhất $\geq$ 50; 2$\sigma$--3 cycle: trung vị 136, 17 báo sớm; 4$\sigma$--10 cycle: 98,5, 0 báo sớm \\
 Mô hình & HistGradientBoosting, GroupKFold 5 fold; MAE CV 20,21 (Ridge 23,99) \\
 Kết quả test & MAE 15,35 (CI 95\%: 12,73--18,09); RMSE 20,54; NASA 1.513; MAE 4,38 khi RUL thật $\leq$ 30 \\
 Cảnh báo ngưỡng 30 & 44 trước, 7 đúng lúc, 49 trễ, 0 bỏ lỡ; lead time trung vị 30 \\

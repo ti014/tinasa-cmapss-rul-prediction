@@ -49,7 +49,7 @@ slide, dashboard và kịch bản dùng cùng một mô hình, một bảng cả
 | Xử lý nhiễu tín hiệu | `src/cmapss/degradation/denoise.py`: EWMA span 10, chỉ dùng quá khứ; giảm trung vị 86,3% dao động; hình trước/sau; Mục 5.2 và 6.2 | **Đạt**; giới hạn: không có tín hiệu sạch để đối chiếu |
 | Chuẩn hóa dữ liệu | Kiểm tra schema/kiểu trong ETL; StandardScaler cho Ridge (trong fold) và trước PCA (Health Index) | **Đạt**; HGB dùng thang gốc vì cây không phụ thuộc thang đo |
 | Tổng hợp theo time window | Window nhân quả 30 cycles, 126 đặc trưng; parity Pandas–PySpark | **Đạt** |
-| Phát hiện dấu hiệu bất thường | `src/cmapss/degradation/anomaly.py`: Health Index giảm quá 3σ so với 30 cycles đầu, 5 cycles liên tiếp; 100/100 động cơ train, trung vị 121 cycles trước khi hỏng; Mục 5.3 và 6.3 | **Đạt**; giới hạn: chưa đo được tỷ lệ báo động giả |
+| Phát hiện dấu hiệu bất thường | `src/cmapss/degradation/anomaly.py`: Health Index giảm quá 3σ so với 30 cycles đầu, 5 cycles liên tiếp; 100/100 động cơ train, trung vị 121 cycles trước khi hỏng; phân tích độ nhạy 9 cấu hình (2/3/4σ × 3/5/10 cycles) đều phát hiện 100/100, lead time nhỏ nhất ≥ 50 cycles (Bảng 17); Mục 5.3 và 6.3 | **Đạt**; giới hạn: chưa đo trực tiếp được tỷ lệ báo động giả |
 | Trực quan hóa xu hướng suy giảm | Quỹ đạo sensor, kiểm định đầu/cuối, Health Index, quỹ đạo cảnh báo | **Đạt** |
 | Dự đoán thời điểm cần bảo trì | `src/cmapss/maintenance/`: lịch cho 100 động cơ test; 21/21 báo cần bảo trì là đúng; Mục 6.6 | **Đạt** trong phạm vi FD001 và điểm cắt test |
 | Báo cáo dự đoán kèm biểu đồ xu hướng cảnh báo sớm | `outputs/maintenance/tables/maintenance_schedule.csv`, `fleet_status.png`, `maintenance_planning.png`, `warning_trajectory.png`; slide 15–16; trang dashboard Lịch bảo trì | **Đạt** |

@@ -2,112 +2,68 @@
 
 <hr>
 
-# Pipeline dự đoán RUL trên NASA C-MAPSS
+# Đề tài 8: Phân tích dữ liệu IoT và bảo trì dự đoán trên NASA C-MAPSS
 
 **Học viên:** Phan Nguyễn Mai Phương · **MSHV:** 25002711.
 
-**Cập nhật lần cuối 07/10/2026:** alignment HGB126/HGB169, reliability code và deck
-đã được đồng bộ. Follow-up ngày 29/09 thử capped RUL/history trên FD001, chuẩn hóa theo điều kiện
-vận hành trong từng fold trên FD002/FD004 và benchmark Pandas/PySpark theo stage.
-Xem [kết quả và cách tái lập](experiments/FOLLOWUP_20260929.md).
-Sáu notebook có thông tin học viên; dashboard, notebook và slide dùng chung run
-đã rebuild. Dependency slide được khóa bằng `slides/pnpm-lock.yaml`.
+**Cập nhật lần cuối 08/10/2026:** báo cáo, slide và dashboard được sắp lại theo
+rubric môn học: pipeline dữ liệu → khử nhiễu và window → xu hướng và bất thường →
+dự đoán RUL → cảnh báo sớm và lịch bảo trì. Bổ sung khử nhiễu EWMA, phát hiện bất
+thường bằng Health Index và báo cáo dự đoán thời điểm cần bảo trì cho 100 động cơ
+test. Các thử nghiệm cải thiện mô hình được gom vào phần mở rộng.
 
-Repository này phục vụ báo cáo cuối kỳ môn Phân tích dữ liệu lớn. Báo cáo xây dựng quy trình có khả năng tái lập để phân tích dữ liệu cảm biến đa biến và dự đoán Remaining Useful Life (RUL, tuổi thọ hữu ích còn lại) trên NASA C-MAPSS FD001--FD004. FD001 là subset chính cho phân tích chi tiết; FD002--FD004 được đánh giá trong ma trận chuyển miền bổ sung. Trọng tâm gồm nguồn gốc dữ liệu rõ ràng, phân tích thống kê phù hợp, đánh giá tránh data leakage (rò rỉ dữ liệu), ETL có khả năng mở rộng và trực quan hóa kết quả dễ diễn giải.
+Repository này phục vụ báo cáo cuối kỳ môn Phân tích dữ liệu lớn, **Đề tài 8 —
+Phân tích dữ liệu IoT và bảo trì dự đoán**. Bài toán: phân tích dữ liệu cảm biến
+thiết bị để phát hiện dấu hiệu bất thường và dự đoán thời điểm cần bảo trì. Dữ liệu
+là bộ mô phỏng động cơ turbofan NASA C-MAPSS; phân tích chính dùng FD001,
+FD002--FD004 chỉ dùng trong thử nghiệm mở rộng.
 
 ## Trạng thái
 
-Repository đã có **kiểm tra dữ liệu FD001--FD004, nhãn RUL train, notebook EDA và suy luận sensor chỉ dùng train FD001, ETL Silver/Gold bằng Pandas/PySpark, rolling features 30 cycles, đánh giá RUL theo engine, phân tích PCA--ARIMA Health Index trên train và ma trận bổ sung window 10 cycles cho cả bốn subset**.
+Kết quả chính trên FD001:
 
-**Đã hoàn tất thử nghiệm cải thiện (27/09/2026):** nested GroupKFold 5×3
-so sánh window 10/20/30, 24 cấu hình HistGradientBoosting và ba phương án trọng số.
-MAE RUL thấp ở vòng ngoài thay đổi từ 3,6676 thành 3,6730 cycles; số cảnh báo
-trễ tăng từ 49 lên 53/100 engines. Cổng promotion giữ lại baseline lịch sử.
-Kết quả này tách với alignment audit ngày 07/10, trong đó HGB126 và HGB169 được
-chấm trên cùng panel đã lưu. Xem [kết quả và cách chạy lại](experiments/README.md).
+| Bước | Kết quả | Artifact |
+|---|---|---|
+| Pipeline dữ liệu | Kiểm tra schema, khóa, cycle liên tục; Silver/Gold Parquet và SQLite; Pandas và PySpark khớp tuyệt đối; ở scale 10×, Spark local nhanh hơn Pandas khoảng 3,4 lần | `outputs/etl/`, `outputs/benchmarks/` |
+| Khử nhiễu | EWMA span 10 giảm khoảng 86% dao động ngắn hạn của 14 sensor có xu hướng | `outputs/degradation/` |
+| Cửa sổ thời gian | Window 30 cycles, 21 sensor × 6 thống kê = 126 đặc trưng | `outputs/features/` |
+| Xu hướng và bất thường | 15/21 sensor thay đổi có ý nghĩa giữa đầu và cuối vòng đời; Health Index phát hiện bất thường ở 100/100 động cơ train, trung vị 121 cycles trước khi hỏng | `outputs/statistics/`, `outputs/degradation/` |
+| Dự đoán RUL | HistGradientBoosting, GroupKFold 5 fold theo động cơ; MAE test 15,35 cycles (CI 95%: 12,73--18,09), RMSE 20,54 | `outputs/modeling/` |
+| Cảnh báo sớm | Ngưỡng RUL dự đoán ≤ 30: không bỏ lỡ, lead time trung vị 30 cycles, 49% trễ; ngưỡng 40 giảm trễ còn 6% | `outputs/modeling/tables/` |
+| Lịch bảo trì | 21 động cơ test được báo cần bảo trì ngay và cả 21 đều đúng; 4 động cơ còn lại thật sự cần bảo trì được xếp đến hạn sau 1--8 cycles | `outputs/maintenance/` |
 
-Đã có:
+Sản phẩm bàn giao:
 
-- Các file NASA C-MAPSS FD001--FD004 nguyên bản và tài liệu mô tả nguồn; kết quả chính dùng FD001, ma trận bổ sung đánh giá cả bốn subset.
-- Trình đọc (reader), bộ kiểm tra (validator) và kiểm thử số dòng, số động cơ, schema, khóa, cycle và nhãn RUL train.
-- [Data contract (đặc tả dữ liệu)](data/CONTRACTS.md), CLI xuất báo cáo JSON và tệp khóa phiên bản dependency.
-- [Notebook walkthrough xử lý dữ liệu đã chạy](notebooks/00_data_pipeline_walkthrough.ipynb):
-  chạy từng bước trên FD001 để thấy cách gom file, lưu trữ, truy vấn (SQL trên
-  SQLite, Spark SQL và Pandas trên Parquet), biến đổi thành 126 đặc trưng và join;
-  đồng thời kiểm tra mọi quan hệ giữa các bảng trên dữ liệu.
-- [Notebook EDA đã chạy](notebooks/01_fd001_eda.ipynb), 12 bảng CSV,
-  11 hình và [diễn giải kết quả, bằng chứng kiểm tra](outputs/eda/README.md).
-- Danh mục tài liệu tham khảo và hướng dẫn đọc.
-- Báo cáo [LaTeX](report/README.md) và [PDF](report/main.pdf) trình bày kiểm tra
-  dữ liệu, EDA, suy luận sensor chỉ dùng train, parity ETL, rolling features,
-  đánh giá RUL theo engine, PCA--ARIMA, cảnh báo sớm và ma trận FD001--FD004.
-  Báo cáo có data dictionary (từ điển dữ liệu), bảng thuật ngữ, phân tích lỗi
-  và ghi chú tái lập; PDF đã biên dịch có 49 trang.
-- Cơ sở lý thuyết có trích dẫn và [quy trình thống kê](report/sections/methodology.tex) (Mục 4.6).
-  Đã chốt so sánh giá trị trung bình của 30 cycles đầu và 30 cycles cuối theo từng động cơ.
-  Cấu hình thống kê đã được chốt trước khi chạy suy luận.
-- Helper `build_engine_sensor_pairs` chỉ nhận train, tạo và kiểm tra một cặp
-  30 cycles đầu/cuối cho từng động cơ và đủ 21 sensor.
-- Helper tính chênh lệch cặp trung bình theo đơn vị gốc, percentile bootstrap CI, Wilcoxon
-  permutation và Benjamini-Hochberg FDR theo cấu hình đã chốt.
-- [Notebook suy luận đã chạy](notebooks/02_fd001_inference.ipynb), hai
-  bảng CSV, metadata (siêu dữ liệu lần chạy) và [ghi chú validation](outputs/statistics/README.md).
-  Đầu ra giữ đủ 21 sensor và không đọc quan sát test hoặc nhãn test.
-- Hình được tạo từ các artifact trên: [phân phối chênh lệch](outputs/statistics/figures/difference_distributions.png)
-  và [effect size kèm bootstrap CI](outputs/statistics/figures/effect_size_ci.png).
-- Pipeline ETL Pandas ghi observations và train targets đã gán kiểu vào Silver
-  Parquet, ghi engine summary vào Gold Parquet/SQLite, lưu checksum raw và đo
-  benchmark cô lập ở scale 1x/10x/100x trong [outputs/etl](outputs/etl/README.md).
-- Adapter PySpark lazy import và bộ đối chiếu cho cùng các boundary Silver/Gold
-  đã có. Lần chạy local hiện tại dùng JRE portable và ghi `outputs/etl/parity.json`;
-  cả ba boundary Pandas/PySpark khớp với `max_abs_diff=0.0`.
-- Pipeline rolling features deterministic trong [outputs/features](outputs/features/README.md).
-  Artifact hiện có 27.927 dòng Gold từ trailing window 30 cycles, giữ đủ 21
-  sensors, tạo 126 cột đặc trưng và không ghép nhãn test.
-- Pipeline modeling theo group trong [outputs/modeling](outputs/modeling/README.md).
-  Pipeline so sánh median baseline, Ridge và HistGradientBoosting bằng 5-fold
-  GroupKFold theo engine, ghi out-of-fold predictions, ghi đúng 100 test
-  predictions trước khi đọc nhãn và đánh giá model được chọn bằng nhãn NASA.
-- Phân tích [PCA--ARIMA trên Health Index](outputs/timeseries/README.md) chỉ
-  dùng train: 10 engine validation đại diện, chia 70/30, 704 điểm dự báo, khoảng
-  dự đoán 95%, ADF và Ljung--Box; không đọc nhãn test.
-- [Dashboard Streamlit đọc artifact](app.py) gồm tám trang: tổng quan, dữ liệu và
-  EDA, đánh giá RUL (test engine và quỹ đạo OOF), cảnh báo sớm, cross-dataset,
-  thử nghiệm cải thiện, Health Index/ARIMA và provenance. Biểu đồ Altair tương
-  tác được. Dashboard không fit lại model và không đọc nhãn test thô khi mở trang.
-- Ba notebook rà soát kết quả đã chạy:
-  [modeling và cảnh báo sớm](notebooks/03_fd001_modeling_evaluation.ipynb),
-  [Health Index/ARIMA](notebooks/04_fd001_health_index_arima.ipynb) và
-  [cross-dataset cùng thử nghiệm cải thiện](notebooks/05_cross_dataset_and_improvement.ipynb).
-  Mỗi notebook tính lại metric từ prediction đã lưu bằng hàm của package, rồi dùng
-  `assert` để so với artifact; không fit model và không ghi vào `outputs/`.
+- [Báo cáo PDF](report/main.pdf) (45 trang, [nguồn LaTeX](report/README.md)).
+- [Slide trình bày](slides/cmapss_fd001_presentation.pptx) ([PDF](slides/cmapss_fd001_presentation.pdf)),
+  20 slide trên template IUH, dựng bằng [`slides/build_presentation.py`](slides/build_presentation.py).
+- [Dashboard Streamlit](app.py) chín trang, chỉ đọc artifact.
+- Bảy notebook đã chạy trong [`notebooks/`](notebooks/), mỗi notebook ghi họ tên và MSHV.
+- [Sổ tay thuyết trình](handoff/SPEECH_SCRIPT_VI.pdf) (mỗi slide kèm chỗ cần chỉ và lời đọc,
+  có phần demo dashboard), [gói bàn giao](handoff/FINAL_HANDOFF.md) và
+  [đối chiếu yêu cầu môn học](handoff/COURSE_ALIGNMENT.md).
 
-Gói bàn giao cuối:
+Thử nghiệm mở rộng (nested CV, thêm 42 đặc trưng lịch sử, similarity-based RUL,
+LightGBM, TCN, chuyển miền FD002--FD004, ARIMA) vẫn được giữ trong
+[`experiments/`](experiments/README.md) và `outputs/experiments/`. Không thử nghiệm
+nào thay đổi mô hình chính hay chính sách cảnh báo.
 
-- Đã có [slide trình bày](slides/cmapss_fd001_presentation.pptx)
-  ([PDF](slides/cmapss_fd001_presentation.pdf)) gồm 20 slide cho bài nói 18--20 phút,
-  chia năm phần: bài toán và dữ liệu, pipeline Big Data, phân tích chuỗi thời
-  gian, mô hình và đánh giá, mở rộng và kết luận. Số liệu trên slide được đọc từ
-  `outputs/` bằng [`slides/extract_slide_data.py`](slides/extract_slide_data.py);
-  [kịch bản nói](handoff/SPEECH_SCRIPT_VI.pdf) ghi thời lượng từng slide;
-  [checklist bàn giao](handoff/FINAL_HANDOFF.md) ghi nguồn kiểm tra.
-
-Lệnh cài đặt, kiểm tra dữ liệu, mở notebook, chạy ETL, tạo rolling features,
-modeling và PCA--ARIMA có ở phần Bắt đầu. Dashboard dùng dependency tùy chọn
-`dashboard`.
+Lệnh cài đặt và chạy từng bước có ở phần Bắt đầu. Dashboard dùng dependency tùy
+chọn `dashboard`.
 
 ## Mục tiêu
 
-Báo cáo tập trung trả lời sáu câu hỏi chính trên FD001:
+Báo cáo trả lời năm câu hỏi, sắp theo đúng thứ tự pipeline:
 
-1. FD001 có đạt kiểm tra schema, khóa và cycle liên tục hay không?
-2. Sensor thay đổi thế nào giữa đầu và cuối vòng đời động cơ?
-3. ETL Pandas và PySpark có cho kết quả tương đương trên cùng input hay không?
-4. HGB126 hay HGB169 ổn định hơn trên cùng panel trajectory và endpoint?
-5. Dự đoán RUL hỗ trợ cảnh báo sớm với chất lượng ra sao?
-6. Model huấn luyện trên FD001 hoạt động thế nào khi áp dụng FD002--FD004?
+1. Dữ liệu có hợp lệ về schema, khóa và cycle liên tục không, và ETL Pandas--PySpark có cho cùng kết quả không?
+2. Nhiễu tín hiệu cảm biến được giảm bao nhiêu sau khử nhiễu, và dữ liệu được tổng hợp theo cửa sổ thời gian ra sao?
+3. Sensor suy giảm theo xu hướng nào, và có phát hiện được dấu hiệu bất thường trước khi động cơ hỏng không?
+4. Dự đoán RUL đạt độ chính xác bao nhiêu trên tập test độc lập?
+5. Dự đoán RUL và tín hiệu bất thường có thể chuyển thành cảnh báo sớm và lịch bảo trì cho từng động cơ với chất lượng ra sao?
 
-Mục tiêu chính là **dự đoán RUL**. Supervised regression (hồi quy có giám sát) là cách mô hình hóa phù hợp vì biến mục tiêu là số cycle còn lại; đây không phải tên hoặc mục tiêu của báo cáo.
+Sản phẩm đặc thù theo đề tài là **báo cáo dự đoán thời điểm cần bảo trì kèm biểu
+đồ xu hướng cảnh báo sớm**. RUL (Remaining Useful Life, tuổi thọ hữu ích còn lại)
+được mô hình hóa bằng hồi quy có giám sát; đây là công cụ, không phải mục tiêu cuối.
 
 ## Dữ liệu
 
@@ -246,29 +202,34 @@ Mỗi window chỉ chứa dữ liệu của một động cơ và không sử d�
 
 ### Dự đoán RUL
 
-Pipeline modeling lịch sử đã so sánh:
+Pipeline modeling so sánh:
 
 1. Naive baseline theo trung vị RUL.
 2. Ridge regression làm baseline tuyến tính có regularization.
-3. HistGradientBoostingRegressor làm mô hình ứng viên phi tuyến (HGB126).
+3. HistGradientBoostingRegressor (HGB) với 126 đặc trưng window.
 
 Mô hình được chọn bằng GroupKFold 5-fold, trong đó `engine_id` xác định group.
 Nhãn test chính thức của NASA được cô lập cho đến khi đã ghi final predictions.
-HistGradientBoostingRegressor được giữ làm baseline lịch sử. Metric test của baseline gồm
+HGB có MAE cross-validation thấp nhất nên là mô hình chính. Metric test gồm
 mean engine-level MAE 15,3490, RMSE 20,5413 và NASA score 1.513,2577; khoảng tin
 cậy bootstrap được lưu trong `outputs/modeling/tables/final_metrics.json`.
 
-### Vai trò predictor và policy cảnh báo
+### Khử nhiễu, bất thường và lịch bảo trì
 
-Để tách các protocol, HGB126 là baseline lịch sử; metric test FD001 ở trên chỉ
-thuộc mô hình này. HGB169 bổ sung `cycle` và 42 history features vào 126 rolling
-features. Alignment audit trên cùng panel OOF đã lưu cho thấy HGB169 có sai số
-thấp hơn ở trajectory và endpoint, nên được giữ là predictor candidate có điều
-kiện. Đây là read-only replay trên prediction đã lưu, chưa phải blind refit và
-không thay thế metric test của HGB126. Warning sensitivity được đánh giá riêng
-trên OOF: threshold 30 có on-time 51% với HGB126 và 45% với HGB169; threshold
-40 lần lượt là 94% và 96% nhưng burden tăng. Đây chưa phải policy bảo trì đã
-hiệu chuẩn.
+- **Khử nhiễu:** EWMA span 10 làm mượt từng sensor trong từng động cơ,
+  $s_t = \alpha x_t + (1-\alpha) s_{t-1}$ với $\alpha = 2/(\text{span}+1) \approx 0{,}18$;
+  chỉ dùng cycle hiện tại và quá khứ.
+- **Health Index:** StandardScaler và PCA một thành phần fit trên train đã khử nhiễu;
+  không dùng nhãn RUL.
+- **Bất thường (cảnh báo mức 1):** so mỗi động cơ với 30 cycles đầu của chính nó;
+  báo khi Health Index giảm quá 3 độ lệch chuẩn và giữ 5 cycles liên tiếp.
+- **Cảnh báo mức 2:** RUL dự đoán ≤ 30 cycles.
+- **Lịch bảo trì:** cycle cần bảo trì = cycle hiện tại + ⌊RUL dự đoán − 30⌋. Trạng thái
+  ưu tiên: cần bảo trì (mức 2), theo dõi tăng cường (mức 1), bình thường. Nhãn test
+  chỉ được đọc sau khi lịch đã ghi ra file.
+
+Ví dụ: động cơ test 90 ở cycle 146 có RUL dự đoán 31,2, nên cần bảo trì ở cycle 147
+và đang ở mức theo dõi tăng cường vì Health Index đã báo bất thường từ cycle 67.
 
 ### Đánh giá FD002--FD004
 
@@ -301,18 +262,11 @@ bỏ tính không dừng trên các đoạn huấn luyện. Sau khi điều ch�
 nhãn RUL train; dự báo Health Index không phải RUL.
 Trên cùng đoạn dữ liệu giữ lại để kiểm tra, MAE trung bình của ARIMA là 0,4110, của `drift` là 0,7469 và
 của `last_value` là 0,9478; đây là so sánh mô tả, chưa phải bằng chứng ưu thế
-thống kê. ARIMA không thay thế predictor RUL và không được dùng để chọn HGB126
-hay HGB169.
+thống kê. ARIMA thuộc thử nghiệm mở rộng và không dùng để cảnh báo.
 
 Ma trận đại lượng cần ước lượng, đơn vị phân tích, cách chia dữ liệu/khoảng dự báo, metric và vai trò báo cáo
 được lưu trong
 [`outputs/modeling/tables/evaluation_protocol.csv`](outputs/modeling/tables/evaluation_protocol.csv).
-Phân tích cảnh báo sớm dùng OOF train của HGB126 baseline lịch sử với ngưỡng cố
-định RUL <= 30 cycles: 44 engine cảnh báo trước ngưỡng, 7 đúng ngưỡng và 49
-sau ngưỡng; lead time có median 30 cycles và miền 19--55. Bảng sensitivity
-HGB126/HGB169 ở threshold 30/40 nằm trong artifact alignment. OOF đã được dùng
-để chọn model nên đây là bằng chứng mô tả nội bộ, không phải đánh giá độc lập hoặc
-lịch bảo trì tối ưu.
 
 ## Phạm vi Big Data
 
@@ -341,18 +295,16 @@ Báo cáo không đặt trước một mức điểm mục tiêu. Kết quả â
 
 ## Trực quan hóa
 
-- Phân phối vòng đời động cơ.
-- Biến thiên và quỹ đạo sensor theo cycle gốc.
-- Quỹ đạo Health Index chỉ dùng train và dự báo trên đoạn giữ lại để kiểm tra của các engine đã
-  chọn trong [artifact PCA--ARIMA](outputs/timeseries/README.md).
-- Biểu đồ RUL thật--dự đoán trên test và phần dư theo khoảng RUL trong
-  [artifact modeling](outputs/modeling/README.md).
-- Xem từng engine qua dashboard Streamlit và out-of-fold predictions cho
-  phân tích validation theo group.
-- Phạm vi hiện tại: chưa lưu riêng hình quỹ đạo sensor chuẩn hóa và biểu đồ
-  validation chuyên dụng trong gói bàn giao.
+- Phân phối vòng đời động cơ và quỹ đạo sensor theo cycle.
+- Tín hiệu trước và sau khử nhiễu: [`denoise_before_after.png`](outputs/degradation/figures/denoise_before_after.png).
+- Health Index, ngưỡng 3σ và lúc phát hiện bất thường: [`anomaly_health_index.png`](outputs/degradation/figures/anomaly_health_index.png).
+- RUL thật--dự đoán và phần dư trên test trong [artifact modeling](outputs/modeling/README.md).
+- Quỹ đạo cảnh báo RUL ≤ 30 của từng động cơ train.
+- Trạng thái đội động cơ test và kế hoạch bảo trì: [`fleet_status.png`](outputs/maintenance/figures/fleet_status.png),
+  [`maintenance_planning.png`](outputs/maintenance/figures/maintenance_planning.png).
 
-Dashboard có thể minh họa cảnh báo khi RUL dự đoán không quá 30 cycles. Đây không phải ngưỡng bảo trì tối ưu vì FD001 không cung cấp chi phí bảo trì, downtime hoặc intervention records.
+Ngưỡng 30 cycles chưa phải ngưỡng bảo trì tối ưu vì FD001 không có chi phí bảo
+trì, downtime hoặc intervention records.
 
 ## Cấu trúc repository
 
@@ -364,8 +316,9 @@ Cấu trúc repository hiện tại:
 │   ├── raw/                 # FD001--FD004 nguyên bản và ghi chú nguồn
 │   └── archive/             # Dữ liệu lưu để đối chiếu, không dùng cho mô hình chính
 ├── references/              # Tài liệu tham khảo và bối cảnh assignment
-├── notebooks/               # 00 walkthrough dữ liệu, 01 EDA, 02 thống kê, 03–05 rà soát kết quả (đã chạy)
-├── src/cmapss/              # data/, statistics/, etl/, features/, modeling/, timeseries/, eda.py, validate.py,
+├── notebooks/               # 00 walkthrough dữ liệu, 01 EDA, 02 thống kê, 03–06 rà soát kết quả (đã chạy)
+├── src/cmapss/              # data/, statistics/, etl/, features/, modeling/, timeseries/,
+│                            # degradation/ (EWMA, bất thường), maintenance/ (lịch bảo trì), eda.py, validate.py,
 │                            # dashboard.py (đọc artifact), dashboard_app.py (giao diện Streamlit)
 ├── scripts/                 # Script sinh notebook, hình báo cáo và kiểm tra thử nghiệm cải thiện
 ├── tests/                   # Kiểm thử data contract, CLI, EDA, thống kê, ETL, features, modeling, timeseries và tái lập
@@ -376,6 +329,8 @@ Cấu trúc repository hiện tại:
 ├── outputs/features/        # Parquet Gold rolling features và metadata
 ├── outputs/modeling/        # Grouped CV, prediction, model artifact và final metrics
 ├── outputs/timeseries/      # Artifact Health Index và PCA--ARIMA train-only
+├── outputs/degradation/     # Tín hiệu EWMA, Health Index, cycle phát hiện bất thường
+├── outputs/maintenance/     # Lịch bảo trì 100 động cơ test, kế hoạch và bảng kiểm tra
 ├── outputs/cross_dataset/   # ETL, features và kết quả transfer FD001--FD004
 ├── assets/diagrams/         # Nguồn draw.io, bản xem trước SVG và file URL
 ├── pyproject.toml           # Thông tin package và dependency trực tiếp
@@ -385,7 +340,7 @@ Cấu trúc repository hiện tại:
 ├── requirements-dashboard.txt # Dependency Streamlit tùy chọn cho dashboard
 ├── uv.lock                  # Phiên bản dependencies đã khóa
 ├── report/                  # Nguồn LaTeX/PDF và hình của báo cáo
-├── slides/                  # Deck 20 slide, bản PDF, script trích số liệu và builder
+├── slides/                  # Deck 20 slide trên template IUH, bản PDF, script trích số liệu và builder
 │   └── archive/             # Deck/script cũ để đối chiếu
 ├── handoff/                 # Kịch bản demo và checklist bàn giao cuối
 │   └── archive/             # Kịch bản Markdown cũ
@@ -488,7 +443,7 @@ Sau khi cài `requirements-dev.txt`, mở notebook từ thư mục gốc:
 Chọn kernel Python của `.venv` và **Restart Kernel and Run All Cells**.
 Notebook chỉ phân tích train và tạo lại 12 bảng CSV, 11 hình PNG.
 Các lần kiểm tra với kernel mới tạo tệp EDA giống nhau trong cùng môi trường.
-Bộ kiểm thử reliability ngày 07/10/2026 đạt **426 passed, 1 skipped**; kiểm thử
+Bộ kiểm thử ngày 08/10/2026 đạt **440 passed, 1 skipped**; kiểm thử
 TCN được bỏ qua vì môi trường chưa có `torch`. Lần chạy ngày 29/09/2026 đạt
 **198 tests** và được giữ như bằng chứng lịch sử cho các nhánh dữ liệu, thống kê,
 ETL, đặc trưng, modeling, PCA--ARIMA, đánh giá liên subset, dashboard và tái lập
@@ -648,9 +603,31 @@ Artifact hiện có 20.631 dòng Health Index train và 704 điểm dự báo tr
 10 engine. Xem [artifact và validation PCA--ARIMA](outputs/timeseries/README.md)
 để biết quy tắc chọn engine, metric, hình và giới hạn.
 
+### Chạy khử nhiễu và phát hiện bất thường
+
+Chỉ đọc `data/raw/train_FD001.txt`, không dùng nhãn RUL:
+
+```powershell
+.venv\Scripts\python -m cmapss.degradation
+```
+
+Lệnh ghi `outputs/degradation/`: bảng mức giảm dao động, cycle phát hiện bất
+thường của 100 động cơ train, tín hiệu gốc/EWMA và Health Index theo cycle, hai hình.
+
+### Chạy lịch bảo trì
+
+Sau khi đã có `outputs/modeling/predictions/final_predictions.parquet`:
+
+```powershell
+.venv\Scripts\python -m cmapss.maintenance
+```
+
+Lệnh fit Health Index trên train, chỉ transform test, lập lịch bảo trì và ghi ra
+file, rồi mới đọc `RUL_FD001.txt` để tạo bảng kiểm tra `status_vs_actual.csv`.
+
 ### Chạy notebook rà soát kết quả
 
-Notebook 03–05 chỉ đọc artifact đã có. Chúng tính lại metric bằng hàm của package
+Notebook 03–06 chỉ đọc artifact đã có. Chúng tính lại metric bằng hàm của package
 và dùng `assert` để dừng nếu số liệu lệch với file trong `outputs/`:
 
 | Notebook | Nội dung | Đối chiếu với |
@@ -658,6 +635,7 @@ và dùng `assert` để dừng nếu số liệu lệch với file trong `outpu
 | `03_fd001_modeling_evaluation.ipynb` | MAE theo fold, metric test, bootstrap CI, sai số theo khoảng RUL, cảnh báo RUL ≤ 30 | `outputs/modeling/tables/*` |
 | `04_fd001_health_index_arima.ipynb` | Xu hướng Health Index, metric holdout ARIMA, naive baseline, ADF/Ljung–Box | `outputs/timeseries/tables/*` |
 | `05_cross_dataset_and_improvement.ipynb` | Ma trận FD001–FD004, ablation và paired CI của nested CV | `outputs/cross_dataset/matrix.json`, `outputs/experiments/rul_improvement/20260928_rebuild/*` |
+| `06_fd001_degradation_maintenance.ipynb` | Khử nhiễu EWMA, Health Index, phát hiện bất thường, lịch bảo trì và kiểm tra bằng nhãn test | `outputs/degradation/*`, `outputs/maintenance/*` |
 
 Notebook được sinh và chạy lại từ fresh kernel bằng:
 
@@ -669,26 +647,27 @@ Thêm `--only 04` để chỉ dựng lại một notebook.
 
 ### Chạy dashboard tái lập
 
-Cài dependency tùy chọn và khởi động Streamlit sau khi đã có artifact modeling
-và PCA--ARIMA:
+Cài dependency tùy chọn và khởi động Streamlit sau khi đã có artifact modeling,
+PCA--ARIMA, `cmapss.degradation` và `cmapss.maintenance`:
 
 ```powershell
 uv sync --extra dashboard
 uv run --extra dashboard streamlit run app.py
 ```
 
-Dashboard có tám trang. Có thể mở thẳng một trang bằng query string, ví dụ
-`http://localhost:8501/?page=Cảnh báo sớm`.
+Dashboard có chín trang, sắp theo thứ tự pipeline. Có thể mở thẳng một trang bằng
+query string, ví dụ `http://localhost:8501/?page=Lịch bảo trì`.
 
 | Trang | Artifact đọc | Nội dung |
 |---|---|---|
-| Tổng quan | `outputs/modeling` | Metric test và khoảng tin cậy, pipeline, so sánh model trong CV, gợi ý thứ tự demo |
-| Dữ liệu & EDA | `outputs/eda`, `outputs/features` | Phân phối tuổi thọ, Spearman sensor–RUL, quỹ đạo sensor của từng train engine |
-| Đánh giá RUL | `outputs/modeling/predictions` | Một test engine tại cycle cuối, scatter và residual; quỹ đạo OOF của train engine theo từng model |
-| Cảnh báo sớm | `outputs/modeling/tables` | Ngưỡng 30 cycles, phân loại thời điểm, trajectory có vạch cảnh báo đầu tiên |
-| Cross-dataset | `outputs/cross_dataset/matrix.json` | MAE và khoảng tin cậy của 4 evaluation nội bộ và 3 transfer |
-| Thử nghiệm cải thiện | `outputs/experiments/rul_improvement/20260928_rebuild` | Ablation, paired CI, quỹ đạo baseline và quy trình chọn |
-| Health Index / ARIMA | `outputs/timeseries` | Forecast và khoảng dự đoán 95%, so sánh với naive baseline, diagnostics |
+| Tổng quan | `outputs/modeling`, `outputs/degradation`, `outputs/maintenance` | Bốn con số chính, pipeline 7 bước, gợi ý thứ tự demo |
+| Dữ liệu & EDA | `outputs/eda`, `outputs/features` | Phân phối tuổi thọ, Spearman sensor–RUL, quỹ đạo sensor |
+| Khử nhiễu | `outputs/degradation` | Tín hiệu gốc và sau EWMA theo động cơ/sensor, mức giảm dao động |
+| Xu hướng & bất thường | `outputs/degradation`, `outputs/statistics` | Health Index, ngưỡng 3σ, lúc phát hiện, phân phối thời gian báo trước |
+| Dự đoán RUL | `outputs/modeling` | So sánh model trong CV, một test engine, quỹ đạo OOF |
+| Cảnh báo sớm | `outputs/modeling/tables` | Ngưỡng 30 cycles, phân loại thời điểm, quỹ đạo cảnh báo |
+| Lịch bảo trì | `outputs/maintenance` | Bảng 100 động cơ, kế hoạch, chi tiết từng động cơ, kiểm tra bằng nhãn test |
+| Thử nghiệm mở rộng | `outputs/cross_dataset`, `outputs/experiments`, `outputs/timeseries` | Ba tab: chuyển miền, cải thiện, ARIMA |
 | Provenance | `run_info.json` | Schema và isolation contract của lần chạy |
 
 Lớp đọc artifact nằm trong `src/cmapss/dashboard.py`; giao diện nằm trong
@@ -744,8 +723,8 @@ Pytest dọn thư mục `--basetemp` khi chạy lại; chỉ dành thư mục đ
 Đợt kiểm chứng mã nguồn ngày 07/10/2026 đạt **426 passed, 1 skipped** (TCN thiếu
 torch). Bao gồm bảo vệ Bronze tùy chỉnh, fault injection ETL/rolling, dependency
 exports và lifecycle dùng chung cho XGBoost/LightGBM. Xem
-[kế hoạch đã hoàn tất](handoff/CODE_RELIABILITY_PLAN_20261007.md) và
-[bằng chứng runtime](handoff/CODE_RELIABILITY_20261007.json) để biết lệnh kiểm
+[kế hoạch đã hoàn tất](handoff/archive/CODE_RELIABILITY_PLAN_20261007.md) và
+[bằng chứng runtime](handoff/archive/CODE_RELIABILITY_20261007.json) để biết lệnh kiểm
 tra, giới hạn Windows/Linux và kết quả worker spawn thực tế.
 
 </details>
@@ -771,7 +750,8 @@ với dữ liệu và quy trình tái lập tương ứng.
 
 - FD001 là dữ liệu mô phỏng với một điều kiện vận hành và một dạng lỗi.
 - Cycle vận hành không tương đương với giờ hoặc thời gian lịch.
-- Dự đoán RUL không tự động xác định lịch bảo trì tối ưu.
+- Lịch bảo trì dùng ngưỡng 30 cycles cố định, chưa hiệu chuẩn theo chi phí; mức theo dõi tăng cường còn rộng (41/59 động cơ có RUL thật trên 60).
+- Phát hiện bất thường chưa đo được tỷ lệ báo động giả vì không có nhãn thời điểm bắt đầu suy giảm.
 - Thử nghiệm khả năng mở rộng không tạo thêm bằng chứng khoa học độc lập.
 - Hiệu quả trên FD001 không chứng minh khả năng khái quát hóa ngoài thực tế.
 

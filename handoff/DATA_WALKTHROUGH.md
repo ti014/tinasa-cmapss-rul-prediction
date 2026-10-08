@@ -4,7 +4,7 @@ Pipeline hiện có đọc từng subset, nối các dòng train/test có cùng 
 observations trong Parquet, tạo nhãn train và tổng hợp theo engine. Từ lịch sử
 của từng engine, pipeline tạo 126 đặc trưng trên window 30 cycles để dự đoán RUL.
 Tài liệu này giải thích hành vi đã triển khai, đối chiếu với code và các artifact
-đã lưu đến 07/10/2026. Lượt đồng bộ này không chạy lại training hay thay số liệu
+đã lưu đến 08/10/2026 (bổ sung khử nhiễu EWMA và lịch bảo trì). Lượt đồng bộ này không chạy lại training hay thay số liệu
 khoa học; benchmark local và parity được dẫn từ run ngày 29/09, còn bằng chứng
 reliability phần mềm được dẫn từ handoff ngày 07/10.
 
@@ -26,8 +26,9 @@ yêu cầu; transcript nhận dạng tiếng nói có lỗi chỉ bổ sung bố
 |---|---|---|
 | Chuỗi cảm biến, nhiều tín hiệu | 21 sensor theo engine/cycle, EDA và thống kê train | Dữ liệu mô phỏng batch, chưa có streaming hoặc thiết bị thật |
 | Chuẩn hóa và time window | Schema/type ở ETL; scaler riêng cho Ridge và Health Index; 30-cycle rolling features | HGB dùng feature theo thang gốc; không có một bước scaling chung trước mọi model |
-| Xu hướng suy giảm | Quỹ đạo sensor, so sánh đầu/cuối, Health Index | Thay đổi tín hiệu chưa chứng minh quan hệ nhân quả hoặc điểm bắt đầu suy giảm |
-| Dự đoán/cảnh báo | RUL test của HGB126 baseline lịch sử, OOF warning trajectory và timing 44/7/49 | Ngưỡng nghiên cứu 30 cycles, chưa suy ra lịch bảo trì tối ưu |
+| Xử lý nhiễu | EWMA span 10 theo từng động cơ, chỉ dùng quá khứ; giảm trung vị 86,3% dao động ngắn hạn | Không có tín hiệu sạch để chứng minh đã loại đúng nhiễu đo |
+| Xu hướng và bất thường | Quỹ đạo sensor, so sánh đầu/cuối, Health Index; bất thường khi giảm quá 3σ so với 30 cycles đầu | Chưa đo được tỷ lệ báo động giả vì không có nhãn điểm bắt đầu suy giảm |
+| Dự đoán/cảnh báo/lịch bảo trì | RUL test của HGB (MAE 15,35), OOF warning timing 44/7/49, lịch bảo trì 100 động cơ test (21/21 báo cần bảo trì là đúng) | Ngưỡng 30 cycles chưa hiệu chuẩn theo chi phí |
 | Nội dung xử lý dữ liệu lớn | PySpark ETL và rolling local[4], Parquet nhiều tầng, parity và benchmark stage có I/O ở scale 1×/10× | Chưa đo cluster, distributed writer hay partition-aware query |
 
 ## 1. Nhiều file được tổ chức và gom thế nào?
@@ -116,14 +117,18 @@ và tạo đặc trưng. Nó không phải kiến trúc mô hình Transformer. V
 train sử dụng endpoint đã biết để tạo **nhãn**, không đưa endpoint đó vào X.
 Không dùng cycle cuối test để suy ra RUL thật vì lịch sử test bị cắt.
 
-Không có bước imputation, xóa outlier hoặc lọc nhiễu chuyên dụng trong đường
-feature hiện tại. EDA FD001 xác nhận không có missing values/khóa trùng;
-validation từ chối đầu vào không đạt contract. Rolling mean tổng hợp tín hiệu
-trong window, nhưng không nên gọi toàn pipeline là đã khử nhiễu có kiểm chứng.
+Bước khử nhiễu riêng là EWMA span 10 trong `src/cmapss/degradation/denoise.py`:
+$s_t = \alpha x_t + (1-\alpha)s_{t-1}$, $\alpha \approx 0{,}18$, tính trong từng động cơ
+và chỉ dùng quá khứ. Tín hiệu EWMA đi vào Health Index và phát hiện bất thường; mô
+hình RUL vẫn dùng rolling features trên tín hiệu gốc vì trung bình và độ dốc trên
+window cũng làm dịu dao động. Không có bước imputation hoặc xóa outlier: EDA FD001
+xác nhận không có missing values/khóa trùng, và validation từ chối đầu vào không đạt
+contract.
 
 Chuẩn hóa schema/type ở ETL khác scaling giá trị: Ridge fit StandardScaler
-trên training fold, Health Index fit StandardScaler/PCA trên 90 train engines
-không thuộc 10 engine đánh giá. HGB được chọn dùng features theo thang gốc.
+trên training fold; Health Index dùng cho bất thường và lịch bảo trì fit
+StandardScaler/PCA trên toàn bộ train đã khử nhiễu (không dùng nhãn), còn Health
+Index của phân tích ARIMA fit trên 90 train engines không thuộc 10 engine đánh giá. HGB được chọn dùng features theo thang gốc.
 Không có scaler chung nằm trước bước rolling features trong pipeline RUL.
 
 ## 4. Columns, features và feature selection
@@ -131,13 +136,12 @@ Không có scaler chung nằm trước bước rolling features trong pipeline R
 Observation có 27 cột: ba cột khóa và 24 cột đo lường. Rolling features giữ
 ba khóa cùng **21 × 6 = 126** cột theo mẫu `<sensor>__<stat>`: `last`, `mean`,
 `std` với ddof=1, `min`, `max`, `slope`. Ba `setting_*` không đi vào X của
-baseline HGB126. `split`, `engine_id`, `cycle` dùng quản lý và chia fold trong
-protocol baseline; predictor tham chiếu HGB169 của alignment thêm `cycle` cùng
-42 history features vào 126 rolling columns.
+mô hình chính. `split`, `engine_id`, `cycle` dùng quản lý và chia fold.
 
-Tạo 126 feature columns là feature engineering (xây dựng đặc trưng). HGB126
-nhận đủ 126 cột và không thực hiện feature selection để giảm số cột; HGB169 là
-biểu diễn khác, thêm cycle và 42 history features theo artifact alignment.
+Tạo 126 feature columns là feature engineering (xây dựng đặc trưng). Mô hình HGB
+chính nhận đủ 126 cột và không thực hiện feature selection để giảm số cột. Thử
+nghiệm mở rộng có thêm `cycle` và 42 history features (169 cột), nhưng không thay
+mô hình chính.
 Danh sách sensor có correlation cao hoặc có p-value nhỏ trong EDA/statistics
 không được dùng để chọn sensor cho model.
 
@@ -209,8 +213,8 @@ hạ tầng phân tán production.
 ## 7. Reliability và khả năng truy vết
 
 Đợt kiểm tra phần mềm ngày 07/10/2026 được ghi tại
-[`CODE_RELIABILITY_20261007.json`](CODE_RELIABILITY_20261007.json) và kế hoạch
-được mô tả tại [`CODE_RELIABILITY_PLAN_20261007.md`](CODE_RELIABILITY_PLAN_20261007.md).
+[`CODE_RELIABILITY_20261007.json`](archive/CODE_RELIABILITY_20261007.json) và kế hoạch
+được mô tả tại [`CODE_RELIABILITY_PLAN_20261007.md`](archive/CODE_RELIABILITY_PLAN_20261007.md).
 Bằng chứng gồm 426 test passed và 1 test skip vì môi trường thiếu `torch` cho
 TCN; chạy CLI từ CWD khác vẫn giữ checksum raw; worker spawn thực hiện save/load
 và resume; dependency runtime và lockfile được đối chiếu. Đây là bằng chứng
@@ -247,4 +251,4 @@ qua driver nên chưa suy rộng được hiệu năng sang cluster.”
   [median summary](../outputs/benchmarks/20260929/summary.csv).
 - Model/cảnh báo: [modeling artifacts](../outputs/modeling/README.md).
 - Health Index: [timeseries artifacts](../outputs/timeseries/README.md).
-- Walkthrough demo: [DEMO_SCRIPT.md](DEMO_SCRIPT.md).
+- Demo dashboard: phần demo trong [sổ tay thuyết trình](SPEECH_SCRIPT_VI.pdf).

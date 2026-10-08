@@ -2,121 +2,68 @@
 
 <hr>
 
-# NASA C-MAPSS RUL Prediction Pipeline
+# Topic 8: IoT Data Analysis and Predictive Maintenance on NASA C-MAPSS
 
 **Student:** Phan Nguyễn Mai Phương · **Student ID:** 25002711.
 
-**Last updated 7 October 2026:** the HGB126/HGB169 alignment, code reliability evidence,
-and final deck are synchronized. The 29 September follow-up tested capped RUL/history features on FD001, fold-local
-operating-condition normalization on FD002/FD004, and a staged local Pandas/Spark
-benchmark. See [results and reproduction commands](experiments/FOLLOWUP_20260929.md).
-All six notebooks identify the student. Dashboard, notebooks and slides share the
-canonical rebuilt experiment; slide dependencies are pinned in `slides/pnpm-lock.yaml`.
+**Last updated 2026-10-08:** the report, slides and dashboard now follow the course
+rubric order: data pipeline → denoising and time windows → degradation trend and
+anomalies → RUL prediction → early warning and maintenance schedule. Added EWMA
+denoising, Health Index anomaly detection and a predicted-maintenance report for
+the 100 test engines. Model-improvement studies are grouped as extended experiments.
 
-A reproducible Big Data course project for analyzing multivariate turbofan sensor data and predicting Remaining Useful Life (RUL) on NASA C-MAPSS FD001--FD004. FD001 is the primary subset for detailed analysis; FD002--FD004 are evaluated in a supplemental cross-dataset matrix. The project emphasizes data provenance, statistically sound analysis, leakage-safe evaluation, scalable ETL, and explainable visual reporting.
+This repository supports the final report for the Big Data Analytics course,
+**Topic 8 — IoT Data Analysis and Predictive Maintenance**: analyze equipment sensor
+data to detect early signs of abnormal behavior and predict when maintenance is
+needed. The data are the simulated NASA C-MAPSS turbofan engines; the main analysis
+uses FD001, and FD002--FD004 appear only in extended experiments.
 
 ## Project Status
 
-This repository provides **FD001 data validation, train RUL targets, an executed train-only EDA notebook, sensor inference artifacts, Pandas/PySpark Silver/Gold ETL, 30-cycle rolling features, grouped RUL evaluation, train-only PCA--ARIMA Health Index analysis, and a supplemental 10-cycle evaluation matrix for FD001--FD004**.
+Main FD001 results:
 
-**Improvement study completed (27 September 2026):** nested 5×3 GroupKFold
-compared windows 10/20/30, 24 HistGradientBoosting configurations and three weight
-schemes. Outer low-RUL MAE changed from 3.6676 to 3.6730 cycles; late warnings
-increased from 49 to 53/100 engines. The final selection retained the baseline,
-so this follow-up did not promote a new pipeline. The 7 October alignment audit
-separately compares HGB126 with HGB169 on the same saved panel. See
-[results and reproduction](experiments/README.md).
+| Step | Result | Artifacts |
+|---|---|---|
+| Data pipeline | Schema, key and cycle checks; Silver/Gold Parquet and SQLite; Pandas and PySpark match exactly; at 10× scale local Spark is about 3.4× faster than Pandas | `outputs/etl/`, `outputs/benchmarks/` |
+| Denoising | EWMA (span 10) removes about 86% of short-term fluctuation across 14 trending sensors | `outputs/degradation/` |
+| Time windows | 30-cycle window, 21 sensors × 6 statistics = 126 features | `outputs/features/` |
+| Trend and anomalies | 15/21 sensors change significantly between early and late life; the Health Index flags an anomaly in 100/100 train engines, median 121 cycles before failure | `outputs/statistics/`, `outputs/degradation/` |
+| RUL prediction | HistGradientBoosting, 5-fold GroupKFold by engine; test MAE 15.35 cycles (95% CI 12.73--18.09), RMSE 20.54 | `outputs/modeling/` |
+| Early warning | Predicted RUL ≤ 30: no missed engine, median lead time 30 cycles, 49% late; a 40-cycle threshold reduces late warnings to 6% | `outputs/modeling/tables/` |
+| Maintenance schedule | 21 test engines are flagged for immediate maintenance and all 21 are correct; the other 4 engines that truly need maintenance are scheduled 1--8 cycles later | `outputs/maintenance/` |
 
-Available now:
+Deliverables:
 
-- The original NASA C-MAPSS FD001--FD004 files and source documentation; the primary report uses FD001 and the supplemental matrix uses all four subsets.
-- Readers, validators, and tests for row counts, engines, schema, keys, cycles, and train RUL.
-- A [data contract](data/CONTRACTS.md), JSON validation CLI, and dependency lockfile.
-- An [executed data-pipeline walkthrough notebook](notebooks/00_data_pipeline_walkthrough.ipynb)
-  that shows, step by step on FD001, how the files are combined, stored,
-  queried (SQLite SQL, Spark SQL and Pandas on Parquet), transformed into the
-  126 features, and joined; it also checks every table relationship on the data.
-- An [executed EDA notebook](notebooks/01_fd001_eda.ipynb), 12 CSV tables,
-  11 figures, and [analysis notes and validation evidence](outputs/eda/README.md).
-- A curated bibliography and reading guide.
-- A [LaTeX report](report/README.md) and [PDF](report/main.pdf) covering data
-  validation, EDA, train-only sensor inference, ETL parity, rolling features,
-  grouped RUL evaluation, PCA--ARIMA, early warning, and the supplemental
-  FD001--FD004 matrix. It includes a data dictionary, glossary, error analysis,
-  and reproducibility notes; the built PDF is 49 pages.
-- A cited theoretical background and [statistical protocol](report/sections/methodology.tex) (Section 4.6).
-  The paired comparison uses each sensor's mean over the first and last 30 cycles of every train engine.
-  The inference configuration was fixed before execution.
-- A train-only `build_engine_sensor_pairs` helper that creates and validates one
-  first/last 30-cycle pair for every engine and all 21 sensors.
-- Helpers for mean paired differences, percentile bootstrap confidence intervals,
-  Wilcoxon permutation, and Benjamini-Hochberg FDR under that configuration.
-- An [executed inference notebook](notebooks/02_fd001_inference.ipynb),
-  two validated CSV tables, run metadata, and [validation notes](outputs/statistics/README.md).
-  The outputs keep all 21 sensors and do not read test observations or test labels.
-- Figures generated from those artifacts:
-  [difference distributions](outputs/statistics/figures/difference_distributions.png)
-  and [effect sizes with bootstrap CI](outputs/statistics/figures/effect_size_ci.png).
-- A Pandas ETL that writes typed Silver observations and train targets to
-  Parquet, writes a Gold engine summary to Parquet and SQLite, records raw
-  checksums, and runs isolated 1x/10x/100x scalability measurements in
-  [outputs/etl](outputs/etl/README.md).
-- A lazy PySpark adapter and parity checker for the same Silver/Gold boundaries.
-  The current local run used a portable JRE and wrote `outputs/etl/parity.json`;
-  all three Pandas/PySpark boundaries matched with `max_abs_diff=0.0`.
-- A deterministic rolling feature pipeline in [outputs/features](outputs/features/README.md).
-  It writes 27,927 Gold rows from 30-cycle trailing windows, keeps all 21 sensors,
-  creates 126 feature columns, and does not join test labels.
-- A grouped modeling pipeline in [outputs/modeling](outputs/modeling/README.md).
-  It compares a median baseline, Ridge, and HistGradientBoosting with five-fold
-  GroupKFold by engine, writes out-of-fold predictions, writes exactly 100 final
-  test predictions before reading labels, and evaluates the selected model on
-  NASA test labels.
-- A train-only [PCA--ARIMA Health Index analysis](outputs/timeseries/README.md)
-  on 10 selected validation engines. StandardScaler/PCA are fit on the other
-  90 train engines before the selected engines are transformed. It writes
-  20,631 Health Index rows, 704 holdout forecasts, ARIMA and same-horizon
-  last-value/drift baseline MAE/RMSE, 95% prediction-interval coverage, ADF and
-  adjusted Ljung--Box diagnostics without reading test labels.
-- An [artifact-driven Streamlit dashboard](app.py) with eight pages: overview,
-  data and EDA, RUL evaluation (test engine and OOF trajectory), early warning,
-  cross-dataset, improvement study, Health Index/ARIMA and provenance. Charts are
-  interactive Altair charts. It does not fit models or read raw test labels when
-  opened.
-- Three executed result-review notebooks:
-  [modeling and early warning](notebooks/03_fd001_modeling_evaluation.ipynb),
-  [Health Index/ARIMA](notebooks/04_fd001_health_index_arima.ipynb) and
-  [cross-dataset and improvement study](notebooks/05_cross_dataset_and_improvement.ipynb).
-  Each notebook recomputes metrics from stored predictions with package
-  functions and `assert`s that they match the artifacts; none fits a model or
-  writes to `outputs/`.
+- [Report PDF](report/main.pdf) (45 pages, [LaTeX source](report/README.md)).
+- [Slides](slides/cmapss_fd001_presentation.pptx) ([PDF](slides/cmapss_fd001_presentation.pdf)),
+  20 slides on the IUH template, built by [`slides/build_presentation.py`](slides/build_presentation.py).
+- A nine-page [Streamlit dashboard](app.py) that only reads artifacts.
+- Seven executed notebooks in [`notebooks/`](notebooks/), each identifying the student.
+- [Presenter handbook](handoff/SPEECH_SCRIPT_VI.pdf) (each slide with what to point at and what
+  to say, plus the dashboard demo), [handoff package](handoff/FINAL_HANDOFF.md) and
+  [course alignment](handoff/COURSE_ALIGNMENT.md).
 
-Final handoff:
+Extended experiments (nested CV, 42 history features, similarity-based RUL,
+LightGBM, TCN, FD002--FD004 transfer, ARIMA) remain in
+[`experiments/`](experiments/README.md) and `outputs/experiments/`. None of them
+changes the main model or the warning policy.
 
-- The [20-slide presentation deck](slides/cmapss_fd001_presentation.pptx)
-  ([PDF](slides/cmapss_fd001_presentation.pdf)) is sized for an 18–20-minute talk
-  five parts: problem and data, Big Data pipeline, time-series analysis,
-  modeling and evaluation, and extensions and conclusions. Slide values are read
-  from `outputs/` by [`slides/extract_slide_data.py`](slides/extract_slide_data.py);
-  the [speech script](handoff/SPEECH_SCRIPT_VI.pdf) gives timing per slide. The
-  [handoff checklist](handoff/FINAL_HANDOFF.md) lists validation.
-
-Installation, data validation, notebook, ETL, feature-generation, modeling and
-time-series instructions are available below. The dashboard requires the
-optional `dashboard` dependency group.
+Installation and step-by-step commands are in Getting Started. The dashboard uses
+the optional `dashboard` dependency group.
 
 ## Objectives
 
-The report addresses six questions on FD001:
+The report answers five questions in pipeline order:
 
-1. Does FD001 satisfy the schema, key, and cycle-continuity checks?
-2. How do sensor values change between the beginning and end of engine life?
-3. Do Pandas and PySpark produce matching ETL outputs on the same input?
-4. Is HGB126 or HGB169 more stable on the same trajectory and endpoint panels?
-5. How well can RUL predictions support an early-warning policy?
-6. How does an FD001 model behave when transferred to FD002--FD004?
+1. Are the data valid with respect to schema, keys and cycle continuity, and do the Pandas and PySpark ETL produce the same result?
+2. How much sensor noise does denoising remove, and how are the data aggregated over time windows?
+3. Which degradation trends do the sensors show, and can abnormal behavior be detected before failure?
+4. How accurate is RUL prediction on the independent test set?
+5. How well can predicted RUL and the anomaly signal be turned into early warnings and a per-engine maintenance schedule?
 
-The primary objective is **RUL prediction**. Supervised regression is the modeling formulation because the target is a numeric number of remaining cycles; it is not the title or purpose of the project.
+The topic-specific deliverable is a **predicted-maintenance report with an
+early-warning trend chart**. RUL (Remaining Useful Life) is modeled with supervised
+regression as a tool, not as the end goal.
 
 ## Dataset
 
@@ -258,28 +205,36 @@ Windows never cross engine boundaries and never use future observations. Engines
 
 ### RUL Prediction
 
-The historical modeling pass compares:
+The modeling pass compares:
 
 1. A naive median-RUL baseline.
 2. Ridge regression as a regularized linear baseline.
-3. HistGradientBoostingRegressor as the nonlinear candidate model (HGB126).
+3. HistGradientBoostingRegressor (HGB) on the 126 window features.
 
 Model selection uses five-fold grouped cross-validation, with `engine_id` as the group.
 The official NASA test labels remain isolated until final predictions have been
-written. HistGradientBoostingRegressor is retained as the historical baseline. Final test metrics
+written. HGB has the lowest cross-validation MAE and is the main model. Final test metrics
 are mean engine-level MAE 15.3490, RMSE 20.5413, and NASA score 1513.2577, with
 bootstrap confidence intervals recorded in `outputs/modeling/tables/final_metrics.json`.
 
-### Predictor and warning-policy roles
+### Denoising, anomalies and maintenance schedule
 
-To keep protocols separate, HGB126 is the historical baseline; the FD001 test
-metrics above belong only to this model. HGB169 adds `cycle` and 42 history
-features to the 126 rolling features. A read-only alignment audit on the same
-saved OOF trajectory and endpoint panels found lower error, so HGB169 is retained
-as a conditional predictor candidate. This is not a blind refit and does not
-replace the HGB126 test readout. Warning sensitivity is evaluated separately on
-OOF predictions: threshold 30 gives 51%/45% on-time for HGB126/HGB169; threshold
-40 gives 94%/96% with higher burden, and is not a calibrated maintenance policy.
+- **Denoising:** an EWMA with span 10 smooths each sensor within each engine,
+  $s_t = \alpha x_t + (1-\alpha) s_{t-1}$ with $\alpha = 2/(\text{span}+1) \approx 0.18$;
+  it only uses the current and past cycles.
+- **Health Index:** StandardScaler and a one-component PCA fit on the denoised train
+  data; no RUL labels are used.
+- **Anomaly (level-1 warning):** each engine is compared with its own first 30
+  cycles; an anomaly is flagged when the Health Index drops more than 3 standard
+  deviations and stays there for 5 consecutive cycles.
+- **Level-2 warning:** predicted RUL ≤ 30 cycles.
+- **Maintenance schedule:** maintenance cycle = current cycle + ⌊predicted RUL − 30⌋.
+  Status priority: needs maintenance (level 2), enhanced monitoring (level 1),
+  normal. Test labels are read only after the schedule has been written.
+
+Example: test engine 90 is at cycle 146 with predicted RUL 31.2, so maintenance is
+due at cycle 147; it is under enhanced monitoring because its Health Index has been
+abnormal since cycle 67.
 
 ### FD002--FD004 Evaluation
 
@@ -313,8 +268,7 @@ the deterministic training RUL countdown; Health Index forecast is not RUL.
 On the same holdouts, mean MAE is 0.4110 for ARIMA, 0.7469 for drift and 0.9478
 for last-value; this comparison is descriptive and has no claim of statistical
 superiority.
-ARIMA does not replace the RUL predictor and is not used to select HGB126 or
-HGB169.
+ARIMA is an extended experiment and is not used for warnings.
 
 ## Big Data Scope
 
@@ -352,18 +306,16 @@ No target score is declared in advance. A negative result remains valid if the p
 
 ## Visualizations
 
-- Engine-life distribution.
-- Sensor variability and raw-cycle trajectories.
-- Train-only Health Index trajectories and holdout forecasts for the
-  selected engines in [the PCA--ARIMA artifacts](outputs/timeseries/README.md).
-- Final test-set true-versus-predicted RUL scatter and residuals by
-  RUL range in [the modeling artifacts](outputs/modeling/README.md).
-- Per-engine inspection through the Streamlit dashboard and persisted
-  out-of-fold predictions for grouped validation analysis.
-- Scope note: normalized sensor trajectories and a dedicated validation scatter
-  are not separate persisted figures in the current handoff.
+- Engine-life distribution and raw sensor trajectories.
+- Signals before and after denoising: [`denoise_before_after.png`](outputs/degradation/figures/denoise_before_after.png).
+- Health Index, 3σ threshold and anomaly onset: [`anomaly_health_index.png`](outputs/degradation/figures/anomaly_health_index.png).
+- Test-set true-versus-predicted RUL and residuals in [the modeling artifacts](outputs/modeling/README.md).
+- Per-engine RUL ≤ 30 warning trajectories on train engines.
+- Test-fleet status and maintenance planning: [`fleet_status.png`](outputs/maintenance/figures/fleet_status.png),
+  [`maintenance_planning.png`](outputs/maintenance/figures/maintenance_planning.png).
 
-An illustrative warning may be shown when predicted RUL is at most 30 cycles. This is not presented as an optimized maintenance threshold because FD001 contains no maintenance costs, downtime, or intervention records.
+The 30-cycle threshold is not an optimized maintenance threshold because FD001
+contains no maintenance costs, downtime or intervention records.
 
 ## Repository Structure
 
@@ -375,8 +327,9 @@ Current repository structure:
 │   ├── raw/                 # Original FD001--FD004 files and provenance notes
 │   └── archive/             # Data retained for comparison, not active modeling
 ├── references/              # Bibliography, reading guide, papers, assignment context
-├── notebooks/               # Executed: 00 data walkthrough, 01 EDA, 02 statistics, 03–05 result review
-├── src/cmapss/              # data/, statistics/, etl/, features/, modeling/, timeseries/, eda.py, validate.py,
+├── notebooks/               # Executed: 00 data walkthrough, 01 EDA, 02 statistics, 03–06 result review
+├── src/cmapss/              # data/, statistics/, etl/, features/, modeling/, timeseries/,
+│                            # degradation/ (EWMA, anomalies), maintenance/ (schedule), eda.py, validate.py,
 │                            # dashboard.py (artifact loaders), dashboard_app.py (Streamlit UI)
 ├── scripts/                 # Notebook builders, report figures and improvement-study verification
 ├── tests/                   # Data contract, CLI, EDA, statistics, ETL, features, modeling, timeseries, and reproducibility tests
@@ -387,6 +340,8 @@ Current repository structure:
 ├── outputs/features/        # Gold rolling feature Parquet and metadata
 ├── outputs/modeling/        # Grouped CV, predictions, model artifact, final metrics
 ├── outputs/timeseries/      # Train-only PCA--ARIMA Health Index artifacts
+├── outputs/degradation/     # EWMA signals, Health Index, anomaly onset cycles
+├── outputs/maintenance/     # Maintenance schedule for 100 test engines, planning and label check
 ├── outputs/cross_dataset/   # FD001--FD004 ETL, features, and transfer results
 ├── assets/diagrams/         # Editable draw.io sources, SVG previews, URL handles
 ├── pyproject.toml           # Package and direct dependencies
@@ -396,7 +351,7 @@ Current repository structure:
 ├── requirements-dashboard.txt # Optional Streamlit dashboard dependencies
 ├── uv.lock                  # Locked dependency versions
 ├── report/                  # LaTeX source, PDF, figures, and evidence
-├── slides/                  # 20-slide deck, PDF export, data extractor and builder
+├── slides/                  # 20-slide deck on the IUH template, PDF export, data extractor and builder
 │   └── archive/             # Superseded decks and builders
 ├── handoff/                 # Demo script and final handoff checklist
 │   └── archive/             # Legacy speech source
@@ -501,7 +456,7 @@ After installing `requirements-dev.txt`, open the notebook from the repository r
 Select the `.venv` Python kernel and **Restart Kernel and Run All Cells**.
 This analyzes only train and recreates 12 CSV tables and 11 PNG figures.
 Validated fresh-kernel runs produced identical EDA artifacts in the same
-environment. The 2026-10-07 reliability run achieved **426 passed, 1 skipped**;
+environment. The 2026-10-08 test run achieved **440 passed, 1 skipped**;
 the TCN test is skipped because `torch` is unavailable. The 2026-09-29 run
 achieved **198 tests** and remains the historical evidence for data, statistics,
 ETL, feature, modeling, PCA--ARIMA, cross-dataset, dashboard, and end-to-end
@@ -669,9 +624,32 @@ The current artifact contains 20,631 train Health Index rows and 704 holdout
 forecasts from 10 engines. See [PCA--ARIMA artifacts and diagnostics](outputs/timeseries/README.md)
 for the selection rule, metrics, figures, and limitations.
 
+### Run denoising and anomaly detection
+
+Reads only `data/raw/train_FD001.txt` and uses no RUL labels:
+
+```powershell
+.venv\Scripts\python -m cmapss.degradation
+```
+
+The command writes `outputs/degradation/`: the noise-reduction table, anomaly onset
+cycles for the 100 train engines, per-cycle raw/EWMA signals and Health Index, and
+two figures.
+
+### Run the maintenance schedule
+
+After `outputs/modeling/predictions/final_predictions.parquet` exists:
+
+```powershell
+.venv\Scripts\python -m cmapss.maintenance
+```
+
+The command fits the Health Index on train, only transforms test, writes the
+schedule, and only then reads `RUL_FD001.txt` to build `status_vs_actual.csv`.
+
 ### Run the result-review notebooks
 
-Notebooks 03–05 only read existing artifacts. They recompute metrics with
+Notebooks 03–06 only read existing artifacts. They recompute metrics with
 package functions and stop on an `assert` if a number differs from the file in
 `outputs/`:
 
@@ -680,6 +658,7 @@ package functions and stop on an `assert` if a number differs from the file in
 | `03_fd001_modeling_evaluation.ipynb` | Per-fold MAE, test metrics, bootstrap CI, error by RUL range, RUL ≤ 30 warning | `outputs/modeling/tables/*` |
 | `04_fd001_health_index_arima.ipynb` | Health Index trend, ARIMA holdout metrics, naive baselines, ADF/Ljung–Box | `outputs/timeseries/tables/*` |
 | `05_cross_dataset_and_improvement.ipynb` | FD001–FD004 matrix, nested-CV ablation and paired CI | `outputs/cross_dataset/matrix.json`, `outputs/experiments/rul_improvement/20260928_rebuild/*` |
+| `06_fd001_degradation_maintenance.ipynb` | EWMA denoising, Health Index, anomaly detection, maintenance schedule and label check | `outputs/degradation/*`, `outputs/maintenance/*` |
 
 Build and execute them from a fresh kernel with:
 
@@ -692,25 +671,26 @@ Add `--only 04` to rebuild a single notebook.
 ### Run the reproducibility dashboard
 
 Install the optional dashboard dependencies and start Streamlit after the
-modeling and PCA--ARIMA artifacts exist:
+modeling, PCA--ARIMA, `cmapss.degradation` and `cmapss.maintenance` artifacts exist:
 
 ```powershell
 uv sync --extra dashboard
 uv run --extra dashboard streamlit run app.py
 ```
 
-The dashboard has eight pages. A page can be opened directly with a query
-string, for example `http://localhost:8501/?page=Cross-dataset`.
+The dashboard has nine pages in pipeline order. A page can be opened directly with
+a query string, for example `http://localhost:8501/?page=Lịch bảo trì`.
 
 | Page | Artifacts read | Content |
 |---|---|---|
-| Tổng quan (overview) | `outputs/modeling` | Test metrics and CI, pipeline, CV model comparison, suggested demo order |
-| Dữ liệu & EDA | `outputs/eda`, `outputs/features` | Lifetime distribution, sensor–RUL Spearman, per-engine sensor trajectories |
-| Đánh giá RUL | `outputs/modeling/predictions` | One test engine at its last cycle, scatter and residuals; OOF trajectory of a train engine per model |
-| Cảnh báo sớm | `outputs/modeling/tables` | 30-cycle threshold, timing classes, trajectory with the first-warning marker |
-| Cross-dataset | `outputs/cross_dataset/matrix.json` | MAE and CI for 4 within-subset and 3 transfer evaluations |
-| Thử nghiệm cải thiện | `outputs/experiments/rul_improvement/20260928_rebuild` | Ablation, paired CI, baseline versus selected-procedure trajectories |
-| Health Index / ARIMA | `outputs/timeseries` | Forecast with 95% prediction interval, naive-baseline comparison, diagnostics |
+| Tổng quan (overview) | `outputs/modeling`, `outputs/degradation`, `outputs/maintenance` | Four headline numbers, 7-step pipeline, suggested demo order |
+| Dữ liệu & EDA | `outputs/eda`, `outputs/features` | Lifetime distribution, sensor–RUL Spearman, sensor trajectories |
+| Khử nhiễu (denoising) | `outputs/degradation` | Raw versus EWMA signal per engine/sensor, noise reduction |
+| Xu hướng & bất thường (trend & anomalies) | `outputs/degradation`, `outputs/statistics` | Health Index, 3σ threshold, anomaly onset, lead-time distribution |
+| Dự đoán RUL (RUL prediction) | `outputs/modeling` | CV model comparison, one test engine, OOF trajectories |
+| Cảnh báo sớm (early warning) | `outputs/modeling/tables` | 30-cycle threshold, timing classes, warning trajectory |
+| Lịch bảo trì (maintenance schedule) | `outputs/maintenance` | 100-engine table, planning chart, per-engine detail, label check |
+| Thử nghiệm mở rộng (extended experiments) | `outputs/cross_dataset`, `outputs/experiments`, `outputs/timeseries` | Tabs: transfer, improvement, ARIMA |
 | Provenance | `run_info.json` | Schema and isolation contract of the run |
 
 Artifact loaders live in `src/cmapss/dashboard.py` and the UI in
@@ -768,8 +748,8 @@ Pytest clears its `--basetemp` directory on subsequent runs; reserve it for test
 The 2026-10-07 code verification achieved **426 passed, 1 skipped** (TCN requires
 the unavailable torch package). Coverage includes custom Bronze boundaries,
 ETL/rolling fault injection, dependency exports and the shared XGBoost/LightGBM
-lifecycle. See the [completed plan](handoff/CODE_RELIABILITY_PLAN_20261007.md)
-and [runtime evidence](handoff/CODE_RELIABILITY_20261007.json) for commands,
+lifecycle. See the [completed plan](handoff/archive/CODE_RELIABILITY_PLAN_20261007.md)
+and [runtime evidence](handoff/archive/CODE_RELIABILITY_20261007.json) for commands,
 Windows/Linux limits and real spawn worker checks.
 
 </details>
@@ -796,7 +776,8 @@ review and reproducibility checks.
 
 - FD001 is simulated and represents one operating condition and one fault mode.
 - Operating cycles are not equivalent to hours or calendar time.
-- RUL prediction does not by itself determine an optimal maintenance schedule.
+- The maintenance schedule uses a fixed 30-cycle threshold that is not cost-calibrated; the enhanced-monitoring level is broad (41/59 engines have true RUL above 60).
+- Anomaly detection cannot measure a false-alarm rate because there is no label for degradation onset.
 - Scalability benchmarks do not create additional independent scientific evidence.
 - Model performance on FD001 does not establish real-world generalization.
 

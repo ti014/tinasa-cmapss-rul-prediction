@@ -93,3 +93,12 @@ temp/
 .DS_Store
 Thumbs.db
 Desktop.ini
+
+# Chỉ giữ hai lần chạy thử nghiệm còn được dashboard, notebook 05 và slide đọc.
+# Các lần chạy khác vẫn nằm trên máy và trong lịch sử git (commit 1e73c96).
+/outputs/experiments/*
+!/outputs/experiments/README.md
+!/outputs/experiments/rul_improvement/
+/outputs/experiments/rul_improvement/*
+!/outputs/experiments/rul_improvement/20260928_rebuild/
+!/outputs/experiments/followup/

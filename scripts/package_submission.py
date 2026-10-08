@@ -10,7 +10,7 @@ file tạm, cache, cấu hình cá nhân ở thư mục gốc và các lần ch�
 Chạy từ thư mục gốc repository:
 
     .venv\\Scripts\\python.exe scripts/package_submission.py
-    .venv\\Scripts\\python.exe scripts/package_submission.py --name Nhom05_BaoTriDuDoan_BaoCaoCuoiKy
+    .venv\\Scripts\\python.exe scripts/package_submission.py --name Nhom4_TenKhac_BaoCaoCuoiKy
 """
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_NAME = "PhanNguyenMaiPhuong_DeTai8_BaoTriDuDoan_BaoCaoCuoiKy"
+DEFAULT_NAME = "Nhom4_PhanTichDuLieuIoTBaoTriDuDoan_BaoCaoCuoiKy"
 
 # File và thư mục đưa vào gói, tính từ thư mục gốc.
 INCLUDE = [

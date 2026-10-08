@@ -12,8 +12,9 @@ của pipeline và in kết quả trung gian.
 
 Theo vòng đời quản lý dữ liệu của môn học, pipeline được ánh xạ trực tiếp thành
 năm bước: \textbf{thu thập} các file C-MAPSS và lưu hash nguồn; \textbf{làm sạch}
-bằng schema contract, kiểm tra khóa, cycle và giá trị hữu hạn; \textbf{chuẩn hóa}
-kiểu dữ liệu, tên cột và thứ tự khóa; \textbf{tích hợp} train/test bằng UNION,
+bằng schema contract, kiểm tra khóa, cycle và giá trị hữu hạn, rồi khử nhiễu sensor
+bằng EWMA; \textbf{chuẩn hóa} kiểu dữ liệu, tên cột, thứ tự khóa, và thang đo bằng
+StandardScaler trước khi tạo Health Index; \textbf{tích hợp} train/test bằng UNION,
 ghép nhãn theo khóa ba thành phần và tạo các bảng Silver--Gold; cuối cùng
 \textbf{lưu trữ} thành Parquet và SQLite để truy vấn bằng Pandas, SQL hoặc
 PySpark. Như vậy, mỗi bước đều có đầu vào, đầu ra và kiểm tra tương ứng thay vì
@@ -80,23 +81,16 @@ Gold & \filepath{rolling_features.parquet} & 1 window 30 cycles & $27.927\times1
 \end{tabular}
 \end{table}
 
-\paragraph{Bảo vệ dữ liệu và ghi kết quả.} Writer xác định thư mục raw thực tế,
-kể cả đường dẫn tùy chỉnh, để bảo vệ Bronze khi đổi thư mục làm việc. ETL và
-rolling features được ghi vào staging (thư mục tạm) cùng filesystem trước khi
-công bố; metadata được công bố sau cùng. Nếu ghi nhãn train thất bại, dữ liệu quan
-sát và metadata cũ được giữ cùng phiên bản. Lỗi khi công bố được xử lý bằng
-backup và rollback (khôi phục); nếu rollback cũng lỗi, backup được giữ để phục
-hồi thủ công. ETL CLI đưa benchmark và parity được yêu cầu vào cùng bộ kết quả,
-nên receipt cũ không được coi là bằng chứng cho lần chạy mới.
+\paragraph{Bảo vệ dữ liệu khi ghi.} File gốc ở lớp Bronze không bao giờ bị ghi đè.
+ETL và rolling features ghi kết quả vào một thư mục tạm trước, kiểm tra xong mới
+thay bộ cũ; nếu bước thay thế lỗi, bộ cũ được khôi phục. File metadata
+(\texttt{run\_info.json}) được ghi sau cùng và lưu hash của dữ liệu đầu vào, nên mỗi
+bộ kết quả luôn đi kèm đúng phiên bản dữ liệu đã tạo ra nó.
 
-\paragraph{Kiểm chứng triển khai.} Đợt kiểm tra ngày 07/10/2026 trên Windows đạt
-426 kiểm thử, bỏ qua một phần kiểm thử TCN do thiếu \texttt{torch}\footnote{Bằng
-chứng kiểm tra và hash mã nguồn: \filepath{handoff/CODE_RELIABILITY_20261007.json}.}.
-CLI chạy từ thư mục khác vẫn khớp số dòng ở Bảng~\ref{tab:layers} và giữ nguyên
-hash Bronze. Môi trường chỉ cài dependency runtime chạy được benchmark Pandas;
-bốn file requirements khớp \texttt{uv.lock}. Hai runner XGBoost và LightGBM dùng
-chung phần điều phối, lưu nguồn và kiểm tra kết quả; cấu hình mô hình và giao
-thức đánh giá được giữ nguyên.
+\paragraph{Kiểm thử.} Bộ kiểm thử tự động gồm 440 kiểm thử đạt (một kiểm thử bỏ
+qua vì môi trường thiếu \texttt{torch}), lần chạy ngày 08/10/2026. Các kiểm thử bao
+gồm schema, khóa, ranh giới window, công thức EWMA, quy tắc bất thường, lịch bảo
+trì và việc nhãn test chỉ được đọc sau khi đã ghi dự đoán.
 
 \subsection{Truy vấn dữ liệu}
 \label{sec:dp-query}
@@ -223,13 +217,15 @@ ETL chỉ chuẩn hóa schema và kiểu dữ liệu, không scale giá trị se
 chỉ diễn ra bên trong mô hình Ridge (StandardScaler fit trong từng fold) và khi tạo
 Health Index; HGB dùng đặc trưng ở thang đo gốc.
 
-Để kiểm tra tính đúng của ETL, PySpark thực hiện lại bước 1--4 và bộ đối chiếu so
-sánh schema, khóa, số dòng và từng giá trị với kết quả Pandas. Ngoài ra, benchmark
-ETL lịch sử đo thời gian Pandas thực hiện bước 4 khi dữ liệu được nhân bản 1, 10 và
-100 lần trong bộ nhớ. Benchmark này chỉ đo một phép tổng hợp, không đo đọc ghi file
-và không đo PySpark; dữ liệu nhân bản không được dùng để huấn luyện. Benchmark
-Pandas--PySpark bổ sung có đọc/ghi và rolling features được trình bày riêng ở
-Mục~\ref{sec:followup}.
+Song song với sáu bước trên, nhánh phân tích tín hiệu làm mượt 14 sensor có xu
+hướng bằng EWMA, rồi tạo Health Index cho mọi cycle
+(Mục~\ref{sec:denoise-method}); nhánh này không cung cấp cột nào cho mô hình RUL.
+
+Để kiểm tra tính đúng của ETL, PySpark thực hiện lại bước 1--5 và bộ đối chiếu so
+sánh schema, khóa, số dòng và từng giá trị với kết quả Pandas. Benchmark đọc/ghi,
+rolling features và đối chiếu Pandas--PySpark được trình bày ở
+Mục~\ref{sec:res-etl}; dữ liệu nhân bản dùng cho benchmark không được dùng để huấn
+luyện.
 
 \subsection{Cột được dùng cho mô hình}
 \label{sec:dp-columns}
@@ -250,7 +246,7 @@ thành một giới hạn (Mục~\ref{sec:disc-transfer}).
 Nhóm cột & Số cột & Vai trò & Trong X? \\\midrule
 \texttt{split}, \texttt{engine\_id}, \texttt{cycle} & 3 & Khóa: join, chia fold theo động cơ & Không \\
 \texttt{setting\_1}--\texttt{setting\_3} & 3 & Điều kiện vận hành & Không \\
-\texttt{sensor\_1}--\texttt{sensor\_21} & 21 & Tín hiệu gốc, chỉ dùng qua đặc trưng window & Không \\
+\texttt{sensor\_1}--\texttt{sensor\_21} & 21 & Tín hiệu gốc, dùng qua đặc trưng window; bản EWMA dùng cho Health Index & Không \\
 \texttt{sensor\_k\_\_\{last, mean, std, min, max, slope\}} & 126 & Đặc trưng window 30 cycles & Có \\
 \texttt{rul} & 1 & Nhãn (biến mục tiêu $y$) & Là $y$ \\
 \bottomrule

@@ -2,14 +2,14 @@
 \label{sec:intro}
 
 \subsection{Bối cảnh và bài toán}
-Trong bảo trì dự đoán, một câu hỏi trung tâm là thiết bị còn vận hành được bao
-lâu trước khi hỏng. Với động cơ turbofan, đại lượng này được gọi là Remaining
-Useful Life (RUL). Nếu ước lượng được RUL từ dữ liệu cảm biến, đội vận hành có
-thể lên kế hoạch can thiệp trước khi sự cố xảy ra thay vì bảo trì theo lịch cố
-định hoặc sửa chữa sau khi hỏng.
+Bảo trì dự đoán cần trả lời hai câu hỏi: thiết bị đã có dấu hiệu bất thường
+chưa, và còn vận hành được bao lâu trước khi hỏng. Câu hỏi thứ hai được đo bằng
+Remaining Useful Life (RUL, tuổi thọ hữu ích còn lại). Nếu trả lời được hai câu
+hỏi này từ dữ liệu cảm biến, đội vận hành có thể lên kế hoạch can thiệp trước khi
+hỏng, thay vì bảo trì theo lịch cố định hoặc sửa chữa sau khi hỏng.
 
 Báo cáo xem dự đoán RUL là bài toán hồi quy có giám sát trên chuỗi thời gian
-cảm biến. Tại cycle $t$, mô hình chỉ được dùng dữ liệu đã quan sát đến cycle
+cảm biến, còn phát hiện bất thường là bài toán không dùng nhãn. Tại cycle $t$, mô hình chỉ được dùng dữ liệu đã quan sát đến cycle
 $t$; biến mục tiêu là số cycle còn lại trước khi động cơ hỏng. Trong tập train,
 mỗi động cơ được theo dõi đến khi hỏng, nên nhãn RUL được tính trực tiếp:
 \begin{equation}
@@ -26,29 +26,29 @@ cấp riêng RUL thật tại cycle cuối được quan sát của mỗi độn
 đánh giá cuối gồm đúng một dự đoán cho mỗi động cơ test, tại cycle cuối của nó.
 
 \subsection{Mục tiêu và câu hỏi nghiên cứu}
-Mục tiêu của báo cáo là xây dựng một pipeline tái lập được, đi từ dữ liệu thô
-đến dự đoán RUL, và đánh giá pipeline đó mà không để thông tin của tập test ảnh
-hưởng tới việc chọn mô hình. Báo cáo trả lời sáu câu hỏi, gồm kiểm tra dữ liệu,
-xu hướng sensor, parity ETL, so sánh biểu diễn đặc trưng, cảnh báo và chuyển miền:
+Báo cáo thực hiện Đề tài 8 của môn Phân tích dữ liệu lớn: phân tích dữ liệu cảm
+biến thiết bị để phát hiện dấu hiệu bất thường và dự đoán thời điểm cần bảo trì.
+Mục tiêu là xây dựng một pipeline tái lập được, đi qua đủ các bước thu thập, làm
+sạch, chuẩn hóa, tích hợp, lưu trữ và trực quan hóa, rồi tạo ra sản phẩm cuối là
+dự đoán thời điểm cần bảo trì kèm biểu đồ xu hướng cảnh báo sớm. Năm câu hỏi được
+sắp theo đúng thứ tự pipeline:
 \begin{enumerate}[label=\textbf{Q\arabic*.},leftmargin=2.6em]
-\item Dữ liệu FD001 có đáp ứng các điều kiện hợp lệ về schema, khóa và tính liên
-      tục của cycle hay không?
-\item Giá trị sensor thay đổi như thế nào giữa đầu và cuối vòng đời động cơ?
-\item ETL bằng Pandas và PySpark có cho kết quả giống nhau trên cùng input hay
-      không?
-\item Giữa HGB126 (126 đặc trưng rolling) và HGB169 (126 đặc trưng rolling,
-      \texttt{cycle} và 42 đặc trưng lịch sử), biểu diễn nào ổn định hơn trên
-      cùng các dòng OOF và các mốc trong vòng đời FD001?
-\item Dự đoán RUL có thể chuyển thành cảnh báo sớm cho từng động cơ với chất
-      lượng ra sao?
-\item Mô hình huấn luyện trên FD001 hoạt động thế nào khi áp dụng lên FD002--FD004?
+\item Dữ liệu có hợp lệ về schema, khóa và tính liên tục của cycle không, và ETL
+      bằng Pandas và PySpark có cho kết quả giống nhau trên cùng input không?
+\item Nhiễu tín hiệu cảm biến được giảm bao nhiêu sau khử nhiễu, và dữ liệu được
+      tổng hợp theo cửa sổ thời gian như thế nào?
+\item Sensor suy giảm theo xu hướng nào, và có phát hiện được dấu hiệu bất thường
+      trước khi động cơ hỏng không?
+\item Dự đoán RUL đạt độ chính xác bao nhiêu trên tập test độc lập?
+\item Dự đoán RUL và tín hiệu bất thường có thể chuyển thành cảnh báo sớm và
+      lịch bảo trì cho từng động cơ với chất lượng ra sao?
 \end{enumerate}
 
 \subsection{Phạm vi và cấu trúc báo cáo}
 C-MAPSS là dữ liệu mô phỏng, nên mọi kết luận chỉ áp dụng trong môi trường mô
-phỏng này. Dữ liệu cũng không có chi phí bảo trì, thời gian ngừng máy hay cách
-quy đổi cycle sang giờ; do đó báo cáo dừng ở mức dự đoán RUL và mô tả cảnh báo,
-không đề xuất lịch bảo trì.
+phỏng này. Dữ liệu cũng không có chi phí bảo trì, thời gian ngừng máy hay cách quy
+đổi cycle sang giờ. Vì vậy, lịch bảo trì trong báo cáo dùng một ngưỡng RUL cố định
+và được tính bằng cycle; báo cáo không tối ưu lịch theo chi phí.
 
 \paragraph{Khai báo hỗ trợ công cụ.} Trong quá trình thực hiện báo cáo, công cụ
 AI/LLM được sử dụng để gợi ý cấu trúc, hỗ trợ viết và rà soát một số đoạn mã,
@@ -60,9 +60,11 @@ thời chịu trách nhiệm về toàn bộ kết quả được trình bày.
 Phần còn lại được tổ chức như sau. Mục~\ref{sec:data} mô tả dữ liệu và kiểm
 tra chất lượng. Mục~\ref{sec:theory} trình bày cơ sở lý thuyết.
 Mục~\ref{sec:data-processing} mô tả cách gom, lưu trữ, truy vấn và biến đổi dữ
-liệu thành đặc trưng. Mục~\ref{sec:method} mô tả mô hình và các protocol đánh giá.
-Mục~\ref{sec:results} trình bày kết quả, Mục~\ref{sec:discussion} thảo luận và
-nêu giới hạn, Mục~\ref{sec:conclusion} kết luận.
+liệu thành đặc trưng. Mục~\ref{sec:method} mô tả khử nhiễu, phát hiện bất thường,
+mô hình và cảnh báo. Mục~\ref{sec:results} trình bày kết quả,
+Mục~\ref{sec:discussion} thảo luận và nêu giới hạn, Mục~\ref{sec:lessons} nêu khó
+khăn và bài học, Mục~\ref{sec:conclusion} kết luận. Phân tích chính dùng FD001; ba
+subset FD002--FD004 chỉ dùng trong thử nghiệm mở rộng.
 
 \section{Dữ liệu}
 \label{sec:data}
@@ -98,9 +100,9 @@ train và 249 test.
 
 FD001 được chọn làm subset chính vì chỉ có một điều kiện vận hành và một dạng
 lỗi. Khi các yếu tố này cố định, biến động của sensor chủ yếu phản ánh quá trình
-suy giảm, giúp việc diễn giải từng bước phân tích rõ ràng hơn. FD002--FD004 được
-dùng trong thí nghiệm bổ sung để kiểm tra mô hình FD001 khi điều kiện vận hành
-và dạng lỗi thay đổi.
+suy giảm, giúp việc diễn giải từng bước phân tích rõ ràng hơn. FD002--FD004 chỉ dùng
+trong thử nghiệm mở rộng, để kiểm tra mô hình FD001 khi điều kiện vận hành và dạng
+lỗi thay đổi.
 
 \subsection{Cấu trúc và ý nghĩa các cột}
 Mỗi dòng trong file train và test là một cycle của một động cơ, gồm 26 giá trị
@@ -136,8 +138,8 @@ và test. & Đơn vị chia fold, ghép cặp và tính metric.\\[0.35em]
 \texttt{float64}; \texttt{setting\_3} hằng bằng 100 trên train. & Không đưa vào
 mô hình RUL hiện tại.\\[0.35em]
 \texttt{sensor\_1}--\texttt{sensor\_21} & Giá trị đo của 21 sensor trong cycle.
-& \texttt{float64}, không thiếu giá trị. & Nguồn tín hiệu cho EDA, phân tích
-ghép cặp và đặc trưng.\\[0.35em]
+& \texttt{float64}, không thiếu giá trị. & Nguồn tín hiệu cho EDA, kiểm định,
+khử nhiễu, Health Index và đặc trưng.\\[0.35em]
 \texttt{rul} & Nhãn RUL train tính theo Công thức~\eqref{eq:rul}. & Số nguyên
 0--361. & Biến mục tiêu; không có trong file gốc.\\[0.35em]
 \texttt{RUL\_FD001.txt} & RUL thật tại cycle cuối của mỗi động cơ test. & 100
@@ -236,7 +238,7 @@ cách báo cáo xử lý.
 Không thiếu giá trị, khóa hợp lệ & Không cần điền dữ liệu. & Giữ nguyên dữ liệu; dừng nếu kiểm tra thất bại.\\
 Độ dài chuỗi khác nhau (128--362 cycles) & Động cơ sống lâu đóng góp nhiều window hơn. & Chia fold, gán trọng số và tính metric theo động cơ.\\
 Sensor hằng hoặc ít biến thiên & Tương quan và kiểm định không xác định. & Giữ trong bảng, đánh dấu ``không xác định''.\\
-Ngoại lệ hoặc nhiễu cảm biến & Chưa có ground truth để phân biệt tín hiệu bất thường với suy giảm thật. & Rolling statistics và Health Index chỉ mô tả/làm dịu dao động; không tự động xoá hoặc thay thế giá trị. Đánh giá bộ lọc riêng là hướng tiếp theo.\\
+Nhiễu cảm biến & Dao động giữa hai cycle liền kề che khuất xu hướng suy giảm. & Làm mượt bằng EWMA chỉ dùng quá khứ (Mục~\ref{sec:denoise-method}); không xóa hoặc thay giá trị gốc.\\
 Không có đơn vị vật lý & Không diễn giải được ý nghĩa vật lý của sensor. & Dùng tên ẩn danh; chênh lệch hiểu theo đơn vị gốc.\\
 Nhãn test tách riêng & Đọc sớm sẽ gây data leakage. & Chỉ đọc \texttt{RUL\_FD001.txt} sau khi đã ghi dự đoán test.\\
 \bottomrule

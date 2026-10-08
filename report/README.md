@@ -3,29 +3,26 @@
 **Học viên:** Phan Nguyễn Mai Phương · **MSHV:** 25002711.
 
 [Bản PDF](main.pdf) được biên dịch từ [main.tex](main.tex), cập nhật ngày
-07/10/2026. Báo cáo trình bày pipeline dự đoán RUL trên NASA C-MAPSS FD001 và
-ma trận đánh giá chuyển miền sang FD002--FD004 (window 10 cycles).
+08/10/2026. Báo cáo trình bày Đề tài 8 — phân tích dữ liệu IoT và bảo trì dự đoán
+trên NASA C-MAPSS FD001, theo thứ tự rubric: pipeline dữ liệu (6.1), khử nhiễu và
+cửa sổ thời gian (6.2), xu hướng và bất thường (6.3), dự đoán RUL (6.4), cảnh báo
+sớm (6.5), báo cáo dự đoán thời điểm cần bảo trì (6.6) và thử nghiệm mở rộng (6.7).
 
-Mục thảo luận đã bổ sung các nghiên cứu nested CV, HGB comparison, similarity
-pilot và benchmark local có I/O. Alignment audit trong
-`outputs/course_alignment/20261007` chấm HGB126 và HGB169 trên cùng panel; HGB169
-được ghi là predictor candidate chính, còn HGB126 và metric test của nó được giữ
-như baseline lịch sử. So sánh này là conditional trên dự đoán đã lưu, chưa phải
-blind refit độc lập; báo cáo không dùng metric test HGB169 để chọn predictor.
-Đã đồng bộ với đợt cải thiện mã nguồn ngày 07/10/2026: Mục 4.2 mô tả bảo vệ
-Bronze, staging/rollback, metadata công bố cuối và bằng chứng 426 kiểm thử đạt,
-một phần kiểm thử TCN bị bỏ qua vì thiếu torch. Mục 7.6 nêu giới hạn publication
-và kiểm chứng Windows/Linux. Chi tiết môi trường, dependency và runner dùng
-chung nằm trong [bằng chứng mã nguồn](../handoff/CODE_RELIABILITY_20261007.json).
-Phụ lục nguồn có ghi thêm chi tiết nhưng không được ghép vào PDF chính; các
-bằng chứng chính đã có trong thân PDF.
-Bảng `sections/followup-tables.tex` được sinh từ artifact bằng
-`scripts/build_followup_summary.py`; protocol và CI đầy đủ nằm trong
-[`experiments/FOLLOWUP_20260929.md`](../experiments/FOLLOWUP_20260929.md).
-Các metric alignment và sensitivity policy cảnh báo được lưu trong
-[`outputs/course_alignment/20261007`](../outputs/course_alignment/20261007),
-trong đó threshold 30/40 chỉ là policy cố định để mô tả độ nhạy, chưa phải
-policy bảo trì đã hiệu chuẩn.
+Đợt sửa ngày 08/10/2026:
+
+- Đổi tựa về Đề tài 8; viết lại Tóm tắt, câu hỏi Q1--Q5 và Kết luận.
+- Mô hình chính là HistGradientBoosting với 126 đặc trưng window; bản 169 đặc
+  trưng, nested CV, similarity, chuyển miền FD002--FD004 và ARIMA được gom vào
+  Mục 6.7 "Thử nghiệm mở rộng".
+- Thêm Mục 5.2--5.3 và 6.2--6.3 (khử nhiễu EWMA, Health Index, phát hiện bất
+  thường), Mục 5.7 và 6.6 (lịch bảo trì cho 100 động cơ test), Mục 8 "Khó khăn và
+  bài học rút ra".
+- Sơ đồ `figures/pipeline.tex` thay nhánh PCA--ARIMA bằng nhánh khử nhiễu → Health
+  Index → bất thường.
+- `sections/followup-tables.tex` không còn được ghép vào PDF; benchmark local được
+  chuyển vào Mục 6.1.
+
+Hình mới đọc từ `outputs/degradation/figures/` và `outputs/maintenance/figures/`.
 
 Ngày 28/09/2026, phần thân báo cáo được viết lại theo cấu trúc Giới thiệu --
 Dữ liệu -- Cơ sở lý thuyết -- Tổ chức, truy vấn và biến đổi dữ liệu -- Phương
@@ -52,19 +49,19 @@ Nội dung của `data-walkthrough.tex`, `statistical-protocol.tex` và hai file
 ```text
 report/
 ├── main.tex                  # Bìa, tóm tắt, mục lục, cấu hình listings, ghép các phần
-├── main.pdf                  # Bản PDF đã biên dịch (49 trang)
+├── main.pdf                  # Bản PDF đã biên dịch (45 trang)
 ├── sections/
 │   ├── glossary.tex          # Thuật ngữ và chữ viết tắt
 │   ├── problem-data.tex      # Mục 1 Giới thiệu, Mục 2 Dữ liệu
 │   ├── theory.tex            # Mục 3 Cơ sở lý thuyết
 │   ├── data-processing.tex   # Mục 4 Gom file, lưu trữ, truy vấn, biến đổi,
 │   │                         # cột cho mô hình, quan hệ giữa các bảng
-│   ├── methodology.tex       # Mục 5 Phương pháp: mô hình, cảnh báo, phân tích
-│   │                         # ghép cặp, ARIMA, chuyển miền, nested CV
-│   ├── current-results.tex   # Mục 6 Kết quả
-│   ├── discussion.tex        # Mục 7 Thảo luận: nguồn gốc sai số, cảnh báo trễ,
-│   │                         # chuyển miền, giới hạn, hướng phát triển
-│   ├── conclusion.tex        # Mục 8 Kết luận theo câu hỏi Q1--Q6
+│   ├── methodology.tex       # Mục 5 Phương pháp: khử nhiễu, Health Index, bất thường,
+│   │                         # kiểm định, mô hình, cảnh báo, lịch bảo trì, mở rộng
+│   ├── current-results.tex   # Mục 6 Kết quả theo thứ tự rubric
+│   ├── discussion.tex        # Mục 7 Thảo luận và Mục 8 Khó khăn và bài học
+│   ├── conclusion.tex        # Mục 9 Kết luận theo câu hỏi Q1--Q5
+│   ├── followup-tables.tex   # Bảng follow-up cũ; không còn ghép vào PDF
 │   └── appendix.tex          # Phụ lục nguồn; không đưa vào PDF chính
 └── figures/
     ├── data-flow.tex / .pdf        # Luồng dữ liệu: bảng, kích thước, phép biến đổi
@@ -107,7 +104,7 @@ Push-Location report
 Pop-Location
 ```
 
-Lần build ngày 07/10/2026 tạo PDF 49 trang (dưới giới hạn 50 trang), không có
+Lần build ngày 08/10/2026 tạo PDF 45 trang (dưới giới hạn 50 trang), không có
 lỗi biên dịch, citation hoặc reference chưa phân giải, và không có overfull hoặc
 underfull box. Tectonic vẫn ghi cảnh báo môi trường về đường dẫn font Windows;
 đây không phải lỗi nội dung. Phần bibliography dùng line spacing 1.0 và cỡ chữ

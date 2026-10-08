@@ -127,12 +127,13 @@ sensor. Dấu của PC1 được chọn sao cho chỉ số giảm dần theo cyc
 ứng với trạng thái xấu hơn.
 
 Khi không có nhãn bất thường, một cách phổ biến là định nghĩa trạng thái bình
-thường từ chính dữ liệu lúc thiết bị còn khỏe, rồi báo khi giá trị đi xa khỏi
+thường từ chính dữ liệu ở giai đoạn vận hành ổn định, rồi báo khi giá trị lệch khỏi
 trạng thái đó quá một số lần độ lệch chuẩn. Ngưỡng ba độ lệch chuẩn tương ứng với
-xác suất rất nhỏ nếu dao động là ngẫu nhiên quanh mức khỏe; yêu cầu vượt ngưỡng
-nhiều cycle liên tiếp giảm thêm báo động do một gai đơn lẻ. Cách làm này đo được
+xác suất rất nhỏ nếu dao động là ngẫu nhiên quanh mức tham chiếu; yêu cầu vượt
+ngưỡng nhiều cycle liên tiếp làm giảm thêm cảnh báo sinh ra từ một giá trị ngoại lai
+đơn lẻ. Cách làm này đo được
 thời điểm phát hiện, nhưng không đo được tỷ lệ báo động giả nếu không có dữ liệu
-động cơ khỏe đến cuối.
+động cơ vận hành bình thường đến hết chuỗi quan sát.
 
 Chuỗi Health Index $h_t$ của từng động cơ được mô hình hóa bằng
 ARIMA$(p,d,q)$~\cite{hyndman2021fpp3}:

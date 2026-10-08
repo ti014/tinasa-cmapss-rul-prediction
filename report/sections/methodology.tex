@@ -4,25 +4,23 @@
 \subsection{Tổng quan pipeline}
 Hình~\ref{fig:pipeline} mô tả toàn bộ luồng xử lý. Sau khi đọc và kiểm tra, dữ
 liệu đi theo hai nhánh. Nhánh chính (bên trái) gồm ETL, tạo đặc trưng, huấn
-luyện và đánh giá mô hình RUL. Nhánh phụ (bên phải) gồm EDA, phân tích ghép cặp
-đầu/cuối vòng đời và Health Index--ARIMA. Nhánh phụ chỉ đọc tập train và không
-cung cấp đặc trưng cho mô hình RUL, nên kết quả của nó không ảnh hưởng tới đánh
-giá mô hình. Nhãn test chỉ được ghép ở bước cuối, sau khi dự đoán test đã được
-ghi ra file.
+luyện và đánh giá mô hình RUL, rồi chuyển dự đoán thành cảnh báo. Nhánh phân tích
+tín hiệu (bên phải) gồm EDA, khử nhiễu, Health Index, phát hiện bất thường và kiểm
+định xu hướng. Nhánh này chỉ đọc tập train và không cung cấp đặc trưng cho mô hình
+RUL. Nhãn test chỉ được ghép ở bước cuối, sau khi dự đoán test đã được ghi ra file.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.78\linewidth]{figures/pipeline.pdf}
+\includegraphics[width=0.74\linewidth]{figures/pipeline.pdf}
 \caption[Pipeline xử lý dữ liệu]{Luồng xử lý dữ liệu. Nhánh train-only bên phải không đi vào mô hình
 RUL; nhãn test chỉ được ghép ở bước đánh giá cuối.}
 \label{fig:pipeline}
 \end{figure}
 
 Bảng~\ref{tab:tool-boundaries} liệt kê công cụ ở từng bước. Pandas là
-implementation chính; PySpark thực hiện lại phần ETL để đối chiếu kết quả. Cách
-gom, lưu trữ, truy vấn và biến đổi dữ liệu của nhánh chính đã được trình bày chi
-tiết ở Mục~\ref{sec:data-processing}; các mục dưới đây mô tả mô hình và các
-protocol đánh giá.
+implementation chính; PySpark thực hiện lại phần ETL và rolling features để đối
+chiếu kết quả. Cách gom, lưu trữ, truy vấn và biến đổi dữ liệu đã được trình bày
+ở Mục~\ref{sec:data-processing}; các mục dưới đây mô tả phần phân tích.
 
 \begin{table}[H]
 \centering
@@ -35,14 +33,70 @@ Bước & Công cụ & Đầu ra \\
 \midrule
 Đọc và kiểm tra & Python, Pandas & Bảng quan sát đã kiểm tra, nhãn RUL train \\
 ETL & Pandas, PySpark, Parquet, SQLite & Lớp Silver/Gold, báo cáo parity \\
-Tạo đặc trưng & Pandas, NumPy & 126 đặc trưng rolling; alignment audit thêm \texttt{cycle} và 42 đặc trưng lịch sử \\
+Khử nhiễu, bất thường & Pandas, scikit-learn & Tín hiệu EWMA, Health Index, cycle phát hiện bất thường \\
+Tạo đặc trưng & Pandas, PySpark & 126 đặc trưng window 30 cycles \\
 Mô hình & scikit-learn & GroupKFold, Ridge, HistGradientBoosting \\
-Đánh giá & scikit-learn, SciPy & MAE, RMSE, NASA score, khoảng tin cậy bootstrap \\
-Phân tích chuỗi & statsmodels & ARIMA, ADF, Ljung--Box \\
+Đánh giá, cảnh báo & scikit-learn, SciPy & MAE, RMSE, NASA score, bootstrap, lead time \\
+Lịch bảo trì & Pandas & Cycle cần bảo trì và trạng thái cho 100 động cơ test \\
 Trực quan hóa & Matplotlib, Seaborn, Streamlit & Hình trong báo cáo, dashboard chỉ đọc kết quả \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\subsection{Khử nhiễu và Health Index}
+\label{sec:denoise-method}
+Mỗi sensor được làm mượt riêng trong từng động cơ bằng exponentially weighted
+moving average (EWMA, trung bình trượt có trọng số mũ):
+\begin{equation}
+ s_{i,t}=\alpha\,x_{i,t}+(1-\alpha)\,s_{i,t-1},\qquad s_{i,1}=x_{i,1},\qquad
+ \alpha=\frac{2}{\text{span}+1}.
+ \label{eq:ewma}
+\end{equation}
+Với span 10 thì $\alpha\approx0{,}18$: giá trị mới chiếm 18\%, phần còn lại là
+lịch sử đã làm mượt. EWMA chỉ dùng cycle hiện tại và quá khứ, nên không rò rỉ
+thông tin tương lai. EWMA được áp dụng cho 14 sensor có xu hướng (2, 3, 4, 7, 8,
+9, 11, 12, 13, 14, 15, 17, 20, 21); bảy sensor còn lại hằng hoặc gần hằng. Span 10
+được cố định trước khi chạy và không được tinh chỉnh theo kết quả. Mức khử nhiễu
+được đo bằng độ lệch chuẩn của sai phân $x_{i,t}-x_{i,t-1}$ trước và sau làm mượt:
+xu hướng suy giảm thay đổi chậm nên đóng góp ít vào sai phân, còn dao động giữa hai
+cycle liền kề đóng góp phần lớn.
+
+Health Index (HI, chỉ số sức khỏe) gộp 21 sensor đã làm mượt thành một chuỗi. Các
+sensor được chuẩn hóa bằng StandardScaler (trừ trung bình, chia độ lệch chuẩn),
+chiếu lên thành phần chính thứ nhất của PCA, đổi dấu để HI giảm theo cycle, rồi
+chuẩn hóa về trung bình 0, độ lệch chuẩn 1. Bước này không dùng nhãn RUL.
+
+\subsection{Phát hiện dấu hiệu bất thường}
+\label{sec:anomaly-method}
+Mỗi động cơ được so với chính nó lúc còn khỏe. Gọi $\mu_i$ và $\sigma_i$ là trung
+bình và độ lệch chuẩn HI trong 30 cycles đầu của động cơ $i$. Tại cycle $t>30$,
+\begin{equation}
+ z_{i,t}=\frac{h_{i,t}-\mu_i}{\sigma_i}.
+ \label{eq:anomaly-z}
+\end{equation}
+Động cơ được báo bất thường tại cycle đầu tiên mà $z_{i,t}\leq-3$ đã giữ liên tiếp
+5 cycles. Ngưỡng 3 độ lệch chuẩn và yêu cầu 5 cycles liên tiếp được cố định trước
+khi chạy; yêu cầu liên tiếp giúp một gai đơn lẻ không gây báo động. Ví dụ, nếu
+$\mu_i=0{,}94$ và $\sigma_i=0{,}07$ thì ngưỡng là $0{,}94-3\times0{,}07=0{,}73$.
+Kết quả được tóm tắt bằng số cycle từ lúc phát hiện đến khi hỏng. Vì mọi động cơ
+train đều đi đến hỏng và dữ liệu không ghi thời điểm bắt đầu suy giảm, phương pháp
+này không đo được tỷ lệ báo động giả.
+
+\subsection{Kiểm định xu hướng đầu/cuối vòng đời}
+\label{sec:paired-method}
+Với sensor $s$ của động cơ $i$, báo cáo tính trung bình của 30 cycles đầu và 30
+cycles cuối, rồi lấy chênh lệch:
+\begin{equation}
+ E_{i,s}=\frac{1}{30}\sum_{t=1}^{30}x_{i,t,s},\qquad
+ L_{i,s}=\frac{1}{30}\sum_{t=T_i-29}^{T_i}x_{i,t,s},\qquad
+ \Delta_{i,s}=L_{i,s}-E_{i,s}.
+ \label{eq:paired-difference}
+\end{equation}
+Động cơ ngắn nhất dài 128 cycles, nên hai đoạn không bao giờ chồng nhau. Khoảng tin
+cậy 95\% của trung bình chênh lệch dùng bootstrap percentile 10.000 lần lấy mẫu
+lại động cơ, seed 42. Kiểm định Wilcoxon hai phía dùng 100.000 hoán vị, sau đó hiệu
+chỉnh Benjamini--Hochberg với $q=0{,}05$ trên cả 21 sensor. Kết quả mô tả xu hướng
+trên train và không được dùng để chọn đặc trưng cho mô hình.
 
 \subsection{Huấn luyện và đánh giá mô hình RUL}
 \label{sec:modeling}
@@ -52,10 +106,10 @@ Ba mô hình được so sánh:
       của RUL trong fold huấn luyện.
 \item \textbf{Ridge}: hồi quy tuyến tính với phạt L2, $\alpha=1$; đặc trưng
       được chuẩn hóa bằng \texttt{StandardScaler} fit trong từng fold huấn luyện.
-\item \textbf{HistGradientBoosting (HGB126)}: tổ hợp cây hồi quy với 200 vòng
+\item \textbf{HistGradientBoosting (HGB)}: tổ hợp cây hồi quy với 200 vòng
       boosting, learning rate 0,05, tối đa 31 lá mỗi cây, tối thiểu 20 mẫu mỗi
       lá, tắt early stopping, \texttt{random\_state=42}; dùng đặc trưng ở thang
-      đo gốc.
+      đo gốc vì cây quyết định không phụ thuộc thang đo.
 \end{itemize}
 
 Mô hình được chọn bằng GroupKFold 5 fold theo \texttt{engine\_id}: mỗi fold có
@@ -63,37 +117,22 @@ Mô hình được chọn bằng GroupKFold 5 fold theo \texttt{engine\_id}: m�
 theo dòng sẽ đưa các window gần như trùng nhau của cùng động cơ vào cả train và
 validation, làm sai số validation thấp một cách giả tạo. Vì động cơ sống lâu có
 nhiều window hơn, trọng số mẫu được chuẩn hóa để tổng trọng số của mỗi động cơ
-bằng 1; nếu không, vài động cơ dài sẽ chi phối hàm mất mát.
+bằng 1.
 
-Tiêu chí chọn là MAE trung bình theo động cơ: tính MAE trên các window của từng
-động cơ, lấy trung bình trên các động cơ trong fold, rồi lấy trung bình qua 5
-fold. RMSE và NASA score được ghi kèm để tham khảo. Mô hình có MAE thấp nhất
-được huấn luyện lại trên toàn bộ 17.731 window train và dự đoán RUL tại cycle
-cuối của mỗi động cơ test. Chỉ sau khi 100 dự đoán này đã được ghi ra file,
-pipeline mới đọc \texttt{RUL\_FD001.txt} để tính metric cuối. Khoảng tin cậy 95\%
-của metric test được ước lượng bằng bootstrap 10.000 lần, lấy mẫu lại động cơ có
-hoàn lại, seed 42.
-
-\paragraph{Alignment audit giữa hai biểu diễn đặc trưng.} Sau protocol lịch sử,
-báo cáo chấm lại các dự đoán đã lưu của HGB126 và HGB169 trên cùng 17.731 dòng,
-cùng bộ khóa \texttt{(split, engine\_id, cycle)}, cùng nhãn RUL và cùng các fold
-theo động cơ. HGB126 dùng 126 đặc trưng rolling của window 30 cycles. HGB169
-dùng đúng 126 đặc trưng đó, thêm cột \texttt{cycle} và 42 đặc trưng lịch sử từ
-30 cycles đầu, tổng cộng 169 đặc trưng; mọi đặc trưng đều được tính nhân quả.
-So sánh dùng paired bootstrap 10.000 lần trên \texttt{engine\_id}, điều kiện
-trên dự đoán đã lưu, nên khoảng tin cậy không bao gồm bất định do fit lại,
-random seed hoặc chọn mô hình. Panel trajectory dùng toàn bộ 17.731 dòng; panel
-endpoint lấy các mốc $0{,}5$, $0{,}7$ và $0{,}9$ tuổi thọ của mỗi động cơ. Kết quả
-này dùng để chọn predictor candidate cho báo cáo; không đọc nhãn test để thực
-hiện lựa chọn. Metric test của các run lịch sử chỉ được báo cáo tách riêng.
+Tiêu chí chọn là MAE trung bình theo động cơ; RMSE và NASA score được ghi kèm.
+Mô hình có MAE thấp nhất được huấn luyện lại trên toàn bộ 17.731 window train và
+dự đoán RUL tại cycle cuối của mỗi động cơ test. Chỉ sau khi 100 dự đoán này đã
+được ghi ra file, pipeline mới đọc \texttt{RUL\_FD001.txt} để tính metric cuối.
+Khoảng tin cậy 95\% của metric test được ước lượng bằng bootstrap 10.000 lần, lấy
+mẫu lại động cơ có hoàn lại, seed 42.
 
 \subsection{Cảnh báo sớm}
 \label{sec:warning-method}
-Để minh họa cách dùng dự đoán RUL, pipeline chuyển dự đoán OOF trên train thành
-cảnh báo: động cơ được cảnh báo tại cycle đầu tiên mà RUL dự đoán không vượt quá
-30 cycles. Ngưỡng 30 được cố định trước, không tối ưu trên dữ liệu. Tập train
-được dùng vì mỗi động cơ có toàn bộ quỹ đạo đến khi hỏng, trong khi test chỉ có
-một điểm cắt.
+Pipeline chuyển dự đoán OOF trên train thành cảnh báo: động cơ được cảnh báo tại
+cycle đầu tiên mà RUL dự đoán không vượt quá 30 cycles. Ngưỡng 30 được cố định
+trước, không tối ưu trên dữ liệu; ngưỡng 40 chỉ dùng để phân tích độ nhạy. Tập
+train được dùng vì mỗi động cơ có toàn bộ quỹ đạo đến khi hỏng, trong khi test chỉ
+có một điểm cắt.
 
 Với động cơ $i$, đặt $a_i$ là cycle cảnh báo đầu tiên
 ($\min\{t:\hat y_{i,t}\leq30\}$) và $r_i$ là cycle đầu tiên RUL thật chạm ngưỡng
@@ -101,121 +140,47 @@ Với động cơ $i$, đặt $a_i$ là cycle cảnh báo đầu tiên
 \begin{itemize}
 \item \textbf{Lead time} $\ell_i=T_i-a_i$: số cycle từ cảnh báo đến khi hỏng.
 \item \textbf{Độ lệch so với ngưỡng} $\delta_i=a_i-r_i$: $\delta_i<0$ là cảnh
-      báo trước ngưỡng, $\delta_i=0$ là đúng ngưỡng, $\delta_i>0$ là sau ngưỡng
-      (cảnh báo trễ).
+      báo trước ngưỡng, $\delta_i=0$ là đúng ngưỡng, $\delta_i>0$ là cảnh báo trễ.
 \end{itemize}
 Động cơ không bao giờ có dự đoán dưới ngưỡng được ghi là bỏ lỡ. Vì mọi động cơ
 train đều đi đến hỏng, không tồn tại động cơ ``âm tính'', nên tỷ lệ báo động giả
-ở cấp động cơ không xác định. Ngoài ra, cùng tập OOF này đã được dùng để chọn mô
-hình, nên kết quả cảnh báo là đánh giá nội bộ, có phần lạc quan.
+ở cấp động cơ không xác định. Cùng tập OOF này đã được dùng để chọn mô hình, nên kết
+quả cảnh báo là đánh giá nội bộ, có phần lạc quan.
 
-\subsection{Phân tích ghép cặp đầu/cuối vòng đời}
-\label{sec:paired-method}
-Phân tích này trả lời câu hỏi Q2 trên tập train. Với sensor $s$ của động cơ $i$,
-báo cáo tính trung bình của 30 cycles đầu và 30 cycles cuối, rồi lấy chênh lệch:
+\subsection{Báo cáo dự đoán thời điểm cần bảo trì}
+\label{sec:maintenance-method}
+Bước cuối ghép hai mức cảnh báo thành một bảng cho 100 động cơ test, tại cycle cuối
+được quan sát $t_i$ của mỗi động cơ. Với RUL dự đoán $\hat y_i$ và ngưỡng 30:
 \begin{equation}
- E_{i,s}=\frac{1}{30}\sum_{t=1}^{30}x_{i,t,s},\qquad
- L_{i,s}=\frac{1}{30}\sum_{t=T_i-29}^{T_i}x_{i,t,s},\qquad
- \Delta_{i,s}=L_{i,s}-E_{i,s}.
- \label{eq:paired-difference}
+ c_i=\max\bigl(\lfloor\hat y_i-30\rfloor,\,0\bigr),\qquad m_i=t_i+c_i,
+ \label{eq:maintenance}
 \end{equation}
-Với động cơ hỏng ở cycle 200, đoạn đầu là cycles 1--30 và đoạn cuối là cycles
-171--200. Động cơ ngắn nhất dài 128 cycles, nên hai đoạn không bao giờ chồng
-nhau. Lấy trung bình 30 cycles thay vì một giá trị đơn lẻ giúp giảm biến động
-ngắn hạn trong mô tả đầu/cuối; dữ liệu không có ground truth cảm biến sạch để
-khẳng định đây là khử nhiễu. Mỗi động cơ đóng góp đúng một cặp cho mỗi sensor, tổng cộng
-$100\times21=2.100$ cặp.
+trong đó $c_i$ là số cycle còn lại đến lúc cần bảo trì và $m_i$ là cycle dự kiến
+cần bảo trì. Làm tròn xuống giúp lịch nghiêng về phía sớm hơn. Ví dụ, động cơ 90 ở
+cycle 146 có $\hat y=31{,}2$, nên $c=1$ và $m=147$.
 
-Đại lượng chính là trung bình chênh lệch $\widehat{\Delta}_s=\frac{1}{100}\sum_i\Delta_{i,s}$,
-có cùng đơn vị với sensor. Cấu hình suy luận được cố định trước khi chạy:
-\begin{itemize}
-\item Khoảng tin cậy 95\% của $\widehat{\Delta}_s$: bootstrap percentile,
-      10.000 lần lấy mẫu lại động cơ, seed 42.
-\item Kiểm định Wilcoxon hai phía, dạng permutation với 100.000 hoán vị; chênh
-      lệch bằng 0 bị loại khỏi phép xếp hạng (\texttt{zero\_method="wilcox"}).
-\item Hiệu chỉnh Benjamini--Hochberg với $q=0{,}05$ trên cả nhóm 21 sensor.
-      Sensor có toàn bộ chênh lệch bằng 0 được giữ trong bảng với trạng thái
-      ``không kiểm định được''.
-\end{itemize}
-Vì các sensor có thang đo khác nhau, độ lớn $\widehat{\Delta}_s$ không so sánh
-được giữa hai sensor. Kết quả mô tả sự thay đổi trên train và không được dùng để
-chọn đặc trưng cho mô hình.
+Trạng thái được xét theo thứ tự ưu tiên cố định trước khi chạy: \emph{cần bảo trì}
+nếu $\hat y_i\leq30$; \emph{theo dõi tăng cường} nếu Health Index của động cơ đã báo
+bất thường theo quy tắc ở Mục~\ref{sec:anomaly-method}; còn lại là \emph{bình
+thường}. Health Index của động cơ test dùng đúng scaler, PCA và hệ số chuẩn hóa đã
+fit trên train, không fit lại. Động cơ có ít hơn 35 cycles (30 cycles tham chiếu và
+5 cycles liên tiếp) được ghi là chưa đủ dữ liệu để đánh giá bất thường. Bảng được
+ghi ra file trước; chỉ sau đó \texttt{RUL\_FD001.txt} mới được đọc để kiểm tra.
 
-\subsection{Health Index và dự báo ARIMA}
-\label{sec:arima-method}
-Nhánh này khảo sát liệu một chỉ số sức khỏe tổng hợp có dự báo được theo thời
-gian hay không. Mười động cơ train được chọn trước khi chạy dự báo: hai động cơ
-trong mỗi fold GroupKFold, tại các vị trí cách đều theo tuổi thọ. StandardScaler,
-PCA một thành phần và hướng của PC1 được fit trên 90 động cơ còn lại; mười động
-cơ được chọn chỉ được biến đổi theo các tham số đã fit.
-
-Chuỗi Health Index của mỗi động cơ được chia theo thời gian: 70\% đầu để fit
-ARIMA và 30\% cuối để đánh giá dự báo. Bậc mô hình được chọn bằng AIC trên lưới
-$p,q\in\{0,1,2\}$ và $d\in\{0,1\}$, chỉ dùng đoạn fit. Đầu ra gồm MAE, RMSE, tỷ
-lệ điểm thật nằm trong khoảng dự đoán 95\%, kiểm định ADF trên đoạn fit và
-Ljung--Box trên phần dư (bậc tự do trừ đi $p+q$). Để có mốc so sánh, hai baseline
-được tính trên cùng đoạn: \texttt{last\_value} giữ nguyên giá trị cuối của đoạn
-fit, còn \texttt{drift} kéo dài đường thẳng nối điểm đầu và điểm cuối của đoạn
-fit.
-
-\subsection{Đánh giá chuyển miền sang FD002--FD004}
-\label{sec:transfer-method}
-Thí nghiệm này trả lời câu hỏi Q6. Window 30 không dùng được cho mọi subset vì
-động cơ test ngắn nhất của FD004 chỉ có 19 cycles, nên toàn bộ ma trận dùng
-window 10 cycles. Mỗi subset được đánh giá theo hai cách:
-\begin{itemize}
-\item \textbf{Nội bộ}: chọn mô hình bằng GroupKFold, huấn luyện lại và đánh giá
-      trên train và test của chính subset đó.
-\item \textbf{Chuyển miền}: mô hình được chọn và huấn luyện trên toàn bộ train
-      FD001, giữ cố định rồi dự đoán test của FD002, FD003 và FD004.
-\end{itemize}
-Các bước còn lại, gồm đặc trưng, tiêu chí chọn mô hình, cách đọc nhãn test muộn
-và bootstrap theo động cơ, giống protocol chính. Vì window khác nhau, kết quả
-của ma trận này không so sánh trực tiếp với MAE 15,3490 cycles của FD001.
-
-\subsection{Thử nghiệm cải thiện bằng nested cross-validation}
+\subsection{Thử nghiệm mở rộng}
 \label{sec:nested-method}
-Sau khi có kết quả chính, báo cáo thử ba hướng cải thiện độ chính xác ở vùng RUL
-thấp, nơi cảnh báo được phát ra: (1) đổi độ dài window, (2) chỉnh siêu tham số
-của HGB, và (3) tăng trọng số cho mẫu có RUL thấp. Để đánh giá công bằng một quy
-trình có bước chọn cấu hình, thí nghiệm dùng nested GroupKFold
-(Hình~\ref{fig:rul-improvement})~\cite{sklearnNestedCV2026,sklearnGroupedCV}.
-Vòng ngoài giữ nguyên 5 fold của mô hình gốc; trong mỗi vòng ngoài, một inner
-GroupKFold 3 fold chỉ dùng động cơ của phần train để chọn cấu hình, sau đó cấu
-hình được chọn mới được đánh giá trên các động cơ validation vòng ngoài.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.46\textwidth]{figures/rul-improvement.pdf}
-\caption[Nested cross-validation]{Quy trình nested cross-validation. Mọi bước chọn window, siêu tham số và
-trọng số đều nằm trong vòng trong.}
-\label{fig:rul-improvement}
-\end{figure}
-
-Việc chọn diễn ra tuần tự theo ba giai đoạn:
-\begin{enumerate}
-\item \textbf{Window}: 10, 20 hoặc 30 cycles. Cả ba cùng tính trên 17.731 dòng
-      từ cycle 30 trở đi, nên số mẫu so sánh không đổi. Window 50 không được xét
-      vì 7 động cơ test FD001 có ít hơn 50 cycles.
-\item \textbf{Siêu tham số}: 24 cấu hình, gồm cấu hình gốc và 23 cấu hình lấy
-      mẫu ngẫu nhiên (seed 42) từ learning rate $\{0{,}03;0{,}05;0{,}1\}$, số
-      vòng boosting $\{100;200;400\}$, số lá tối đa $\{15;31;63\}$, số mẫu tối
-      thiểu mỗi lá $\{10;20;40\}$ và hệ số L2 $\{0;0{,}01;0{,}1\}$~\cite{sklearnHGBAPI2026}.
-\item \textbf{Trọng số}: hệ số $(1;1;1)$, $(1;1{,}5;2)$ hoặc $(1;2;3)$ cho các
-      vùng $\mathrm{RUL}>30$, $15<\mathrm{RUL}\leq30$ và $\mathrm{RUL}\leq15$; sau
-      đó chuẩn hóa để tổng trọng số mỗi động cơ vẫn bằng 1.
-\end{enumerate}
-
-Tiêu chí được chốt trước khi chạy. Metric chính là \textbf{MAE ở vùng RUL thấp},
-tức MAE trên các dòng có RUL thật $\leq30$, tính theo động cơ rồi lấy trung
-bình. Một cấu hình chỉ được chấp nhận nếu đồng thời không làm tăng ba chỉ số
-kiểm soát so với cấu hình đang dùng: MAE toàn bộ, tỷ lệ động cơ cảnh báo trễ hoặc
-bỏ lỡ (theo Mục~\ref{sec:warning-method}), và tỷ lệ báo sớm, tức tỷ lệ dòng có RUL
-dự đoán $\leq30$ trong khi RUL thật $>30$. Chênh lệch giữa cấu hình mới và mô
-hình gốc được ước lượng bằng paired bootstrap trên cùng các động cơ, 10.000 lần.
-Cuối cùng, cùng quy trình chọn được chạy lại trên toàn bộ train để ra cấu hình
-cuối, rồi mới dự đoán test.
-
-Cần lưu ý rằng nhãn test FD001 đã được dùng để đánh giá mô hình gốc trước thí
-nghiệm này. Thí nghiệm không dùng test để chọn cấu hình, nhưng không thể coi test
-là hoàn toàn ``chưa từng thấy''.
+\label{sec:transfer-method}
+\label{sec:arima-method}
+Ba thử nghiệm phụ dùng cùng nguyên tắc chia theo động cơ và đọc nhãn test muộn:
+\begin{itemize}
+\item \textbf{Cải thiện mô hình}: nested GroupKFold (5 fold ngoài, 3 fold trong)
+      chọn window, siêu tham số và trọng số chỉ bằng fold trong; tiêu chí chấp
+      nhận được chốt trước khi chạy~\cite{sklearnNestedCV2026,sklearnGroupedCV}.
+\item \textbf{Chuyển miền}: mô hình chọn và huấn luyện trên FD001 được áp dụng
+      nguyên trạng lên test FD002--FD004, so với mô hình huấn luyện nội bộ từng
+      subset. Window 10 cycles được dùng vì động cơ test ngắn nhất của FD004 chỉ
+      có 19 cycles, nên kết quả không so trực tiếp với window 30.
+\item \textbf{ARIMA}: trên 10 động cơ train chọn trước, Health Index được chia
+      70\% đầu để fit ARIMA (bậc chọn bằng AIC) và 30\% cuối để đánh giá dự báo,
+      so với hai baseline \texttt{last\_value} và \texttt{drift}.
+\end{itemize}

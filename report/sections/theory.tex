@@ -90,6 +90,21 @@ vị của $b$ là đơn vị sensor trên một cycle. Giá trị cuối và tr
 mức tín hiệu, còn độ dốc cho biết tín hiệu đang tăng hay giảm trong 30 cycles
 gần nhất.
 
+\subsection{Khử nhiễu bằng làm mượt hàm mũ}
+EWMA (exponentially weighted moving average, trung bình trượt có trọng số mũ) là
+cách làm mượt đơn giản nhất trong họ exponential smoothing~\cite{hyndman2021fpp3}.
+Giá trị làm mượt tại cycle $t$ là trung bình có trọng số của giá trị hiện tại và
+giá trị làm mượt trước đó:
+\begin{equation}
+ s_t=\alpha x_t+(1-\alpha)s_{t-1}
+    =\alpha\sum_{k=0}^{t-2}(1-\alpha)^k x_{t-k}+(1-\alpha)^{t-1}x_1,
+ \label{eq:ewma-theory}
+\end{equation}
+với $0<\alpha\leq1$. Trọng số của các quan sát giảm theo cấp số nhân khi lùi về quá
+khứ, nên dao động ngắn hạn bị triệt tiêu một phần, còn xu hướng chậm vẫn được giữ.
+$\alpha$ càng nhỏ thì đường càng mượt nhưng càng phản ứng chậm. EWMA chỉ dùng quá
+khứ, nên áp dụng được tại thời điểm dự đoán mà không rò rỉ thông tin tương lai.
+
 \subsection{Kiểm định ghép cặp và hiệu chỉnh đa kiểm định}
 Khi so sánh một sensor ở đầu và cuối vòng đời của cùng một động cơ, phép ghép
 cặp loại bỏ khác biệt nền giữa các động cơ. Kiểm định dấu-hạng Wilcoxon xếp hạng
@@ -103,11 +118,21 @@ Khi kiểm định đồng thời 21 sensor, xác suất có ít nhất một k�
 tăng lên. Thủ tục Benjamini--Hochberg điều chỉnh các p-value để kiểm soát tỷ lệ
 phát hiện sai kỳ vọng (FDR) trong nhóm kiểm định~\cite{benjamini1995fdr,scipyFDR}.
 
-\subsection{Health Index và ARIMA}
+\subsection{Health Index, phát hiện bất thường và ARIMA}
 Health Index là một chỉ số duy nhất tóm tắt trạng thái của động cơ từ nhiều
 sensor. Báo cáo tạo Health Index bằng cách chuẩn hóa 21 sensor rồi lấy thành
-phần chính thứ nhất (PC1) của PCA~\cite{sklearnPCA}. Dấu của PC1 được chọn sao
-cho chỉ số giảm dần theo cycle, tức giá trị thấp ứng với trạng thái xấu hơn.
+phần chính thứ nhất (PC1) của PCA~\cite{sklearnPCA}. PC1 là hướng có phương sai
+lớn nhất; trong FD001, phần lớn phương sai đến từ xu hướng suy giảm chung của các
+sensor. Dấu của PC1 được chọn sao cho chỉ số giảm dần theo cycle, tức giá trị thấp
+ứng với trạng thái xấu hơn.
+
+Khi không có nhãn bất thường, một cách phổ biến là định nghĩa trạng thái bình
+thường từ chính dữ liệu lúc thiết bị còn khỏe, rồi báo khi giá trị đi xa khỏi
+trạng thái đó quá một số lần độ lệch chuẩn. Ngưỡng ba độ lệch chuẩn tương ứng với
+xác suất rất nhỏ nếu dao động là ngẫu nhiên quanh mức khỏe; yêu cầu vượt ngưỡng
+nhiều cycle liên tiếp giảm thêm báo động do một gai đơn lẻ. Cách làm này đo được
+thời điểm phát hiện, nhưng không đo được tỷ lệ báo động giả nếu không có dữ liệu
+động cơ khỏe đến cuối.
 
 Chuỗi Health Index $h_t$ của từng động cơ được mô hình hóa bằng
 ARIMA$(p,d,q)$~\cite{hyndman2021fpp3}:

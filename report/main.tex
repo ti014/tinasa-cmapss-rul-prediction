@@ -10,14 +10,14 @@
 \usepackage{listings}
 \usepackage{xurl}
 \usepackage[colorlinks=true,linkcolor=blue!45!black,citecolor=blue!45!black,urlcolor=blue!45!black]{hyperref}
-\hypersetup{pdftitle={Phân tích dữ liệu cảm biến, dự đoán RUL và cảnh báo sớm trên NASA C-MAPSS FD001--FD004},pdfauthor={Phan Nguyễn Mai Phương -- 25002711}}
+\hypersetup{pdftitle={Phân tích dữ liệu IoT và bảo trì dự đoán trên NASA C-MAPSS},pdfauthor={Phan Nguyễn Mai Phương -- 25002711}}
 \renewcommand{\contentsname}{Mục lục}
 \renewcommand{\listfigurename}{Danh mục hình}
 \renewcommand{\listtablename}{Danh mục bảng}
 \renewcommand{\figurename}{Hình}
 \renewcommand{\tablename}{Bảng}
 \renewcommand{\refname}{Tài liệu tham khảo}
-\newcommand{\reportdate}{07/10/2026}
+\newcommand{\reportdate}{08/10/2026}
 \newcommand{\filepath}[1]{\nolinkurl{#1}}
 \newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
 % Giữ bố cục học thuật nhưng đáp ứng giới hạn dưới 50 trang của báo cáo.
@@ -50,8 +50,8 @@
 \lstdefinelanguage{SparkSQL}[]{SQL}{morekeywords={OVER,WINDOW,PARTITION,ROWS,PRECEDING,CURRENT,ROW,ROUND}}
 \pagestyle{fancy}
 \fancyhf{}
-\fancyhead[L]{\small NASA C-MAPSS FD001--FD004}
-\fancyhead[R]{\small Kết quả phân tích -- \reportdate}
+\fancyhead[L]{\small Đề tài 8 -- Phân tích dữ liệu IoT và bảo trì dự đoán}
+\fancyhead[R]{\small \reportdate}
 \fancyfoot[C]{\thepage}
 
 \begin{document}
@@ -64,11 +64,11 @@
 \vspace{0.4cm}
 {\large Môn học: Phân tích dữ liệu lớn\par}
 \vspace{1.5cm}
-{\LARGE\bfseries Phân tích dữ liệu cảm biến, dự đoán RUL và cảnh báo sớm\par}
+{\large Đề tài 8\par}
+\vspace{0.3cm}
+{\LARGE\bfseries Phân tích dữ liệu IoT và bảo trì dự đoán\par}
 \vspace{0.6cm}
-{\Large NASA C-MAPSS FD001--FD004\par}
-\vspace{0.8cm}
-{\large Đề tài 8: Phân tích dữ liệu IoT và bảo trì dự đoán\par}
+{\Large Phát hiện bất thường, dự đoán RUL và cảnh báo sớm\\ trên dữ liệu cảm biến NASA C-MAPSS\par}
 \vspace{1.5cm}
 \begin{tabular}{ll}
 Học viên thực hiện: & Phan Nguyễn Mai Phương\\
@@ -82,46 +82,32 @@ Ngành: & Khoa học máy tính
 \pagenumbering{roman}
 \section*{Tóm tắt}
 \addcontentsline{toc}{section}{Tóm tắt}
-Báo cáo xây dựng và đánh giá một pipeline dự đoán Remaining Useful Life (RUL,
-tuổi thọ hữu ích còn lại) cho động cơ turbofan trên bộ dữ liệu mô phỏng NASA
-C-MAPSS. Phân tích chính được thực hiện trên subset FD001; ba subset
-FD002--FD004 được dùng để kiểm tra khả năng chuyển miền của mô hình.
+Báo cáo thực hiện Đề tài 8 (Phân tích dữ liệu IoT và bảo trì dự đoán) trên bộ dữ
+liệu cảm biến mô phỏng NASA C-MAPSS, phân tích chính trên subset FD001 gồm 100 động
+cơ turbofan chạy đến khi hỏng. Mục tiêu là phát hiện dấu hiệu bất thường và dự đoán
+thời điểm cần bảo trì, kèm biểu đồ xu hướng cảnh báo sớm.
 
-Dữ liệu được kiểm tra schema và tính liên tục của cycle trước khi đi qua các
-lớp lưu trữ Bronze, Silver và Gold. Protocol lịch sử dùng trailing window 30
-cycles với 126 đặc trưng và chọn HistGradientBoosting (HGB126) bằng GroupKFold
-5 fold theo động cơ. Một alignment audit sau đó chấm lại HGB126 và HGB169 trên
-cùng 17.731 dòng, cùng khóa và cùng fold; HGB169 gồm 126 đặc trưng rolling,
-\texttt{cycle} và 42 đặc trưng lịch sử. Trên panel chung, HGB169 đạt MAE trung bình theo
-động cơ 17,0009 và RMSE 29,8068, so với 20,2143 và 33,6359 của HGB126.
+Dữ liệu được kiểm tra schema, khóa và tính liên tục của cycle, rồi lưu theo các lớp
+Bronze, Silver và Gold bằng Parquet và SQLite. ETL và rolling features được viết
+bằng cả Pandas và PySpark; hai implementation khớp hoàn toàn trên cùng input, và ở
+scale $10\times$, Spark local nhanh hơn Pandas khoảng 3,4 lần. Tín hiệu được khử
+nhiễu bằng EWMA span 10, giảm khoảng 86\% dao động ngắn hạn mà vẫn giữ xu hướng suy
+giảm, rồi tổng hợp theo window 30 cycles thành 126 đặc trưng.
 
-HGB126 vẫn được giữ như baseline lịch sử với metric test tại điểm cắt: MAE
-15,3490 cycles (khoảng tin cậy bootstrap 95\%: 12,7286--18,0866), RMSE 20,5413
-cycles và NASA score 1.513,2577. Báo cáo không dùng metric test của HGB169 để
-chọn predictor; HGB169 chỉ được đối chiếu trên panel alignment đã lưu. Với cảnh báo, threshold 30
-cycles là sensitivity policy cố định: HGB126 có 51\% cảnh báo đúng thời điểm,
-còn HGB169 có 45\%; threshold 40 lần lượt là 94\% và 96\%. Đây là đánh giá
-nghiên cứu trên OOF, không phải policy bảo trì đã hiệu chuẩn.
+Kết quả gồm hai mức cảnh báo. Mức một dùng Health Index từ tín hiệu đã khử nhiễu:
+khi chỉ số giảm quá 3 độ lệch chuẩn so với 30 cycles đầu, cả 100/100 động cơ train
+được phát hiện bất thường trước khi hỏng, trung vị 121 cycles. Mức hai dùng
+HistGradientBoosting dự đoán RUL, đạt MAE 15,35 cycles (khoảng tin cậy 95\%:
+12,73--18,09) và RMSE 20,54 cycles trên 100 động cơ test. Với ngưỡng RUL dự đoán
+$\leq30$ cycles, không động cơ nào bị bỏ lỡ và lead time trung vị là 30 cycles,
+nhưng 49\% cảnh báo bị trễ, tập trung ở động cơ suy giảm nhanh; ngưỡng 40 giảm tỷ
+lệ trễ xuống 6\%. Ghép hai mức cảnh báo, báo cáo lập lịch dự đoán thời điểm cần bảo
+trì cho 100 động cơ test: 21 động cơ được báo cần bảo trì ngay và cả 21 đều đúng;
+4 động cơ còn lại thật sự cần bảo trì được xếp đến hạn sau 1--8 cycles. Kết quả chỉ áp dụng cho dữ liệu mô phỏng; dữ liệu không có chi phí
+bảo trì nên báo cáo không đề xuất lịch bảo trì tối ưu.
 
-Thử nghiệm nested cross-validation với window 10/20/30, 24 cấu hình siêu tham
-số và ba phương án trọng số không tìm được cấu hình mới vượt bộ tiêu chí đã
-chốt; similarity-based RUL pilot cũng bị dừng sau khi thua HGB ở cả ba fold.
-Với window 10 cycles, mô hình huấn luyện trên FD001 có MAE 47,39--60,32 cycles
-khi áp dụng trực tiếp lên FD002--FD004, so với 21,93--28,33 cycles khi mỗi
-subset tự huấn luyện và đánh giá.
-
-Các phân tích phụ cho thấy 15/21 sensor thay đổi có ý nghĩa thống kê giữa đầu và
-cuối vòng đời sau hiệu chỉnh Benjamini--Hochberg; ARIMA trên Health Index có sai
-số dự báo thấp hơn hai baseline đơn giản trên 10 động cơ được chọn trước; ETL
-bằng Pandas và PySpark cho kết quả trùng khớp. Ở khía cạnh Big Data, báo cáo
-chứng minh một pipeline batch có tổ chức, có kiểm tra tính đúng và có thể chuyển
-phần ETL sang Spark; dữ liệu hiện tại vẫn vừa một máy và Spark chỉ chạy local,
-nên không tuyên bố đã kiểm chứng trên cluster phân tán. Các kết quả chỉ áp dụng
-cho dữ liệu mô phỏng C-MAPSS. Dữ liệu không có chi phí bảo trì hay quy đổi cycle
-sang thời gian thực, nên báo cáo không đề xuất lịch bảo trì.
-
-\noindent\textbf{Từ khóa:} NASA C-MAPSS; RUL; bảo trì dự đoán; trailing window;
-GroupKFold; ETL; PySpark; Health Index; ARIMA.
+\noindent\textbf{Từ khóa:} bảo trì dự đoán; IoT; NASA C-MAPSS; khử nhiễu EWMA;
+phát hiện bất thường; time window; RUL; cảnh báo sớm; lịch bảo trì; PySpark.
 \clearpage
 \begin{spacing}{1.1}
 \tableofcontents

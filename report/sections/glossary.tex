@@ -22,6 +22,7 @@ C-MAPSS & Commercial Modular Aero-Propulsion System Simulation, bộ dữ liệu
 Cycle & Một chu kỳ vận hành của động cơ; là đơn vị thời gian rời rạc của dữ liệu, không quy đổi được sang giờ hoặc ngày.\\
 Train / test & Train chứa lịch sử vận hành đến khi hỏng; test bị cắt trước khi hỏng và có file nhãn RUL riêng.\\
 Trailing window & Đoạn $w$ cycles liên tiếp gần nhất của một động cơ tính đến cycle đang xét; báo cáo dùng $w=30$.\\
+EWMA & Exponentially weighted moving average, trung bình trượt có trọng số mũ; báo cáo dùng span 10 để khử nhiễu sensor.\\
 GroupKFold & Cross-validation chia fold theo nhóm; ở đây mỗi nhóm là một động cơ, nên mọi window của một động cơ nằm cùng một fold.\\
 OOF & Out-of-fold: dự đoán cho một động cơ được tạo bởi mô hình không dùng động cơ đó khi huấn luyện.\\
 Nested CV & Cross-validation lồng nhau: vòng trong chọn cấu hình, vòng ngoài đánh giá cả quy trình chọn.\\
@@ -36,7 +37,9 @@ Bronze / Silver / Gold & Ba lớp lưu trữ: dữ liệu gốc; dữ liệu đ�
 Parquet / SQLite & Định dạng lưu trữ dạng cột / cơ sở dữ liệu quan hệ dạng file.\\
 Parity & Đối chiếu kết quả của hai implementation (Pandas và PySpark) trên cùng input.\\
 Lead time & Thời gian báo trước: số cycle từ cảnh báo đầu tiên đến khi động cơ hỏng.\\
-Health Index & Chỉ số tổng hợp trạng thái động cơ, ở đây là thành phần chính thứ nhất của 21 sensor sau chuẩn hóa.\\
+Health Index & Chỉ số tổng hợp trạng thái động cơ, ở đây là thành phần chính thứ nhất của 21 sensor đã khử nhiễu và chuẩn hóa.\\
+Cảnh báo mức 1 / mức 2 & Mức 1: Health Index giảm quá 3 độ lệch chuẩn so với 30 cycles đầu trong 5 cycles liên tiếp (dấu hiệu bất thường). Mức 2: RUL dự đoán không vượt quá 30 cycles (cần bảo trì).\\
+Lịch bảo trì & Bảng cho mỗi động cơ test: cycle hiện tại, RUL dự đoán, cycle cần bảo trì (lúc RUL dự đoán chạm 30) và trạng thái.\\
 PCA & Principal Component Analysis, phân tích thành phần chính.\\
 ARIMA & Mô hình chuỗi thời gian tự hồi quy, sai phân và trung bình trượt.\\
 AIC & Akaike Information Criterion, tiêu chí chọn bậc mô hình.\\

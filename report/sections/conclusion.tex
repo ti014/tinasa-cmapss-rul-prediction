@@ -1,46 +1,36 @@
 \section{Kết luận}
 \label{sec:conclusion}
 
-Báo cáo đã xây dựng một pipeline tái lập được để dự đoán RUL trên NASA C-MAPSS,
-từ dữ liệu thô qua các lớp Bronze--Silver--Gold đến mô hình và đánh giá, trong đó
-nhãn test được tách khỏi huấn luyện và chọn cấu hình. Các câu hỏi nghiên cứu được trả lời
-như sau:
+Báo cáo đã xây dựng một pipeline bảo trì dự đoán tái lập được trên dữ liệu cảm
+biến NASA C-MAPSS FD001, đi từ dữ liệu thô qua các lớp Bronze--Silver--Gold đến
+phát hiện bất thường, dự đoán RUL và cảnh báo sớm. Các câu hỏi được trả lời như
+sau:
 \begin{enumerate}[label=\textbf{Q\arabic*.},leftmargin=2.6em]
 \item Dữ liệu FD001 (20.631 dòng train, 13.096 dòng test) đạt mọi kiểm tra về
-      schema, khóa và tính liên tục của cycle; sáu sensor hằng số và không mang
-      thông tin.
-\item 15/21 sensor thay đổi có ý nghĩa thống kê giữa 30 cycles đầu và 30 cycles
-      cuối vòng đời; năm sensor 4, 7, 11, 12 và 20 thay đổi cùng hướng ở cả 100
-      động cơ.
-\item ETL bằng PySpark khớp hoàn toàn với Pandas trên ba bảng Silver/Gold.
-\item Protocol lịch sử với HGB126 và 126 đặc trưng từ window 30 cycles đạt MAE
-      15,3490 cycles (khoảng tin cậy 95\%: 12,7286--18,0866) và RMSE 20,5413
-      cycles trên 100 động cơ test. Khi chấm lại HGB126 và HGB169 trên cùng
-      17.731 dòng OOF và cùng các fold, HGB169 (thêm \texttt{cycle} và 42 đặc
-      trưng lịch sử) đạt MAE trajectory 17,0009 và RMSE 29,8068, so với 20,2143
-      và 33,6359 của HGB126; trên panel endpoint tương ứng là 9,8913 và 14,9913
-      so với 15,2577 và 22,3462. Vì vậy HGB169 là predictor candidate chính theo
-      bằng chứng panel chung. Đây là alignment audit trên dự đoán đã lưu, chưa
-      phải xác nhận độc lập bằng refit mù; metric test HGB126 vẫn được giữ như
-      baseline lịch sử.
-\item Với cảnh báo, threshold 30 cycles là sensitivity policy cố định: tỷ lệ
-      đúng thời điểm là 51\% với HGB126 và 45\% với HGB169; threshold 40 nâng
-      các tỷ lệ này lên 94\% và 96\%, với early-alarm burden lần lượt 5,329\%
-      và 5,553\%. Các số liệu này được tính trên OOF và chưa phải policy bảo trì
-      đã hiệu chuẩn.
-\item Mô hình FD001 không dùng trực tiếp được cho các subset khác: MAE tăng từ
-      21,93--28,33 cycles (huấn luyện nội bộ) lên 47,39--60,32 cycles (chuyển
-      miền). Với FD002 và FD004, phần lớn giá trị sensor nằm ngoài miền huấn
-      luyện nên dự đoán gần như hằng số; với FD003, dự đoán bị lệch cao dù sensor
-      nằm trong miền quen thuộc.
+      schema, khóa và tính liên tục của cycle. ETL bằng PySpark khớp hoàn toàn với
+      Pandas trên ba bảng Silver/Gold; ở scale $10\times$, Spark local nhanh hơn
+      Pandas khoảng 3,4 lần.
+\item EWMA span 10 giảm khoảng 86\% dao động ngắn hạn của 14 sensor có thông tin
+      mà vẫn giữ xu hướng suy giảm; window 30 cycles tổng hợp 21 sensor thành 126
+      đặc trưng.
+\item 15/21 sensor thay đổi có ý nghĩa thống kê giữa đầu và cuối vòng đời; năm
+      sensor 4, 7, 11, 12 và 20 thay đổi cùng hướng ở cả 100 động cơ. Health Index
+      từ tín hiệu đã khử nhiễu phát hiện bất thường ở cả 100/100 động cơ train, trung
+      vị 121 cycles trước khi hỏng.
+\item HistGradientBoosting đạt MAE 15,35 cycles (khoảng tin cậy 95\%: 12,73--18,09)
+      và RMSE 20,54 cycles trên 100 động cơ test; sai số nhỏ nhất ở vùng gần hỏng
+      (MAE 4,38 cycles khi RUL thật $\leq30$).
+\item Với ngưỡng RUL dự đoán $\leq30$, không động cơ nào bị bỏ lỡ, lead time trung
+      vị 30 cycles, nhưng 49\% cảnh báo bị trễ, tập trung ở động cơ suy giảm nhanh.
+      Ngưỡng 40 giảm tỷ lệ trễ xuống 6\% với thời gian báo sớm tăng khoảng bốn lần.
+      Lịch bảo trì cho 100 động cơ test báo cần bảo trì ngay 21 động cơ, đúng cả 21;
+      4 động cơ còn lại thật sự cần bảo trì được xếp đến hạn sau 1--8 cycles.
 \end{enumerate}
 
-Nhìn chung, pipeline cho kết quả RUL hợp lý trên FD001 và có ranh giới dữ liệu
-rõ ràng. Phân tích lỗi chỉ ra ba hạn chế có nguyên nhân cụ thể: sai số lớn ở đầu
-vòng đời do tín hiệu sensor chưa thay đổi, cảnh báo trễ ở động cơ suy giảm nhanh,
-và mất khả năng dự đoán khi điều kiện vận hành thay đổi. Các ablation thêm window
-10, profile đầu vòng đời và similarity retrieval chưa vượt promotion gate của
-HGB169; điều đó không chứng minh mọi kiến trúc mới đều kém. HGB169 được giữ là
-predictor candidate chính với giới hạn alignment audit và historical inspection
-đã nêu. Hướng phát triển phù hợp là refit mù độc lập, hiệu chuẩn policy cảnh báo
-và đánh giá sai số theo toàn quỹ đạo.
+Sản phẩm chính của báo cáo là lịch dự đoán thời điểm cần bảo trì cho từng động
+cơ, dựa trên hai mức cảnh báo bổ sung cho nhau: mức một báo động cơ đã rời trạng
+thái khỏe, mức hai báo thời điểm cần bảo trì; cả hai được thể hiện trên biểu đồ xu
+hướng và biểu đồ kế hoạch bảo trì. Các thử nghiệm mở rộng cho thấy mô hình
+FD001 không dùng trực tiếp được cho điều kiện vận hành khác, và các hướng tinh
+chỉnh mô hình chưa làm thay đổi kết luận chính. Kết quả chỉ áp dụng cho dữ liệu mô
+phỏng; việc chọn ngưỡng cảnh báo thực tế cần thêm dữ liệu chi phí bảo trì.

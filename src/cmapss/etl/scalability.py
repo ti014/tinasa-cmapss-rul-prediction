@@ -150,7 +150,7 @@ def verify_parity(left_dir: Path, right_dir: Path) -> dict:
 
 
 def main() -> None:
-    """Run one worker or orchestrate the preregistered 1x/10x, three-repeat study."""
+    """Run one worker, or run every scale and repetition in fresh subprocesses."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--worker", choices=("pandas", "spark"))
     parser.add_argument("--source", type=Path, default=Path("outputs/etl/silver/observations.parquet"))

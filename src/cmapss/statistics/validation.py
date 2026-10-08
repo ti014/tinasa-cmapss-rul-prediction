@@ -44,11 +44,7 @@ def validate_sensor_inference(
     inference: pd.DataFrame,
     config: SensorInferenceConfig | None = None,
 ) -> None:
-    """Kiểm tra contract của bảng suy luận theo sensor.
-
-    Validator không suy diễn kết quả thống kê; nó bảo vệ family 21 sensors,
-    trạng thái all-zero, khoảng p-value và cấu hình M2.0 đã chốt.
-    """
+    """Kiểm tra bảng suy luận: đủ 21 sensors, trạng thái all-zero, p-value và cấu hình."""
     resolved_config = config or SensorInferenceConfig()
     resolved_config.validate()
     validate_columns(inference, SENSOR_INFERENCE_COLUMNS, _INFERENCE_SOURCE)
@@ -69,15 +65,15 @@ def validate_sensor_inference(
     if not inference["ci_lower"].le(inference["ci_upper"]).all():
         raise ContractError("INFERENCE_CI", _INFERENCE_SOURCE, "ci_lower phải <= ci_upper")
     if not inference["ci_method"].eq(resolved_config.bootstrap_method).all():
-        raise ContractError("INFERENCE_CONFIG", "ci_method", "không khớp cấu hình M2.0")
+        raise ContractError("INFERENCE_CONFIG", "ci_method", "không khớp cấu hình suy luận")
     if not inference["ci_level"].eq(resolved_config.bootstrap_confidence_level).all():
-        raise ContractError("INFERENCE_CONFIG", "ci_level", "không khớp cấu hình M2.0")
+        raise ContractError("INFERENCE_CONFIG", "ci_level", "không khớp cấu hình suy luận")
     if not inference["bootstrap_resamples"].eq(resolved_config.bootstrap_resamples).all():
-        raise ContractError("INFERENCE_CONFIG", "bootstrap_resamples", "không khớp cấu hình M2.0")
+        raise ContractError("INFERENCE_CONFIG", "bootstrap_resamples", "không khớp cấu hình suy luận")
     if not inference["fdr_method"].eq(resolved_config.fdr_method).all():
-        raise ContractError("INFERENCE_CONFIG", "fdr_method", "không khớp cấu hình M2.0")
+        raise ContractError("INFERENCE_CONFIG", "fdr_method", "không khớp cấu hình suy luận")
     if not inference["fdr_q"].eq(resolved_config.fdr_q).all():
-        raise ContractError("INFERENCE_CONFIG", "fdr_q", "không khớp cấu hình M2.0")
+        raise ContractError("INFERENCE_CONFIG", "fdr_q", "không khớp cấu hình suy luận")
 
     if not inference["bootstrap_status"].isin({_BOOTSTRAP_STATUS_OK, _BOOTSTRAP_STATUS_DEGENERATE}).all():
         raise ContractError("INFERENCE_STATUS", "bootstrap_status", "trạng thái bootstrap không hợp lệ")
@@ -98,7 +94,7 @@ def validate_sensor_inference(
         raise ContractError("INFERENCE_NUMERIC", "wilcoxon_statistic", "statistic phải NA khi không kiểm định được")
     expected_method = inference["wilcoxon_method"].where(ok_mask, "not_applicable")
     if not expected_method[ok_mask].eq(resolved_config.wilcoxon_method).all():
-        raise ContractError("INFERENCE_CONFIG", "wilcoxon_method", "không khớp cấu hình M2.0")
+        raise ContractError("INFERENCE_CONFIG", "wilcoxon_method", "không khớp cấu hình suy luận")
     if not expected_method[~ok_mask].eq("not_applicable").all():
         raise ContractError("INFERENCE_CONFIG", "wilcoxon_method", "trường hợp không kiểm định được phải ghi not_applicable")
 

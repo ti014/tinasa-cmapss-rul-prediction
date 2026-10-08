@@ -13,15 +13,9 @@ def _require_train(data: pd.DataFrame) -> None:
 
 
 def describe_measurements(data: pd.DataFrame, columns: Sequence[str]) -> pd.DataFrame:
-    """Mô tả cột đo lường đã qua data contract, giữ cả cột hằng.
+    """Thống kê mô tả cho từng cột settings/sensors, một dòng mỗi cột.
 
-    Args:
-        data: Observations train đã kiểm tra schema và giá trị hữu hạn.
-        columns: Các settings hoặc sensors cần thống kê.
-
-    Returns:
-        Một dòng mỗi cột; sample std (ddof=1), quartiles nội suy tuyến tính.
-        Cột hằng được xác định bằng n_unique=1, không dùng ngưỡng std.
+    std là sample std (ddof=1). Cột hằng xác định bằng n_unique == 1, không dùng ngưỡng std.
     """
     _require_train(data)
     measurements = data[list(columns)]
@@ -36,14 +30,9 @@ def describe_measurements(data: pd.DataFrame, columns: Sequence[str]) -> pd.Data
 
 
 def select_example_engines(lifetimes: pd.DataFrame) -> pd.DataFrame:
-    """Chọn engine gần Q25/Q50/Q75 tuổi thọ; tie-break bằng ID nhỏ nhất.
+    """Chọn engine có tuổi thọ gần Q25/Q50/Q75 nhất; hòa thì lấy ID nhỏ nhất.
 
-    Args:
-        lifetimes: Một dòng mỗi engine, có engine_id và last_cycle.
-
-    Returns:
-        Phân vị, tuổi thọ mục tiêu, engine ID và tuổi thọ thực. Nếu dữ liệu
-        có nhiều tuổi thọ bằng nhau, một engine có thể phục vụ nhiều phân vị.
+    Một engine có thể xuất hiện ở nhiều phân vị nếu tuổi thọ trùng nhau.
     """
     selected = []
     for quantile in (0.25, 0.5, 0.75):
@@ -60,15 +49,9 @@ def select_example_engines(lifetimes: pd.DataFrame) -> pd.DataFrame:
 
 
 def sensor_rul_correlations(data: pd.DataFrame, sensors: Sequence[str]) -> pd.DataFrame:
-    """Tính Spearman sensor–RUL riêng trong mỗi engine, không xuất p-value.
+    """Tính Spearman rho giữa sensor và RUL trong từng engine.
 
-    Args:
-        data: Train observations đã ghép raw RUL bằng khóa một–một.
-        sensors: Tên sensors cần khảo sát, bao gồm cả sensor hằng.
-
-    Returns:
-        Một dòng mỗi engine/sensor. Rho=NaN khi sensor hoặc RUL hằng;
-        n_observations và defined ghi rõ phạm vi của hệ số.
+    Trả một dòng mỗi engine/sensor; rho là NaN khi sensor hoặc RUL không đổi.
     """
     _require_train(data)
     rows = []

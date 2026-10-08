@@ -1,4 +1,4 @@
-"""Command-line entrypoint for the isolated TCN comparison."""
+"""Command-line entrypoint for the TCN comparison."""
 
 from .runner import main
 

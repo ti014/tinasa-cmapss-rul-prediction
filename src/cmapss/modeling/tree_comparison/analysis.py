@@ -1,9 +1,7 @@
-"""Frozen trajectory-first selection and conditional paired engine inference.
+"""Candidate selection and paired engine bootstrap for the tree comparison.
 
-The endpoint panel and warning measurements reuse the audited implementation.
-Outer predictions are readouts only: the selected pipeline must already have
-been chosen inside each fitting fold. Bootstrap uncertainty is conditional on
-these fixed predictions and does not describe model refitting variability.
+Selection uses inner folds only; outer predictions are only read out. Bootstrap
+intervals are conditional on fixed predictions and ignore refitting variability.
 """
 
 from __future__ import annotations
@@ -35,7 +33,7 @@ INTERVAL_SCOPE = (
 
 
 def _require_finite(frame: pd.DataFrame | pd.Series, columns: tuple[str, ...]) -> None:
-    """Reject missing or nonfinite numerical inputs before selection/inference."""
+    """Raise if any of ``columns`` is missing, non-numeric or nonfinite."""
     missing = set(columns) - set(frame.index if isinstance(frame, pd.Series) else frame.columns)
     if missing:
         raise ValueError(f"missing required metrics: {sorted(missing)}")
@@ -68,37 +66,18 @@ def _validate_predictions(predictions: pd.DataFrame) -> pd.DataFrame:
 
 
 def candidate_readout(predictions: pd.DataFrame, cfg: StudyConfig) -> dict[str, Any]:
-    """Score raw-RUL endpoints and full trajectories without changing selection.
-
-    Args:
-        predictions: One candidate's held-out train-engine predictions.
-        cfg: Frozen tree study configuration.
-
-    Returns:
-        Audited endpoint and trajectory metrics, with pooled trajectory RMSE.
-    """
+    """Endpoint and trajectory metrics on raw RUL for one candidate."""
     return audit._model_readout(_validate_predictions(predictions), cfg.audit_config())
 
 
 def select_xgb_candidate(
     records: pd.DataFrame, reference: pd.Series, family: str, cfg: StudyConfig,
 ) -> dict[str, Any]:
-    """Minimize inner trajectory RMSE subject to corresponding HGB endpoints.
+    """Pick the XGBoost candidate with the lowest inner trajectory RMSE.
 
-    If no member satisfies both endpoint controls, retain the unconstrained
-    winner for measurement while marking it ineligible for pipeline selection.
-
-    Args:
-        records: Inner summaries containing candidate_id and optional family.
-        reference: Corresponding capped or uncapped fixed HGB summary.
-        family: xgb_uncapped or xgb_cap125.
-        cfg: Frozen zero-margin study rules.
-
-    Returns:
-        Candidate identity, feasibility flag and declared selection rule.
-
-    Raises:
-        ValueError: Candidate identities or required metrics are invalid.
+    Candidates must not be worse than the matching HGB (``reference``) on
+    endpoint MAE and NASA score. If none qualifies, the unconstrained winner is
+    returned with ``numeric_controls_met=False``.
     """
     if family not in ("xgb_uncapped", "xgb_cap125") or "candidate_id" not in records:
         raise ValueError("unknown XGBoost family or missing candidate identities")
@@ -132,27 +111,16 @@ def select_xgb_candidate(
 def calibrate_policy(
     predictions: pd.DataFrame, cfg: StudyConfig,
 ) -> tuple[audit.WarningPolicy, pd.DataFrame]:
-    """Calibrate the declared warning grid on one selected arm's inner vector.
-
-    Call once per selected arm, after numeric family selection. The returned
-    grid contains the same inner target and feasibility readouts as the audit.
-    """
+    """Calibrate the warning policy grid on one arm's inner predictions."""
     return audit._policy_grid(_validate_predictions(predictions), cfg.audit_config())
 
 
 def choose_procedure(arm_records: pd.DataFrame, cfg: StudyConfig) -> dict[str, Any]:
-    """Choose an inner arm with zero-margin endpoint and warning safeguards.
+    """Choose the eligible arm with the lowest inner trajectory RMSE.
 
-    Args:
-        arm_records: Four selected arm summaries, including numeric_controls_met
-            from XGBoost family selection and calibrated warning summaries.
-        cfg: Frozen study margins.
-
-    Returns:
-        Selected procedure ID, eligibility checks and frozen rule description.
-
-    Raises:
-        ValueError: An arm is missing, duplicated, or has invalid metrics.
+    An arm is eligible when its endpoint and warning metrics are not worse than
+    ``hgb_uncapped``. XGBoost arms also need ``numeric_controls_met`` from
+    family selection.
     """
     if ("procedure" not in arm_records or arm_records.procedure.duplicated().any()
             or set(arm_records.procedure) != set(ARMS)):
@@ -199,7 +167,7 @@ def choose_procedure(arm_records: pd.DataFrame, cfg: StudyConfig) -> dict[str, A
 def _engine_tables(
     predictions: pd.DataFrame, events: pd.DataFrame, cfg: StudyConfig,
 ) -> dict[str, pd.DataFrame]:
-    """Require matched keys/truth/events and retain sufficient pooled statistics."""
+    """Per-engine metric table for each procedure, plus SSE and row counts for pooled RMSE."""
     if "procedure" not in predictions or "procedure" not in events:
         raise ValueError("predictions and events require procedure identities")
     if predictions.procedure.isna().any() or events.procedure.isna().any():
@@ -246,7 +214,7 @@ def _engine_tables(
 def _paired_table(
     baseline: pd.DataFrame, candidate: pd.DataFrame, cfg: StudyConfig,
 ) -> pd.DataFrame:
-    """Bootstrap paired pooled RMSE and equal-engine summaries with multiplicity."""
+    """Paired engine bootstrap of candidate minus baseline for each metric."""
     if not baseline.index.equals(candidate.index):
         raise ValueError("paired engine metrics require identical ordered engine IDs")
     n_engines = len(baseline)
@@ -282,7 +250,7 @@ def _paired_table(
 def _comparisons_from_tables(
     tables: dict[str, pd.DataFrame], cfg: StudyConfig,
 ) -> pd.DataFrame:
-    """Publish fixed arm comparisons and the already selected pipeline."""
+    """Compare each arm and ``selected_pipeline`` with its HGB reference."""
     pairs = [("hgb_uncapped", arm) for arm in ARMS
              if arm in tables and arm != "hgb_uncapped"]
     if "hgb_cap125" in tables and "xgb_cap125" in tables:
@@ -300,16 +268,15 @@ def _comparisons_from_tables(
 def paired_comparisons(
     predictions: pd.DataFrame, events: pd.DataFrame, cfg: StudyConfig,
 ) -> pd.DataFrame:
-    """Compare matched procedures using fixed, conditional engine bootstrap.
+    """Paired bootstrap comparisons between procedures.
 
-    Full study inputs contain four arms and selected_pipeline. A subset with
-    hgb_uncapped is accepted for independent checks of the inference math.
+    Any subset of procedures works as long as it includes ``hgb_uncapped``.
     """
     return _comparisons_from_tables(_engine_tables(predictions, events, cfg), cfg)
 
 
 def _gate_controls(comparison: pd.DataFrame) -> dict[str, bool]:
-    """Apply predeclared confidence-bound signs for the five joint safeguards."""
+    """Turn the 95% CI bounds into the five promotion checks."""
     rows = comparison.set_index("metric")
     return {
         "trajectory_rmse_improved": bool(rows.loc["trajectory_rmse", "ci_upper"] < 0.),
@@ -323,16 +290,10 @@ def _gate_controls(comparison: pd.DataFrame) -> dict[str, bool]:
 def write_readouts(
     predictions: pd.DataFrame, events: pd.DataFrame, cfg: StudyConfig, output: str | Path,
 ) -> dict[str, Any]:
-    """Write outer readouts and gate without selecting from outer observations.
+    """Write outer metrics and the promotion decision to ``output``.
 
-    Args:
-        predictions: Matched outer vectors for four arms and selected_pipeline.
-        events: Warning events obtained using each fold's inner-selected policy.
-        cfg: Frozen study configuration; smoke configurations cannot pass.
-        output: Isolated output directory owned by the tree study runner.
-
-    Returns:
-        Joint conditional gate decision and separate capped-reference readout.
+    The gate compares ``selected_pipeline`` with ``hgb_uncapped``; the
+    comparison with ``hgb_cap125`` is reported only. Smoke configs never pass.
     """
     expected = set(ARMS) | {"selected_pipeline"}
     if "procedure" not in predictions or set(predictions.procedure) != expected:

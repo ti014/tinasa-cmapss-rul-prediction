@@ -1,11 +1,8 @@
-"""Isolated, nested FD001 study following the 2026-10-05 audit protocol.
+"""Nested CV study on FD001: model ablations plus a tuned warning policy.
 
-The published model and historical experiments are immutable inputs. Model
-selection uses retrospective 50/70/90-percent lifetime endpoints, not the full
-trajectory score. Lifetime positions evaluation origins only: it is never an
-input feature. Warning rules are selected on inner predictions and evaluated
-on engines excluded from both model and policy selection. FD001 test labels
-have already been examined historically; test results are reporting only.
+Models are selected by MAE at 50/70/90% of each engine's lifetime. Lifetime is
+only used to place these evaluation points, never as a feature. Warning
+policies are tuned on inner predictions and scored on outer engines.
 """
 
 from __future__ import annotations
@@ -71,16 +68,11 @@ BASELINE_FILES = (
 
 @dataclass(frozen=True)
 class CandidateSpec:
-    """Describe one predeclared model ablation.
+    """One model variant.
 
-    Attributes:
-        candidate_id: Stable name, including the declared interaction row.
-        model_kind: HistGradientBoosting or weighted, standardized Ridge.
-        history: Include causal age and first30-baseline-relative features.
-        prune: Remove only features constant in this fitting fold.
-        target_cap: Optional upper bound applied to fitting labels only.
-        loss: HGB objective; ignored for Ridge.
-        alpha: Ridge regularization under mean-one sample weights.
+    ``history`` adds cycle and sensor values relative to the first 30 cycles.
+    ``prune`` drops features that are constant in the fitting fold.
+    ``target_cap`` clips training labels only. ``loss`` applies to HGB only.
     """
 
     candidate_id: str
@@ -93,12 +85,7 @@ class CandidateSpec:
 
 
 def make_candidate_specs() -> tuple[CandidateSpec, ...]:
-    """Return the fixed six HGB rows and four fair Ridge rows.
-
-    Returns:
-        Immutable candidate specifications; cap+history is an interaction,
-        not evidence attributable to either single change.
-    """
+    """Six HGB variants and four Ridge alphas."""
     return (
         CandidateSpec("hgb_baseline"),
         CandidateSpec("hgb_pruned", prune=True),
@@ -113,21 +100,11 @@ def make_candidate_specs() -> tuple[CandidateSpec, ...]:
 
 @dataclass(frozen=True)
 class AuditStudyConfig:
-    """Freeze split, feature, endpoint and illustrative warning decisions.
+    """Study settings.
 
-    Attributes:
-        outer_splits: Outer engine folds, five in the scientific study.
-        inner_splits: Inner engine folds, three in the scientific study.
-        endpoint_fractions: Retrospective evaluation-origin fractions.
-        candidate_ids: Predeclared candidates included in this run.
-        thresholds: Predicted-RUL thresholds in the warning grid.
-        persistences: Consecutive confirmations in the warning grid.
-        lead_requirement: Illustrative benchmark lead, not a maintenance SLA.
-        target_on_time_rate: Inner illustrative feasibility target.
-        bootstrap_resamples: Paired engine resamples conditional on predictions.
-        seed: Fixed deterministic model and bootstrap seed.
-        fit_threads: Limit native fitting threads.
-        hgb_max_iter: Two hundred scientifically; reduced only for dry-run.
+    ``thresholds`` and ``persistences`` form the warning-policy grid.
+    ``lead_requirement`` is the minimum lead (cycles) for a warning to count as
+    on time; ``target_on_time_rate`` is the on-time rate a policy should reach.
     """
 
     outer_splits: int = 5
@@ -144,7 +121,6 @@ class AuditStudyConfig:
     hgb_max_iter: int = 200
 
     def __post_init__(self) -> None:
-        """Reject invalid configurations before any run state exists."""
         if min(self.outer_splits, self.inner_splits) < 2:
             raise ValueError("at least two inner and outer folds are required")
         if min(self.bootstrap_resamples, self.fit_threads, self.hgb_max_iter) < 1:
@@ -174,18 +150,12 @@ class AuditStudyConfig:
 
 @dataclass(frozen=True)
 class WarningPolicy:
-    """Store one threshold and consecutive-confirmation policy.
-
-    Attributes:
-        threshold: Predicted-RUL cutoff in cycles.
-        persistence: Number of consecutive predictions at/below the cutoff.
-    """
+    """Warn after ``persistence`` consecutive predictions with RUL <= ``threshold``."""
 
     threshold: int
     persistence: int
 
     def __post_init__(self) -> None:
-        """Validate an integer, nonnegative cutoff and positive persistence."""
         if (isinstance(self.threshold, bool) or isinstance(self.persistence, bool)
                 or not isinstance(self.threshold, (int, np.integer))
                 or not isinstance(self.persistence, (int, np.integer))
@@ -195,14 +165,7 @@ class WarningPolicy:
 
 @dataclass
 class FittedCandidate:
-    """Keep all learned feature and scaling state needed for inference.
-
-    Attributes:
-        spec: Frozen candidate identity.
-        feature_columns: Columns retained using fitting rows only.
-        scaler: Weighted Ridge scaler, or None for unscaled HGB.
-        model: Fitted sklearn regressor.
-    """
+    """Fitted model with its feature columns and scaler (None for HGB)."""
 
     spec: CandidateSpec
     feature_columns: tuple[str, ...]
@@ -210,17 +173,7 @@ class FittedCandidate:
     model: Any
 
     def predict(self, features: pd.DataFrame) -> np.ndarray:
-        """Predict without fitting or consulting truth/validation statistics.
-
-        Args:
-            features: Causal features containing the retained column names.
-
-        Returns:
-            Finite predictions on the same raw-RUL reporting scale.
-
-        Raises:
-            ValueError: Inputs or predictions are nonfinite.
-        """
+        """Predict RUL; raises ValueError on non-finite inputs or outputs."""
         values = features.loc[:, list(self.feature_columns)]
         if not np.isfinite(values.to_numpy(dtype="float64")).all():
             raise ValueError("nonfinite inference features")
@@ -232,21 +185,10 @@ class FittedCandidate:
 
 
 def build_study_features(observations: pd.DataFrame) -> pd.DataFrame:
-    """Build trailing30 features and causal first30-relative history features.
+    """30-cycle rolling features plus sensor values relative to the first 30 cycles.
 
-    No learned statistics cross engines or splits. For every retained cycle
-    (>=30), the initial baseline is already observed. The full lifetime and
-    labels are not read or included. Raw features remain available unchanged.
-
-    Args:
-        observations: Canonical full observations starting at cycle1.
-
-    Returns:
-        Keys, 126 original features, and 42 first30-relative features. Cycle
-        becomes a model feature only for the declared history candidates.
-
-    Raises:
-        ValueError: A trajectory lacks exactly the first30 baseline samples.
+    The reference is the per-engine mean of cycles 1..30, so it is already known
+    at every kept row (cycle >= 30). Adds 42 columns to the 126 rolling features.
     """
     features = build_rolling_features(observations, window_cycles=30)
     initial = observations.loc[observations.cycle.le(30)]
@@ -265,17 +207,10 @@ def build_study_features(observations: pd.DataFrame) -> pd.DataFrame:
 
 
 def engine_weights(frame: pd.DataFrame, *, mean_one: bool = False) -> np.ndarray:
-    """Return engine-equal weights with an explicit global scale.
+    """Row weights giving each engine the same total weight.
 
-    Args:
-        frame: Fitting rows containing engine_id.
-        mean_one: Scale to mean1 for Ridge; otherwise engine total1 for HGB.
-
-    Returns:
-        Positive row weights with identical total weight per fitting engine.
-
-    Raises:
-        ValueError: Fitting rows are empty or engine IDs are missing.
+    Each engine sums to one, or the weights are rescaled to mean one if
+    ``mean_one`` is set (used for Ridge).
     """
     if frame.empty or frame.engine_id.isna().any():
         raise ValueError("engine weights require nonempty, identified rows")
@@ -285,7 +220,6 @@ def engine_weights(frame: pd.DataFrame, *, mean_one: bool = False) -> np.ndarray
 
 
 def _make_model(spec: CandidateSpec, config: AuditStudyConfig) -> Any:
-    """Construct a model using only declared candidate parameters."""
     if spec.model_kind == "ridge":
         return Ridge(alpha=spec.alpha, solver="svd")
     return HistGradientBoostingRegressor(
@@ -297,19 +231,7 @@ def _make_model(spec: CandidateSpec, config: AuditStudyConfig) -> Any:
 
 def fit_candidate(train: pd.DataFrame, spec: CandidateSpec,
                   config: AuditStudyConfig) -> FittedCandidate:
-    """Fit pruning, scaler and regressor strictly within fitting engines.
-
-    Args:
-        train: Train-only feature rows with raw rul labels.
-        spec: Predeclared ablation.
-        config: Frozen resource/model configuration.
-
-    Returns:
-        Predictor retaining its learned preprocessing state.
-
-    Raises:
-        ValueError: Rows are not train-only or no nonconstant columns remain.
-    """
+    """Fit feature pruning, scaler and regressor on the given train rows only."""
     if train.empty or not train["split"].eq("train").all() or "rul" not in train:
         raise ValueError("fitting requires train-only rows with raw rul")
     columns = BASE_FEATURES + (HISTORY_FEATURES if spec.history else ())
@@ -336,17 +258,11 @@ def fit_candidate(train: pd.DataFrame, spec: CandidateSpec,
 
 def build_endpoint_panel(predictions: pd.DataFrame,
                          fractions: tuple[float, ...]) -> pd.DataFrame:
-    """Position a fixed retrospective panel without changing model inputs.
+    """Pick the prediction row at each lifetime fraction for every engine.
 
-    Args:
-        predictions: Complete train trajectory predictions with raw y_true.
-        fractions: Declared ordered lifetime fractions, identical for models.
-
-    Returns:
-        One row per engine/fraction, with requested and actual origins visible.
-
-    Raises:
-        ValueError: Lifetime is inconsistent or an endpoint key is absent.
+    Lifetime is ``cycle + y_true``. The row is at ``floor(fraction * lifetime)``,
+    moved up to the first available cycle if needed
+    (``origin_clamped_to_available_prefix``).
     """
     if predictions.empty:
         raise ValueError("empty endpoint prediction input")
@@ -370,7 +286,6 @@ def build_endpoint_panel(predictions: pd.DataFrame,
 
 
 def _prediction_metrics(frame: pd.DataFrame, prefix: str) -> dict[str, Any]:
-    """Score equal-engine MAE plus separately named row RMSE/NASA totals."""
     metrics = summarize_prediction_errors(frame)
     scored = add_prediction_errors(frame)
     mean_nasa = scored.groupby("engine_id").nasa_score_component.mean().mean()
@@ -379,24 +294,13 @@ def _prediction_metrics(frame: pd.DataFrame, prefix: str) -> dict[str, Any]:
 
 
 def _model_readout(predictions: pd.DataFrame, config: AuditStudyConfig) -> dict[str, Any]:
-    """Keep endpoint and full-trajectory estimands separate."""
     endpoint = build_endpoint_panel(predictions, config.endpoint_fractions)
     return {**_prediction_metrics(endpoint, "endpoint"),
             **_prediction_metrics(predictions, "trajectory")}
 
 
 def select_candidate(records: pd.DataFrame) -> str:
-    """Choose the declared inner endpoint-MAE winner and deterministic ties.
-
-    Args:
-        records: Inner candidate summaries, never outer/test metrics.
-
-    Returns:
-        Stable candidate ID minimizing endpoint MAE, then NASA/engine, then ID.
-
-    Raises:
-        ValueError: Selection metrics are empty or nonfinite.
-    """
+    """Lowest endpoint MAE; ties broken by endpoint NASA, then candidate ID."""
     columns = ["endpoint_mean_engine_mae", "endpoint_mean_engine_nasa"]
     if records.empty or not np.isfinite(records[columns].to_numpy()).all():
         raise ValueError("invalid inner model-selection metrics")
@@ -404,26 +308,17 @@ def select_candidate(records: pd.DataFrame) -> str:
 
 
 def _alarm_flags(group: pd.DataFrame, policy: WarningPolicy) -> np.ndarray:
-    """Require current and preceding k-1 predictions to satisfy the cutoff."""
+    """True where the last ``persistence`` predictions are all <= threshold."""
     below = group.y_pred.le(policy.threshold)
     return below.rolling(policy.persistence, min_periods=policy.persistence).sum().ge(policy.persistence).to_numpy()
 
 
 def warning_events(predictions: pd.DataFrame, policy: WarningPolicy,
                    *, lead_requirement: int) -> pd.DataFrame:
-    """Measure an illustrative policy's timeliness, burden and instability.
+    """Per-engine warning timing, early-alarm burden and on/off switching.
 
-    Args:
-        predictions: Complete ordered run-to-failure train predictions.
-        policy: Threshold/persistence fixed before this engine is evaluated.
-        lead_requirement: Illustrative minimum lead; not a real maintenance SLA.
-
-    Returns:
-        One row per engine. Early burden is time flagged when raw RUL exceeds
-        the illustrative lead requirement; it is not a false-positive rate.
-
-    Raises:
-        ValueError: Data do not describe complete, contiguous train runs.
+    ``early_alarm_burden`` is the share of rows with true RUL above
+    ``lead_requirement`` that are in alarm. It is not a false-positive rate.
     """
     if predictions.empty or not predictions.split.eq("train").all():
         raise ValueError("warning evaluation requires complete train trajectories")
@@ -458,7 +353,6 @@ def warning_events(predictions: pd.DataFrame, policy: WarningPolicy,
 
 
 def _warning_readout(events: pd.DataFrame) -> dict[str, Any]:
-    """Summarize engine-level policy observations without inventing negatives."""
     lead = events.lead_time_cycles.dropna()
     return {
         "on_time_rate": float(events.on_time.mean()),
@@ -477,17 +371,10 @@ def _warning_readout(events: pd.DataFrame) -> dict[str, Any]:
 
 
 def choose_policy(records: pd.DataFrame, target_rate: float) -> WarningPolicy:
-    """Choose feasible minimum burden, else maximum timeliness then burden.
+    """Pick a warning policy from the grid summary.
 
-    Args:
-        records: Inner-grid summaries, not outer or test observations.
-        target_rate: Declared inner illustrative on-time rate target.
-
-    Returns:
-        Policy with deterministic threshold/persistence tie breaks.
-
-    Raises:
-        ValueError: The policy grid has no finite burden/timeliness values.
+    Among policies with on-time rate >= ``target_rate``, take the lowest early
+    burden. If none qualifies, take the highest on-time rate, then lowest burden.
     """
     valid = records.dropna(subset=["on_time_rate", "early_alarm_burden"])
     if valid.empty:
@@ -503,7 +390,7 @@ def choose_policy(records: pd.DataFrame, target_rate: float) -> WarningPolicy:
 
 
 def _policy_grid(predictions: pd.DataFrame, config: AuditStudyConfig) -> tuple[WarningPolicy, pd.DataFrame]:
-    """Calibrate a declared grid exclusively on inner OOF predictions."""
+    """Score every grid policy on the given (inner OOF) predictions and pick one."""
     rows = []
     for threshold in config.thresholds:
         for persistence in config.persistences:
@@ -518,12 +405,11 @@ def _policy_grid(predictions: pd.DataFrame, config: AuditStudyConfig) -> tuple[W
 
 
 def _sha256(path: Path) -> str:
-    """Hash exact bytes without changing the source artifact."""
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def _json_value(value: Any) -> Any:
-    """Use strict JSON primitives and explicit null for unavailable metrics."""
+    """Convert to plain JSON types; NaN and inf become None."""
     if isinstance(value, dict):
         return {str(key): _json_value(item) for key, item in value.items()}
     if isinstance(value, (tuple, list)):
@@ -538,7 +424,6 @@ def _json_value(value: Any) -> Any:
 
 
 def _write_json(path: Path, payload: Any) -> None:
-    """Atomically publish strict UTF-8 JSON inside the isolated run."""
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(".tmp.json")
     temporary.write_text(json.dumps(_json_value(payload), ensure_ascii=False,
@@ -547,7 +432,6 @@ def _write_json(path: Path, payload: Any) -> None:
 
 
 def _write_parquet(frame: pd.DataFrame, path: Path) -> None:
-    """Atomically publish one prediction table in the isolated run."""
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(".tmp.parquet")
     frame.to_parquet(temporary, index=False)
@@ -555,7 +439,6 @@ def _write_parquet(frame: pd.DataFrame, path: Path) -> None:
 
 
 def _relative(path: Path, repo_root: Path) -> str:
-    """Require portable, repository-relative input and source identities."""
     try:
         return path.resolve().relative_to(repo_root.resolve()).as_posix()
     except ValueError as error:
@@ -564,7 +447,7 @@ def _relative(path: Path, repo_root: Path) -> str:
 
 def _initialize_run(output: Path, repo_root: Path, inputs: tuple[Path, ...],
                     config: AuditStudyConfig) -> tuple[dict[str, Any], str]:
-    """Freeze current-used source/input bytes before any fit or test-label read."""
+    """Write the manifest and source snapshot, or check them when resuming."""
     allowed = repo_root / "outputs/experiments/audit_remediation"
     if output == allowed or allowed not in output.parents:
         raise ValueError("study output must be a new run under outputs/experiments/audit_remediation")
@@ -625,7 +508,7 @@ def _initialize_run(output: Path, repo_root: Path, inputs: tuple[Path, ...],
 def _fit_predict(train: pd.DataFrame, validation: pd.DataFrame, spec: CandidateSpec,
                  config: AuditStudyConfig, cache_dir: Path,
                  source_identity: str) -> pd.DataFrame:
-    """Fit/cache one disjoint-engine fold with exact data/source binding."""
+    """Fit one fold and predict validation rows, cached by a hash of data, spec and source."""
     if set(train.engine_id) & set(validation.engine_id):
         raise ValueError("fitting and validation engines overlap")
     if not validation.split.eq("train").all():
@@ -640,7 +523,7 @@ def _fit_predict(train: pd.DataFrame, validation: pd.DataFrame, spec: CandidateS
     metadata_path = cache_dir / f"{cache_key}.json"
     if parquet.exists() or metadata_path.exists():
         if not parquet.exists() or not metadata_path.exists():
-            # Preserve an interrupted atomic-pair publication before retrying.
+            # Half-written pair from an interrupted run: move it aside and refit.
             orphan_dir = cache_dir / "interrupted_publications"
             orphan_dir.mkdir(parents=True, exist_ok=True)
             stamp = time.time_ns()
@@ -688,7 +571,7 @@ def _fit_predict(train: pd.DataFrame, validation: pd.DataFrame, spec: CandidateS
 def _inner_evaluation(frame: pd.DataFrame, config: AuditStudyConfig,
                       output: Path, identity: str,
                       outer_fold: int) -> tuple[str, dict[str, pd.DataFrame], pd.DataFrame, pd.DataFrame]:
-    """Evaluate every fixed candidate on identical inner engine folds."""
+    """Evaluate every candidate on the same inner engine folds and select one."""
     splitter = GroupKFold(n_splits=config.inner_splits)
     folds = list(splitter.split(frame, frame.rul, frame.engine_id))
     assignment_rows = []
@@ -722,7 +605,7 @@ def _inner_evaluation(frame: pd.DataFrame, config: AuditStudyConfig,
 
 def _outer_assignments(frame: pd.DataFrame, config: AuditStudyConfig,
                        repo_root: Path) -> pd.DataFrame:
-    """Reuse published five folds, or deterministic GroupKFold for dry-run."""
+    """Reuse the main pipeline's 5 folds; otherwise use GroupKFold."""
     if config.outer_splits == 5:
         assignments = pd.read_csv(repo_root / "outputs/modeling/tables/fold_assignments.csv")
         assignments = assignments[["engine_id", "fold"]].rename(columns={"fold": "outer_fold"})
@@ -742,7 +625,7 @@ def _outer_assignments(frame: pd.DataFrame, config: AuditStudyConfig,
 
 def _engine_readout(predictions: pd.DataFrame, events: pd.DataFrame,
                      config: AuditStudyConfig) -> pd.DataFrame:
-    """Build matched per-engine endpoint/trajectory/warning metrics."""
+    """Per-engine endpoint, trajectory and warning metrics."""
     endpoint = add_prediction_errors(build_endpoint_panel(predictions, config.endpoint_fractions))
     trajectory = add_prediction_errors(predictions)
     result = endpoint.groupby("engine_id").agg(
@@ -759,7 +642,7 @@ def _engine_readout(predictions: pd.DataFrame, events: pd.DataFrame,
 
 def _paired_comparison(baseline: pd.DataFrame, candidate: pd.DataFrame,
                        config: AuditStudyConfig) -> pd.DataFrame:
-    """Resample paired engine differences while preserving multiplicity."""
+    """Bootstrap CI of the per-engine difference (candidate - baseline)."""
     if not baseline.index.equals(candidate.index):
         raise ValueError("paired engine metrics need identical ordered IDs")
     rng = np.random.default_rng(config.seed)
@@ -791,7 +674,7 @@ def _paired_comparison(baseline: pd.DataFrame, candidate: pd.DataFrame,
 
 def _write_comparisons(predictions: pd.DataFrame, events: pd.DataFrame,
                         config: AuditStudyConfig, output: Path) -> dict[str, Any]:
-    """Publish all estimands, error slices, tradeoffs and the frozen gate."""
+    """Write aggregate, per-engine, per-region and paired metrics, plus decision.json."""
     summaries, engine_tables, region_rows = [], {}, []
     for procedure, frame in predictions.groupby("procedure", sort=True):
         policy_events = events[events.procedure.eq(procedure)]
@@ -848,7 +731,7 @@ def _write_comparisons(predictions: pd.DataFrame, events: pd.DataFrame,
 
 
 def _freeze_selection(path: Path, selection: dict[str, Any]) -> None:
-    """Publish settings before test labels, rejecting changes on resume."""
+    """Save the final selection; on resume it must be unchanged."""
     if path.exists():
         saved = json.loads(path.read_text(encoding="utf-8"))
         if saved != _json_value(selection):
@@ -860,7 +743,7 @@ def _freeze_selection(path: Path, selection: dict[str, Any]) -> None:
 def _final_predictor(train: pd.DataFrame, spec: CandidateSpec,
                      config: AuditStudyConfig, output: Path,
                      identity: str) -> FittedCandidate:
-    """Save/reload the all-train predictor with checksum-bound learned state."""
+    """Fit the final model on all train engines, or load it if already saved."""
     model_path = output / "selected_model.joblib"
     metadata_path = output / "selected_model.json"
     if model_path.exists() and metadata_path.exists():
@@ -902,7 +785,7 @@ def _final_predictor(train: pd.DataFrame, spec: CandidateSpec,
 
 def _baseline_replay(predictions: pd.DataFrame, config: AuditStudyConfig,
                      repo_root: Path, output: Path) -> dict[str, Any]:
-    """Check exact old HGB OOF keys/truth/predictions for the full protocol."""
+    """Check that baseline_fixed reproduces the main pipeline's HGB OOF predictions."""
     if config.outer_splits != 5 or config.hgb_max_iter != 200 or config.seed != 42:
         result = {"applicable": False, "reason": "reduced/custom dry-run configuration"}
     else:
@@ -931,7 +814,7 @@ def _baseline_replay(predictions: pd.DataFrame, config: AuditStudyConfig,
 def _evaluate_test(predictions: pd.DataFrame, labels_path: Path,
                    config: AuditStudyConfig, output: Path,
                    repo_root: Path) -> dict[str, Any]:
-    """Read historically inspected labels only after frozen settings/predictions."""
+    """Score final test predictions; requires selection.json and final predictions on disk."""
     if not (output / "selection.json").is_file() or not (output / "final_predictions.parquet").is_file():
         raise ValueError("test labels require saved selection and final predictions")
     labels = read_test_labels(labels_path)
@@ -980,36 +863,23 @@ def run_audit_study(
     config: AuditStudyConfig | None = None,
     evaluate_test: bool = True,
 ) -> dict[str, Any]:
-    """Execute the frozen nested study without mutating historical artifacts.
+    """Run the full study and return the run summary.
 
-    Args:
-        repo_root: Repository containing portable inputs and immutable baseline.
-        observations_path: Canonical FD001 observations, separate from labels.
-        targets_path: Complete raw train targets before window filtering.
-        test_labels_path: Historical test labels, read only after frozen settings.
-        output_dir: New isolated run descendant of audit_remediation.
-        config: Frozen protocol; a reduced configuration cannot pass promotion.
-        evaluate_test: Include reporting-only final-test metrics after prediction.
-
-    Returns:
-        Portable run summary, selection, gate and reporting-only test metrics.
-
-    Raises:
-        ValueError: Leakage, raw-target mismatch, cache/provenance mismatch, or
-            baseline replay/invariance failure occurs.
+    Relative paths are resolved against ``repo_root``. ``output_dir`` must be
+    under ``outputs/experiments/audit_remediation``. Test labels are read only
+    after the final selection and test predictions are saved.
     """
     started = time.perf_counter()
     root = Path(repo_root).resolve() if repo_root is not None else Path(__file__).resolve().parents[3]
     config = config or AuditStudyConfig()
     def resolve(value: str | Path) -> Path:
-        """Resolve a repository-relative path without changing working directory."""
         path = Path(value)
         return (root / path).resolve() if not path.is_absolute() else path.resolve()
     observations_path = resolve(observations_path)
     targets_path = resolve(targets_path)
     labels_path = resolve(test_labels_path)
     output = resolve(output_dir)
-    _relative(labels_path, root)  # Check portability without reading label bytes.
+    _relative(labels_path, root)  # Labels must be inside the repo.
     manifest, identity = _initialize_run(output, root, (observations_path, targets_path), config)
     observations = pd.read_parquet(observations_path)
     targets = pd.read_parquet(targets_path)
@@ -1081,7 +951,7 @@ def run_audit_study(
             events = warning_events(predictions, policy, lead_requirement=config.lead_requirement)
             all_events.append(events.assign(procedure=procedure, outer_fold=fold,
                                              candidate_id=predictions.candidate_id.iloc[0]))
-        # Checkpoints are deterministic and regenerated from valid fit caches.
+        # Checkpoint after each outer fold; a resume rebuilds them from the fit cache.
         _write_parquet(pd.concat(all_predictions, ignore_index=True), output / "outer_predictions.parquet")
         _write_parquet(pd.concat(all_events, ignore_index=True), output / "warning_events.parquet")
         pd.concat(inner_tables, ignore_index=True).to_csv(output / "inner_candidate_metrics.csv", index=False)
@@ -1159,7 +1029,7 @@ def run_audit_study(
 
 
 def main(argv: list[str] | None = None) -> None:
-    """Run the isolated module CLI; reduced dry-runs never satisfy promotion."""
+    """Command-line entry point."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--observations", default="outputs/etl/silver/observations.parquet")
     parser.add_argument("--targets", default="outputs/etl/silver/train_targets.parquet")
@@ -1187,7 +1057,7 @@ def main(argv: list[str] | None = None) -> None:
 
 
 if __name__ == "__main__":
-    # Keep pickle references importable when invoked with python -m.
+    # Import via the package so pickled classes are not stored as __main__.*.
     from cmapss.modeling.audit_study import main as canonical_main
 
     canonical_main()

@@ -651,26 +651,24 @@ After `outputs/modeling/predictions/final_predictions.parquet` exists:
 The command fits the Health Index on train, only transforms test, writes the
 schedule, and only then reads `RUL_FD001.txt` to build `status_vs_actual.csv`.
 
-### Run the result-review notebooks
+### Run the result notebooks
 
-Notebooks 03–06 only read existing artifacts. They recompute metrics with
-package functions and stop on an `assert` if a number differs from the file in
-`outputs/`:
+Notebooks 03–06 read the saved artifacts, plot them and discuss the results. They
+do not fit models or write to `outputs/`; the consistency checks between code and
+artifacts live in `tests/`.
 
-| Notebook | Content | Checked against |
+| Notebook | Content | Reads |
 |---|---|---|
 | `03_fd001_modeling_evaluation.ipynb` | Per-fold MAE, test metrics, bootstrap CI, error by RUL range, RUL ≤ 30 warning | `outputs/modeling/tables/*` |
 | `04_fd001_health_index_arima.ipynb` | Health Index trend, ARIMA holdout metrics, naive baselines, ADF/Ljung–Box | `outputs/timeseries/tables/*` |
 | `05_cross_dataset_and_improvement.ipynb` | FD001–FD004 matrix, nested-CV ablation and paired CI | `outputs/cross_dataset/matrix.json`, `outputs/experiments/rul_improvement/20260928_rebuild/*` |
 | `06_fd001_degradation_maintenance.ipynb` | EWMA denoising, Health Index, anomaly detection, maintenance schedule and label check | `outputs/degradation/*`, `outputs/maintenance/*` |
 
-Build and execute them from a fresh kernel with:
+Open them in JupyterLab and run all cells, or execute them from the command line:
 
 ```powershell
-.venv\Scripts\python scripts/build_results_notebooks.py --execute
+.venv\Scripts\jupyter nbconvert --to notebook --execute --inplace notebooks/06_fd001_degradation_maintenance.ipynb
 ```
-
-Add `--only 04` to rebuild a single notebook.
 
 ### Run the reproducibility dashboard
 

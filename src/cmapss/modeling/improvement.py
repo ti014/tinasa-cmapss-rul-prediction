@@ -1,8 +1,7 @@
-"""Staged nested experiments for improving FD001 RUL predictions.
+"""Nested CV experiment to improve FD001 RUL predictions.
 
-The runner is deliberately separate from the published modeling pipeline. It
-creates experiment artifacts under ``outputs/experiments`` and never overwrites
-the current model artifacts.
+Tunes window, HGB parameters and low-RUL weights in stages. Results go to
+``outputs/experiments``; the main model artifacts are not touched.
 """
 
 from __future__ import annotations
@@ -53,7 +52,7 @@ WEIGHT_SCHEMES = {
 
 @dataclass(frozen=True)
 class ImprovementConfig:
-    """Configuration for one reproducible improvement run."""
+    """Settings for one improvement run."""
 
     seed: int = 42
     outer_splits: int = 5
@@ -88,7 +87,7 @@ def _sha256(path: Path) -> str:
 
 
 def make_hgb_candidates(config: ImprovementConfig) -> list[dict[str, Any]]:
-    """Create one baseline plus deterministic sampled HGB configurations."""
+    """Baseline params plus random unique HGB configs (seeded)."""
     candidates: list[dict[str, Any]] = [{**BASELINE_PARAMS}]
     rng = np.random.default_rng(config.seed)
     choices = {
@@ -112,7 +111,10 @@ def make_hgb_candidates(config: ImprovementConfig) -> list[dict[str, Any]]:
 
 
 def low_rul_weights(dataset: pd.DataFrame, scheme: str) -> np.ndarray:
-    """Return per-row weights whose sum is one for every engine."""
+    """Row weights that sum to one per engine.
+
+    The scheme gives factors for RUL > 30, 16..30 and <= 15, in that order.
+    """
     if scheme not in WEIGHT_SCHEMES:
         raise ValueError(f"unknown weight scheme: {scheme}")
     high, medium, low = WEIGHT_SCHEMES[scheme]
@@ -134,7 +136,7 @@ def load_window_datasets(
     *,
     min_cycle: int = 30,
 ) -> dict[int, pd.DataFrame]:
-    """Build train datasets for all windows and align them from ``min_cycle``."""
+    """Train feature tables per window, all starting at ``min_cycle`` so rows match."""
     observations = read_silver_observations(observations_path)
     targets = pd.read_parquet(targets_path)
     datasets: dict[int, pd.DataFrame] = {}
@@ -184,8 +186,7 @@ def _fit_predict(
         early_stopping=False,
         random_state=seed,
     )
-    # Each engine has total weight one; low-RUL schemes redistribute weight
-    # inside the engine without letting long trajectories dominate.
+    # Total weight per engine is one, so long trajectories do not dominate.
     weights = low_rul_weights(train, weight_scheme)
     started = time.perf_counter()
     try:
@@ -223,7 +224,7 @@ def _write_json(path: Path, payload: Any) -> None:
 
 
 def _metrics(predictions: pd.DataFrame, threshold: int) -> dict[str, Any]:
-    """Compute the selection metrics for aligned trajectory predictions."""
+    """Error and warning metrics used for candidate selection."""
     scored = add_prediction_errors(predictions)
     engine_mae = scored.groupby("engine_id", sort=True)["absolute_error"].mean()
     low = scored.loc[scored["y_true"].le(threshold)]
@@ -298,7 +299,7 @@ def _evaluate_candidate(
 
 
 def _select_candidate(records: list[dict[str, Any]], baseline: dict[str, Any]) -> int:
-    """Select by the plan's low-RUL-first rule with baseline controls."""
+    """Pick the lowest low-RUL MAE among candidates no worse than baseline on the controls."""
     eligible = []
     for index, record in enumerate(records):
         controls = (
@@ -391,7 +392,7 @@ def _run_outer_stages(
             predictions["outer_fold"] = outer_fold
             predictions["window"] = window
             selected_window_predictions.append(predictions)
-        # Window selection uses the same inner training engines and window 30 as reference.
+        # Window 30 is the reference for the control checks.
         window_baseline = next(record for record in selected_window_records if record["window"] == 30)
         selected_window_index = _select_candidate(selected_window_records, window_baseline)
         selected_window = int(selected_window_records[selected_window_index]["window"])
@@ -476,7 +477,7 @@ def _select_final_configuration(
     config: ImprovementConfig,
     cache_dir: Path | None = None,
 ) -> tuple[int, dict[str, Any], str, pd.DataFrame]:
-    """Select window, HGB parameters and weights with inner CV on all train."""
+    """Select window, HGB parameters and weights with CV on all train engines."""
     window_records: list[dict[str, Any]] = []
     for window in WINDOWS:
         metrics, _ = _evaluate_candidate(datasets[window], BASELINE_PARAMS, "uniform", config, cache_dir)
@@ -539,7 +540,7 @@ def _final_test_predictions(
 
 
 def _prepare_run(output: Path, observations: Path, targets: Path, config: ImprovementConfig) -> None:
-    """Freeze run inputs before fitting; reject unsafe reuse of cached fits."""
+    """Write the run manifest and baseline snapshot; refuse to resume if inputs changed."""
     import sklearn
     identity = {
         "config": asdict(config),
@@ -620,7 +621,7 @@ def run_improvement_experiment(
     config: ImprovementConfig | None = None,
     evaluate_test: bool = True,
 ) -> dict[str, Any]:
-    """Run staged nested evaluation and write reproducible artifacts."""
+    """Run the full experiment and write all artifacts to ``output_dir``."""
     run_config = config or ImprovementConfig()
     output_path = Path(output_dir).resolve()
     output_path.mkdir(parents=True, exist_ok=True)
@@ -679,7 +680,7 @@ def run_improvement_experiment(
     (output_path / "run_info.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2, default=_json_safe) + "\n", encoding="utf-8")
     if not evaluate_test:
         return manifest
-    # Chỉ sau khi đã ghi final_predictions mới đọc test labels và tính final metrics.
+    # Test labels are read only after final_predictions is saved.
     evaluation = evaluate_predictions_from_path(output_path / "final_predictions.parquet", test_label_path)
     final_metrics = write_final_evaluation_artifacts(
         evaluation,

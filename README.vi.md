@@ -625,25 +625,24 @@ Sau khi đã có `outputs/modeling/predictions/final_predictions.parquet`:
 Lệnh fit Health Index trên train, chỉ transform test, lập lịch bảo trì và ghi ra
 file, rồi mới đọc `RUL_FD001.txt` để tạo bảng kiểm tra `status_vs_actual.csv`.
 
-### Chạy notebook rà soát kết quả
+### Chạy notebook phân tích kết quả
 
-Notebook 03–06 chỉ đọc artifact đã có. Chúng tính lại metric bằng hàm của package
-và dùng `assert` để dừng nếu số liệu lệch với file trong `outputs/`:
+Notebook 03–06 đọc artifact đã lưu, vẽ hình và nhận xét kết quả. Chúng không huấn
+luyện mô hình và không ghi vào `outputs/`; phần kiểm tra code khớp với artifact nằm
+trong `tests/`.
 
-| Notebook | Nội dung | Đối chiếu với |
+| Notebook | Nội dung | Dữ liệu đọc |
 |---|---|---|
 | `03_fd001_modeling_evaluation.ipynb` | MAE theo fold, metric test, bootstrap CI, sai số theo khoảng RUL, cảnh báo RUL ≤ 30 | `outputs/modeling/tables/*` |
 | `04_fd001_health_index_arima.ipynb` | Xu hướng Health Index, metric holdout ARIMA, naive baseline, ADF/Ljung–Box | `outputs/timeseries/tables/*` |
 | `05_cross_dataset_and_improvement.ipynb` | Ma trận FD001–FD004, ablation và paired CI của nested CV | `outputs/cross_dataset/matrix.json`, `outputs/experiments/rul_improvement/20260928_rebuild/*` |
 | `06_fd001_degradation_maintenance.ipynb` | Khử nhiễu EWMA, Health Index, phát hiện bất thường, lịch bảo trì và kiểm tra bằng nhãn test | `outputs/degradation/*`, `outputs/maintenance/*` |
 
-Notebook được sinh và chạy lại từ fresh kernel bằng:
+Mở notebook trong JupyterLab rồi chạy tất cả các ô, hoặc chạy từ dòng lệnh:
 
 ```powershell
-.venv\Scripts\python scripts/build_results_notebooks.py --execute
+.venv\Scripts\jupyter nbconvert --to notebook --execute --inplace notebooks/06_fd001_degradation_maintenance.ipynb
 ```
-
-Thêm `--only 04` để chỉ dựng lại một notebook.
 
 ### Chạy dashboard tái lập
 

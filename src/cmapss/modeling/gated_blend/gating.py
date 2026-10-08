@@ -1,8 +1,7 @@
-"""Blend two frozen HGB predictions using a smooth prediction-only gate.
+"""Blend uncapped and cap125 HGB predictions with a smooth gate.
 
-Weights depend only on the uncapped prediction for the current observation.
-Labels, future observations, engine lifetime and RUL regions do not enter the
-gate. No clipping of the resulting RUL prediction is introduced.
+The weight depends only on the uncapped prediction of the current row; labels
+and future cycles never enter it. The blended RUL is not clipped.
 """
 
 from __future__ import annotations
@@ -18,7 +17,6 @@ from .contracts import GateSpec
 
 
 def _vector(values: Any, name: str) -> np.ndarray:
-    """Require a finite nonempty one-dimensional real prediction vector."""
     raw = np.asarray(values)
     if raw.dtype.kind not in "iuf" or raw.ndim != 1 or raw.size == 0:
         raise ValueError(f"{name} must be a nonempty one-dimensional real vector")
@@ -29,26 +27,10 @@ def _vector(values: Any, name: str) -> np.ndarray:
 
 
 def capped_weights(uncapped_predictions: Any, spec: GateSpec) -> np.ndarray:
-    """Compute a bounded smooth weight without accessing any target.
+    """Smoothstep weight for cap125: max_capped_weight at lower_rul, 0 at upper_rul.
 
-    The weight decreases from its maximum at lower_rul to zero at upper_rul.
-    Smoothstep has zero slope at both boundaries; this smoothness does not
-    imply that the resulting prediction trajectory is monotonic over time.
-
-    Args:
-        uncapped_predictions: Current-observation uncapped HGB predictions.
-        spec: A gate specification frozen before outer evaluation.
-
-    Returns:
-        A float64 vector with weights in [0, max_capped_weight].
-
-    Raises:
-        ValueError: Predictions are empty, malformed, nonnumeric or nonfinite.
-        TypeError: The supplied specification is not a GateSpec.
-
-    Examples:
-        >>> capped_weights([60, 105, 150], GateSpec(60, 150, 0.5)).tolist()
-        [0.5, 0.25, 0.0]
+    With r = (upper - clip(p)) / (upper - lower), w = max_w * r^2 * (3 - 2r).
+    Example: GateSpec(60, 150, 0.5) gives [0.5, 0.25, 0.0] for p = [60, 105, 150].
     """
     if not isinstance(spec, GateSpec):
         raise TypeError("spec must be a GateSpec")
@@ -63,24 +45,7 @@ def capped_weights(uncapped_predictions: Any, spec: GateSpec) -> np.ndarray:
 def blend_vectors(
     uncapped_predictions: Any, capped_predictions: Any, spec: GateSpec,
 ) -> np.ndarray:
-    """Combine matched predictions with a current-observation smooth gate.
-
-    Args:
-        uncapped_predictions: One-dimensional uncapped HGB vector.
-        capped_predictions: Cap125 HGB vector in exactly the same row order.
-        spec: A gate specification frozen before evaluation.
-
-    Returns:
-        Convex combinations of the two prediction vectors, without RUL clipping.
-
-    Raises:
-        ValueError: Vectors are malformed, nonfinite or have different shapes.
-        TypeError: The supplied specification is not a GateSpec.
-
-    Examples:
-        >>> blend_vectors([60, 150], [50, 120], GateSpec(60, 150, 0.5)).tolist()
-        [55.0, 150.0]
-    """
+    """Return (1 - w) * uncapped + w * capped; both vectors must share row order."""
     uncapped = _vector(uncapped_predictions, "uncapped_predictions")
     capped = _vector(capped_predictions, "capped_predictions")
     if uncapped.shape != capped.shape:
@@ -93,7 +58,6 @@ def blend_vectors(
 
 
 def _prediction_frame(frame: pd.DataFrame, name: str) -> pd.DataFrame:
-    """Validate and sort one prediction frame before exact paired alignment."""
     required = set(KEY) | {"y_pred"}
     if (not isinstance(frame, pd.DataFrame) or not frame.columns.is_unique
             or frame.empty or not required.issubset(frame.columns)):
@@ -116,28 +80,12 @@ def blend_predictions(
     uncapped_predictions: pd.DataFrame, capped_predictions: pd.DataFrame,
     spec: GateSpec,
 ) -> pd.DataFrame:
-    """Align stored vectors by exact keys and retain gate inputs for audit.
+    """Pair two prediction frames by key and blend them.
 
-    Raw truth and optional inner/outer fold columns must match exactly when
-    present. Truth is copied for subsequent scoring and does not affect weights.
-    Inference frames without any labels are accepted.
-
-    Args:
-        uncapped_predictions: Unique key/y_pred rows from uncapped HGB.
-        capped_predictions: Matching key/y_pred rows from cap125 HGB.
-        spec: A frozen gate specification.
-
-    Returns:
-        Sorted keys, optional truth/folds, component predictions, weights and
-        the blended y_pred. Stale input error columns are omitted.
-
-    Raises:
-        ValueError: Frames have inconsistent keys, truth or fold membership.
-        TypeError: The supplied specification is not a GateSpec.
-
-    Examples:
-        Inputs may be supplied in different row orders; unique keys determine
-        the pairing. A missing engine-cycle row is rejected.
+    `y_true`, `inner_fold` and `outer_fold` must match exactly when present;
+    `y_true` is only carried along for scoring. Output columns: keys, optional
+    truth/folds, uncapped_prediction, cap125_prediction, capped_weight, y_pred,
+    candidate_id. Old error columns from the inputs are dropped.
     """
     uncapped = _prediction_frame(uncapped_predictions, "uncapped_predictions")
     capped = _prediction_frame(capped_predictions, "capped_predictions")

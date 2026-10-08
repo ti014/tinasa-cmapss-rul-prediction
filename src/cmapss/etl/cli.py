@@ -16,7 +16,6 @@ from cmapss.etl.spark_pipeline import SparkRuntimeUnavailable, run_spark_etl
 
 
 def _write_json(path: Path, payload: dict[str, Any]) -> None:
-    """Ghi JSON UTF-8 với newline cuối."""
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 

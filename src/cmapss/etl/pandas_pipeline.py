@@ -1,8 +1,7 @@
 """Pipeline Pandas tham chiếu cho ETL Silver/Gold C-MAPSS.
 
-Mốc ETL chỉ chuẩn hóa observations, tạo train targets và tổng hợp catalog
-engine. Rolling features, predictions và metrics sẽ dùng catalog này ở các
-mốc sau; chúng không được suy diễn là đã có từ artifact hiện tại.
+Chuẩn hóa observations, tạo train targets và tổng hợp bảng engine summary.
+Rolling features được tạo riêng trong `cmapss.features`.
 """
 
 from __future__ import annotations
@@ -68,7 +67,6 @@ class PandasETLResult:
 
 
 def _sha256(path: Path) -> str:
-    """Tính SHA-256 của một file đầu vào."""
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
@@ -84,23 +82,9 @@ def _canonical_observations(frames: list[pd.DataFrame]) -> pd.DataFrame:
 
 
 def load_dataset(raw_dir: str | Path, dataset_id: str = "FD001") -> tuple[pd.DataFrame, pd.DataFrame, dict[str, str]]:
-    """Đọc và kiểm tra train/test một subset C-MAPSS trước khi tạo Silver.
+    """Đọc và kiểm tra `train_<id>.txt`, `test_<id>.txt` của một subset C-MAPSS.
 
-    Args:
-        raw_dir: Thư mục chứa file `train_<dataset_id>.txt` và `test_<dataset_id>.txt`.
-        dataset_id: Một trong `FD001` đến `FD004`.
-
-    Returns:
-        Tuple gồm observations canonical, train targets và SHA-256 input.
-
-    Raises:
-        ContractError: Nếu observations hoặc train targets vi phạm contract.
-        OSError: Nếu không đọc được raw file.
-
-    Example:
-        >>> observations, targets, hashes = load_fd001("data/raw")
-        >>> len(targets) == len(observations.query("split == 'train'"))
-        True
+    Trả về (observations canonical, train targets, SHA-256 của từng file input).
     """
     dataset_id = dataset_id.upper()
     if dataset_id not in DATASET_IDS:
@@ -129,22 +113,7 @@ def load_fd001(raw_dir: str | Path) -> tuple[pd.DataFrame, pd.DataFrame, dict[st
 
 
 def build_engine_summary(observations: pd.DataFrame) -> pd.DataFrame:
-    """Tạo bảng Gold engine-level từ observations đã kiểm tra.
-
-    Args:
-        observations: Bảng observations có schema data contract.
-
-    Returns:
-        Một dòng cho mỗi `(split, engine_id)`, canonical theo split rồi ID.
-
-    Raises:
-        ContractError: Nếu observations không đạt schema, khóa hoặc cycle.
-
-    Example:
-        >>> summary = build_engine_summary(observations)
-        >>> {"split", "engine_id", "n_cycles"} <= set(summary.columns)
-        True
-    """
+    """Tạo bảng Gold một dòng cho mỗi `(split, engine_id)`, sắp theo split rồi ID."""
     validate_observations(observations, source="ETL engine summary")
     summary = (
         observations.groupby(list(GOLD_ENGINE_KEY), sort=True, as_index=False)
@@ -225,20 +194,10 @@ def write_pandas_artifacts(
     *,
     raw_dir: str | Path | None = None,
 ) -> dict[str, Any]:
-    """Ghi Silver Parquet, Gold Parquet/SQLite và metadata lần chạy.
+    """Ghi Silver Parquet, Gold Parquet/SQLite và `run_info.json`; trả về metadata.
 
-    Args:
-        result: Kết quả từ :func:`run_pandas_etl`.
-        output_dir: Thư mục artifact ETL, không được nằm trong Bronze.
-        raw_dir: Bronze cho result tạo thủ công; không bỏ qua result.raw_dir.
-
-    Returns:
-        Metadata JSON-serializable gồm row counts, schema và output paths.
-
-    Raises:
-        ValueError: Nếu output nằm trong thư mục raw.
-        RuntimeError: Nếu thiếu engine Parquet.
-        OSError: Nếu không tạo/ghi được artifact.
+    `output_dir` không được nằm trong thư mục raw. `raw_dir` dùng cho result tạo
+    thủ công; nó được bảo vệ thêm chứ không thay `result.raw_dir`.
     """
     output_path = Path(output_dir).resolve()
     raw_path = Path(result.raw_dir or raw_dir or default_raw_dir()).resolve()

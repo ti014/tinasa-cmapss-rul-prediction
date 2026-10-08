@@ -1,8 +1,7 @@
 """Tạo rolling features từ Silver observations.
 
-M3.2 chỉ tạo đặc trưng từ observations đã kiểm tra. Module này không đọc
-`RUL_FD001.txt`, không fit scaler, không chọn sensor theo toàn bộ train và
-không huấn luyện mô hình.
+Chỉ dùng observations; không đọc `RUL_FD001.txt` và không fit gì trên dữ liệu,
+nên không có rò rỉ nhãn hay thống kê toàn tập.
 """
 
 from __future__ import annotations
@@ -57,7 +56,6 @@ class RollingFeatureResult:
 
 
 def _sha256(path: Path) -> str:
-    """Tính SHA-256 của artifact đầu vào."""
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
@@ -127,25 +125,11 @@ def build_rolling_features(
 ) -> pd.DataFrame:
     """Tạo trailing-window features cho mọi split và engine.
 
-    Mỗi output row dùng đúng `window_cycles` observations kết thúc tại khóa
-    `(split, engine_id, cycle)` của chính dòng đó. Window không đi qua engine,
-    split hoặc cycle tương lai.
+    Mỗi dòng dùng đúng `window_cycles` observations kết thúc tại cycle của dòng đó,
+    trong cùng engine/split; không dùng cycle tương lai. Output gồm khóa và 126 cột
+    `<sensor>__<stat>` (21 sensor x 6 thống kê). Engine không đủ cycle thì raise ContractError.
 
-    Args:
-        observations: Silver observations đã đạt data contract.
-        window_cycles: Độ dài trailing window. M3.2 dùng mặc định 30.
-
-    Returns:
-        DataFrame gồm khóa observation và 126 feature columns theo mẫu
-        `<sensor>__<stat>` cho 21 sensors và 6 statistics.
-
-    Raises:
-        ContractError: Nếu schema observations sai hoặc một engine không đủ
-            số cycle để tạo window đầy đủ.
-
-    Example:
-        Với sensor bằng cycle và window 30, row tại cycle 30 có `last=30`,
-        `mean=15.5`, `min=1`, `max=30` và `slope=1`.
+    Ví dụ: sensor bằng cycle, window 30, dòng cycle 30 có mean=15.5, slope=1.
     """
     ordered = _require_windowable_observations(observations, window_cycles=window_cycles)
     frames = [
@@ -283,7 +267,7 @@ def write_rolling_feature_artifacts(
     *,
     raw_dir: str | Path | None = None,
 ) -> dict[str, Any]:
-    """Ghi Gold rolling features và metadata M3.2."""
+    """Ghi Gold rolling features và `run_info.json`."""
     output_path = Path(output_dir).resolve()
     raw_path = Path(result.raw_dir or raw_dir or default_raw_dir()).resolve()
     protected_dirs = [raw_path, *(Path(path) for path in result.protected_raw_dirs)]

@@ -4,8 +4,7 @@ Ví dụ chạy từ thư mục gốc repository::
 
     uv run --frozen python -m cmapss.maintenance
 
-Thứ tự đọc dữ liệu: train (fit Health Index) → test observations và dự đoán RUL
-đã lưu → ghi lịch bảo trì → cuối cùng mới đọc ``RUL_FD001.txt`` để đánh giá.
+``RUL_FD001.txt`` chỉ được đọc sau khi lịch bảo trì đã được ghi ra file.
 """
 
 from __future__ import annotations

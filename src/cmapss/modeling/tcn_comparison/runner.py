@@ -1,8 +1,7 @@
 """Run a grouped nested TCN comparison on raw FD001 sensor sequences.
 
-This runner is deliberately separate from the published HGB pipeline.  It
-trains two predeclared arms (uncapped and cap125), keeps test labels unread
-until final predictions exist, and writes an isolated experiment directory.
+Trains two arms (uncapped and cap125). Test labels are read only after
+final predictions are written.
 """
 
 from __future__ import annotations
@@ -63,7 +62,7 @@ def _metric_frame(frame: pd.DataFrame) -> dict[str, float | int]:
 
 
 def _engine_folds(metadata: pd.DataFrame, *, root: Path, n_splits: int) -> dict[int, int]:
-    """Read published five-fold assignments when available, otherwise derive folds."""
+    """Use the published five-fold assignments when available, else GroupKFold."""
     path = root / "outputs/modeling/tables/fold_assignments.csv"
     engines = sorted(map(int, metadata.engine_id.unique()))
     if n_splits == 5 and path.is_file():
@@ -146,7 +145,7 @@ def run_tcn_comparison(
     config: TCNConfig | None = None,
     evaluate_test: bool = True,
 ) -> dict[str, object]:
-    """Execute grouped nested CV and final reporting for both TCN arms."""
+    """Run grouped nested CV, fit final models and report test metrics for both arms."""
     root = Path(repo_root).resolve() if repo_root is not None else Path(__file__).resolve().parents[4]
     config = config or TCNConfig()
     output = Path(output_dir)

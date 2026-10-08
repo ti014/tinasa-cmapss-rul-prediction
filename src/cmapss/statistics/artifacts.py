@@ -1,8 +1,7 @@
-"""Xuất artifact thống kê suy luận mốc 2 từ raw train FD001.
+"""Ghi artifact suy luận thống kê sensor từ raw train FD001.
 
-Module này giữ notebook 02 ở vai trò điều phối: notebook gọi một hàm duy nhất
-để đọc train, kiểm tra contract, tạo cặp engine--sensor, tính suy luận theo
-cấu hình M2.0 và ghi các bảng/metadata đã kiểm tra round-trip.
+Đọc train, tạo cặp engine--sensor, tính suy luận rồi ghi bảng và metadata
+đã kiểm tra round-trip.
 """
 
 from __future__ import annotations
@@ -47,22 +46,10 @@ def write_sensor_statistics_artifacts(
     output_dir: str | Path = "outputs/statistics",
     config: SensorInferenceConfig | None = None,
 ) -> SensorStatisticsArtifacts:
-    """Tạo bảng cặp, bảng suy luận, metadata và validation cho M2.3a.
+    """Tạo bảng cặp, bảng suy luận, `run_info.json` và `validation.json`.
 
-    Args:
-        project_root: Thư mục gốc repository.
-        raw_dir: Thư mục chứa `train_FD001.txt`; có thể là đường dẫn tuyệt đối.
-        output_dir: Thư mục đích cho `tables/`, `run_info.json` và
-            `validation.json`.
-        config: Cấu hình suy luận. Mặc định dùng M2.0 đầy đủ.
-
-    Returns:
-        `SensorStatisticsArtifacts` chứa DataFrame và payload JSON đã ghi.
-
-    Raises:
-        ContractError: Khi raw train, bảng cặp hoặc bảng suy luận vi phạm
-            contract đã chốt.
-        OSError: Khi không đọc/ghi được file.
+    `raw_dir` chứa `train_FD001.txt`. Kết quả ghi vào `output_dir/tables/`
+    và hai file JSON ở `output_dir`.
     """
     resolved_config = config or SensorInferenceConfig()
     resolved_config.validate()

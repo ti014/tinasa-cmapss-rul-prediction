@@ -1,4 +1,4 @@
-"""Execute the isolated tree comparison with ``python -m``."""
+"""Entry point for ``python -m cmapss.modeling.lightgbm_comparison``."""
 
 from cmapss.modeling.lightgbm_comparison.runner import main
 

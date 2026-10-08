@@ -1,4 +1,4 @@
-"""Cấu hình đóng băng cho nested HGB multi-scale study."""
+"""Cấu hình cho nested HGB multi-scale study."""
 
 from __future__ import annotations
 
@@ -6,10 +6,9 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class StudyConfig:
-    """Split, fitting, warning và promotion controls của study.
+    """Tham số split, fit HGB, warning policy và điều kiện promotion.
 
-    ``max_workers`` chỉ điều khiển lịch process; không thay đổi candidate,
-    fold, sample weight hoặc tiêu chí khoa học.
+    ``max_workers`` chỉ ảnh hưởng cách chạy process, không đổi kết quả.
     """
 
     outer_splits: int = 5
@@ -67,7 +66,7 @@ class StudyConfig:
 
     @property
     def scientific(self) -> bool:
-        """True khi cấu hình đúng protocol đầy đủ đã khai báo."""
+        """True khi mọi tham số khớp cấu hình đầy đủ của protocol."""
         return (
             self.outer_splits == 5 and self.inner_splits == 3 and self.seed == 42
             and self.bootstrap_resamples >= 10_000 and self.hgb_max_iter == 200
@@ -82,7 +81,7 @@ class StudyConfig:
         )
 
     def audit_config(self):
-        """Chuyển phần đánh giá dùng chung sang audited implementation."""
+        """Tạo ``AuditStudyConfig`` tương ứng cho phần đánh giá dùng chung."""
         from cmapss.modeling.audit_study import AuditStudyConfig
 
         return AuditStudyConfig(

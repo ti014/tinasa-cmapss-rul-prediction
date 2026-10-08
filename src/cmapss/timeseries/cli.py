@@ -13,12 +13,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--observations",
         default="outputs/etl/silver/observations.parquet",
-        help="Silver observations Parquet từ M3.1",
+        help="Silver observations Parquet (outputs/etl/silver)",
     )
     parser.add_argument(
         "--fold-assignments",
         default="outputs/modeling/tables/fold_assignments.csv",
-        help="Fold assignment theo engine từ M3.3",
+        help="Fold assignment theo engine (outputs/modeling/tables)",
     )
     parser.add_argument(
         "--output-dir",

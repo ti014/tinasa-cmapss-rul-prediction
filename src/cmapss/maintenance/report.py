@@ -20,7 +20,7 @@ STATUS_ORDER = (NEEDS_MAINTENANCE, WATCH, NORMAL)
 
 @dataclass(frozen=True)
 class MaintenanceConfig:
-    """Ngưỡng RUL dùng chung với cảnh báo mức hai (Mục cảnh báo sớm)."""
+    """Ngưỡng RUL (cycle) để đánh dấu cần bảo trì."""
 
     rul_threshold: int = 30
 
@@ -75,16 +75,10 @@ def build_schedule(predictions: pd.DataFrame, anomalies: pd.DataFrame, config: M
     ``cycles_to_maintenance`` là số cycle còn lại đến khi RUL dự đoán chạm
     ngưỡng, làm tròn xuống để lịch nghiêng về phía an toàn; bằng 0 khi RUL dự
     đoán đã không vượt ngưỡng. Trạng thái xét theo thứ tự ưu tiên: cần bảo trì
-    (RUL dự đoán ≤ ngưỡng), theo dõi tăng cường (đã có bất thường), bình thường.
+    (RUL dự đoán <= ngưỡng), theo dõi tăng cường (đã có bất thường), bình thường.
 
-    Args:
-        predictions: Một dòng mỗi động cơ với ``engine_id``, ``cycle`` (cycle cuối
-            quan sát) và ``rul_pred``.
-        anomalies: Kết quả của :func:`anomaly_status`.
-        config: Ngưỡng RUL.
-
-    Returns:
-        Lịch bảo trì sắp theo mức ưu tiên (cần bảo trì sớm nhất lên đầu).
+    ``predictions`` có một dòng mỗi động cơ, ``cycle`` là cycle cuối quan sát.
+    Kết quả sắp theo mức ưu tiên, động cơ cần bảo trì sớm nhất lên đầu.
     """
     required = {"engine_id", "cycle", "rul_pred"}
     if not required.issubset(predictions.columns):
@@ -125,13 +119,10 @@ def build_schedule(predictions: pd.DataFrame, anomalies: pd.DataFrame, config: M
 
 
 def evaluate_schedule(schedule: pd.DataFrame, labels: pd.DataFrame, config: MaintenanceConfig) -> tuple[pd.DataFrame, dict]:
-    """Đối chiếu lịch bảo trì với RUL thật sau khi lịch đã được ghi.
+    """Đối chiếu lịch bảo trì với RUL thật.
 
-    Returns:
-        Bảng chéo trạng thái × nhóm RUL thật, và dict các chỉ số tóm tắt: số
-        động cơ thật sự cần bảo trì (RUL thật ≤ ngưỡng), số được báo đúng ở mức
-        cần bảo trì, số được báo ở mức bất kỳ, số báo cần bảo trì nhưng RUL thật
-        còn trên ngưỡng, và sai số tuyệt đối của số cycle đến lúc cần bảo trì.
+    Trả về bảng chéo trạng thái theo nhóm RUL thật và dict chỉ số tóm tắt
+    (số báo đúng, báo nhầm, MAE của số cycle đến lúc cần bảo trì).
     """
     threshold = config.rul_threshold
     joined = schedule.merge(labels.loc[:, ["engine_id", "rul"]], on="engine_id", how="left", validate="one_to_one")

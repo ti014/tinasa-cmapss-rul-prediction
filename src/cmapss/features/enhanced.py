@@ -74,10 +74,10 @@ class OperatingConditionNormalizer:
 
 
 def build_history_features(observations: pd.DataFrame, *, minimum_cycle: int = 30) -> pd.DataFrame:
-    """Use the first 30 cycles and the observed prefix; future rows never contribute.
+    """Per-sensor history features computed from the observed prefix only.
 
-    For each sensor, append deviation from its first-30-cycle mean and the
-    least-squares slope from cycle 1 through the current cycle.
+    Adds the deviation from the first-30-cycle mean and the least-squares slope
+    from cycle 1 to the current cycle.
     """
     validate_observations(observations, source="history features")
     if minimum_cycle < 30:

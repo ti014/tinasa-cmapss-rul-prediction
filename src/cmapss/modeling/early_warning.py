@@ -35,13 +35,11 @@ def build_warning_events(
     model_name: str,
     rul_threshold: int,
 ) -> tuple[pd.DataFrame, dict[str, Any]]:
-    """Aggregate a predeclared low-RUL warning rule by train engine.
+    """Apply a low-RUL warning rule per train engine and summarize it.
 
-    The first predicted value at or below ``rul_threshold`` is the warning
-    event. Lead time is the observed RUL at that event, which is a proxy for
-    cycles until the run-to-failure endpoint in FD001. ``false_alarm`` is only
-    true when no observed low-RUL event exists; this denominator is zero for
-    complete run-to-failure train trajectories and is reported explicitly.
+    The warning fires at the first cycle with ``y_pred <= rul_threshold``.
+    Lead time is the true RUL at that cycle. ``false_alarm`` needs an engine
+    with no true low-RUL rows, so its denominator is zero on full train runs.
     """
     required = {"split", "engine_id", "cycle", "model_name", "y_true", "y_pred"}
     if not required.issubset(oof_predictions.columns):

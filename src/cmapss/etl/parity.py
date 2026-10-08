@@ -50,10 +50,7 @@ def compare_frames(
     rtol: float = 1e-9,
     atol: float = 1e-12,
 ) -> FrameParity:
-    """Đối chiếu schema, khóa, số dòng và giá trị số của hai bảng.
-
-    Diagnostic nêu rõ boundary bị lệch để caller biết cần sửa engine nào.
-    """
+    """Đối chiếu schema, khóa, số dòng và giá trị số của hai bảng; lệch thì raise ParityError."""
     keys = tuple(key_columns)
     numeric = tuple(numeric_columns)
     if tuple(reference.columns) != tuple(candidate.columns):

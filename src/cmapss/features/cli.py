@@ -14,7 +14,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--silver-observations",
         default="outputs/etl/silver/observations.parquet",
-        help="Đường dẫn Silver observations Parquet từ M3.1",
+        help="Đường dẫn Silver observations Parquet (outputs/etl/silver)",
     )
     parser.add_argument(
         "--raw-dir",

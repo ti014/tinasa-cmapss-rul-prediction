@@ -1,4 +1,4 @@
-"""Positive/negative proof cho rolling features M3.2."""
+"""Kiểm thử rolling features."""
 
 from pathlib import Path
 

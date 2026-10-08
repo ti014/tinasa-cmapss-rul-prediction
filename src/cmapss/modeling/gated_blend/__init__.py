@@ -1,7 +1,6 @@
-"""Prediction-only smooth gating for capped and uncapped HGB models.
+"""Smooth gating between capped and uncapped HGB predictions.
 
-The package exposes pure contracts and blending operations. Model fitting and
-selection must remain in the study runner's grouped inner-validation procedure.
+Only gate specs and blending live here; fitting and selection are in the runner.
 """
 
 from .contracts import GateSpec, build_specs

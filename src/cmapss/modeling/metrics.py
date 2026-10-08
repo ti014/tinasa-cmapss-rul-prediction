@@ -7,10 +7,9 @@ import pandas as pd
 
 
 def nasa_score_components(y_true: np.ndarray, y_pred: np.ndarray) -> np.ndarray:
-    """Tính NASA asymmetric score theo lỗi `predicted - true`.
+    """NASA asymmetric score từng dòng, với lỗi `d = pred - true`.
 
-    Nhánh dự đoán thấp hơn thực tế dùng mẫu số 13; nhánh dự đoán cao hơn hoặc
-    bằng thực tế dùng mẫu số 10 theo công thức C-MAPSS thường dùng.
+    d < 0: exp(-d/13) - 1; d >= 0: exp(d/10) - 1 (dự đoán trễ bị phạt nặng hơn).
     """
     true = np.asarray(y_true, dtype="float64")
     pred = np.asarray(y_pred, dtype="float64")
@@ -19,7 +18,7 @@ def nasa_score_components(y_true: np.ndarray, y_pred: np.ndarray) -> np.ndarray:
 
 
 def add_prediction_errors(frame: pd.DataFrame) -> pd.DataFrame:
-    """Thêm absolute/squared error và NASA score component vào bảng prediction."""
+    """Thêm cột absolute_error, squared_error và nasa_score_component."""
     result = frame.copy()
     result["absolute_error"] = (result["y_pred"] - result["y_true"]).abs()
     result["squared_error"] = (result["y_pred"] - result["y_true"]) ** 2
@@ -50,12 +49,10 @@ def bootstrap_metric_intervals(
     n_resamples: int,
     seed: int,
 ) -> dict[str, dict[str, float]]:
-    """Bootstrap final metrics theo engine và giữ nguyên cluster multiplicity.
+    """Khoảng tin cậy 95% bằng bootstrap theo engine.
 
-    Mỗi resample chọn các engine có hoàn lại. Các dòng của engine được chọn
-    được ghép lại để tính row-level RMSE/NASA score; engine-level MAE được tính
-    trên vector MAE theo đúng số lần engine xuất hiện trong resample. Cách này
-    tránh làm mất trọng số khi một engine được chọn nhiều lần.
+    Mỗi resample chọn engine có hoàn lại; engine được chọn nhiều lần thì các
+    dòng của nó cũng được tính nhiều lần.
     """
     rng = np.random.default_rng(seed)
     rows = add_prediction_errors(evaluation.reset_index(drop=True))

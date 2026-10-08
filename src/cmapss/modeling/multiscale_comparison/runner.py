@@ -43,7 +43,7 @@ def _sha(path: Path) -> str:
 
 
 def _runtime_versions() -> dict[str, str]:
-    """Record the versions the independent verifier can reload exactly."""
+    """Package versions recorded in the run identity."""
     names = ("python", "numpy", "pandas", "sklearn", "joblib", "pyarrow",
              "scipy", "threadpoolctl")
     return {
@@ -58,7 +58,7 @@ def _json(path: Path, value: object) -> None:
 
 
 def _build_union(observations: pd.DataFrame, targets: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Build one frozen union matrix while preserving each arm's exact values."""
+    """Merge all arms and raw targets into one union matrix."""
     arms = build_feature_arms(observations)
     base = arms[BASELINE_ARM].merge(targets, on=list(KEY), how="left", validate="one_to_one")
     if base.rul.isna().any():
@@ -79,7 +79,7 @@ def _build_union(observations: pd.DataFrame, targets: pd.DataFrame) -> tuple[pd.
 
 
 def _make_train_test(observations: pd.DataFrame, targets: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Return the frozen union train matrix and test feature matrix."""
+    """Return the union train matrix (with raw RUL) and the test feature matrix."""
     arms = build_feature_arms(observations)
     base = arms[BASELINE_ARM]
     union = base.merge(targets, on=list(KEY), how="left", validate="one_to_one")
@@ -128,7 +128,7 @@ def _prediction(path: str | Path, arm: str, frame: pd.DataFrame) -> pd.DataFrame
 def _inner_stage(frame: pd.DataFrame, outer_fold: int, config: StudyConfig,
                  matrix_path: Path, cache_dir: Path, identity: str,
                  output: Path) -> tuple[dict[str, dict], dict[str, pd.DataFrame], dict]:
-    """Fit 3 x 3 inner folds, calibrate each policy, then freeze arm choice."""
+    """Run inner CV for every arm, calibrate its warning policy and pick an arm."""
     splitter = GroupKFold(config.inner_splits)
     folds = list(splitter.split(frame, frame.rul, frame.engine_id))
     assignments = []
@@ -194,7 +194,7 @@ def _save_final_model(train: pd.DataFrame, arm: str, config: StudyConfig,
 
 
 def _evaluate_test(final: pd.DataFrame, labels_path: Path, output: Path, config: StudyConfig) -> dict:
-    # This guard is deliberately before the first read of historical test labels.
+    # Must run before test labels are read.
     required = [output / "selection.json", output / "outer_decision_before_test.json",
                 output / "final_predictions.parquet", output / "final_predictions_receipt.json"]
     required.extend(output / "models" / arm / name
@@ -255,8 +255,8 @@ def run_multiscale_comparison(*, repo_root: str | Path | None = None,
     if any(output.iterdir()) and not (output / "manifest.json").exists():
         raise ValueError("nonempty output has no manifest")
     if not (output / "manifest.json").exists():
-        # Freeze the full local Python import closure, not only the top-level
-        # package. This lets the independent verifier detect source drift.
+        # Snapshot all local sources, not only this package, so later source
+        # changes can be detected.
         source_files = [
             *sorted((root / "src/cmapss").rglob("*.py")),
             root / "experiments/MULTISCALE_FEATURE_PROTOCOL.md",
@@ -342,8 +342,8 @@ def run_multiscale_comparison(*, repo_root: str | Path | None = None,
     audit._write_parquet(outer, output / "outer_predictions.parquet")
     audit._write_parquet(events, output / "warning_events.parquet")
     decision = write_readouts(outer, events, config, output)
-    # The baseline arm is independently checked against the already published
-    # HGB outer predictions before any historically inspected test label is read.
+    # Check the baseline arm against the published HGB outer predictions
+    # before any test label is read.
     reference_path = root / "outputs/experiments/lightgbm_comparison/20261005_study01/outer_predictions.parquet"
     replay = {"applicable": bool(config.scientific and reference_path.is_file()), "passed": False}
     if config.scientific and reference_path.is_file():

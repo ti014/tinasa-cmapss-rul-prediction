@@ -1,9 +1,7 @@
-"""Selection and paired readouts for the multi-scale HGB study.
+"""Arm selection and paired outer readouts for the multi-scale HGB study.
 
-The model fitting code is deliberately kept separate from this module.  This
-module consumes raw-RUL prediction vectors and warning events produced by the
-nested runner, reuses the audited metric implementation, and applies the
-predeclared promotion rule without looking at test labels.
+Works on raw-RUL predictions and warning events from the nested runner.
+Test labels are never read here.
 """
 
 from __future__ import annotations
@@ -57,7 +55,7 @@ class _ConfigAdapter:
         self._config = config
 
     def audit_config(self) -> audit.AuditStudyConfig:
-        """Build the unchanged audited metric configuration."""
+        """Build the shared audit metric configuration."""
         return audit.AuditStudyConfig(
             outer_splits=self._config.outer_splits,
             inner_splits=self._config.inner_splits,
@@ -126,12 +124,11 @@ def calibrate_policy(
 
 
 def choose_procedure(arm_records: pd.DataFrame, cfg: StudyConfig) -> dict[str, Any]:
-    """Select a multi-scale arm under the strict baseline safeguards.
+    """Pick an arm from inner OOF metrics, falling back to the baseline.
 
-    A candidate must improve point trajectory RMSE strictly while preserving
-    endpoint MAE, endpoint NASA, on-time rate and early-alarm burden relative
-    to the baseline under the configured margins.  The baseline is returned if
-    no candidate satisfies every condition.  Outer metrics are never consulted.
+    A candidate must strictly improve trajectory RMSE and be no worse than the
+    baseline (within the configured margins) on endpoint MAE, endpoint NASA,
+    on-time rate and early-alarm burden. Outer metrics are not used.
     """
     records = _validate_arm_records(arm_records)
     baseline = records.loc[BASELINE_ARM]
@@ -211,7 +208,7 @@ def paired_comparisons(
 def _engine_tables(
     predictions: pd.DataFrame, events: pd.DataFrame, cfg: StudyConfig,
 ) -> dict[str, pd.DataFrame]:
-    """Build paired engine statistics with the multi-scale baseline identity."""
+    """Per-engine statistics for each procedure, checked for identical keys and truth."""
     if "procedure" not in predictions or "procedure" not in events:
         raise ValueError("predictions and events require procedure identities")
     if predictions.procedure.isna().any() or events.procedure.isna().any():
@@ -261,7 +258,7 @@ def _engine_tables(
 
 
 def _gate_controls(comparison: pd.DataFrame) -> dict[str, bool]:
-    """Apply confidence-bound signs for the five joint safeguards."""
+    """Check the CI bounds of the five promotion conditions."""
     if comparison.empty:
         raise ValueError("selected paired comparison is empty")
     rows = comparison.set_index("metric")
@@ -280,7 +277,7 @@ def _gate_controls(comparison: pd.DataFrame) -> dict[str, bool]:
 
 
 def _region_rows(predictions: pd.DataFrame) -> list[dict[str, Any]]:
-    """Return raw-RUL region readouts for the report."""
+    """Error metrics per raw-RUL region."""
     rows: list[dict[str, Any]] = []
     for procedure, frame in predictions.groupby("procedure", sort=True):
         scored = tree_analysis._validate_predictions(frame)
@@ -310,7 +307,7 @@ def write_readouts(
     cfg: StudyConfig,
     output: str | Path,
 ) -> dict[str, Any]:
-    """Write outer readouts and the fixed paired promotion decision."""
+    """Write outer readout tables and the paired promotion decision."""
     if "procedure" not in predictions or set(predictions.procedure) != set(READOUT_ARMS):
         raise ValueError("readouts require the three arms and selected_pipeline")
     if "procedure" not in events or set(events.procedure) != set(READOUT_ARMS):

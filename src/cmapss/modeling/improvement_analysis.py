@@ -1,4 +1,4 @@
-"""Matched engine comparisons for the predeclared RUL improvement study."""
+"""Paired per-engine comparisons between the baseline and the improved RUL model."""
 
 from pathlib import Path
 
@@ -9,7 +9,7 @@ from cmapss.modeling.early_warning import build_warning_events
 
 
 def engine_metrics(predictions: pd.DataFrame) -> pd.DataFrame:
-    """Aggregate each engine before comparing or resampling engines."""
+    """Per-engine error and warning metrics."""
     events, _ = build_warning_events(predictions, model_name="candidate", rul_threshold=30)
     events = events.set_index("engine_id")
     rows = []
@@ -116,7 +116,7 @@ def _write_figures(predictions: pd.DataFrame, engine_tables: dict, output: Path)
 
 
 def write_test_comparison(evaluation: pd.DataFrame, output: Path, resamples: int, seed: int) -> None:
-    """Compare endpoint errors only after predictions and final evaluation exist."""
+    """Compare test endpoint errors of the baseline snapshot and the selected model."""
     from cmapss.modeling.metrics import summarize_prediction_errors
     baseline = pd.read_parquet(output / "baseline_snapshot/predictions/final_evaluation.parquet")
     baseline = baseline.sort_values("engine_id").reset_index(drop=True)

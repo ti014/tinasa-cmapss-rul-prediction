@@ -21,16 +21,9 @@ def ewma_smooth(frame: pd.DataFrame, columns: Sequence[str], *, span: int) -> pd
 
     EWMA với ``adjust=False`` chỉ dùng giá trị hiện tại và quá khứ:
     ``s_t = alpha * x_t + (1 - alpha) * s_{t-1}``, ``alpha = 2 / (span + 1)``.
-    Vì vậy giá trị làm mượt tại cycle t không nhìn thấy cycle t+1.
+    Vì vậy giá trị tại cycle t không nhìn thấy cycle t+1. ``span`` tính bằng cycle.
 
-    Args:
-        frame: Observations có ``engine_id``, ``cycle`` và các cột cần làm mượt.
-        columns: Các cột số cần làm mượt.
-        span: Độ dài span của EWMA, tính bằng cycle; phải lớn hơn hoặc bằng 1.
-
-    Returns:
-        Bản sao ``frame`` đã sắp theo engine/cycle, với ``columns`` được thay
-        bằng giá trị làm mượt.
+    Trả về bản sao đã sắp theo engine/cycle, với ``columns`` được thay bằng giá trị làm mượt.
     """
     if span < 1:
         raise ValueError("span phải lớn hơn hoặc bằng 1")
@@ -50,10 +43,7 @@ def noise_summary(raw: pd.DataFrame, smoothed: pd.DataFrame, columns: Sequence[s
     Chỉ số dao động là độ lệch chuẩn của sai phân bậc một trong từng động cơ
     (``x_t - x_{t-1}``). Xu hướng suy giảm thay đổi chậm nên đóng góp rất ít
     vào sai phân; phần lớn sai phân đến từ dao động giữa các cycle liền kề.
-
-    Returns:
-        Bảng mỗi sensor một dòng: ``diff_std_raw``, ``diff_std_smoothed`` và
-        ``reduction_pct`` (phần trăm dao động giảm được).
+    ``reduction_pct`` là phần trăm dao động giảm được.
     """
     raw = raw.sort_values(["engine_id", "cycle"], kind="mergesort").reset_index(drop=True)
     smoothed = smoothed.sort_values(["engine_id", "cycle"], kind="mergesort").reset_index(drop=True)

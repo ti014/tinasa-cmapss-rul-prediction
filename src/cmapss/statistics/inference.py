@@ -39,7 +39,7 @@ _INFERENCE_FLOAT_COLUMNS = (
 
 
 def _inference_frame(rows: list[dict[str, object]]) -> pd.DataFrame:
-    """Tạo DataFrame inference với dtype ổn định cho xuất CSV/JSON sau này."""
+    """DataFrame inference với dtype cố định."""
     frame = pd.DataFrame(rows, columns=SENSOR_INFERENCE_COLUMNS)
     return frame.astype(
         {
@@ -57,12 +57,12 @@ def _inference_frame(rows: list[dict[str, object]]) -> pd.DataFrame:
 
 
 def _rng_for(config: SensorInferenceConfig, sensor_index: int, purpose: int) -> np.random.Generator:
-    """Tạo RNG ổn định theo seed, sensor và mục đích tính toán."""
+    """RNG riêng cho từng (seed, sensor, mục đích) để kết quả tái lập được."""
     return np.random.default_rng(np.random.SeedSequence([config.seed, sensor_index + 1, purpose]))
 
 
 def _difference_vector(differences: np.ndarray | pd.Series, *, source: str) -> np.ndarray:
-    """Chuẩn hóa vector difference và chặn giá trị không hữu hạn."""
+    """Ép về float64 1 chiều và chặn giá trị không hữu hạn."""
     values = np.asarray(differences, dtype=np.float64)
     if values.ndim != 1 or values.size == 0 or not np.isfinite(values).all():
         raise ContractError(
@@ -79,11 +79,9 @@ def bootstrap_mean_difference(
     *,
     sensor_index: int,
 ) -> dict[str, float | int | str]:
-    """Tính mean paired difference và percentile bootstrap CI.
+    """Mean paired difference và percentile bootstrap CI.
 
-    Bootstrap lấy mẫu lại engine, không lấy mẫu cycle, để giữ đúng đơn vị phân
-    tích đã chốt. Hàm trả metadata phương pháp để notebook và artifact không
-    phải suy ra từ default của SciPy/NumPy.
+    Bootstrap lấy mẫu lại engine (mỗi phần tử là một engine), không lấy mẫu cycle.
     """
     config.validate()
     values = _difference_vector(differences, source="bootstrap differences")
@@ -114,7 +112,7 @@ def paired_wilcoxon(
     *,
     sensor_index: int,
 ) -> dict[str, float | str]:
-    """Tính Wilcoxon signed-rank theo cấu hình permutation đã chốt."""
+    """Wilcoxon signed-rank dùng permutation; trả NA khi mọi difference bằng 0."""
     config.validate()
     values = _difference_vector(differences, source="wilcoxon differences")
     if np.all(values == 0.0):
@@ -153,7 +151,7 @@ def paired_wilcoxon(
 
 
 def adjust_sensor_pvalues(inference: pd.DataFrame, config: SensorInferenceConfig) -> pd.DataFrame:
-    """Hiệu chỉnh BH trên đúng family 21 sensors, giữ NA ở output public."""
+    """Hiệu chỉnh BH trên family 21 sensors; sensor không kiểm định được giữ NA."""
     config.validate()
     validate_columns(inference, SENSOR_INFERENCE_COLUMNS, _INFERENCE_SOURCE)
     _validate_sensor_order(inference)
@@ -178,7 +176,7 @@ def summarize_sensor_changes(
     pairs: pd.DataFrame,
     config: SensorInferenceConfig | None = None,
 ) -> pd.DataFrame:
-    """Tóm tắt effect size, CI, Wilcoxon và FDR cho đủ 21 sensors."""
+    """Effect size, CI, Wilcoxon và FDR cho 21 sensors."""
     resolved_config = config or SensorInferenceConfig()
     resolved_config.validate()
     validate_engine_sensor_pairs(pairs)

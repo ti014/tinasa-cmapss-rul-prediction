@@ -1,9 +1,7 @@
-"""Run the frozen HGB/LightGBM nested comparison on shared causal features.
+"""Run the nested HGB/LightGBM comparison on the shared 169-feature matrix.
 
-Four arms use one persisted 169-feature matrix. Inner folds tune LightGBM and
-warning policies; each outer fold evaluates engines excluded from those
-choices. Historically inspected test labels are read only after every final
-choice, fitted model and test prediction has been persisted.
+Inner folds tune LightGBM and the warning policy; outer folds evaluate the
+held-out engines. Test labels are read only after final predictions are saved.
 """
 
 from __future__ import annotations
@@ -35,7 +33,7 @@ ARMS = ("hgb_uncapped", "hgb_cap125", "lgbm_uncapped", "lgbm_cap125")
 
 
 def _backend() -> common.ComparisonBackend:
-    """Bind the model-specific grid, selectors and process-safe workers."""
+    """Bundle this study's grid, selectors and workers for the shared runner."""
     return common.ComparisonBackend(
         study_name="lightgbm_comparison", arms=ARMS, features=FEATURES,
         specs=specs, active_specs=_active_specs, source_files=_source_files,
@@ -48,12 +46,12 @@ def _backend() -> common.ComparisonBackend:
 
 
 def _source_files(root: Path) -> tuple[str, ...]:
-    """Freeze this study, shared lifecycle and transitive local imports."""
+    """Source files hashed into the run manifest."""
     return common.source_files(root, "lightgbm_comparison", "scripts/run_lightgbm_study.py")
 
 
 def _versions() -> dict[str, str]:
-    """Record the numeric stack and this study's model package."""
+    """Package versions to record, including lightgbm."""
     return common.installed_versions("lightgbm")
 
 
@@ -61,13 +59,12 @@ def _freeze_inputs(
     root: Path, output: Path, observations_path: Path, targets_path: Path,
     config: StudyConfig,
 ) -> tuple[dict[str, Any], str, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """Freeze model-specific provenance and the shared causal feature matrix."""
     return common.freeze_inputs(root, output, observations_path, targets_path,
                                 config, _backend())
 
 
 def _active_specs(config: StudyConfig) -> tuple[TreeSpec, ...]:
-    """Return the declared scientific grid, or a small explicit smoke grid."""
+    """Full grid, or the explicitly listed smoke candidates."""
     declared = specs(config)
     if config.scientific:
         return declared
@@ -90,7 +87,6 @@ def _fit_batch(
     root: Path, output: Path, manifest: dict[str, Any], identity: str,
     config: StudyConfig, stage: str,
 ) -> dict[tuple[str, int], str]:
-    """Schedule this study's fold worker through the common lifecycle."""
     return common.fit_batch(pool, tasks, root, output, manifest, identity,
                             config, stage, _backend())
 
@@ -99,7 +95,6 @@ def _inner_stage(
     frame: pd.DataFrame, fold: int, pool: ProcessPoolExecutor, root: Path,
     output: Path, manifest: dict[str, Any], identity: str, config: StudyConfig,
 ) -> tuple[dict[str, dict[str, Any]], dict[str, pd.DataFrame], dict[str, Any]]:
-    """Apply this study's candidate selection and warning calibration."""
     return common.inner_stage(frame, fold, pool, root, output, manifest,
                               identity, config, _backend())
 
@@ -107,7 +102,7 @@ def _inner_stage(
 def _final_model_task(
     feature_path: Path, spec: TreeSpec, config: StudyConfig, folder: Path, identity: str,
 ) -> str:
-    """Keep a top-level spawn-safe worker for this study's final estimator."""
+    """Defined at module level so spawned worker processes can pickle it."""
     return common.final_model_task(feature_path, spec, config, folder,
                                    identity, _backend())
 
@@ -115,7 +110,6 @@ def _final_model_task(
 def _evaluate_final_test(
     predictions: pd.DataFrame, labels_path: Path, config: StudyConfig, output: Path,
 ) -> dict[str, Any]:
-    """Read reporting labels after the shared final-artifact checks."""
     return common.evaluate_final_test(predictions, labels_path, config,
                                       output, _backend())
 
@@ -128,19 +122,10 @@ def run_lightgbm_comparison(
     output_dir: str | Path = "outputs/experiments/lightgbm_comparison/20261005",
     config: StudyConfig | None = None, evaluate_test: bool = True,
 ) -> dict[str, Any]:
-    """Execute four controlled arms and the inner-selected outer procedure.
+    """Run the full study and return the run summary.
 
-    Args:
-        repo_root: Repository with canonical inputs and published engine folds.
-        observations_path: Canonical train/test observations without test labels.
-        targets_path: Complete uncapped train labels.
-        test_labels_path: Historically inspected reporting labels, read last.
-        output_dir: Isolated fresh or compatible resumable study directory.
-        config: Predeclared fitting, split, selection and warning configuration.
-        evaluate_test: Report test metrics only after frozen final predictions.
-
-    Returns:
-        Completed run receipt with outer decision and reporting-only test status.
+    Relative paths are resolved against ``repo_root``. An existing compatible
+    ``output_dir`` is resumed. ``evaluate_test=False`` skips test scoring.
     """
     root = Path(repo_root).resolve() if repo_root is not None else Path(__file__).resolve().parents[4]
     config = config or StudyConfig()
@@ -152,7 +137,7 @@ def run_lightgbm_comparison(
 
 
 def main(argv: list[str] | None = None) -> None:
-    """Expose portable scientific and reduced smoke-run command line modes."""
+    """Command-line entry point; ``--dry-run`` uses a small smoke config."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", type=Path)
     parser.add_argument("--observations", default="outputs/etl/silver/observations.parquet")

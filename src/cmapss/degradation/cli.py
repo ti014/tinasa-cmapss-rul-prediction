@@ -130,7 +130,7 @@ def main(argv: list[str] | None = None) -> int:
 
     noise.to_csv(out / "tables/noise_summary.csv", index=False)
     events.to_csv(out / "tables/anomaly_events.csv", index=False)
-    # Độ nhạy của quy tắc: lưới z 2/3/4 × 3/5/10 cycle liên tiếp, trên HI gốc và HI sau EWMA.
+    # Độ nhạy của quy tắc: lưới z 2/3/4 x 3/5/10 cycle liên tiếp, trên HI gốc và HI sau EWMA.
     sensitivity = pd.concat(
         [sensitivity_grid(hi, column="health_index").assign(signal=name)
          for name, hi in (("ewma", hi_smooth), ("raw", hi_raw))],

@@ -1,4 +1,4 @@
-"""Process-safe fold fitting cache for the tree comparison study."""
+"""Fold fitting with an on-disk prediction cache shared across worker processes."""
 
 from __future__ import annotations
 
@@ -24,12 +24,12 @@ from .estimators import fit_predictor
 
 
 def _required_columns() -> tuple[str, ...]:
-    """Return unique key/features/target columns (cycle is in KEY and FEATURES)."""
+    """Key, feature and target columns, deduplicated (``cycle`` is in both KEY and FEATURES)."""
     return tuple(dict.fromkeys((*KEY, *FEATURES, "rul")))
 
 
 def _frame_digest(frame: pd.DataFrame) -> str:
-    """Hash ordered frozen values, including dtypes and column order."""
+    """Hash column order, dtypes and values."""
     digest = hashlib.sha256()
     digest.update(repr(tuple(frame.columns)).encode("utf-8"))
     digest.update(repr(tuple(str(dtype) for dtype in frame.dtypes)).encode("utf-8"))
@@ -49,7 +49,7 @@ def _file_digest(path: Path) -> str:
 def _load_frozen_cached(
     path_string: str, identity: str, file_hash: str,
 ) -> tuple[pd.DataFrame, str]:
-    """Read a frozen matrix once per worker process and return its content hash."""
+    """Read and validate the matrix once per worker; also return its content hash."""
     path = Path(path_string)
     if not path.is_file():
         raise FileNotFoundError(f"frozen feature matrix not found: {path}")
@@ -68,15 +68,15 @@ def _load_frozen_cached(
         raise ValueError("frozen feature matrix contains nonfinite values or negative RUL")
     if not identity:
         raise ValueError("frozen source identity must be nonempty")
-    # ``file_hash`` is a cache key as well as a tamper guard: replacing a
-    # parquet at the same path cannot silently reuse a prior worker matrix.
+    # file_hash is part of the lru_cache key, so a parquet replaced at the
+    # same path is reloaded instead of reusing the old matrix.
     if _file_digest(path) != file_hash:
         raise ValueError("frozen feature matrix changed while loading")
     return ordered, _frame_digest(ordered)
 
 
 def load_frozen_features(path: Path, identity: str) -> pd.DataFrame:
-    """Load train matrix through the worker-local LRU cache."""
+    """Return a copy of the train matrix from the per-worker cache."""
     resolved = Path(path).resolve()
     frame, _ = _load_frozen_cached(str(resolved), identity, _file_digest(resolved))
     return frame.copy(deep=True)
@@ -101,8 +101,7 @@ def _json_value(value: Any) -> Any:
 
 
 def _atomic_json(path: Path, payload: dict[str, Any]) -> None:
-    # Keep the temporary basename short: Windows MAX_PATH can be reached by
-    # nested managed worktrees plus a 64-character cache key.
+    # Short temp name: deep worktrees plus a 64-char key can hit Windows MAX_PATH.
     temporary = path.with_name(f".{uuid4().hex}.tmp.json")
     temporary.write_text(json.dumps(_json_value(payload), indent=2, sort_keys=True), encoding="utf-8")
     os.replace(temporary, path)
@@ -115,7 +114,7 @@ def _atomic_parquet(path: Path, frame: pd.DataFrame) -> None:
 
 
 def _quarantine_pair(parquet: Path, metadata: Path) -> None:
-    """Preserve interrupted cache artifacts before writing a replacement."""
+    """Move half-written cache files aside instead of deleting them."""
     if not parquet.exists() and not metadata.exists():
         return
     orphan = parquet.parent / "interrupted_publications"
@@ -171,11 +170,9 @@ def run_fit_task(
     cache_dir: Path,
     identity: str,
 ) -> str:
-    """Fit one candidate/fold and return an atomically cached parquet path.
+    """Fit one candidate on one fold and return the path of the cached predictions.
 
-    The worker never reads test labels or warning policy state.  ``fit_ids``
-    and ``validation_ids`` are engine IDs, so overlap is rejected before any
-    model is trained.
+    ``fit_ids`` and ``validation_ids`` are engine IDs and must not overlap.
     """
     fit_ids = tuple(sorted(set(map(int, fit_ids))))
     validation_ids = tuple(sorted(set(map(int, validation_ids))))

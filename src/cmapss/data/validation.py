@@ -35,10 +35,9 @@ def validate_integer(frame: pd.DataFrame, column: str, minimum: int, source: str
 
 
 def validate_observations(frame: pd.DataFrame, *, source: str = "observations") -> None:
-    """Kiểm tra bảng đầy đủ trước window; cho phép nhiều split và thứ tự dòng bất kỳ.
+    """Kiểm tra schema, kiểu, khóa duy nhất và cycle liên tục trong từng (split, engine_id).
 
-    Cycle phải liên tục sau khi sắp xếp trong từng (split, engine_id).
-    Contract chung không áp đặt số dòng FD001 hoặc cycle bắt đầu bằng 1.
+    Cho phép nhiều split và thứ tự dòng bất kỳ. Không ép số dòng hay cycle bắt đầu từ 1.
     """
     validate_columns(frame, OBSERVATION_COLUMNS, source)
     if not frame["split"].isin(SPLITS).all():

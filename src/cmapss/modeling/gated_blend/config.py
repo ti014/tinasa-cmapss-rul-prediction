@@ -1,7 +1,7 @@
-"""Freeze the derived HGB gating study grid and its evaluation contract.
+"""Configuration for the gated HGB study.
 
-The runner reuses the verified 200-iteration HGB models and their original
-5-by-3 engine splits. Smoke mode reduces gates and bootstrap draws, not fits.
+Reuses the 200-iteration HGB models and the original 5x3 engine splits.
+Smoke mode only shrinks the gate grid and bootstrap draws, not the fits.
 """
 
 from __future__ import annotations
@@ -15,15 +15,7 @@ from .contracts import GateSpec, build_specs
 
 @dataclass(frozen=True)
 class StudyConfig:
-    """Predeclare all scientific choices for a prediction-derived comparison.
-
-    Attributes:
-        lower_ruls: Lower uncapped-prediction gate boundaries.
-        upper_ruls: Upper uncapped-prediction gate boundaries.
-        max_capped_weights: Maximum capped-model contributions.
-        bootstrap_resamples: Conditional paired engine-bootstrap draws.
-        smoke: Engineering-only mode; can never pass the scientific gate.
-    """
+    """Fixed settings for the gated study. `smoke=True` is never scientific."""
 
     outer_splits: int = 5
     inner_splits: int = 3
@@ -47,7 +39,6 @@ class StudyConfig:
     smoke: bool = False
 
     def __post_init__(self) -> None:
-        """Reject incompatible base-model contracts and malformed gate grids."""
         if (self.outer_splits != 5 or self.inner_splits != 3 or self.seed != 42
                 or self.fit_threads != 4 or self.hgb_max_iter != 200):
             raise ValueError("derived study requires original 5x3/seed42/HGB200/threads4 contract")
@@ -70,21 +61,13 @@ class StudyConfig:
 
     @property
     def scientific(self) -> bool:
-        """Return whether the complete predeclared protocol is retained.
-
-        Returns:
-            True only for the full sixteen-gate configuration.
-        """
+        """True only for the full 16-gate grid with at least 10,000 bootstrap draws."""
         return (not self.smoke and self.bootstrap_resamples >= 10_000
                 and self.lower_ruls == (60., 90.) and self.upper_ruls == (125., 150.)
                 and self.max_capped_weights == (.25, .5, .75, 1.))
 
     def audit_config(self) -> AuditStudyConfig:
-        """Expose the unchanged endpoint and warning measurement contract.
-
-        Returns:
-            Configuration consumed by the existing audited measurement code.
-        """
+        """Config for the shared endpoint and warning measurement code."""
         return AuditStudyConfig(
             outer_splits=self.outer_splits, inner_splits=self.inner_splits,
             seed=self.seed, fit_threads=self.fit_threads, hgb_max_iter=self.hgb_max_iter,
@@ -96,14 +79,7 @@ class StudyConfig:
 
 
 def specs(config: StudyConfig) -> tuple[GateSpec, ...]:
-    """Return the explicit gate grid recorded in the study configuration.
-
-    Args:
-        config: Frozen derived-study configuration.
-
-    Returns:
-        Gate candidates in deterministic Cartesian-product order.
-    """
+    """Gate grid of the config, in Cartesian-product order."""
     return build_specs(lower_ruls=config.lower_ruls, upper_ruls=config.upper_ruls,
                        max_capped_weights=config.max_capped_weights)
 

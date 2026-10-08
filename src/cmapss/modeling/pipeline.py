@@ -1,4 +1,7 @@
-"""Leakage-safe modeling pipeline cho RUL FD001."""
+"""Pipeline huấn luyện, chọn model bằng GroupKFold và đánh giá RUL FD001.
+
+Test labels chỉ được đọc sau khi final predictions đã ghi ra đĩa.
+"""
 
 from __future__ import annotations
 
@@ -54,7 +57,7 @@ from matplotlib import pyplot as plt  # noqa: E402
 
 @dataclass(frozen=True)
 class ModelingConfig:
-    """Cấu hình modeling đã cố định cho mốc RUL đầu tiên."""
+    """Cấu hình CV và hyperparameter cho các model RUL ứng viên."""
 
     n_splits: int = MODELING_N_SPLITS
     seed: int = MODELING_SEED
@@ -104,7 +107,7 @@ class WeightedMedianRegressor(BaseEstimator, RegressorMixin):
 
 
 def build_evaluation_protocol() -> pd.DataFrame:
-    """Return the repository-wide evaluation matrix used by the report."""
+    """Bảng mô tả các giao thức đánh giá dùng trong repo."""
     rows = [
         {
             "protocol_id": "rul_cv",
@@ -290,7 +293,6 @@ def _write_warning_figure(
     event: pd.Series,
     path: Path,
 ) -> None:
-    """Plot one train OOF trajectory with the fixed warning threshold."""
     frame = oof_predictions.loc[
         oof_predictions["engine_id"].eq(int(event["engine_id"]))
         & oof_predictions["model_name"].eq(str(event["model_name"]))
@@ -435,7 +437,7 @@ def run_modeling_pipeline(
 
 
 def write_modeling_artifacts(result: ModelingResult, output_dir: str | Path) -> dict[str, Any]:
-    """Ghi CV metrics, final predictions chưa join labels và selected model."""
+    """Ghi CV metrics, final predictions (chưa join labels), selected model và run_info."""
     output_path = Path(output_dir).resolve()
     raw_path = Path("data/raw").resolve()
     if output_path == raw_path or raw_path in output_path.parents:

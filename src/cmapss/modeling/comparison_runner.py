@@ -1,9 +1,8 @@
-"""Shared frozen experiment lifecycle for the XGBoost and LightGBM studies.
+"""Shared nested-CV run lifecycle for the XGBoost and LightGBM studies.
 
-Only lifecycle mechanics live here. Each adapter owns its candidate grid,
-selection rules, estimators, fit cache and process-safe worker entrypoints.
-Source provenance follows local imports, so this module is frozen alongside
-the selected study and changes still invalidate a resume.
+Each study passes its own candidates, estimators, selection rules and workers
+through a ComparisonBackend. This module is part of each study's source hash,
+so editing it invalidates a resume.
 """
 
 from __future__ import annotations
@@ -40,7 +39,7 @@ AUTHOR = {"full_name": "Phan Nguyễn Mai Phương", "student_id": "25002711"}
 
 
 class ComparisonConfig(Protocol):
-    """Lifecycle settings shared by both study-specific configuration records."""
+    """Settings the lifecycle reads from a study config."""
 
     outer_splits: int
     inner_splits: int
@@ -52,12 +51,11 @@ class ComparisonConfig(Protocol):
     lead_requirement: int
 
     def audit_config(self) -> audit.AuditStudyConfig:
-        """Return the reference fold and feature protocol."""
         ...
 
 
 class CandidateSpec(Protocol):
-    """Identity used to schedule model-specific dataclass specifications."""
+    """Minimal interface of a study's candidate spec."""
 
     candidate_id: str
     family: str
@@ -65,10 +63,9 @@ class CandidateSpec(Protocol):
 
 @dataclass(frozen=True)
 class ComparisonBackend:
-    """Explicit model-specific functions consumed by the shared lifecycle.
+    """Study-specific functions used by the lifecycle.
 
-    Workers remain top-level functions in the study adapter. This record is
-    built inside the caller or worker, never sent through the process pool.
+    Built in the caller or worker and never pickled into the process pool.
     """
 
     study_name: str
@@ -91,7 +88,6 @@ class ComparisonBackend:
 
 
 def _sha(path: Path) -> str:
-    """Hash an artifact without retaining the entire file in memory."""
     digest = hashlib.sha256()
     with path.open("rb") as handle:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
@@ -100,7 +96,6 @@ def _sha(path: Path) -> str:
 
 
 def _read_json(path: Path) -> dict[str, Any]:
-    """Require a JSON object for immutable run receipts."""
     value = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(value, dict):
         raise ValueError(f"JSON object required: {path}")
@@ -108,7 +103,7 @@ def _read_json(path: Path) -> dict[str, Any]:
 
 
 def _write_json(path: Path, value: Any) -> None:
-    """Atomically publish JSON with native scalar values and finite numbers."""
+    """Write JSON atomically; NaN/inf are rejected."""
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_text(json.dumps(audit._json_value(value), ensure_ascii=False,
@@ -118,7 +113,7 @@ def _write_json(path: Path, value: Any) -> None:
 
 
 def _freeze_json(path: Path, value: Any) -> None:
-    """Reject changing a previously published choice or provenance receipt."""
+    """Write once; on resume, fail if the content differs."""
     normalized = audit._json_value(value)
     if path.exists():
         if _read_json(path) != normalized:
@@ -128,7 +123,7 @@ def _freeze_json(path: Path, value: Any) -> None:
 
 
 def _resolve(root: Path, value: str | Path) -> Path:
-    """Require portable repository descendants for every artifact path."""
+    """Resolve a path under the repo root; reject paths outside it."""
     path = Path(value)
     path = (root / path).resolve() if not path.is_absolute() else path.resolve()
     if not path.is_relative_to(root):
@@ -137,7 +132,7 @@ def _resolve(root: Path, value: str | Path) -> Path:
 
 
 def source_files(root: Path, study_name: str, entrypoint: str) -> tuple[str, ...]:
-    """Collect local import dependencies, package initializers and entrypoints."""
+    """Study source files plus their cmapss import closure and the entrypoint."""
     folder = root / "src/cmapss/modeling" / study_name
     pending = [path.relative_to(root).as_posix() for path in folder.glob("*.py")]
     pending.extend(["src/cmapss/modeling/audit_study.py",
@@ -183,7 +178,6 @@ def source_files(root: Path, study_name: str, entrypoint: str) -> tuple[str, ...
 
 
 def installed_versions(model_package: str) -> dict[str, str]:
-    """Record exact installed numeric and serialization package versions."""
     names = ("numpy", "pandas", "scikit-learn", model_package, "pyarrow", "joblib",
              "scipy", "threadpoolctl")
     return {"python": platform.python_version(),
@@ -191,7 +185,7 @@ def installed_versions(model_package: str) -> dict[str, str]:
 
 
 def _assert_immutable(root: Path, output: Path, manifest: dict[str, Any]) -> None:
-    """Stop if source, lock, inputs, folds or frozen feature bytes change."""
+    """Fail if sources, lock file, inputs, folds or frozen features changed."""
     identity = manifest["identity"]
     for field in ("source_sha256", "inputs_sha256", "outer_fold_source_sha256"):
         for name, digest in identity[field].items():
@@ -210,11 +204,10 @@ def freeze_inputs(
     root: Path, output: Path, observations_path: Path, targets_path: Path,
     config: ComparisonConfig, backend: ComparisonBackend,
 ) -> tuple[dict[str, Any], str, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """Snapshot provenance and persist one exact feature matrix before fits.
+    """Snapshot sources and inputs and save the frozen feature matrix before fitting.
 
-    On compatible resume, use the stored matrix without recomputing rolling
-    statistics. Inputs, local imports, dependency lock and configuration are
-    independently checked against the original manifest.
+    On resume, the stored matrix is reused after checking every hash against
+    the original manifest.
     """
     allowed = root / "outputs/experiments" / backend.study_name
     if output == allowed or not output.is_relative_to(allowed):
@@ -324,7 +317,6 @@ def freeze_inputs(
 
 
 def _progress(output: Path, stage: str, **values: Any) -> None:
-    """Publish compact checkpoints and an immediately visible console line."""
     payload = {"stage": stage, "updated_at_utc": datetime.now(timezone.utc).isoformat(), **values}
     _write_json(output / "progress.json", payload)
     # Windows pipes can use cp1252; persisted JSON remains UTF-8.
@@ -336,7 +328,7 @@ def fit_batch(
     root: Path, output: Path, manifest: dict[str, Any], identity: str,
     config: ComparisonConfig, stage: str, backend: ComparisonBackend,
 ) -> dict[tuple[str, int], str]:
-    """Execute independent folds in retained workers using file paths only."""
+    """Run fit tasks in the pool (workers get file paths, not frames)."""
     _assert_immutable(root, output, manifest)
     futures: dict[Future[str], tuple[str, int]] = {}
     for spec, fitting, validation, fold in tasks:
@@ -362,7 +354,7 @@ def inner_stage(
     frame: pd.DataFrame, fold: int, pool: ProcessPoolExecutor, root: Path,
     output: Path, manifest: dict[str, Any], identity: str, config: ComparisonConfig, backend: ComparisonBackend,
 ) -> tuple[dict[str, dict[str, Any]], dict[str, pd.DataFrame], dict[str, Any]]:
-    """Tune declared candidates, calibrate four policies and freeze an inner-only choice."""
+    """Fit and score candidates on inner folds, calibrate policies, save the selection."""
     stage = output / "stages" / (f"outer_{fold}" if fold else "final_inner")
     stage.mkdir(parents=True, exist_ok=True)
     rows, tasks = [], []
@@ -433,7 +425,7 @@ def final_model_task(
     feature_path: Path, spec: CandidateSpec, config: ComparisonConfig, folder: Path, identity: str,
     backend: ComparisonBackend,
 ) -> str:
-    """Fit/save/reload an all-train model in one worker and verify exact replay."""
+    """Fit on all train rows, save, reload and check that predictions match exactly."""
     folder.mkdir(parents=True, exist_ok=True)
     model_path, metadata_path = folder / "model.joblib", folder / "model.json"
     train = backend.load_frozen_features(feature_path, identity)
@@ -476,7 +468,7 @@ def final_model_task(
 def evaluate_final_test(
     predictions: pd.DataFrame, labels_path: Path, config: ComparisonConfig, output: Path, backend: ComparisonBackend,
 ) -> dict[str, Any]:
-    """Read labels only after all four models, selections and predictions exist."""
+    """Score final predictions on test labels; requires all models and receipts on disk."""
     required = [output / "selection.json", output / "final_predictions.parquet",
                 output / "final_predictions_receipt.json"]
     required.extend(output / "models" / arm / name
@@ -534,7 +526,7 @@ def run_comparison(
     root: Path, output: Path, observations: Path, targets: Path, labels: Path,
     config: ComparisonConfig, evaluate_test: bool, backend: ComparisonBackend,
 ) -> dict[str, Any]:
-    """Run common nested folds, frozen final choices and reporting-only test."""
+    """Run outer folds, the final inner selection, final models and optional test scoring."""
     manifest, identity, train, test, assignments = freeze_inputs(
         root, output, observations, targets, config, backend)
     started = time.perf_counter()

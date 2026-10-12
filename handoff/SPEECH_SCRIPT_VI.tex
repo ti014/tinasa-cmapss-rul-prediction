@@ -260,11 +260,18 @@ cất vào kho phân tán HDFS. Trước khi vào kho, mọi dòng đều qua c�
 đủ 26 cột chưa, đúng kiểu số chưa, có dòng nào trùng không, các chuyến bay có liền mạch không.
 
 \num{Bạc} là kim loại đã lọc sạch: dữ liệu đã kiểm tra, lưu dạng Parquet, gọn và đọc nhanh.
-\num{Vàng} là thành phẩm: bảng tổng hợp theo từng động cơ, lưu cả Parquet và SQLite để tra cứu.
-Sau đó mới đến bước tạo đặc trưng và mô hình.
+\num{Vàng} lưu bảng engine\_summary có 200 động cơ để tra cứu và bảng rolling
+features có 126 đặc trưng. Từ Silver observations, chương trình tạo cửa sổ 30 cycles
+để tính đặc trưng. Bảng 200 động cơ là nhánh tổng hợp riêng. Ví dụ, engine 1 tại
+cycle 100 dùng các cycle 71--100, rồi ghép nhãn RUL là 92. Mô hình được chọn bằng
+GroupKFold theo động cơ, huấn luyện lại trên toàn train và ghi 100 dự đoán test
+trước khi đọc nhãn thật để đánh giá.
 
 Ô trắng phía dưới bên trái là nhánh nghe ngóng sức khỏe động cơ: lọc nhiễu, tính chỉ số sức khỏe
-và tìm bất thường. Mỗi bước đều để lại biên bản, nên ai muốn chạy lại cũng ra đúng kết quả này.
+và tìm bất thường. Phần phân tích dùng train. Khi lập lịch cho test, chương trình
+transform tín hiệu test đã qua EWMA bằng scaler và PCA fit trên train, rồi kết hợp
+Health Index với RUL dự đoán. Dải vàng đối chiếu Pandas/PySpark ở ETL và rolling;
+MapReduce đối chiếu bảng tổng hợp động cơ trong slide tiếp theo.
 \nextslide{``Em làm dây chuyền này bằng hai công cụ khác nhau.''}
 
 % ---------------------------------------------------------------- 7
@@ -272,7 +279,8 @@ và tìm bất thường. Mỗi bước đều để lại biên bản, nên ai 
 \lookbox{Bên trái: chỉ cột ``Sai khác'' toàn số 0, nhấn vào hai dòng cuối có chữ HDFS, rồi ô xanh
 nhạt ``Cụm Hadoop''. Bên phải: chỉ cặp cột 10×, cột xanh 112 và cột vàng 33.}
 \say
-Em làm cùng một việc bằng ba cách. \num{Pandas} giống một đầu bếp giỏi làm một mình.
+Em đối chiếu Pandas/PySpark ở ETL và rolling features; MapReduce/Spark trên HDFS
+ở bảng tổng hợp động cơ. \num{Pandas} giống một đầu bếp giỏi làm một mình.
 \num{PySpark} giống một bếp có bốn đầu bếp chia nhau làm. Còn \num{Hadoop} là cả một nhà hàng có
 kho riêng: dữ liệu cất trong kho HDFS, và MapReduce chia việc thành hai công đoạn, sơ chế rồi
 gom lại. Em dựng nhà hàng đó trong Docker và cho nó tính lại bảng tổng hợp động cơ. Hai dòng cuối

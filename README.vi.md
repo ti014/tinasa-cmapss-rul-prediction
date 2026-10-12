@@ -6,11 +6,11 @@
 
 **Học viên:** Phan Nguyễn Mai Phương · **MSHV:** 25002711.
 
-**Cập nhật lần cuối 08/10/2026:** báo cáo, slide và dashboard được sắp lại theo
-rubric môn học: pipeline dữ liệu → khử nhiễu và window → xu hướng và bất thường →
-dự đoán RUL → cảnh báo sớm và lịch bảo trì. Bổ sung khử nhiễu EWMA, phát hiện bất
-thường bằng Health Index và báo cáo dự đoán thời điểm cần bảo trì cho 100 động cơ
-test. Các thử nghiệm cải thiện mô hình được gom vào phần mở rộng.
+**Đồng bộ tài liệu 12/10/2026:** mô tả pipeline được đối chiếu với code và artifact
+hiện có, gồm HDFS một node, hai nhánh RUL/Health Index độc lập và lịch bảo trì test.
+Lượt sửa tài liệu này không chạy lại training hoặc thay đổi kết quả khoa học.
+Báo cáo, slide và dashboard trình bày theo rubric môn học; thứ tự trình bày đó
+không có nghĩa tín hiệu đã khử nhiễu được đưa vào mô hình RUL.
 
 Repository này phục vụ báo cáo cuối kỳ môn Phân tích dữ liệu lớn, **Đề tài 8 —
 Phân tích dữ liệu IoT và bảo trì dự đoán**. Bài toán: phân tích dữ liệu cảm biến
@@ -35,7 +35,7 @@ Kết quả chính trên FD001:
 
 Sản phẩm bàn giao:
 
-- [Báo cáo PDF](report/main.pdf) (45 trang, [nguồn LaTeX](report/README.md)).
+- [Báo cáo PDF](report/main.pdf) (50 trang, [nguồn LaTeX](report/README.md)).
 - [Slide trình bày](slides/cmapss_fd001_presentation.pptx) ([PDF](slides/cmapss_fd001_presentation.pdf)),
   20 slide trên template IUH, dựng bằng [`slides/build_presentation.py`](slides/build_presentation.py).
 - [Dashboard Streamlit](app.py) chín trang, chỉ đọc artifact.
@@ -101,28 +101,27 @@ FD002--FD004 là các đánh giá bổ sung; kết quả chưa chứng minh hi�
 
 ## Kiến trúc dữ liệu
 
-```text
-Các file text gốc của NASA
-        |
-        v
-Bronze: dữ liệu nguồn bất biến
-        |
-        v
-Silver: observations có kiểu dữ liệu, đã kiểm tra và lưu Parquet
-        |
-        v
-Gold: engine summary, rolling features, predictions, metrics và bảng SQLite
-        |
-        +-------------------+
-        |                   |
-        v                   v
-Phân tích thống kê      Mô hình dự đoán RUL
-        |                   |
-        +---------+---------+
-                  v
-       Hình minh họa, dashboard Streamlit
-       và báo cáo LaTeX cuối kỳ
-```
+Các lớp mô tả dữ liệu được lưu, không phải chuỗi mà mọi bảng đều là đầu vào của
+bảng tiếp theo:
+
+1. **Bronze:** file text NASA bất biến. Reader kiểm tra schema, khóa và cycle liên
+   tục trước khi xử lý tiếp.
+2. **Silver:** union observations train/test, giữ cột `split` và lưu Parquet
+   (33.727 dòng FD001). Nhãn RUL train được lưu riêng.
+3. **Gold:** `engine_summary` tổng hợp observations thành 200 dòng động cơ. Một
+   nhánh độc lập đọc trực tiếp **Silver observations**, không đọc `engine_summary`,
+   để tạo 27.927 dòng rolling features, mỗi dòng có 126 đặc trưng.
+4. **Nhánh RUL:** features và targets train đi vào chọn mô hình theo động cơ rồi
+   huấn luyện lại. Mô hình dự đoán tại cycle cuối của mỗi động cơ test; chỉ đọc
+   nhãn test sau khi đã ghi đủ 100 dự đoán.
+5. **Nhánh phân tích tín hiệu:** observations train đã kiểm tra đi vào EDA/thống kê
+   và nhánh riêng EWMA → Health Index → bất thường. Các kết quả này không đi vào
+   mô hình RUL. Khi lập lịch bảo trì, phép biến đổi Health Index đã fit trên train
+   được áp dụng cho test; trạng thái bất thường mới ghép với dự đoán RUL đã lưu.
+
+Hình, dashboard chỉ đọc và báo cáo dùng kết quả đã lưu. Bước HDFS riêng minh họa
+lưu trữ Bronze/Silver và đối chiếu bảng tổng hợp động cơ; bước này không đưa quá
+trình huấn luyện RUL lên cụm nhiều máy.
 
 
 ### Quan hệ dữ liệu và công cụ
@@ -137,7 +136,9 @@ features (6 phép tóm tắt cho mỗi 21 sensor).
 | --- | --- | --- |
 | Đọc và kiểm tra | Python, Pandas | Schema, khóa, cycle continuity, train RUL |
 | ETL | Pandas, PySpark, Parquet, SQLite | Silver/Gold và parity |
-| Features | Pandas, NumPy | Window 30 cycles, 126 features |
+| Minh họa HDFS | Docker, Hadoop, YARN, MapReduce, Spark | Bronze/Silver trên HDFS và bảng Gold theo động cơ khớp trên một node |
+| Features | Pandas, NumPy; PySpark đối chiếu | Silver observations → window 30 cycles, 126 features |
+| Phân tích tín hiệu | Pandas, scikit-learn | EWMA, Health Index fit trên train và trạng thái bất thường; tách khỏi features RUL |
 | Modeling | scikit-learn | GroupKFold và HistGradientBoostingRegressor |
 | Đánh giá | scikit-learn, SciPy | MAE, RMSE, NASA score, bootstrap CI |
 | Trực quan hóa | Matplotlib, Seaborn, Streamlit | Hình, dashboard và kết quả |
@@ -199,7 +200,11 @@ Biểu diễn đặc trưng đã triển khai sử dụng trailing window dài 3
 - Giá trị nhỏ nhất và lớn nhất.
 - Độ dốc xu hướng tuyến tính theo vị trí 1--30 trong window.
 
-Mỗi window chỉ chứa dữ liệu của một động cơ và không sử dụng quan sát tương lai. Engine dưới 30 cycles bị từ chối thay vì padding, impute hoặc rút ngắn window.
+Window dùng giá trị sensor gốc trong Silver, không dùng tín hiệu EWMA hoặc Health
+Index. Mỗi window chỉ chứa dữ liệu của một động cơ và không sử dụng quan sát tương
+lai. Engine dưới 30 cycles bị từ chối thay vì padding, impute hoặc rút ngắn window.
+29 cycles đầu mỗi động cơ chưa đủ window, nên còn 17.731 dòng features train và
+10.196 dòng test; chỉ 100 dòng test ở cycle cuối được dùng để dự đoán cuối.
 
 ### Dự đoán RUL
 
@@ -217,17 +222,24 @@ cậy bootstrap được lưu trong `outputs/modeling/tables/final_metrics.json`
 
 ### Khử nhiễu, bất thường và lịch bảo trì
 
-- **Khử nhiễu:** EWMA span 10 làm mượt từng sensor trong từng động cơ,
+- **Khử nhiễu:** EWMA span 10 làm mượt 14 sensor có xu hướng trong từng động cơ,
   $s_t = \alpha x_t + (1-\alpha) s_{t-1}$ với $\alpha = 2/(\text{span}+1) \approx 0{,}18$;
-  chỉ dùng cycle hiện tại và quá khứ.
-- **Health Index:** StandardScaler và PCA một thành phần fit trên train đã khử nhiễu;
-  không dùng nhãn RUL.
+  chỉ dùng cycle hiện tại và quá khứ; bảy sensor còn lại giữ nguyên.
+- **Health Index:** StandardScaler và PCA một thành phần nhận đủ 21 cột sensor sau
+  bước làm mượt trên, fit chỉ trên train và không dùng nhãn RUL. Khi lập lịch bảo
+  trì, test dùng lại scaler, PCA, chiều dấu và hệ số chuẩn hóa đã fit; không fit
+  lại tham số trên test.
 - **Bất thường (cảnh báo mức 1):** so mỗi động cơ với 30 cycles đầu của chính nó;
-  báo khi Health Index giảm quá 3 độ lệch chuẩn và giữ 5 cycles liên tiếp.
+  báo khi `z <= -3` giữ đủ 5 cycles liên tiếp sau đoạn tham chiếu đó. Động cơ có
+  dưới 35 cycles quan sát được ghi là chưa đủ dữ liệu đánh giá bất thường.
 - **Cảnh báo mức 2:** RUL dự đoán ≤ 30 cycles.
-- **Lịch bảo trì:** cycle cần bảo trì = cycle hiện tại + ⌊RUL dự đoán − 30⌋. Trạng thái
+- **Lịch bảo trì:** cycle cần bảo trì = cycle hiện tại + max(⌊RUL dự đoán − 30⌋, 0). Trạng thái
   ưu tiên: cần bảo trì (mức 2), theo dõi tăng cường (mức 1), bình thường. Nhãn test
   chỉ được đọc sau khi lịch đã ghi ra file.
+
+EWMA và Health Index thuộc nhánh phân tích tín hiệu riêng; HGB vẫn nhận 126
+rolling features từ sensor gốc. Bất thường của Health Index không phải dự đoán
+số cycle còn lại.
 
 Ví dụ: động cơ test 90 ở cycle 146 có RUL dự đoán 31,2, nên cần bảo trì ở cycle 147
 và đang ở mức theo dõi tăng cường vì Health Index đã báo bất thường từ cycle 67.
@@ -249,7 +261,8 @@ Xem [artifact ma trận transfer](outputs/cross_dataset/README.md).
 ARIMA là phân tích chuỗi thời gian phụ, không phải mô hình RUL chính. Pipeline
 đã triển khai chọn 10 engine validation trước khi dự báo, huấn luyện StandardScaler và
 PCA trên 90 engine train còn lại rồi transform các engine được chọn, sau đó dùng 70% đầu chuỗi để fit và
-30% cuối để đánh giá:
+30% cuối để đánh giá. Phép biến đổi và cách chia dữ liệu này tách biệt với Health
+Index dùng cho bất thường/lịch bảo trì:
 
 - MAE và RMSE của dự báo.
 - Tỷ lệ bao phủ của khoảng dự đoán 95%.
@@ -283,11 +296,17 @@ Thành phần Big Data tập trung vào vòng đời dữ liệu và khả năng
 
 Dữ liệu nhân bản cho thử nghiệm khả năng mở rộng sử dụng engine ID mới và được tách hoàn toàn khỏi phân tích khoa học cũng như quá trình huấn luyện mô hình.
 
+Các dịch vụ Hadoop chạy trong Docker trên một máy. Artifact HDFS chứng minh bước
+lưu trữ, chạy job và đối chiếu chính xác bảng tổng hợp động cơ, không chứng minh
+hiệu năng trên cụm nhiều máy. Benchmark Pandas–Spark 1×/10× là phép đo riêng, dùng
+Spark local và xuất Arrow qua driver; thời gian đó không đo writer trên HDFS.
+
 ## Quy trình đánh giá
 
 - Dùng trailing window 30 cycles.
 - Chia các fold validation theo động cơ, không chia ngẫu nhiên các dòng hoặc window chồng lấn.
-- Chỉ huấn luyện scaler, feature selection, PCA và mô hình trên các fold training.
+- Chỉ fit scaler của Ridge và các mô hình RUL ứng viên trên training fold.
+- Giữ đủ 126 features RUL; mô hình chính không có feature selection hoặc PCA.
 - Chọn mô hình theo trung bình engine-level MAE.
 - Huấn luyện lại mô hình được chọn trên toàn bộ tập train.
 - Tạo đúng một dự đoán cuối cho mỗi động cơ trong số 100 động cơ test.
@@ -428,11 +447,14 @@ Hàm tạo nhãn từ chối quan sát test. Xem [data contract](data/CONTRACTS.
 
 ### Pipeline dữ liệu tổng thể
 
-Sơ đồ draw.io công khai dưới đây mô tả luồng FD001 chi tiết: EDA, paired analysis
-và PCA--ARIMA là các nhánh chỉ đọc train độc lập; Silver/Gold đi vào rolling
-features và modeling RUL; nhãn test chỉ được ghép sau khi ghi final predictions.
-[Sơ đồ trong báo cáo](report/figures/pipeline.pdf) cũng đánh dấu phạm vi đánh giá
-bổ sung FD001--FD004.
+Sơ đồ dưới đây tách nhánh RUL khỏi phân tích tín hiệu. Rolling features đọc trực
+tiếp Silver observations; `engine_summary` là bảng tổng hợp riêng, không phải đầu
+vào của features. EDA/thống kê chỉ dùng train. EWMA và Health Index fit trên train
+phục vụ phân tích bất thường, rồi transform test để lập lịch; chúng không đi vào
+HGB. Dự đoán RUL và trạng thái bất thường chỉ được ghép ở báo cáo bảo trì. Nhãn
+test được đọc sau khi ghi predictions hoặc lịch. [Sơ đồ trong báo cáo](report/figures/pipeline.pdf)
+thể hiện cùng các ranh giới này; PCA–ARIMA và chuyển miền FD002--FD004 vẫn là thử
+nghiệm mở rộng.
 
 ![Pipeline dữ liệu tổng thể FD001](assets/diagrams/fd001-pipeline.png)
 

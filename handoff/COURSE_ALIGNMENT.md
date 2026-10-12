@@ -2,7 +2,7 @@
 
 **Học viên:** Phan Nguyễn Mai Phương  
 **MSHV:** 25002711  
-**Ngày rà soát:** 09/10/2026 (cập nhật bản 08/10/2026)
+**Ngày đồng bộ:** 12/10/2026 (đối chiếu code và artifact hiện có)
 
 Tài liệu này đối chiếu bài làm với hai nguồn yêu cầu: đề cương môn Phân tích dữ liệu
 lớn và brief **Đề tài 8 — Phân tích dữ liệu IoT & bảo trì dự đoán**. Trạng thái
@@ -74,7 +74,7 @@ slide, dashboard và kịch bản dùng cùng một mô hình, một bảng cả
 | CLO4/CLO7: trực quan hóa, dashboard, storytelling | Báo cáo, slide, dashboard chín trang theo thứ tự pipeline | **Đạt** |
 | CLO5: thao tác HDFS và chạy job MapReduce/Spark | Thao tác HDFS (`put`, `ls`, `fsck`), job MapReduce trên YARN, Spark đọc/ghi HDFS; PySpark ETL và rolling, parity, benchmark 1×/10× | **Đạt** ở mức một node; chưa đo hiệu năng trên cụm nhiều máy |
 | CLO6: Pandas/PySpark cleaning và integration | concat/`unionByName`, kiểm tra schema và khóa, parity | **Đạt** trong phạm vi batch local |
-| CLO8: pipeline end-to-end | Raw → Silver → Gold → khử nhiễu → đặc trưng → mô hình → cảnh báo → lịch bảo trì → dashboard | **Đạt** |
+| CLO8: pipeline end-to-end | Raw → Silver observations → rolling features → RUL; nhánh riêng EWMA → HI → bất thường; lịch bảo trì kết hợp RUL/HI → dashboard; engine_summary tổng hợp riêng từ Silver | **Đạt** |
 | CLO9: làm việc nhóm | Brief cá nhân | **Không áp dụng** |
 | CLO10: chất lượng dữ liệu, đạo đức | Contract, hash, ranh giới nhãn test, khai báo sử dụng AI/LLM trong Mục 1.3 | **Đạt** |
 
@@ -85,7 +85,7 @@ slide, dashboard và kịch bản dùng cùng một mô hình, một bảng cả
 | Nhiều file, nhiều tầng | "Batch ETL nhiều file và lưu trữ phân lớp Bronze/Silver/Gold" |
 | Hai implementation | "Pandas và PySpark khớp tuyệt đối trên cùng input" |
 | Benchmark | "Trên một máy, Spark `local[4]` nhanh hơn Pandas khoảng 3,4 lần ở scale 10×"; không nói là cluster |
-| Hạ tầng | "Pipeline Big Data ở môi trường local"; chưa có HDFS, cluster hay streaming |
+| Hạ tầng | "Hadoop/HDFS/YARN một node Docker; MapReduce và Spark trên HDFS đối chiếu engine_summary khớp 200/200"; chưa có cụm nhiều máy hay streaming |
 
 ## Các điểm phải khóa trước khi nộp
 

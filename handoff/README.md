@@ -2,6 +2,10 @@
 
 **Học viên:** Phan Nguyễn Mai Phương · **MSHV:** 25002711
 
+**Đồng bộ pipeline:** 12/10/2026. README song ngữ, sơ đồ, báo cáo, slide và sổ tay
+phân biệt nhánh RUL với EWMA/Health Index; lịch bảo trì kết hợp hai đầu ra.
+Ví dụ train engine 1 ở cycle 100 dùng cycles 71–100 và target 92.
+
 Đi báo cáo chỉ cần đọc **[`SPEECH_SCRIPT_VI.pdf`](SPEECH_SCRIPT_VI.pdf)**.
 
 | File | Dùng khi nào |

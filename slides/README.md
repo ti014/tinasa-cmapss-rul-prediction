@@ -30,15 +30,19 @@ Deck gồm 20 slide, thứ tự bám rubric và cùng thứ tự với mục K�
 | 6. Mở rộng và kết luận | 17--20 | 3:00 | Thử nghiệm mở rộng, Q1--Q5, khó khăn và bài học, cảm ơn |
 | Demo dashboard | -- | 3:00 | Trình diễn artifact đã tạo |
 
+Slide 6 đọc rolling features trực tiếp từ Silver observations; bảng Gold
+engine_summary là nhánh tổng hợp riêng. Pandas/PySpark đối chiếu ETL và rolling;
+MapReduce/Spark trên HDFS đối chiếu engine_summary. Lịch bảo trì kết hợp RUL
+với Health Index đã fit trên train rồi transform test sau EWMA.
+
 ## Luồng dựng deck
 
 ```text
 outputs/ (JSON, CSV, PNG đã nghiệm thu)
-  │  slides/extract_slide_data.py   chỉ đọc artifact, không huấn luyện lại
-  │  python -m cmapss.degradation   khử nhiễu và phát hiện bất thường
-  │  python -m cmapss.maintenance   lịch bảo trì cho 100 động cơ test
+  │  cmapss.degradation / cmapss.maintenance tạo artifact nếu cần tái tính
+  │  slides/extract_slide_data.py   đọc artifact đã có
   ▼
-slides/slide_data.json + outputs/degradation/
+slides/slide_data.json + outputs/degradation/ + outputs/maintenance/ + outputs/hdfs/
   │  slides/build_presentation.py   python-pptx trên template IUH
   ▼
 slides/cmapss_fd001_presentation.pptx

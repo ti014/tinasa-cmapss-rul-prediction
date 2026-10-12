@@ -1,10 +1,13 @@
 # Tổ chức, truy xuất và biến đổi dữ liệu C-MAPSS
 
+**Học viên:** Phan Nguyễn Mai Phương · **MSHV:** 25002711 · **Đồng bộ:** 12/10/2026.
+
 Pipeline hiện có đọc từng subset, nối các dòng train/test có cùng schema, lưu
 observations trong Parquet, tạo nhãn train và tổng hợp theo engine. Từ lịch sử
 của từng engine, pipeline tạo 126 đặc trưng trên window 30 cycles để dự đoán RUL.
 Tài liệu này giải thích hành vi đã triển khai, đối chiếu với code và các artifact
-đã lưu đến 08/10/2026 (bổ sung khử nhiễu EWMA và lịch bảo trì). Lượt đồng bộ này không chạy lại training hay thay số liệu
+đã lưu đến 09/10/2026 (gồm EWMA, lịch bảo trì và Hadoop/HDFS một node).
+Lượt đồng bộ ngày 12/10/2026 không chạy lại training hay thay số liệu
 khoa học; benchmark local và parity được dẫn từ run ngày 29/09, còn bằng chứng
 reliability phần mềm được dẫn từ handoff ngày 07/10.
 
@@ -28,7 +31,7 @@ yêu cầu; transcript nhận dạng tiếng nói có lỗi chỉ bổ sung bố
 | Xử lý nhiễu | EWMA span 10 theo từng động cơ, chỉ dùng quá khứ; giảm trung vị 86,3% dao động ngắn hạn | Không có tín hiệu sạch để chứng minh đã loại đúng nhiễu đo |
 | Xu hướng và bất thường | Quỹ đạo sensor, so sánh đầu/cuối, Health Index; bất thường khi giảm quá 3σ so với 30 cycles đầu | Chưa đo được tỷ lệ báo động giả vì không có nhãn điểm bắt đầu suy giảm |
 | Dự đoán/cảnh báo/lịch bảo trì | RUL test của HGB (MAE 15,35), OOF warning timing 44/7/49, lịch bảo trì 100 động cơ test (21/21 báo cần bảo trì là đúng) | Ngưỡng 30 cycles chưa hiệu chuẩn theo chi phí |
-| Nội dung xử lý dữ liệu lớn | PySpark ETL và rolling local[4], Parquet nhiều tầng, parity và benchmark stage có I/O ở scale 1×/10× | Chưa đo cluster, distributed writer hay partition-aware query |
+| Nội dung xử lý dữ liệu lớn | PySpark ETL/rolling local[4], parity và benchmark I/O 1×/10×; Hadoop một node Docker, Bronze/Silver trên HDFS, MapReduce/Spark đối chiếu engine_summary | Chưa đo hiệu năng cụm nhiều máy; benchmark local ghi qua driver, tách khỏi writer HDFS |
 
 ## 1. Nhiều file được tổ chức và gom thế nào?
 
@@ -183,6 +186,13 @@ không có foreign key constraint được khai báo trong SQLite hiện tại.
 
 ## 6. Phần Big Data được thể hiện thế nào?
 
+Rolling features đọc trực tiếp Silver observations, còn engine_summary là nhánh
+tổng hợp riêng. Ví dụ, train engine 1 ở cycle 100 dùng 30 dòng observations từ
+71–100, tạo 126 features rồi join target 92; không dùng bảng 200 dòng động cơ
+để tạo features. Nhánh EWMA/Health Index phân tích train độc lập với RUL. Khi lập
+lịch bảo trì, test được làm mượt bằng EWMA rồi transform bằng scaler/PCA fit trên
+train; trạng thái HI kết hợp với dự đoán RUL đã lưu.
+
 Phần xử lý dữ liệu phải trình bày được input/output, schema, grain (đơn vị
 của một dòng), khóa, union/join, group/window, lưu trữ và truy xuất trước khi
 nói metric model. Project minh họa các nội dung này bằng batch ETL nhiều file,
@@ -197,17 +207,24 @@ Windows, nên `write_seconds` và `pipeline_seconds` không phải phép đo c�
 distributed writer. Parity tại scale 1× cho toàn bộ 27.927 rolling rows × 126
 features khớp với tolerance $10^{-7}$; ETL boundary cũng có `max_abs_diff = 0`.
 
-Không có distributed cluster, Airflow DAG hoặc Power BI. Không gọi giữ
-Parquet theo thư mục subset là đã `partitionBy engine`. Dữ liệu scale 10× là bản
+Hadoop 3.4.3 chạy một node trong Docker, có HDFS, YARN, job MapReduce và Spark
+đọc/ghi HDFS. Bằng chứng `outputs/hdfs/summary.json` ghi nhận Silver 33.727 dòng,
+hai bảng engine_summary đều khớp Pandas 200/200 động cơ và `fsck` HEALTHY.
+MapReduce đối chiếu bảng tổng hợp động cơ; Pandas/PySpark còn đối chiếu ETL và rolling.
+Đây là các tác vụ đối chiếu, không phải ba bước nối tiếp của mô hình RUL.
+
+Chưa có cụm nhiều máy, Airflow DAG hoặc Power BI. Silver của job HDFS phân vùng
+theo `split`; các artifact Parquet local theo thư mục subset không đồng nghĩa
+`partitionBy engine`. Dữ liệu scale 10× là bản
 nhân bản để đo chi phí kỹ thuật, không dùng để huấn luyện và không đại diện cho
 workload production. Không dùng benchmark local để kết luận Spark nhanh hơn trên
 cluster.
 
 Cách trình bày phù hợp: báo cáo áp dụng các thao tác tổ chức và xử lý dữ liệu
 trong môn Phân tích dữ liệu lớn cho bài toán cảm biến time series; evidence
-Spark hiện giới hạn ở pipeline local, parity và benchmark có I/O. Đây là bằng
-chứng về tính đúng và khả năng chuyển implementation, không phải tuyên bố đã có
-hạ tầng phân tán production.
+gồm pipeline local, parity/benchmark có I/O và lưu trữ/chạy job trên Hadoop một node.
+Benchmark local không đo writer HDFS; kết quả một node chưa chứng minh hiệu năng
+hoặc độ sẵn sàng của cụm nhiều máy trong production.
 
 ## 7. Reliability và khả năng truy vết
 

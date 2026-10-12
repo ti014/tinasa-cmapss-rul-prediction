@@ -1,6 +1,6 @@
 # Bàn giao bài báo cáo — Đề tài 8
 
-**Học viên:** Phan Nguyễn Mai Phương · **MSHV:** 25002711 · **Cập nhật:** 08/10/2026
+**Học viên:** Phan Nguyễn Mai Phương · **MSHV:** 25002711 · **Đồng bộ:** 12/10/2026
 
 ## Đọc gì trước
 
@@ -11,7 +11,7 @@ liệu tra nhanh.
 
 ## Bài làm gồm những gì
 
-- **Báo cáo:** [`report/main.pdf`](../report/main.pdf), 45 trang.
+- **Báo cáo:** [`report/main.pdf`](../report/main.pdf), 50 trang.
 - **Slide:** [`slides/cmapss_fd001_presentation.pptx`](../slides/cmapss_fd001_presentation.pptx),
   20 slide trên template IUH; bản PDF dự phòng nằm cùng thư mục.
 - **Dashboard:** mở bằng lệnh bên dưới, chín trang, dùng để demo.
@@ -38,6 +38,15 @@ Không đưa vào zip: các lần chạy thử nghiệm không dùng trong `outp
 (`auth.json`, `*.sqlite`, `config.toml`).
 
 ## Nếu cần sửa số liệu hoặc slide
+
+Pipeline đã đồng bộ: rolling đọc Silver observations; engine_summary là bảng
+tổng hợp riêng. EWMA/HI dùng cho bất thường và được áp dụng lên test bằng tham
+số fit trên train khi lập lịch. Pandas/PySpark đối chiếu ETL/rolling;
+MapReduce/Spark trên HDFS đối chiếu engine_summary trên một node Docker.
+
+Nếu chỉ sửa cách trình bày, dựng lại deck từ artifact hiện có bằng builder,
+xuất PDF/preview rồi build sổ tay. Chỉ tái tạo degradation/maintenance khi cần
+tính lại artifact; sửa câu chữ không yêu cầu chạy lại model RUL.
 
 Chạy lại theo thứ tự, từ thư mục gốc project:
 

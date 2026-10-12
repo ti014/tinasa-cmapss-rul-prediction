@@ -3,10 +3,16 @@
 **Học viên:** Phan Nguyễn Mai Phương · **MSHV:** 25002711.
 
 [Bản PDF](main.pdf) được biên dịch từ [main.tex](main.tex), cập nhật ngày
-08/10/2026. Báo cáo trình bày Đề tài 8 — phân tích dữ liệu IoT và bảo trì dự đoán
+12/10/2026. Báo cáo trình bày Đề tài 8 — phân tích dữ liệu IoT và bảo trì dự đoán
 trên NASA C-MAPSS FD001, theo thứ tự rubric: pipeline dữ liệu (6.1), khử nhiễu và
 cửa sổ thời gian (6.2), xu hướng và bất thường (6.3), dự đoán RUL (6.4), cảnh báo
 sớm (6.5), báo cáo dự đoán thời điểm cần bảo trì (6.6) và thử nghiệm mở rộng (6.7).
+
+Đợt đồng bộ ngày 12/10/2026 làm rõ rolling features đọc Silver observations,
+engine_summary là nhánh tổng hợp riêng, và lịch bảo trì kết hợp RUL với Health
+Index fit trên train rồi transform test. Kích thước bảng trong sơ đồ tổng thể
+thuộc FD001; Hadoop/HDFS là bước đối chiếu trên một node Docker. Bản nguồn và
+bản xuất pipeline trong README, báo cáo và slide được cập nhật cùng lượt.
 
 Đợt sửa ngày 08/10/2026:
 
@@ -49,7 +55,7 @@ Nội dung của `data-walkthrough.tex`, `statistical-protocol.tex` và hai file
 ```text
 report/
 ├── main.tex                  # Bìa, tóm tắt, mục lục, cấu hình listings, ghép các phần
-├── main.pdf                  # Bản PDF đã biên dịch (45 trang)
+├── main.pdf                  # Bản PDF đã biên dịch (50 trang)
 ├── sections/
 │   ├── glossary.tex          # Thuật ngữ và chữ viết tắt
 │   ├── problem-data.tex      # Mục 1 Giới thiệu, Mục 2 Dữ liệu
@@ -81,7 +87,9 @@ chỉ đọc dữ liệu raw và artifact có sẵn, không huấn luyện lại
 
 Hình kết quả được tham chiếu trực tiếp từ `outputs/` để tránh sao chép và lệch
 nguồn. Bibliography dùng chung tại `../references/bibliography.bib`. Sơ đồ
-pipeline có nguồn Draw.io tại `../assets/diagrams/fd001-pipeline.drawio`.
+pipeline trong báo cáo có nguồn TikZ tại `figures/pipeline.tex`; sơ đồ tổng thể
+cùng nội dung cho README có nguồn draw.io tại
+`../assets/diagrams/fd001-pipeline.drawio`. Mỗi bản xuất được sinh từ nguồn tương ứng.
 
 ## Biên dịch
 
@@ -104,7 +112,7 @@ Push-Location report
 Pop-Location
 ```
 
-Lần build ngày 08/10/2026 tạo PDF 45 trang (dưới giới hạn 50 trang), không có
+Lần build đồng bộ ngày 12/10/2026 tạo PDF 50 trang (đúng giới hạn 50 trang), không có
 lỗi biên dịch, citation hoặc reference chưa phân giải, và không có overfull hoặc
 underfull box. Tectonic vẫn ghi cảnh báo môi trường về đường dẫn font Windows;
 đây không phải lỗi nội dung. Phần bibliography dùng line spacing 1.0 và cỡ chữ

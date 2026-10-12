@@ -6,11 +6,12 @@
 
 **Student:** Phan Nguyễn Mai Phương · **Student ID:** 25002711.
 
-**Last updated 2026-10-08:** the report, slides and dashboard now follow the course
-rubric order: data pipeline → denoising and time windows → degradation trend and
-anomalies → RUL prediction → early warning and maintenance schedule. Added EWMA
-denoising, Health Index anomaly detection and a predicted-maintenance report for
-the 100 test engines. Model-improvement studies are grouped as extended experiments.
+**Documentation synchronized 2026-10-12:** the pipeline description follows the
+implemented code and existing artifacts, including the single-node HDFS stage,
+the separate RUL and Health Index paths, and the test maintenance schedule. This
+documentation update does not rerun training or change scientific results. The
+report, slides and dashboard follow the course rubric order; that presentation
+order does not mean that denoised signals are inputs to the RUL model.
 
 This repository supports the final report for the Big Data Analytics course,
 **Topic 8 — IoT Data Analysis and Predictive Maintenance**: analyze equipment sensor
@@ -35,7 +36,7 @@ Main FD001 results:
 
 Deliverables:
 
-- [Report PDF](report/main.pdf) (45 pages, [LaTeX source](report/README.md)).
+- [Report PDF](report/main.pdf) (50 pages, [LaTeX source](report/README.md)).
 - [Slides](slides/cmapss_fd001_presentation.pptx) ([PDF](slides/cmapss_fd001_presentation.pdf)),
   20 slides on the IUH template, built by [`slides/build_presentation.py`](slides/build_presentation.py).
 - A nine-page [Streamlit dashboard](app.py) that only reads artifacts.
@@ -101,28 +102,28 @@ evaluations; they do not establish real-world deployment performance.
 
 ## Data Architecture
 
-```text
-NASA raw text files
-        |
-        v
-Bronze: immutable source files
-        |
-        v
-Silver: typed and validated observations in Parquet
-        |
-        v
-Gold: engine summary, rolling features, predictions, metrics, and SQLite tables
-        |
-        +-------------------+
-        |                   |
-        v                   v
-Statistical analysis   RUL prediction models
-        |                   |
-        +---------+---------+
-                  v
-        Figures, Streamlit dashboard,
-        and final LaTeX report
-```
+The layers describe stored data; they are not a sequence in which every table
+feeds the next table:
+
+1. **Bronze:** immutable NASA text files. The reader validates schema, keys and
+   cycle continuity before further processing.
+2. **Silver:** train and test observations are unioned with a `split` column and
+   stored in Parquet (33,727 FD001 rows). Train RUL targets are stored separately.
+3. **Gold:** `engine_summary` aggregates those observations into 200 engine rows.
+   Independently, rolling features read the full **Silver observations**, not
+   `engine_summary`, and create 27,927 window rows with 126 features each.
+4. **RUL path:** train features and targets feed grouped model selection and
+   refitting. The model predicts at the last observed cycle of each test engine;
+   test labels are read only after the 100 predictions have been written.
+5. **Signal-analysis path:** validated train observations feed EDA/statistics
+   and, separately, EWMA → Health Index → anomaly detection. These outputs are
+   not inputs to the RUL model. For maintenance, the train-fitted Health Index
+   transformation is applied to test observations and its anomaly status is
+   combined with the saved RUL predictions.
+
+Figures, the read-only dashboard and the report consume the saved results. The
+HDFS stage separately demonstrates Bronze/Silver storage and engine-summary
+parity; it does not move RUL training onto a multi-machine cluster.
 
 
 ### Data relationships and tool boundaries
@@ -137,7 +138,9 @@ create 126 features (six summaries for each of 21 sensors).
 | --- | --- | --- |
 | Read and validate | Python, Pandas | Schema, keys, cycle continuity, train RUL |
 | ETL | Pandas, PySpark, Parquet, SQLite | Silver/Gold and parity |
-| Features | Pandas, NumPy | 30-cycle window, 126 features |
+| HDFS demonstration | Docker, Hadoop, YARN, MapReduce, Spark | HDFS Bronze/Silver and matching Gold engine summaries on one node |
+| Features | Pandas, NumPy; PySpark parity | Silver observations → 30-cycle window, 126 features |
+| Signal analysis | Pandas, scikit-learn | EWMA, train-fitted Health Index and anomaly status; separate from RUL features |
 | Modeling | scikit-learn | GroupKFold and HistGradientBoostingRegressor |
 | Evaluation | scikit-learn, SciPy | MAE, RMSE, NASA score, bootstrap CI |
 | Visualization | Matplotlib, Seaborn, Streamlit | Figures, dashboard, results |
@@ -202,7 +205,11 @@ The implemented feature representation uses a trailing window of 30 cycles. It k
 - Minimum and maximum.
 - Linear trend slope over positions 1--30 within the window.
 
-Windows never cross engine boundaries and never use future observations. Engines with fewer than 30 cycles are rejected rather than padded or shortened.
+Windows use the original sensor values in Silver, not EWMA signals or Health
+Index. They never cross engine boundaries or use future observations. Engines
+with fewer than 30 cycles are rejected rather than padded or shortened. The
+first 29 cycles of every engine have no full window, leaving 17,731 train and
+10,196 test feature rows; only the 100 final test rows enter final prediction.
 
 ### RUL Prediction
 
@@ -220,18 +227,25 @@ bootstrap confidence intervals recorded in `outputs/modeling/tables/final_metric
 
 ### Denoising, anomalies and maintenance schedule
 
-- **Denoising:** an EWMA with span 10 smooths each sensor within each engine,
+- **Denoising:** an EWMA with span 10 smooths 14 trending sensors within each engine,
   $s_t = \alpha x_t + (1-\alpha) s_{t-1}$ with $\alpha = 2/(\text{span}+1) \approx 0.18$;
-  it only uses the current and past cycles.
-- **Health Index:** StandardScaler and a one-component PCA fit on the denoised train
-  data; no RUL labels are used.
+  it only uses the current and past cycles; the other seven sensors are unchanged.
+- **Health Index:** StandardScaler and a one-component PCA use all 21 sensor
+  columns after that smoothing. They fit on train only, without RUL labels.
+  Maintenance applies the fitted scaler, PCA, orientation and normalization to
+  test; no parameter is refitted on test.
 - **Anomaly (level-1 warning):** each engine is compared with its own first 30
-  cycles; an anomaly is flagged when the Health Index drops more than 3 standard
-  deviations and stays there for 5 consecutive cycles.
+  cycles; an anomaly is flagged when `z <= -3` holds for 5 consecutive cycles
+  after that reference segment. Fewer than 35 observed cycles are marked as
+  insufficient for anomaly evaluation.
 - **Level-2 warning:** predicted RUL ≤ 30 cycles.
-- **Maintenance schedule:** maintenance cycle = current cycle + ⌊predicted RUL − 30⌋.
+- **Maintenance schedule:** maintenance cycle = current cycle + max(⌊predicted RUL − 30⌋, 0).
   Status priority: needs maintenance (level 2), enhanced monitoring (level 1),
   normal. Test labels are read only after the schedule has been written.
+
+EWMA and Health Index are a separate signal-analysis path; the HGB model still
+uses 126 rolling features from the original sensors. A Health Index anomaly is
+not a prediction of the number of cycles remaining.
 
 Example: test engine 90 is at cycle 146 with predicted RUL 31.2, so maintenance is
 due at cycle 147; it is under enhanced monitoring because its Health Index has been
@@ -252,8 +266,11 @@ evaluation artifact](outputs/cross_dataset/README.md).
 ### ARIMA Analysis
 
 ARIMA is a secondary time-series analysis, not the primary RUL model. The
-implemented pipeline fits a standardized PCA Health Index on train observations
-and forecasts the final 30% of 10 representative validation engines. It reports:
+implemented pipeline selects 10 representative validation engines, fits the
+StandardScaler/PCA transformation on the other 90 train engines, and transforms
+the selected engines without refitting it. For each selected engine, ARIMA fits
+the first 70% of its Health Index trajectory and forecasts the final 30%. This is
+a separate transformer/protocol from the anomaly and maintenance analysis. It reports:
 
 - Forecast MAE and RMSE.
 - 95% prediction-interval coverage.
@@ -285,6 +302,11 @@ The Big Data component focuses on lifecycle and reproducibility rather than over
 
 Replicated records used in the scalability benchmark will receive remapped engine identifiers and remain isolated from scientific analysis and model training.
 
+The Hadoop services run on one host in Docker. The HDFS artifacts demonstrate
+storage, job execution and exact engine-summary parity, not performance on a
+multi-machine cluster. The separate 1×/10× Pandas–Spark benchmark uses local Spark
+and driver-side Arrow export; its timing does not benchmark the HDFS writer.
+
 ## Evaluation Protocol
 
 The estimand, unit of analysis, split/horizon, metric role, and uncertainty
@@ -298,7 +320,8 @@ does not use test labels.
 
 - Use a trailing window of 30 cycles.
 - Split validation folds by engine, never by overlapping rows or windows.
-- Fit scalers, feature selection, PCA, and models using training folds only.
+- Fit the Ridge scaler and candidate RUL models using training folds only.
+- Keep all 126 RUL features; neither feature selection nor PCA is part of the main RUL model.
 - Select models using mean engine-level MAE.
 - Refit the selected model on all training engines.
 - Produce exactly one final prediction for each of the 100 test engines.
@@ -441,11 +464,14 @@ for conditions and validation limits.
 
 ### Overall data pipeline
 
-The public draw.io diagram below shows the detailed FD001 path: EDA, paired
-statistics, and PCA--ARIMA read train data independently; Silver/Gold feeds
-rolling features and RUL modeling; test labels are joined only after final
-predictions. The [report pipeline figure](report/figures/pipeline.pdf) also
-marks the supplemental FD001--FD004 evaluation scope.
+The diagram below separates the RUL path from signal analysis. Rolling features
+read Silver observations directly; `engine_summary` is a separate aggregate, not
+their input. EDA/statistics use train only. EWMA and the train-fitted Health Index
+support anomaly analysis, then test transformation for maintenance; they do not
+feed HGB. RUL predictions and anomaly status meet only in the maintenance report.
+Test labels are read after predictions or the schedule have been written. The
+[report pipeline figure](report/figures/pipeline.pdf) shows the same boundaries;
+PCA–ARIMA and FD002--FD004 transfer remain extended experiments.
 
 ![FD001 overall data pipeline](assets/diagrams/fd001-pipeline.png)
 

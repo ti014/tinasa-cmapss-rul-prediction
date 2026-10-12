@@ -492,19 +492,22 @@ def slide_pipeline():
                 "và cycle liên tục; train và test được union theo dòng.\nSilver lưu observations và train_targets dạng "
                 "Parquet. Gold lưu engine_summary dạng Parquet và SQLite. Từ Silver, bước đặc trưng tạo window 30 cycle; "
                 "mô hình dùng GroupKFold, refit và tạo 100 dự đoán test.\nNhánh dưới bên trái là phân tích tín hiệu: khử "
-                "nhiễu, Health Index, bất thường, chỉ dùng train. Đây là phần thu thập, làm sạch, chuẩn hóa, tích hợp, "
+                "nhiễu, Health Index và bất thường trên train. Khi lập lịch bảo trì, test được làm mượt bằng EWMA rồi "
+                "transform bằng scaler/PCA đã fit trên train. engine_summary là nhánh tổng hợp riêng, không cấp đầu vào "
+                "cho rolling features. Pandas/PySpark đối chiếu ETL và rolling; MapReduce đối chiếu engine_summary. "
+                "Đây là phần thu thập, làm sạch, chuẩn hóa, tích hợp, "
                 "lưu trữ mà rubric chấm 40%.")
     steps = [
         ("Bronze", "Text gốc + HDFS", "tải từ NASA,\nMD5 + SHA-256"),
         ("Kiểm tra", "Reader", "26 trường, kiểu,\nkhóa, cycle"),
         ("Silver", "Parquet", f"observations\n{vn(FD['FD001']['observations'], 0)} dòng"),
-        ("Gold", "Parquet + SQLite", f"engine_summary\n{P['parity'][2]['rows']} dòng"),
-        ("Đặc trưng", "Window 30", f"{vn(P['feature_rows']['rolling_features'], 0)} dòng\n{P['feature_columns']} đặc trưng"),
-        ("Mô hình", "HGB", "GroupKFold →\nrefit → test"),
+        ("Đặc trưng", "Gold · Window 30", f"{vn(P['feature_rows']['rolling_features'], 0)} dòng\n{P['feature_columns']} đặc trưng"),
+        ("Mô hình", "HGB", "GroupKFold\nrefit toàn train"),
+        ("Dự đoán", "100 test engines", "ghi prediction\nrồi đọc nhãn"),
     ]
     bw, gap, y, bh = 1.72, 0.236, 2.95, 1.65
     rect(s, 0.92 + 2 * (bw + gap) - 0.08, 2.5, 2 * bw + gap + 0.16, 0.34, GOLD_TINT)
-    text(s, 0.92 + 2 * (bw + gap) - 0.08, 2.5, 2 * bw + gap + 0.16, 0.34, "Pandas = PySpark = MapReduce", size=12,
+    text(s, 0.92 + 2 * (bw + gap) - 0.08, 2.5, 2 * bw + gap + 0.16, 0.34, "ETL / rolling: Pandas–PySpark parity", size=11,
          bold=True, color=GOLD_DARK, align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
     for i, (head, tool, body) in enumerate(steps):
         x = 0.92 + i * (bw + gap)
@@ -516,15 +519,22 @@ def slide_pipeline():
         text(s, x + 0.12, y + 0.85, bw - 0.2, 0.75, body, size=11.5, color=WHITE if dark else INK)
         if i < 5:
             arrow(s, x + bw + 0.02, y + bh / 2, x + bw + gap - 0.02, y + bh / 2)
-    for col, head, sub, width in ((1, "Khử nhiễu → Health Index → bất thường", "chỉ dùng tập train · slide 9–12", 4.3),
-                                  (5, "Cảnh báo, lịch bảo trì", "slide 13–16", 2.9)):
+    for col, head, sub, width in ((1, "EWMA → Health Index → bất thường", "fit train; transform test khi lập lịch", 4.3),
+                                  (3, "Gold · engine_summary", "200 dòng; tổng hợp riêng từ Silver", 2.7),
+                                  (5, "Cảnh báo, lịch bảo trì", "kết hợp RUL và HI · slide 13–16", 2.9)):
         cx = 0.92 + col * (bw + gap) + bw / 2
         x = min(max(cx - width / 2, 0.92), 12.42 - width)
-        arrow(s, cx, y + bh + 0.03, cx, 5.2)
+        if col == 3:
+            source_x = 0.92 + 2 * (bw + gap) + bw / 2
+            arrow(s, source_x, y + bh + 0.03, source_x, 4.9)
+            arrow(s, source_x, 4.9, cx, 4.9)
+            arrow(s, cx, 4.9, cx, 5.2)
+        else:
+            arrow(s, cx, y + bh + 0.03, cx, 5.2)
         rect(s, x, 5.22, width, 0.85, WHITE, line=LINE)
         text(s, x + 0.15, 5.3, width - 0.3, 0.38, head, size=13, bold=True, color=BLUE)
         text(s, x + 0.15, 5.68, width - 0.3, 0.3, sub, size=11.5, color=SLATE)
-    text(s, 0.92, 6.22, 11.5, 0.35, "Đặc trưng và nhãn được ghép bằng đủ ba cột khóa, kiểm tra quan hệ 1:1.", size=13,
+    text(s, 0.92, 6.22, 11.5, 0.35, "Rolling đọc Silver observations. MapReduce đối chiếu engine_summary. Join train dùng đủ 3 khóa (1:1).", size=12,
          color=SLATE)
 
 
@@ -533,7 +543,7 @@ def slide_parity():
     bench = {(r["engine"], int(r["scale"])): r for r in D["stage_benchmark"]}
     pandas10, spark10 = bench[("pandas", 10)]["pipeline_seconds"], bench[("spark", 10)]["pipeline_seconds"]
     s = content(2, 7, "Đối chiếu Pandas, PySpark và Hadoop",
-                f"Ba cách triển khai trùng khớp ở mọi tầng; ở quy mô 10×, PySpark nhanh hơn Pandas khoảng {vn(pandas10 / spark10, 1)} lần",
+                f"ETL và rolling: Pandas–PySpark khớp; Hadoop đối chiếu bảng động cơ; Spark local 10× nhanh hơn ~{vn(pandas10 / spark10, 1)} lần",
                 "outputs/etl/parity.json; outputs/hdfs/summary.json; outputs/benchmarks/20260929/measurements.csv",
                 "Thời lượng: 1 phút.\nBảng trái: cùng input, Pandas và PySpark cho cùng schema, khóa, số dòng và giá trị ở "
                 "ba boundary; sai khác bằng 0. Hai dòng cuối là bảng engine_summary tính lại trên cụm Hadoop: một job "

@@ -2,18 +2,21 @@
 \label{sec:method}
 
 \subsection{Tổng quan pipeline}
-Hình~\ref{fig:pipeline} mô tả toàn bộ luồng xử lý. Sau khi đọc và kiểm tra, dữ
-liệu đi theo hai nhánh. Nhánh chính (bên trái) gồm ETL, tạo đặc trưng, huấn
-luyện và đánh giá mô hình RUL, rồi chuyển dự đoán thành cảnh báo. Nhánh phân tích
-tín hiệu (bên phải) gồm EDA, khử nhiễu, Health Index, phát hiện bất thường và kiểm
-định xu hướng. Nhánh này chỉ đọc tập train và không cung cấp đặc trưng cho mô hình
-RUL. Nhãn test chỉ được ghép ở bước cuối, sau khi dự đoán test đã được ghi ra file.
+Hình~\ref{fig:pipeline} tách nhánh RUL và nhánh phân tích tín hiệu. Rolling features
+đọc trực tiếp Silver observations; Gold \texttt{engine\_summary} là bảng tổng hợp
+riêng. Nhánh tín hiệu phân tích train bằng EDA, EWMA, Health Index và quy tắc bất
+thường; nhánh RUL dùng sensor gốc qua rolling statistics. Lịch bảo trì kết hợp hai
+đầu ra: RUL dự đoán và HI của test sau EWMA, transform bằng scaler/PCA fit trên train
+(Mục~\ref{sec:maintenance-method}). Nhãn test được đọc sau khi ghi dự đoán hoặc lịch.
+HDFS/MapReduce/Spark đối chiếu bảng tổng hợp trên một node Docker, độc lập với
+luồng huấn luyện RUL bằng Pandas/scikit-learn.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.74\linewidth]{figures/pipeline.pdf}
+\includegraphics[width=0.64\linewidth]{figures/pipeline.pdf}
 \caption[Pipeline xử lý dữ liệu]{Luồng xử lý dữ liệu. Nhánh train-only bên phải không đi vào mô hình
-RUL; nhãn test chỉ được ghép ở bước đánh giá cuối.}
+RUL; lịch bảo trì kết hợp hai đầu ra. Kích thước bảng trong hình là của FD001;
+nhãn test chỉ được ghép sau khi ghi dự đoán hoặc lịch.}
 \label{fig:pipeline}
 \end{figure}
 

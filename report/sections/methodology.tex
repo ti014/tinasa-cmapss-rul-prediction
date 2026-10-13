@@ -2,7 +2,7 @@
 \label{sec:method}
 
 \subsection{Tổng quan pipeline}
-Hình~\ref{fig:pipeline} tách nhánh RUL và nhánh phân tích tín hiệu. Rolling features
+Hình~\ref{fig:pipeline} tách nhánh A (dự đoán RUL) và nhánh B (theo dõi tín hiệu). Rolling features
 đọc trực tiếp Silver observations; Gold \texttt{engine\_summary} là bảng tổng hợp
 riêng. Nhánh tín hiệu phân tích train bằng EDA, EWMA, Health Index và quy tắc bất
 thường; nhánh RUL dùng sensor gốc qua rolling statistics. Lịch bảo trì kết hợp hai
@@ -14,9 +14,10 @@ luồng huấn luyện RUL bằng Pandas/scikit-learn.
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.64\linewidth]{figures/pipeline.pdf}
-\caption[Pipeline xử lý dữ liệu]{Luồng xử lý dữ liệu. Nhánh train-only bên phải không đi vào mô hình
-RUL; lịch bảo trì kết hợp hai đầu ra. Kích thước bảng trong hình là của FD001;
-nhãn test chỉ được ghép sau khi ghi dự đoán hoặc lịch.}
+\caption[Pipeline xử lý dữ liệu]{Luồng xử lý dữ liệu. Bước 1--3 chuẩn bị dữ liệu; nhánh A dự đoán RUL,
+nhánh B theo dõi tín hiệu và chỉ học trên train. Ô nét đứt (chạy lại trên Hadoop)
+chỉ kiểm tra lại bảng tổng hợp động cơ, không đi vào mô hình. Đáp án test chỉ được
+mở sau khi đã lưu dự đoán; lịch bảo trì kết hợp hai nhánh. Số liệu trong hình là của FD001.}
 \label{fig:pipeline}
 \end{figure}
 

@@ -70,6 +70,7 @@ report/
 │   ├── followup-tables.tex   # Bảng follow-up cũ; không còn ghép vào PDF
 │   └── appendix.tex          # Phụ lục nguồn; không đưa vào PDF chính
 └── figures/
+    ├── diagram-style.tex           # Màu, cỡ ô, mũi tên và chú giải dùng chung cho mọi sơ đồ
     ├── data-flow.tex / .pdf        # Luồng dữ liệu: bảng, kích thước, phép biến đổi
     ├── data-relations.tex / .pdf   # Quan hệ giữa các bảng, khóa và bậc quan hệ
     ├── pipeline.tex / .pdf         # Pipeline tổng thể gồm nhánh train-only
@@ -90,6 +91,9 @@ nguồn. Bibliography dùng chung tại `../references/bibliography.bib`. Sơ đ
 pipeline trong báo cáo có nguồn TikZ tại `figures/pipeline.tex`; sơ đồ tổng thể
 cùng nội dung cho README có nguồn draw.io tại
 `../assets/diagrams/fd001-pipeline.drawio`. Mỗi bản xuất được sinh từ nguồn tương ứng.
+Mọi sơ đồ TikZ nạp `figures/diagram-style.tex`; các sơ đồ draw.io dùng cùng quy ước:
+xanh lá là dữ liệu, xanh dương là bước xử lý, cam là kết quả, viền xám nét đứt là
+kiểm tra phụ, mũi tên cam nét đứt là dữ liệu chỉ được mở sau cùng.
 
 ## Biên dịch
 

@@ -1,62 +1,43 @@
-\documentclass[tikz,border=10pt]{standalone}
-\usepackage{fontspec}
-\setsansfont{Arial}
-\setmonofont{Consolas}[Scale=0.9]
-\usepackage{tikz}
-\usetikzlibrary{arrows.meta,positioning,calc}
-\definecolor{bronzeFill}{HTML}{F3E5D8}
-\definecolor{bronzeStroke}{HTML}{8D6E63}
-\definecolor{silverFill}{HTML}{E3EAF2}
-\definecolor{silverStroke}{HTML}{546E7A}
-\definecolor{goldFill}{HTML}{FFF3D6}
-\definecolor{goldStroke}{HTML}{C79100}
-\definecolor{modelFill}{HTML}{E1F5FE}
-\definecolor{modelStroke}{HTML}{0277BD}
-\definecolor{lateStroke}{HTML}{EF6C00}
+\documentclass[tikz,border=12pt]{standalone}
+\input{diagram-style}
+\renewcommand{\boxwidth}{4.3cm}
+% Lưới: ba cột cách nhau 6 cm; bước hàng 2,9 cm.
+\newcommand{\colA}{-6}
+\newcommand{\colB}{0}
+\newcommand{\colC}{6}
 \begin{document}
-\begin{tikzpicture}[
-font=\sffamily\small,
->=Stealth,
-table/.style={rectangle,rounded corners=3pt,align=center,text width=4.1cm,inner sep=5pt,thick},
-bronze/.style={table,draw=bronzeStroke,fill=bronzeFill},
-silver/.style={table,draw=silverStroke,fill=silverFill},
-gold/.style={table,draw=goldStroke,fill=goldFill},
-model/.style={table,draw=modelStroke,fill=modelFill},
-edge/.style={->,thick,draw=gray!75},
-late/.style={->,thick,dashed,draw=lateStroke},
-op/.style={font=\sffamily\scriptsize,align=center,fill=white,inner sep=2pt,text=black!80}]
+\begin{tikzpicture}[diagram,
+op/.style={note,fill=white}]
 
-% Bronze: ba file text gốc.
-\node[bronze] (train) at (-5.2,0) {\textbf{train\_FD001.txt}\\\scriptsize 20.631 dòng $\times$ 26 cột\\\scriptsize 1 dòng = 1 cycle};
-\node[bronze] (test) at (0,0) {\textbf{test\_FD001.txt}\\\scriptsize 13.096 dòng $\times$ 26 cột\\\scriptsize 1 dòng = 1 cycle};
-\node[bronze] (labels) at (5.2,0) {\textbf{RUL\_FD001.txt}\\\scriptsize 100 dòng $\times$ 1 cột\\\scriptsize 1 dòng = 1 động cơ test};
+% Hàng 1: ba file gốc từ NASA (Bronze).
+\node[dataBox] (train) at (\colA,0) {\cell{Dữ liệu train}{Bronze · \texttt{train\_FD001.txt}}{20.631 dòng; 1 dòng = 1 cycle}};
+\node[dataBox] (test) at (\colB,0) {\cell{Dữ liệu test}{Bronze · \texttt{test\_FD001.txt}}{13.096 dòng; 1 dòng = 1 cycle}};
+\node[dataBox] (labels) at (\colC,0) {\cell{Đáp án RUL của test}{Bronze · \texttt{RUL\_FD001.txt}}{100 dòng; 1 dòng = 1 động cơ}};
 
-% Silver: bảng quan sát sau khi gom.
-\node[silver] (obs) at (-2.6,-2.9) {\textbf{observations.parquet}\\\scriptsize 33.727 dòng $\times$ 27 cột\\\scriptsize 1 dòng = 1 cycle của 1 động cơ\\\scriptsize khóa \texttt{(split, engine\_id, cycle)}};
-\draw[edge] (train.south) -- node[op,pos=0.45] {đọc, kiểm tra,\\thêm \texttt{split}} (obs.north west|-obs.north);
-\draw[edge] (test.south) -- node[op,pos=0.45] {UNION\\theo dòng} (obs.north east|-obs.north);
+% Hàng 2: bảng quan sát đã kiểm tra (Silver).
+\node[dataBox] (obs) at (-3,-2.9) {\cell{Bảng quan sát}{Silver · \texttt{observations.parquet}}{33.727 dòng; 1 dòng = 1 cycle}};
+\draw[flow] (train.south) -- (\colA,-1.45) -| node[op,pos=0.25] {đọc, kiểm tra} ([xshift=-1.0cm]obs.north);
+\draw[flow] (test.south) -- (\colB,-1.45) -| node[op,pos=0.25] {gộp vào cùng bảng} ([xshift=1.0cm]obs.north);
 
-% Silver/Gold: ba bảng dẫn xuất.
-\node[silver] (targets) at (-5.9,-6.3) {\textbf{train\_targets.parquet}\\\scriptsize 20.631 $\times$ 4\\\scriptsize 1 dòng = 1 cycle train\\\scriptsize cột \texttt{rul}; cũng có trong SQLite};
-\node[gold] (summary) at (-1.3,-6.3) {\textbf{engine\_summary}\\\scriptsize 200 $\times$ 5 (Parquet + SQLite)\\\scriptsize 1 dòng = 1 động cơ\\\scriptsize khóa \texttt{(split, engine\_id)}};
-\node[gold] (features) at (3.6,-6.3) {\textbf{rolling\_features.parquet}\\\scriptsize 27.927 $\times$ 129\\\scriptsize 1 dòng = 1 window 30 cycles\\\scriptsize 3 khóa + 126 đặc trưng};
-\draw[edge] (obs.south west) -- node[op] {lọc train; GROUP BY động cơ;\\\texttt{rul = max(cycle) - cycle}} (targets.north);
-\draw[edge] (obs.south) -- node[op,pos=0.55] {GROUP BY\\split, engine\_id} (summary.north);
-\draw[edge] (obs.south east) -- node[op,pos=0.55] {window 30 cycles;\\6 thống kê $\times$ 21 sensor} (features.north);
+% Hàng 3: ba bảng dẫn xuất (Silver và Gold).
+\node[dataBox] (targets) at (\colA,-5.8) {\cell{Nhãn RUL của train}{Silver · \texttt{train\_targets.parquet}}{20.631 dòng; có cột RUL}};
+\node[dataBox] (features) at (\colB,-5.8) {\cell{Đặc trưng cửa sổ 30 cycles}{Gold · \texttt{rolling\_features.parquet}}{27.927 dòng; 126 đặc trưng}};
+\node[dataBox] (summary) at (\colC,-5.8) {\cell{Tổng hợp theo động cơ}{Gold · \texttt{engine\_summary}}{200 dòng; 1 dòng = 1 động cơ}};
+\coordinate (split) at (-3,-4.35);
+\draw[line] (obs.south) -- (split);
+\draw[flow] (split) -| node[op,pos=0.3] {lọc train, tính RUL} (targets.north);
+\draw[flow] (split) -| node[op,pos=0.7] {tính 6 thống kê × 21 sensor} (features.north);
+\draw[flow] (split) -| node[op,pos=0.8] {gom theo động cơ} (summary.north);
 
-% Dữ liệu cho mô hình và đánh giá cuối.
-\node[model] (xy) at (-2.6,-9.6) {\textbf{Dữ liệu huấn luyện}\\\scriptsize X: 17.731 $\times$ 126, y: \texttt{rul}\\\scriptsize 1 dòng = 1 window train};
-\node[model] (eval) at (3.6,-9.6) {\textbf{Đánh giá cuối}\\\scriptsize 100 dự đoán test + 100 nhãn\\\scriptsize 1 dòng = 1 động cơ test};
-\draw[edge] (targets.south) -- node[op,pos=0.5] {JOIN 3 khóa, 1:1} (xy.north west|-xy.north);
-\draw[edge] (features.south west) -- node[op,pos=0.45] {phần train} (xy.north east|-xy.north);
-\draw[edge] (features.south) -- node[op,pos=0.5] {dòng cycle cuối\\của mỗi động cơ test} (eval.north);
-\draw[edge] (xy.east) -- node[op,below=5pt,fill=none] {huấn luyện\\mô hình} (eval.west);
-\draw[late] (labels.east) -- ++(1.0,0) |- node[op,pos=0.25,right=2pt,fill=none] {đọc muộn,\\sau khi\\ghi dự đoán} (eval.east);
+% Hàng 4: dữ liệu cho mô hình và chấm điểm.
+\node[processBox] (xy) at (\colB,-8.7) {\cell{Dữ liệu huấn luyện}{X: 17.731 × 126; y: RUL}{1 dòng = 1 cửa sổ của train}};
+\node[resultBox] (eval) at (\colC,-8.7) {\cell{Chấm điểm trên test}{Ghép 100 dự đoán với đáp án}{1 dòng = 1 động cơ test}};
+\draw[flow] (targets.south) |- node[op,pos=0.25] {ghép theo 3 khóa} (xy.west);
+\draw[flow] (features.south) -- node[op,pos=0.45] {phần train} (xy.north);
+\draw[flow] ([xshift=1.2cm]features.south) |- node[op,pos=0.75] {cycle cuối của mỗi động cơ test} ([yshift=-0.6cm]features.south -| eval.north) -- (eval.north);
+\draw[flow] (xy.east) -- node[note,below=2pt] {dự đoán} (eval.west);
+\draw[lateFlow] (labels.east) -- ++(0.9,0) |- node[note,pos=0.25,right=2pt,align=left,text=resultStroke] {mở sau khi\\đã lưu\\dự đoán} (eval.east);
 
-% Chú giải lớp dữ liệu.
-\node[bronze,text width=2.2cm,font=\sffamily\scriptsize] (lb) at (-5.2,-11.6) {Bronze: file gốc};
-\node[silver,text width=2.2cm,font=\sffamily\scriptsize,right=0.35cm of lb] (ls) {Silver: đã kiểm tra};
-\node[gold,text width=2.2cm,font=\sffamily\scriptsize,right=0.35cm of ls] (lg) {Gold: tổng hợp};
-\node[model,text width=2.2cm,font=\sffamily\scriptsize,right=0.35cm of lg] (lm) {Mô hình / đánh giá};
+\diagramlegend{(-8.2,-10.4)}{legendData/Dữ liệu (Bronze = file gốc · Silver = đã kiểm tra · Gold = đã tổng hợp),legendProcess/Bước xử lý,legendResult/Kết quả}
 \end{tikzpicture}
 \end{document}

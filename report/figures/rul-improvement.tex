@@ -1,29 +1,29 @@
-\documentclass[tikz,border=15pt]{standalone}
-\usepackage{fontspec}
-\setsansfont{Arial}
-\usepackage{tikz}
-\usetikzlibrary{arrows.meta,positioning,fit,backgrounds}
-\definecolor{greenFill}{HTML}{E8F5E9}
-\definecolor{greenStroke}{HTML}{43A047}
-\definecolor{coreFill}{HTML}{E1F5FE}
-\definecolor{coreStroke}{HTML}{0277BD}
+\documentclass[tikz,border=12pt]{standalone}
+\input{diagram-style}
+\renewcommand{\boxwidth}{7.0cm}
+% Một cột, bước hàng 2,1 cm; ba bước giữa nằm trong khung lặp theo outer fold.
 \begin{document}
-\begin{tikzpicture}[
- font=\sffamily\small,>=Stealth,
- base/.style={rectangle,rounded corners=3pt,align=center,text width=11cm,minimum height=1.2cm,inner sep=8pt},
- dataNode/.style={base,draw=greenStroke,fill=greenFill,thick},
- opNode/.style={base,draw=coreStroke,fill=coreFill,thick},
- edge/.style={->,thick,draw=gray!80}]
-\node[dataNode] (input) at (0,0) {100 train engines, khóa từ cycle 30\\Lưu baseline, cố định 5 outer folds theo engine};
-\node[opNode] (select) at (0,-2) {Trong mỗi outer fold: chỉ dùng outer train\\Inner 3-fold chọn window 10/20/30, rồi 24 cấu hình HGB, rồi 3 phương án trọng số};
-\node[opNode] (evaluate) at (0,-4) {Outer validation: engine không tham gia chọn hoặc fit\\Lưu baseline và phương án sau mỗi giai đoạn trên cùng khóa};
-\node[dataNode] (compare) at (0,-6) {Gộp predictions của 5 outer folds\\So sánh theo engine; paired bootstrap 10.000 lần};
-\node[opNode] (final) at (0,-8) {Chọn cấu hình cuối bằng inner 3-fold trên toàn train\\Fit toàn bộ train; ghi 100 test predictions};
-\node[dataNode] (test) at (0,-10) {Sau khi ghi predictions mới ghép nhãn test\\Đánh giá tại điểm cuối; không quay lại tuning};
-\draw[edge] (input.south) -- (select.north);
-\draw[edge] (select.south) -- (evaluate.north);
-\draw[edge] (evaluate.south) -- (compare.north);
-\draw[edge] (compare.south) -- (final.north);
-\draw[edge] (final.south) -- (test.north);
+\begin{tikzpicture}[diagram]
+
+\node[dataBox] (baseline) at (0,0) {\cell{1. Chốt mốc so sánh}{Lưu kết quả mô hình gốc (baseline)}{Cùng động cơ, cùng cycle, ngưỡng cảnh báo 30}};
+\node[processBox] (window) at (0,-2.9) {\cell{2. Thử độ dài cửa sổ}{10, 20 hoặc 30 cycles}{Chọn bằng CV 3 phần bên trong}};
+\node[processBox] (tune) at (0,-5.0) {\cell{3. Chỉnh tham số mô hình}{24 cấu hình HGB}{Chọn bằng CV 3 phần bên trong}};
+\node[processBox] (weight) at (0,-7.1) {\cell{4. Tăng trọng số mẫu sắp hỏng}{3 phương án}{Giữ cân bằng giữa các động cơ}};
+\node[processBox] (compare) at (0,-10.0) {\cell{5. Chấm trên phần validation}{Gộp 5 phần, so với baseline}{Bootstrap 10.000 lần theo động cơ}};
+\node[resultBox] (final) at (0,-12.1) {\cell{6. Chọn cấu hình cuối, dự đoán test}{Học lại trên toàn bộ train}{Lưu 100 dự đoán rồi mới mở đáp án}};
+
+\begin{scope}[on background layer]
+  \node[group,fit=(window)(weight)] (fold) {};
+\end{scope}
+\node[groupTitle] at ([xshift=12pt]fold.north west) {Lặp lại cho mỗi fold};
+
+\draw[flow] (baseline) -- (window);
+\draw[flow] (window) -- (tune);
+\draw[flow] (tune) -- (weight);
+\draw[flow] (weight) -- (compare);
+\draw[flow] (compare) -- (final);
+
+\node[note] at ([yshift=-14pt]final.south) {Đáp án test không được dùng để chọn cấu hình.};
+\diagramlegend{(-3.75,-14.0)}{legendData/Mốc so sánh,legendProcess/Bước xử lý,legendResult/Kết quả}
 \end{tikzpicture}
 \end{document}

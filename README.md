@@ -469,7 +469,10 @@ read Silver observations directly; `engine_summary` is a separate aggregate, not
 their input. EDA/statistics use train only. EWMA and the train-fitted Health Index
 support anomaly analysis, then test transformation for maintenance; they do not
 feed HGB. RUL predictions and anomaly status meet only in the maintenance report.
-Test labels are read after predictions or the schedule have been written. The
+Test labels are read after predictions or the schedule have been written. In the
+figure, steps 1--3 prepare the data; branch A predicts RUL and branch B tracks the
+signal. The dashed Hadoop box only re-checks the engine summary and does not feed
+RUL modeling. The
 [report pipeline figure](report/figures/pipeline.pdf) shows the same boundaries;
 PCA–ARIMA and FD002--FD004 transfer remain extended experiments.
 

@@ -1,38 +1,22 @@
-<mxfile host="Codex fallback">
-  <diagram id="fd001-statistics" name="M2.3a statistics">
-    <mxGraphModel grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="0" page="0" pageScale="1" pageWidth="1100" pageHeight="160" math="0" shadow="0">
+<mxfile host="drawio" modified="2026-10-13T00:00:00.000Z" version="31.4.5">
+  <diagram id="fd001-statistics" name="FD001 statistics">
+    <mxGraphModel dx="1422" dy="820" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1280" pageHeight="200" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <UserObject label="FD001 train&#xa;20.631 observations" id="2">
-          <mxCell parent="1" style="html=1;whiteSpace=wrap;strokeWidth=1;fillColor=#e8f0fa;strokeColor=#386088;fontColor=#15283c;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=15;" vertex="1">
-            <mxGeometry height="93" width="203" x="8" y="18" as="geometry" />
-          </mxCell>
-        </UserObject>
-        <UserObject label="cmapss.data&#xa;Reader + FD001 profile" id="3">
-          <mxCell parent="1" style="html=1;whiteSpace=wrap;strokeWidth=1;fillColor=#e5f2ef;strokeColor=#368071;fontColor=#15283c;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=15;" vertex="1">
-            <mxGeometry height="93" width="215" x="258" y="18" as="geometry" />
-          </mxCell>
-        </UserObject>
-        <UserObject label="cmapss.statistics&#xa;30 cycles đầu/cuối&#xa;Bootstrap + Wilcoxon + FDR" id="4">
-          <mxCell parent="1" style="html=1;whiteSpace=wrap;strokeWidth=1;fillColor=#e5f2ef;strokeColor=#368071;fontColor=#15283c;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=15;" vertex="1">
-            <mxGeometry height="113" width="250" x="520" y="8" as="geometry" />
-          </mxCell>
-        </UserObject>
-        <UserObject label="outputs/statistics&#xa;2 CSV + run_info&#xa;validation passed" id="5">
-          <mxCell parent="1" style="html=1;whiteSpace=wrap;strokeWidth=1;fillColor=#fff2db;strokeColor=#a67529;fontColor=#15283c;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=15;" vertex="1">
-            <mxGeometry height="93" width="218" x="818" y="18" as="geometry" />
-          </mxCell>
-        </UserObject>
-        <mxCell id="6" edge="1" parent="1" source="2" target="3" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=#333333;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="7" edge="1" parent="1" source="3" target="4" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=#333333;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="8" edge="1" parent="1" source="4" target="5" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=#333333;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
+        <mxCell id="s0" value="&lt;b&gt;Dữ liệu train FD001&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:12px&quot;&gt;100 động cơ, 20.631 dòng&lt;br&gt;&lt;font face=&quot;Courier New&quot;&gt;train_FD001.txt&lt;/font&gt;&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;strokeWidth=2;fontSize=15;align=center;verticalAlign=middle;fontFamily=Arial;fillColor=#E8F5E9;strokeColor=#43A047;" vertex="1" parent="1"><mxGeometry x="30" y="30" width="260" height="96" as="geometry" /></mxCell>
+        <mxCell id="s1" value="&lt;b&gt;Đọc và kiểm tra&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:12px&quot;&gt;Module &lt;font face=&quot;Courier New&quot;&gt;cmapss.data&lt;/font&gt;&lt;br&gt;Kiểm tra theo hồ sơ FD001&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;strokeWidth=2;fontSize=15;align=center;verticalAlign=middle;fontFamily=Arial;fillColor=#E1F5FE;strokeColor=#0277BD;" vertex="1" parent="1"><mxGeometry x="350" y="30" width="260" height="96" as="geometry" /></mxCell>
+        <mxCell id="e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#757575;fontFamily=Arial;" edge="1" parent="1" source="s0" target="s1"><mxGeometry relative="1" as="geometry"></mxGeometry></mxCell>
+        <mxCell id="s2" value="&lt;b&gt;Kiểm định thống kê&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:12px&quot;&gt;So 30 cycle đầu với 30 cycle cuối&lt;br&gt;Bootstrap, Wilcoxon, hiệu chỉnh FDR&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;strokeWidth=2;fontSize=15;align=center;verticalAlign=middle;fontFamily=Arial;fillColor=#E1F5FE;strokeColor=#0277BD;" vertex="1" parent="1"><mxGeometry x="670" y="30" width="260" height="96" as="geometry" /></mxCell>
+        <mxCell id="e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#757575;fontFamily=Arial;" edge="1" parent="1" source="s1" target="s2"><mxGeometry relative="1" as="geometry"></mxGeometry></mxCell>
+        <mxCell id="s3" value="&lt;b&gt;Kết quả thống kê&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:12px&quot;&gt;2 bảng CSV và &lt;font face=&quot;Courier New&quot;&gt;run_info&lt;/font&gt;&lt;br&gt;Lưu ở &lt;font face=&quot;Courier New&quot;&gt;outputs/statistics&lt;/font&gt;&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;strokeWidth=2;fontSize=15;align=center;verticalAlign=middle;fontFamily=Arial;fillColor=#FFF3E0;strokeColor=#EF6C00;" vertex="1" parent="1"><mxGeometry x="990" y="30" width="260" height="96" as="geometry" /></mxCell>
+        <mxCell id="e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#757575;fontFamily=Arial;" edge="1" parent="1" source="s2" target="s3"><mxGeometry relative="1" as="geometry"></mxGeometry></mxCell>
+        <mxCell id="lg4" value="" style="rounded=1;arcSize=20;html=1;strokeWidth=2;fillColor=#E8F5E9;strokeColor=#43A047;" vertex="1" parent="1"><mxGeometry x="30" y="154" width="22" height="14" as="geometry" /></mxCell>
+        <mxCell id="n5" value="Dữ liệu" style="text;html=1;strokeColor=none;fillColor=none;verticalAlign=middle;fontSize=12;fontColor=#616161;fontFamily=Arial;align=left;" vertex="1" parent="1"><mxGeometry x="58" y="150" width="60" height="22" as="geometry" /></mxCell>
+        <mxCell id="lg6" value="" style="rounded=1;arcSize=20;html=1;strokeWidth=2;fillColor=#E1F5FE;strokeColor=#0277BD;" vertex="1" parent="1"><mxGeometry x="136" y="154" width="22" height="14" as="geometry" /></mxCell>
+        <mxCell id="n7" value="Bước xử lý" style="text;html=1;strokeColor=none;fillColor=none;verticalAlign=middle;fontSize=12;fontColor=#616161;fontFamily=Arial;align=left;" vertex="1" parent="1"><mxGeometry x="164" y="150" width="80" height="22" as="geometry" /></mxCell>
+        <mxCell id="lg8" value="" style="rounded=1;arcSize=20;html=1;strokeWidth=2;fillColor=#FFF3E0;strokeColor=#EF6C00;" vertex="1" parent="1"><mxGeometry x="262" y="154" width="22" height="14" as="geometry" /></mxCell>
+        <mxCell id="n9" value="Kết quả" style="text;html=1;strokeColor=none;fillColor=none;verticalAlign=middle;fontSize=12;fontColor=#616161;fontFamily=Arial;align=left;" vertex="1" parent="1"><mxGeometry x="290" y="150" width="60" height="22" as="geometry" /></mxCell>
       </root>
     </mxGraphModel>
   </diagram>

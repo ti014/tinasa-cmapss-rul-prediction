@@ -1,0 +1,64 @@
+% Quy ước chung cho mọi sơ đồ TikZ của báo cáo.
+% Màu theo vai trò, giống với các sơ đồ draw.io trong assets/diagrams/:
+%   xanh lá = dữ liệu, xanh dương = bước xử lý, cam = kết quả,
+%   viền xám nét đứt = kiểm tra phụ (không đi vào luồng chính),
+%   mũi tên cam nét đứt = dữ liệu chỉ được đọc sau cùng.
+\usepackage{fontspec}
+\setsansfont{Arial}
+\setmonofont{Consolas}[Scale=0.9]
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,backgrounds,calc,shapes.multipart}
+
+\definecolor{dataFill}{HTML}{E8F5E9}
+\definecolor{dataStroke}{HTML}{43A047}
+\definecolor{processFill}{HTML}{E1F5FE}
+\definecolor{processStroke}{HTML}{0277BD}
+\definecolor{resultFill}{HTML}{FFF3E0}
+\definecolor{resultStroke}{HTML}{EF6C00}
+\definecolor{sideStroke}{HTML}{9E9E9E}
+\definecolor{edgeColor}{HTML}{757575}
+\definecolor{noteColor}{HTML}{616161}
+\definecolor{groupFill}{HTML}{FAFAFA}
+\definecolor{groupStroke}{HTML}{BDBDBD}
+
+% Bề rộng chữ trong ô; từng hình có thể đặt lại trước khi vẽ.
+\newcommand{\boxwidth}{5.0cm}
+% Ô chuẩn: tiêu đề đậm và hai dòng chi tiết cỡ nhỏ.
+\newcommand{\cell}[3]{\textbf{#1}\\[1pt]{\scriptsize #2}\\{\scriptsize #3}}
+
+\tikzset{
+  diagram/.style={font=\sffamily\small,>=Stealth},
+  box/.style={rectangle,rounded corners=3pt,align=center,text width=\boxwidth,
+    minimum height=1.45cm,inner sep=6pt,thick},
+  dataBox/.style={box,draw=dataStroke,fill=dataFill},
+  processBox/.style={box,draw=processStroke,fill=processFill},
+  resultBox/.style={box,draw=resultStroke,fill=resultFill},
+  sideBox/.style={box,draw=sideStroke,dashed,fill=white},
+  group/.style={draw=groupStroke,dashed,rounded corners=6pt,inner sep=10pt,fill=groupFill},
+  groupTitle/.style={font=\sffamily\small\bfseries,text=black!75,fill=white,inner sep=3pt,anchor=west},
+  note/.style={font=\sffamily\scriptsize,text=noteColor,align=center,inner sep=2pt},
+  flow/.style={->,thick,draw=edgeColor},
+  line/.style={thick,draw=edgeColor},
+  sideFlow/.style={->,thick,dashed,draw=sideStroke},
+  lateFlow/.style={->,thick,dashed,draw=resultStroke},
+  legendBox/.style={rectangle,rounded corners=1.5pt,minimum width=0.5cm,minimum height=0.3cm,thick,inner sep=0pt},
+  legendText/.style={font=\sffamily\scriptsize,text=noteColor,anchor=west,inner sep=1pt},
+}
+
+% Chú giải màu, đặt một hàng ngang bắt đầu tại tọa độ #1.
+% #2 = danh sách mục, mỗi mục là {style}/{nhãn}.
+\newcommand{\diagramlegend}[2]{%
+  \coordinate (legendCursor) at #1;
+  \foreach \st/\lb in {#2} {%
+    \node[legendBox,\st,anchor=west] (legendItem) at (legendCursor) {};
+    \node[legendText] (legendLabel) at ([xshift=3pt]legendItem.east) {\lb};
+    \coordinate (legendCursor) at ([xshift=12pt]legendLabel.east);
+    \global\let\legendCursorSaved\relax
+  }%
+}
+\tikzset{
+  legendData/.style={draw=dataStroke,fill=dataFill},
+  legendProcess/.style={draw=processStroke,fill=processFill},
+  legendResult/.style={draw=resultStroke,fill=resultFill},
+  legendSide/.style={draw=sideStroke,dashed,fill=white},
+}

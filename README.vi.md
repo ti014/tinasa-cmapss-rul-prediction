@@ -452,7 +452,9 @@ tiếp Silver observations; `engine_summary` là bảng tổng hợp riêng, kh�
 vào của features. EDA/thống kê chỉ dùng train. EWMA và Health Index fit trên train
 phục vụ phân tích bất thường, rồi transform test để lập lịch; chúng không đi vào
 HGB. Dự đoán RUL và trạng thái bất thường chỉ được ghép ở báo cáo bảo trì. Nhãn
-test được đọc sau khi ghi predictions hoặc lịch. [Sơ đồ trong báo cáo](report/figures/pipeline.pdf)
+test được đọc sau khi ghi predictions hoặc lịch. Trên hình, bước 1--3 chuẩn bị
+dữ liệu; nhánh A dự đoán RUL, nhánh B theo dõi tín hiệu. Ô nét đứt (chạy lại trên
+Hadoop) chỉ kiểm tra lại bảng tổng hợp động cơ và không đi vào mô hình RUL. [Sơ đồ trong báo cáo](report/figures/pipeline.pdf)
 thể hiện cùng các ranh giới này; PCA–ARIMA và chuyển miền FD002--FD004 vẫn là thử
 nghiệm mở rộng.
 

@@ -155,8 +155,8 @@ bình 30 cycles cuối trừ trung bình 30 cycles đầu, theo đơn vị gốc
 \end{tabular}
 \end{table}
 
-\paragraph{Phát hiện dấu hiệu bất thường.} Health Index gộp 21 sensor đã khử nhiễu
-thành một chỉ số duy nhất, bằng 0 ở mức trung bình và giảm dần khi động cơ suy
+\paragraph{Phát hiện dấu hiệu bất thường.} Health Index gộp 21 sensor (14 sensor có xu hướng đã khử nhiễu,
+7 sensor gần như không đổi giữ nguyên) thành một chỉ số duy nhất, bằng 0 ở mức trung bình và giảm dần khi động cơ suy
 giảm. Với quy tắc cố định trước (Mục~\ref{sec:anomaly-method}: giảm quá 3 độ lệch
 chuẩn so với 30 cycles đầu, kéo dài 5 cycles liên tiếp), cả 100/100 động cơ train
 đều được phát hiện bất thường trước khi hỏng. Số cycle từ lúc phát hiện đến khi
@@ -460,7 +460,7 @@ thay mô hình chính. Similarity-based RUL thua HGB ở cả 3/3 fold và bị 
 
 \paragraph{Chuyển sang FD002--FD004.} Với window 10 cycles, mô hình huấn luyện trên
 FD001 có MAE 47,39--60,32 cycles khi áp dụng trực tiếp lên ba subset còn lại, so với
-21,93--28,33 cycles khi mỗi subset tự huấn luyện (Bảng~\ref{tab:cross-dataset}).
+22,36--28,33 cycles khi mỗi subset tự huấn luyện, tức tăng 1,7--2,7 lần (Bảng~\ref{tab:cross-dataset}).
 Nguyên nhân chính là điều kiện vận hành khác nhau (Mục~\ref{sec:disc-transfer}).
 
 \begin{table}[H]

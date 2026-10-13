@@ -26,6 +26,7 @@ from pptx import Presentation
 from pptx.chart.data import CategoryChartData
 from pptx.dml.color import RGBColor
 from pptx.enum.chart import XL_CHART_TYPE, XL_LABEL_POSITION, XL_LEGEND_POSITION
+from pptx.enum.dml import MSO_LINE_DASH_STYLE
 from pptx.enum.shapes import MSO_CONNECTOR, MSO_SHAPE
 from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 from pptx.oxml.ns import qn
@@ -136,13 +137,22 @@ def circle(slide, x, y, d, label, fill=BLUE, color=WHITE, size=13):
          anchor=MSO_ANCHOR.MIDDLE)
 
 
-def arrow(slide, x1, y1, x2, y2, color=SLATE):
+def arrow(slide, x1, y1, x2, y2, color=SLATE, *, head=True, dash=False):
     connector = slide.shapes.add_connector(MSO_CONNECTOR.STRAIGHT, Inches(x1), Inches(y1), Inches(x2), Inches(y2))
     connector.line.color.rgb = rgb(color)
     connector.line.width = Pt(1.5)
-    line = connector.line._get_or_add_ln()
-    tail = line.makeelement(qn("a:tailEnd"), {"type": "triangle"})
-    line.append(tail)
+    if dash:
+        connector.line.dash_style = MSO_LINE_DASH_STYLE.DASH
+    if head:
+        line = connector.line._get_or_add_ln()
+        tail = line.makeelement(qn("a:tailEnd"), {"type": "triangle"})
+        line.append(tail)
+
+
+def path(slide, points, color=SLATE, *, dash=False):
+    """Đường gấp khúc qua các điểm; chỉ đoạn cuối có đầu mũi tên."""
+    for (x1, y1), (x2, y2) in zip(points, points[1:]):
+        arrow(slide, x1, y1, x2, y2, color, head=(x2, y2) == points[-1], dash=dash)
 
 
 def picture(slide, rel, x, y, w, h, *, crop=None, align="center"):
@@ -485,57 +495,82 @@ def slide_labels():
 # ============================================================================ 6. Pipeline
 def slide_pipeline():
     s = content(2, 6, "Kiến trúc pipeline dữ liệu Bronze–Silver–Gold",
-                "Mỗi tầng lưu kết quả kèm mã băm và metadata, bảo đảm khả năng truy vết và tái lập",
+                "Ba bước chuẩn bị chung, rồi tách hai nhánh: dự đoán RUL và theo dõi tín hiệu",
                 "report/figures/pipeline.pdf; handoff/DATA_WALKTHROUGH.md; outputs/*/run_info.json",
-                "Thời lượng: 55 giây.\nBronze là file text gốc, tải bằng script từ cổng dữ liệu NASA, kiểm tra MD5 và "
-                "SHA-256, đồng thời được đưa lên HDFS. Reader kiểm tra đúng 26 trường, kiểu dữ liệu, khóa duy nhất "
-                "và cycle liên tục; train và test được union theo dòng.\nSilver lưu observations và train_targets dạng "
-                "Parquet. Gold lưu engine_summary dạng Parquet và SQLite. Từ Silver, bước đặc trưng tạo window 30 cycle; "
-                "mô hình dùng GroupKFold, refit và tạo 100 dự đoán test.\nNhánh dưới bên trái là phân tích tín hiệu: khử "
-                "nhiễu, Health Index và bất thường trên train. Khi lập lịch bảo trì, test được làm mượt bằng EWMA rồi "
-                "transform bằng scaler/PCA đã fit trên train. engine_summary là nhánh tổng hợp riêng, không cấp đầu vào "
-                "cho rolling features. Pandas/PySpark đối chiếu ETL và rolling; MapReduce đối chiếu engine_summary. "
-                "Đây là phần thu thập, làm sạch, chuẩn hóa, tích hợp, "
-                "lưu trữ mà rubric chấm 40%.")
-    steps = [
-        ("Bronze", "Text gốc + HDFS", "tải từ NASA,\nMD5 + SHA-256"),
-        ("Kiểm tra", "Reader", "26 trường, kiểu,\nkhóa, cycle"),
-        ("Silver", "Parquet", f"observations\n{vn(FD['FD001']['observations'], 0)} dòng"),
-        ("Đặc trưng", "Gold · Window 30", f"{vn(P['feature_rows']['rolling_features'], 0)} dòng\n{P['feature_columns']} đặc trưng"),
-        ("Mô hình", "HGB", "GroupKFold\nrefit toàn train"),
-        ("Dự đoán", "100 test engines", "ghi prediction\nrồi đọc nhãn"),
-    ]
-    bw, gap, y, bh = 1.72, 0.236, 2.95, 1.65
-    rect(s, 0.92 + 2 * (bw + gap) - 0.08, 2.5, 2 * bw + gap + 0.16, 0.34, GOLD_TINT)
-    text(s, 0.92 + 2 * (bw + gap) - 0.08, 2.5, 2 * bw + gap + 0.16, 0.34, "ETL / rolling: Pandas–PySpark parity", size=11,
-         bold=True, color=GOLD_DARK, align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
-    for i, (head, tool, body) in enumerate(steps):
-        x = 0.92 + i * (bw + gap)
-        fill = BLUE if i == 5 else TEAL if i == 4 else TINT
-        dark = i >= 4
-        rect(s, x, y, bw, bh, fill)
-        text(s, x + 0.12, y + 0.12, bw - 0.24, 0.34, head, size=15, bold=True, color=WHITE if dark else BLUE)
-        text(s, x + 0.12, y + 0.47, bw - 0.24, 0.3, tool, size=12, bold=True, color=ICE if dark else TEAL)
-        text(s, x + 0.12, y + 0.85, bw - 0.2, 0.75, body, size=11.5, color=WHITE if dark else INK)
-        if i < 5:
-            arrow(s, x + bw + 0.02, y + bh / 2, x + bw + gap - 0.02, y + bh / 2)
-    for col, head, sub, width in ((1, "EWMA → Health Index → bất thường", "fit train; transform test khi lập lịch", 4.3),
-                                  (3, "Gold · engine_summary", "200 dòng; tổng hợp riêng từ Silver", 2.7),
-                                  (5, "Cảnh báo, lịch bảo trì", "kết hợp RUL và HI · slide 13–16", 2.9)):
-        cx = 0.92 + col * (bw + gap) + bw / 2
-        x = min(max(cx - width / 2, 0.92), 12.42 - width)
-        if col == 3:
-            source_x = 0.92 + 2 * (bw + gap) + bw / 2
-            arrow(s, source_x, y + bh + 0.03, source_x, 4.9)
-            arrow(s, source_x, 4.9, cx, 4.9)
-            arrow(s, cx, 4.9, cx, 5.2)
-        else:
-            arrow(s, cx, y + bh + 0.03, cx, 5.2)
-        rect(s, x, 5.22, width, 0.85, WHITE, line=LINE)
-        text(s, x + 0.15, 5.3, width - 0.3, 0.38, head, size=13, bold=True, color=BLUE)
-        text(s, x + 0.15, 5.68, width - 0.3, 0.3, sub, size=11.5, color=SLATE)
-    text(s, 0.92, 6.22, 11.5, 0.35, "Rolling đọc Silver observations. MapReduce đối chiếu engine_summary. Join train dùng đủ 3 khóa (1:1).", size=12,
-         color=SLATE)
+                "Thời lượng: 55 giây.\nBước 1–3 là phần chuẩn bị chung. Bước 1 tải dữ liệu từ cổng NASA và kiểm tra "
+                "MD5, SHA-256. Bước 2 giữ nguyên file text gốc ở lớp Bronze. Bước 3 kiểm tra đủ 26 cột, đúng kiểu, "
+                "không trùng khóa, cycle liên tục, rồi tính RUL cho train. Ô nét đứt là bước chạy lại trên Hadoop: "
+                f"MapReduce tính lại bảng tổng hợp động cơ, khớp {HDFS['mapreduce_vs_pandas']['rows_candidate']}/"
+                f"{HDFS['mapreduce_vs_pandas']['rows_reference']} động cơ, không đi vào mô hình.\n"
+                "Nhánh A dự đoán RUL: lưu bảng Silver và Gold dạng Parquet, SQLite; tạo "
+                f"{P['feature_columns']} đặc trưng từ cửa sổ 30 cycles; huấn luyện HGB, chia 5 phần theo động cơ; "
+                "lưu 100 dự đoán test rồi mới mở đáp án để chấm điểm. Pandas và PySpark cho cùng kết quả ở A1–A2.\n"
+                "Nhánh B chỉ học trên train: khám phá dữ liệu, làm mượt bằng EWMA, gộp sensor thành chỉ số sức khỏe "
+                "bằng PCA và phát hiện bất thường. Lịch bảo trì ghép RUL dự đoán với trạng thái bất thường của "
+                "động cơ test.\nĐây là phần thu thập, làm sạch, chuẩn hóa, tích hợp, lưu trữ mà rubric chấm 40%.")
+
+    def node(x, y, w, h, title, detail, kind="step"):
+        fill, line = {"step": (TINT, None), "result": (BLUE, None), "side": (WHITE, SLATE)}[kind]
+        shape = rect(s, x, y, w, h, fill, line=line)
+        if kind == "side":
+            shape.line.dash_style = MSO_LINE_DASH_STYLE.DASH
+            shape.line.width = Pt(1.25)
+        head_color = WHITE if kind == "result" else SLATE if kind == "side" else BLUE
+        body_color = WHITE if kind == "result" else INK
+        text(s, x + 0.1, y + 0.08, w - 0.2, 0.3, title, size=12.5, bold=True, color=head_color)
+        text(s, x + 0.1, y + 0.4, w - 0.2, h - 0.45, detail, size=10.5, color=body_color)
+
+    # Cột trái: bước 1–3 và ô Hadoop chỉ để đối chiếu.
+    lx, lw, lh = 0.92, 2.35, 0.8
+    ly = (2.45, 3.49, 4.525)
+    node(lx, ly[0], lw, lh, "1. Tải dữ liệu từ NASA", "Kiểm tra MD5, SHA-256")
+    node(lx, ly[1], lw, lh, "2. Dữ liệu gốc (Bronze)", "File text, giữ nguyên")
+    node(lx, ly[2], lw, lh, "3. Đọc và kiểm tra", "26 cột, khóa, cycle liên tục")
+    node(lx, 5.6, lw, lh, "Chạy lại trên Hadoop",
+         f"MapReduce khớp\n{HDFS['mapreduce_vs_pandas']['rows_candidate']}/"
+         f"{HDFS['mapreduce_vs_pandas']['rows_reference']} động cơ", "side")
+    cx = lx + lw / 2
+    arrow(s, cx, ly[0] + lh, cx, ly[1])
+    arrow(s, cx, ly[1] + lh, cx, ly[2])
+    path(s, [(lx, ly[1] + lh / 2), (lx - 0.17, ly[1] + lh / 2), (lx - 0.17, 6.0), (lx, 6.0)], dash=True)
+
+    # Hai nhánh: năm cột cùng bề rộng.
+    x0, bw, step, bh = 3.6, 1.62, 1.79, 1.05
+    col = [x0 + i * step for i in range(5)]
+    ya, yb = 2.8, 4.4
+    text(s, x0, 2.45, 6.0, 0.3, "A. Dự đoán RUL", size=12.5, bold=True, color=BLUE)
+    text(s, x0, 4.05, 6.0, 0.3, "B. Theo dõi tín hiệu (chỉ học trên train)", size=12.5, bold=True, color=BLUE)
+    lane_a = [("A1. Lưu bảng", "Silver, Gold\n(Parquet, SQLite)"),
+              ("A2. Đặc trưng", f"Cửa sổ 30 cycles\n{P['feature_columns']} đặc trưng"),
+              ("A3. Huấn luyện", "HGB, chia 5 phần\ntheo động cơ"),
+              ("A4. Dự đoán test", "100 động cơ, lưu\ntrước khi mở đáp án"),
+              ("A5. Chấm điểm", "MAE, RMSE,\nNASA score")]
+    lane_b = [("B1. Khám phá", "EDA: sensor đổi\ntheo tuổi máy"),
+              ("B2. Làm mượt", "EWMA, 14 sensor,\nspan 10"),
+              ("B3. Sức khỏe", "Health Index:\nPCA trên 21 sensor"),
+              ("B4. Bất thường", "Chỉ số ≤ −3 trong\n5 cycles liền nhau")]
+    for i, (title, detail) in enumerate(lane_a):
+        node(col[i], ya, bw, bh, title, detail, "result" if i == 3 else "step")
+        if i:
+            arrow(s, col[i - 1] + bw + 0.02, ya + bh / 2, col[i] - 0.02, ya + bh / 2)
+    for i, (title, detail) in enumerate(lane_b):
+        node(col[i], yb, bw, bh, title, detail)
+        if i:
+            arrow(s, col[i - 1] + bw + 0.02, yb + bh / 2, col[i] - 0.02, yb + bh / 2)
+    node(col[4], yb, bw, bh, "Lịch bảo trì", "RUL ≤ 30: bảo trì\nBất thường: theo dõi", "result")
+    arrow(s, col[3] + bw + 0.02, yb + bh / 2, col[4] - 0.02, yb + bh / 2)
+
+    # Bước 3 tỏa sang hai nhánh; A4 đi xuống lịch bảo trì.
+    mid3 = ly[2] + lh / 2
+    path(s, [(lx + lw, mid3), (x0 - 0.17, mid3), (x0 - 0.17, ya + bh / 2), (x0 - 0.02, ya + bh / 2)])
+    arrow(s, x0 - 0.17, mid3, x0 - 0.02, yb + bh / 2)
+    a4x = col[3] + bw / 2
+    path(s, [(a4x, ya + bh), (a4x, 4.2), (col[4] + 0.4, 4.2), (col[4] + 0.4, yb - 0.02)])
+
+    text(s, x0, 5.72, 8.8, 0.6,
+         ["Ô nét đứt là kiểm tra phụ, không đi vào mô hình. Đáp án test chỉ được mở sau khi đã lưu dự đoán.",
+          "Pandas và PySpark cho cùng kết quả ở A1–A2; bảng tổng hợp 200 động cơ trên HDFS khớp với Pandas."],
+         size=12, color=SLATE)
 
 
 # ============================================================================ 7. Parity và benchmark

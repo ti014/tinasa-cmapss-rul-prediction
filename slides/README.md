@@ -30,10 +30,11 @@ Deck gồm 20 slide, thứ tự bám rubric và cùng thứ tự với mục K�
 | 6. Mở rộng và kết luận | 17--20 | 3:00 | Thử nghiệm mở rộng, Q1--Q5, khó khăn và bài học, cảm ơn |
 | Demo dashboard | -- | 3:00 | Trình diễn artifact đã tạo |
 
-Slide 6 đọc rolling features trực tiếp từ Silver observations; bảng Gold
-engine_summary là nhánh tổng hợp riêng. Pandas/PySpark đối chiếu ETL và rolling;
-MapReduce/Spark trên HDFS đối chiếu engine_summary. Lịch bảo trì kết hợp RUL
-với Health Index đã fit trên train rồi transform test sau EWMA.
+Slide 6 dùng cùng cách gọi với Hình 5 của báo cáo: bước 1–3 chuẩn bị dữ liệu,
+nhánh A dự đoán RUL (A1–A5), nhánh B theo dõi tín hiệu chỉ học trên train
+(B1–B4), ô nét đứt là bước chạy lại trên Hadoop để đối chiếu bảng tổng hợp động
+cơ. Lịch bảo trì nhận RUL dự đoán từ A4 và trạng thái bất thường từ B4.
+Pandas/PySpark đối chiếu ETL và rolling features (A1–A2).
 
 ## Luồng dựng deck
 

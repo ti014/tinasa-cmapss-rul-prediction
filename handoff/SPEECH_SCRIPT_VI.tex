@@ -251,27 +251,25 @@ học, khi chọn mô hình hay khi vẽ biểu đồ. Chỉ khi đã nộp bài
 
 % ---------------------------------------------------------------- 6
 \slidepage{06}{Pipeline Bronze -- Silver -- Gold}{55 giây}{4:15}
-\lookbox{Chỉ lần lượt 6 ô từ trái sang phải. Khi nói ``hai cách làm ra cùng kết quả'', chỉ dải vàng
-phía trên. Cuối cùng chỉ hai ô trắng phía dưới.}
+\lookbox{Chỉ cột bên trái từ trên xuống: bước 1, 2, 3, rồi ô nét đứt Hadoop. Sau đó chỉ hàng A
+từ trái sang phải, rồi hàng B. Cuối cùng chỉ ô xanh đậm ``Lịch bảo trì'' ở góc phải.}
 \say
-Ba lớp Đồng, Bạc, Vàng giống quy trình làm trang sức. \num{Đồng} là quặng thô: file text gốc,
-được script tải thẳng từ trang dữ liệu của NASA, kiểm tra mã băm để chắc không sai một byte, rồi
-cất vào kho phân tán HDFS. Trước khi vào kho, mọi dòng đều qua cửa kiểm tra giống kiểm hàng:
-đủ 26 cột chưa, đúng kiểu số chưa, có dòng nào trùng không, các chuyến bay có liền mạch không.
+Ba lớp Đồng, Bạc, Vàng giống quy trình làm trang sức. Cột bên trái là ba bước chuẩn bị chung.
+\num{Bước 1} tải dữ liệu thẳng từ trang của NASA và kiểm tra mã băm để chắc không sai một byte.
+\num{Bước 2} là lớp Đồng: file text gốc, giữ nguyên, không bao giờ ghi đè. \num{Bước 3} là cửa
+kiểm hàng: đủ 26 cột chưa, đúng kiểu số chưa, có dòng nào trùng không, các chuyến bay có liền
+mạch không, rồi tính RUL cho train. Ô nét đứt bên dưới là bản chạy lại trên Hadoop: MapReduce
+tính lại bảng 200 động cơ và khớp hoàn toàn, nhưng không đi vào mô hình.
 
-\num{Bạc} là kim loại đã lọc sạch: dữ liệu đã kiểm tra, lưu dạng Parquet, gọn và đọc nhanh.
-\num{Vàng} lưu bảng engine\_summary có 200 động cơ để tra cứu và bảng rolling
-features có 126 đặc trưng. Từ Silver observations, chương trình tạo cửa sổ 30 cycles
-để tính đặc trưng. Bảng 200 động cơ là nhánh tổng hợp riêng. Ví dụ, engine 1 tại
-cycle 100 dùng các cycle 71--100, rồi ghép nhãn RUL là 92. Mô hình được chọn bằng
-GroupKFold theo động cơ, huấn luyện lại trên toàn train và ghi 100 dự đoán test
-trước khi đọc nhãn thật để đánh giá.
+\num{Nhánh A} dự đoán RUL. A1 lưu lớp Bạc, là dữ liệu đã kiểm tra dạng Parquet, và lớp Vàng,
+là các bảng tổng hợp. A2 tạo 126 đặc trưng từ cửa sổ 30 cycles. Ví dụ, engine 1 tại cycle 100
+dùng các cycle 71--100, rồi ghép nhãn RUL là 92. A3 huấn luyện mô hình, chia 5 phần theo động
+cơ. A4 lưu 100 dự đoán test trước, rồi A5 mới mở đáp án để chấm điểm.
 
-Ô trắng phía dưới bên trái là nhánh nghe ngóng sức khỏe động cơ: lọc nhiễu, tính chỉ số sức khỏe
-và tìm bất thường. Phần phân tích dùng train. Khi lập lịch cho test, chương trình
-transform tín hiệu test đã qua EWMA bằng scaler và PCA fit trên train, rồi kết hợp
-Health Index với RUL dự đoán. Dải vàng đối chiếu Pandas/PySpark ở ETL và rolling;
-MapReduce đối chiếu bảng tổng hợp động cơ trong slide tiếp theo.
+\num{Nhánh B} nghe ngóng sức khỏe động cơ và chỉ học trên train: khám phá dữ liệu, làm mượt tín
+hiệu, gộp 21 sensor thành một chỉ số sức khỏe, rồi tìm bất thường. Ô cuối ghép hai nhánh: động
+cơ có RUL dự đoán từ 30 trở xuống thì cần bảo trì, động cơ có chỉ số bất thường thì theo dõi
+thêm. Pandas và PySpark cho cùng kết quả ở A1 và A2; slide tiếp theo nói rõ phần này.
 \nextslide{``Em làm dây chuyền này bằng hai công cụ khác nhau.''}
 
 % ---------------------------------------------------------------- 7

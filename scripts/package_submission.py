@@ -34,6 +34,7 @@ INCLUDE = [
     "references/bibliography.bib", "references/README.md", "references/reading-guide.md",
     "slides/cmapss_fd001_presentation.pptx", "slides/cmapss_fd001_presentation.pdf",
     "slides/build_presentation.py", "slides/extract_slide_data.py", "slides/slide_data.json", "slides/README.md",
+    "slides/slide_figures.py", "slides/figures",
     "handoff/COURSE_ALIGNMENT.md", "handoff/DATA_WALKTHROUGH.md",
     "assets/diagrams",
     "experiments",

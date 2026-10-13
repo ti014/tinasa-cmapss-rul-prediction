@@ -21,14 +21,15 @@ Deck gồm 20 slide, thứ tự bám rubric và cùng thứ tự với mục K�
 
 | Phần | Slide | Thời lượng | Nội dung |
 |---|---|---|---|
-| Bìa và lộ trình | 1--2 | 0:45 | Đề tài, bốn con số chính, năm câu hỏi |
-| 1. Bài toán và dữ liệu | 3--5 | 2:10 | RUL, đối chiếu yêu cầu đề tài, C-MAPSS, ranh giới nhãn test |
-| 2. Pipeline dữ liệu | 6--8 | 2:25 | Bronze/Silver/Gold, parity và benchmark Pandas--PySpark, EDA |
-| 3. Khử nhiễu và cửa sổ thời gian | 9--10 | 1:45 | EWMA span 10, window 30 → 126 đặc trưng |
+| Bìa và lộ trình | 1--2 | 0:55 | Đề tài, bốn con số chính, năm câu hỏi |
+| 1. Bài toán và dữ liệu | 3--5 | 2:25 | RUL, đối chiếu yêu cầu đề tài, lý do chọn C-MAPSS, ranh giới nhãn test |
+| 2. Pipeline dữ liệu | 6--8 | 2:15 | Pipeline 1–3, A1–A5, B1–B4 và năm bước quy trình dữ liệu; đối chiếu Pandas--PySpark--Hadoop; EDA |
+| 3. Khử nhiễu và cửa sổ thời gian | 9--10 | 1:50 | EWMA span 10, cửa sổ 30 cycle → 126 đặc trưng, chuẩn hóa |
 | 4. Xu hướng và bất thường | 11--12 | 2:00 | Kiểm định đầu/cuối, Health Index phát hiện bất thường |
-| 5. Dự đoán RUL và cảnh báo | 13--16 | 4:30 | MAE test (GroupKFold trong notes), phân tích sai số, hai mức cảnh báo, lịch bảo trì 100 động cơ test |
-| 6. Mở rộng và kết luận | 17--20 | 3:00 | Thử nghiệm mở rộng, Q1--Q5, khó khăn và bài học, cảm ơn |
-| Demo dashboard | -- | 3:00 | Trình diễn artifact đã tạo |
+| 5. Dự đoán RUL và cảnh báo | 13--16 | 4:25 | MAE test và GroupKFold, phân tích sai số, hai mức cảnh báo (OOF train), lịch bảo trì 100 động cơ test |
+| 6. Mở rộng và kết luận | 17--19 | 2:30 | Thử nghiệm mở rộng, Q1--Q5, khó khăn, bài học và giới hạn |
+| Demo dashboard | sau 19 | 2:30 | Trình diễn artifact đã tạo |
+| Cảm ơn | 20 | 0:10 | Mời đặt câu hỏi; tổng thời gian 19:00 |
 
 Slide 6 dùng cùng cách gọi với Hình 5 của báo cáo: bước 1–3 chuẩn bị dữ liệu,
 nhánh A dự đoán RUL (A1–A5), nhánh B theo dõi tín hiệu chỉ học trên train
@@ -42,8 +43,9 @@ Pandas/PySpark đối chiếu ETL và rolling features (A1–A2).
 outputs/ (JSON, CSV, PNG đã nghiệm thu)
   │  cmapss.degradation / cmapss.maintenance tạo artifact nếu cần tái tính
   │  slides/extract_slide_data.py   đọc artifact đã có
+  │  slides/slide_figures.py        vẽ lại hình cho slide từ dữ liệu đã lưu
   ▼
-slides/slide_data.json + outputs/degradation/ + outputs/maintenance/ + outputs/hdfs/
+slides/slide_data.json + slides/figures/ + outputs/degradation/ + outputs/maintenance/ + outputs/hdfs/
   │  slides/build_presentation.py   python-pptx trên template IUH
   ▼
 slides/cmapss_fd001_presentation.pptx
@@ -52,9 +54,12 @@ slides/cmapss_fd001_presentation.pptx
 slides/cmapss_fd001_presentation.pdf
 ```
 
-Biểu đồ ở slide 7 và 17 là chart native của PowerPoint; các hình còn lại là PNG
-sẵn có trong `outputs/`. Slide 11 crop hai panel `sensor_4` và `sensor_7` từ
-`outputs/eda/figures/sensor_trajectories_1.png` lúc build.
+Biểu đồ ở slide 7 và 17 là chart native của PowerPoint, nhãn số dùng dấu phẩy thập
+phân ở mọi máy chiếu. Tám hình matplotlib (slide 8, 9, 11–16) được
+`slides/slide_figures.py` vẽ lại vào `slides/figures/` từ dữ liệu raw và artifact
+trong `outputs/`: đúng kích thước ô trên slide, chữ từ 9,5 pt, nhãn tiếng Việt, dấu
+phẩy thập phân, có chú giải màu. Script không huấn luyện lại mô hình và không ghi đè
+hình gốc của pipeline trong `outputs/`.
 
 ## Cách build lại
 
@@ -64,6 +69,7 @@ Từ thư mục gốc repository:
 uv run --frozen python slides/extract_slide_data.py
 uv run --frozen python -m cmapss.degradation
 uv run --frozen python -m cmapss.maintenance
+uv run --frozen python slides/slide_figures.py
 uv run --no-project --with python-pptx==1.0.2 --with pillow==12.3.0 python slides/build_presentation.py
 powershell -File scripts/export_slides.ps1
 ```

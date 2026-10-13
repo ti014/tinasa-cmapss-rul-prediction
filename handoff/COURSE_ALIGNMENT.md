@@ -34,7 +34,7 @@ slide, dashboard và kịch bản dùng cùng một mô hình, một bảng cả
 
 | Tiêu chí | Trọng số | Bằng chứng trong bản nộp |
 |---|---:|---|
-| Quy trình quản lý dữ liệu: thu thập → làm sạch → chuẩn hóa → tích hợp → lưu trữ | 40% | Mục 4 và 6.1 báo cáo; slide 5–8; `src/cmapss/{data,etl,features}`; parity và benchmark |
+| Quy trình quản lý dữ liệu: thu thập → làm sạch → chuẩn hóa → tích hợp → lưu trữ | 40% | Mục 4 và 6.1 báo cáo; slide 6–10 (slide 6 gắn năm bước với sơ đồ pipeline); `src/cmapss/{data,etl,features}`; parity và benchmark |
 | Trực quan hóa và truyền đạt kết quả | 25% | Hình khử nhiễu, Health Index, cảnh báo, lịch bảo trì; dashboard chín trang; slide 9–16 |
 | Code, cấu trúc pipeline và tài liệu kỹ thuật | 20% | Package theo bước, notebook 00–06, README song ngữ, bộ test tự động |
 | Trình bày, thuyết minh và phản biện | 15% | Deck 20 slide, kịch bản nói khoảng 19 phút gồm demo 2,5 phút, sổ tay `SPEECH_SCRIPT_VI.pdf` có lời đọc từng slide, demo và câu hỏi phản biện |
@@ -69,7 +69,7 @@ slide, dashboard và kịch bản dùng cùng một mô hình, một bảng cả
 | CLO | Bằng chứng | Trạng thái |
 |---|---|---|
 | CLO1: Big Data, 5V và Data Science | Bảng 5V trong Mục 7.4 báo cáo | **Đạt ở mức khái niệm**; nêu rõ giới hạn volume/velocity |
-| CLO2: Hadoop/HDFS/MapReduce | `infra/hadoop/` (Hadoop 3.4.3 một node trong Docker), `src/cmapss/hdfs/`: raw FD001 trên HDFS, job MapReduce (Hadoop Streaming) trên YARN, `fsck` HEALTHY; Mục 3.7, 4.1 và 4.4 báo cáo; slide 7 | **Đạt ở mức sandbox** đúng phạm vi đề cương (không cần cluster thật); chưa có cụm nhiều máy |
+| CLO2: Hadoop/HDFS/MapReduce | `infra/hadoop/` (Hadoop 3.4.3 một node trong Docker), `src/cmapss/hdfs/`: raw FD001 trên HDFS, job MapReduce (Hadoop Streaming) trên YARN, `fsck` HEALTHY; Mục 3.7 và 4.4 báo cáo; slide 6–7 | **Đạt ở mức sandbox** đúng phạm vi đề cương (không cần cluster thật); chưa có cụm nhiều máy |
 | CLO3: thu thập, làm sạch, chuẩn hóa, tích hợp, lưu trữ | `cmapss.data.acquire` tải từ NASA, kiểm tra MD5/SHA-256, ghi manifest; reader, contract, ETL Pandas/PySpark, Parquet/SQLite, HDFS | **Đạt**; nguồn là dataset công khai, thu thập bằng script chứ không qua API/streaming |
 | CLO4/CLO7: trực quan hóa, dashboard, storytelling | Báo cáo, slide, dashboard chín trang theo thứ tự pipeline | **Đạt** |
 | CLO5: thao tác HDFS và chạy job MapReduce/Spark | Thao tác HDFS (`put`, `ls`, `fsck`), job MapReduce trên YARN, Spark đọc/ghi HDFS; PySpark ETL và rolling, parity, benchmark 1×/10× | **Đạt** ở mức một node; chưa đo hiệu năng trên cụm nhiều máy |

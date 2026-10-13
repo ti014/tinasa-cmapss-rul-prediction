@@ -67,7 +67,8 @@ thông tin tương lai. EWMA được áp dụng cho 14 sensor có xu hướng (
 xu hướng suy giảm thay đổi chậm nên đóng góp ít vào sai phân, còn dao động giữa hai
 cycle liền kề đóng góp phần lớn.
 
-Health Index (HI, chỉ số sức khỏe) gộp 21 sensor đã làm mượt thành một chuỗi. Các
+Health Index (HI, chỉ số sức khỏe) gộp 21 sensor thành một chuỗi: 14 sensor có xu
+hướng đã được làm mượt bằng EWMA, 7 sensor gần như không đổi giữ nguyên. Các
 sensor được chuẩn hóa bằng StandardScaler (trừ trung bình, chia độ lệch chuẩn),
 chiếu lên thành phần chính thứ nhất của PCA, đổi dấu để HI giảm theo cycle, rồi
 chuẩn hóa về trung bình 0, độ lệch chuẩn 1. Bước này không dùng nhãn RUL.

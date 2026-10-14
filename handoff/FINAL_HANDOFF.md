@@ -1,6 +1,6 @@
 # Bàn giao bài báo cáo — Đề tài 8
 
-**Học viên:** Phan Nguyễn Mai Phương · **MSHV:** 25002711 · **Đồng bộ:** 12/10/2026
+**Học viên:** Phan Nguyễn Mai Phương · **MSHV:** 25002711 · **Đồng bộ:** 14/10/2026
 
 ## Đọc gì trước
 
@@ -11,7 +11,7 @@ liệu tra nhanh.
 
 ## Bài làm gồm những gì
 
-- **Báo cáo:** [`report/main.pdf`](../report/main.pdf), 50 trang.
+- **Báo cáo:** [`report/main.pdf`](../report/main.pdf), 51 trang.
 - **Slide:** [`slides/cmapss_fd001_presentation.pptx`](../slides/cmapss_fd001_presentation.pptx),
   20 slide trên template IUH; bản PDF dự phòng nằm cùng thư mục.
 - **Dashboard:** mở bằng lệnh bên dưới, chín trang, dùng để demo.

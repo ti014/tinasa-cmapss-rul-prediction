@@ -223,9 +223,8 @@ thẻ nhạt bên cạnh, cuối cùng chỉ dải màu ``26 trường''.}
 \say
 Muốn biết động cơ hỏng ra sao thì phải có động cơ bị hỏng. Nhưng không ai đem 100 động cơ máy bay
 thật ra chạy đến khi hỏng chỉ để lấy dữ liệu, vì quá đắt và quá nguy hiểm. Nên NASA làm một bộ
-\num{dữ liệu mô phỏng} tên là C-MAPSS. Đề gợi ý hai bộ: Predictive Maintenance trên Kaggle và NASA
-Turbofan. Em chọn bộ NASA vì mỗi động cơ có cả chuỗi số đo theo từng chuyến cho tới khi hỏng, và
-phần test có đáp án để chấm; bộ Kaggle là bảng phân loại lỗi, không có chuỗi như vậy.
+\num{dữ liệu mô phỏng} tên là C-MAPSS, em tải trực tiếp từ cổng dữ liệu mở của NASA. Mỗi động cơ
+có cả chuỗi số đo theo từng chuyến cho tới khi hỏng, và phần test có đáp án để chấm.
 
 Bộ này có bốn phần. Em chọn \num{FD001} vì nó giống một phòng thí nghiệm sạch: chỉ một điều kiện
 bay và một kiểu hỏng, nên khi số đo thay đổi, mình biết đó là do động cơ yếu đi chứ không phải do
@@ -597,7 +596,7 @@ chính nó và đo số cycle báo trước khi hỏng. Em chưa đo được t�
 định trước khi chạy, theo lệ thường của biểu đồ kiểm soát chất lượng: 3 sigma là mức mà nếu chỉ do
 dao động ngẫu nhiên thì rất hiếm khi vượt, còn 5 cycle liên tiếp để một cái gai lẻ không làm hệ thống
 la làng. Sau đó em có chạy lại cả lưới 2, 3, 4 sigma nhân với 3, 5, 10 cycle, tổng cộng 9 cấu hình
-(Bảng 18 trong báo cáo, và có trên dashboard). Kết quả là cấu hình nào cũng bắt đủ 100 trên 100 động
+(Bảng 19 trong báo cáo, và có trên dashboard). Kết quả là cấu hình nào cũng bắt đủ 100 trên 100 động
 cơ, và động cơ báo muộn nhất vẫn còn ít nhất 50 cycle mới hỏng. Cái thay đổi chỉ là đánh đổi. Hạ
 xuống 2 sigma, 3 cycle thì báo sớm hơn, trung vị 136 cycle, nhưng có 17 động cơ bị báo ngay sau đoạn
 tham chiếu, giống cái chuông báo cháy kêu khi mới bật bếp. Nâng lên 4 sigma, 10 cycle thì không còn

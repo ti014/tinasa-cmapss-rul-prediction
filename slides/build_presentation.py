@@ -443,9 +443,8 @@ def slide_data():
     s = content(1, 4, "Bộ dữ liệu NASA C-MAPSS",
                 "Chọn NASA Turbofan (C-MAPSS) trong gợi ý của đề vì có chuỗi cảm biến chạy đến khi hỏng của từng động cơ",
                 "data/raw/readme.txt; outputs/cross_dataset/FD00x/etl/run_info.json",
-                "Thời lượng: 50 giây.\nĐề gợi ý hai bộ dữ liệu: Predictive Maintenance trên Kaggle và NASA Turbofan Engine. "
-                "Em chọn NASA C-MAPSS vì mỗi động cơ có cả chuỗi cảm biến theo cycle cho tới khi hỏng, và tập test có nhãn RUL "
-                "thật để chấm điểm. Bộ Kaggle là bảng phân loại lỗi, không có chuỗi chạy đến khi hỏng của từng máy.\n"
+                "Thời lượng: 50 giây.\nDữ liệu là bộ NASA C-MAPSS, tải trực tiếp từ cổng dữ liệu mở của NASA. Mỗi động cơ "
+                "có chuỗi cảm biến theo cycle cho tới khi hỏng, và tập test có nhãn RUL thật để chấm điểm.\n"
                 "C-MAPSS có bốn tập con (subset). Mỗi subset có train (chạy đến khi hỏng), test (bị cắt trước khi hỏng) và "
                 "file nhãn RUL test. FD001: 1 điều kiện vận hành, 1 dạng lỗi ở máy nén áp suất cao (HPC), 100 động cơ "
                 "train và 100 động cơ test, 33.727 quan sát. Mỗi dòng có 26 trường: engine_id, cycle, 3 setting và 21 sensor.")

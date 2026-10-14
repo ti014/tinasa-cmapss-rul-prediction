@@ -52,6 +52,10 @@ outputs/features/gold/
 outputs/cross_dataset/FD00x/      ETL và features riêng cho mỗi subset
 ```
 
+Các file trong `data/raw/` được tải bằng `python -m cmapss.data.acquire`. Lệnh kiểm
+tra MD5 của gói ZIP và SHA-256 của 12 file, rồi ghi `outputs/acquisition/manifest.json`
+([nguồn](../src/cmapss/data/acquire.py), [ghi chú dữ liệu](../data/raw/DATA_SOURCE.md)).
+
 Reader tách mỗi dòng theo whitespace, yêu cầu đúng 26 trường và gán tên cột:
 `engine_id`, `cycle`, ba `setting_*`, 21 `sensor_*`. Sau đó thêm `split`.
 `engine_id/cycle` có kiểu int64; settings/sensors có kiểu float64.

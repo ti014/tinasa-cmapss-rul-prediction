@@ -11,6 +11,18 @@ của báo cáo cuối kỳ; FD002--FD004 được lưu để phục vụ các t
 - Bản công bố có checksum: https://zenodo.org/records/15346912
 - MD5 của gói ZIP đã kiểm tra: `79a22f36e80606c69d0e9e4da5bb2b7a`.
 
+## Cách tải lại
+
+```powershell
+uv run --frozen python -m cmapss.data.acquire --dest data/raw
+```
+
+Lệnh tải gói ZIP, kiểm tra MD5 của gói và SHA-256 của 12 file dữ liệu, rồi ghi
+`outputs/acquisition/manifest.json`. Đây là hồ sơ của lớp Bronze. File đã có trong
+`data/raw` chỉ được giữ khi trùng nội dung; file khác nội dung làm lệnh dừng chứ không
+bị ghi đè. Ví dụ: lần chạy ngày 09/10/2026 (giờ Việt Nam) ghi cả 12 file ở trạng thái `unchanged`.
+Có thể truyền `--archive <đường dẫn ZIP>` để dùng gói đã tải sẵn.
+
 Các file dữ liệu giữ nguyên nội dung từ nguồn. Kết quả, artifact và data contract
 hiện tại vẫn chỉ áp dụng cho FD001; việc có mặt của FD002--FD004 không có nghĩa
 pipeline đã được đánh giá trên các subset này.

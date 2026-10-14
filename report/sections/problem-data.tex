@@ -70,11 +70,41 @@ subset FD002--FD004 chỉ dùng trong thử nghiệm mở rộng.
 \label{sec:data}
 
 \subsection{Nguồn dữ liệu}
-Đề tài gợi ý hai nguồn: bộ Predictive Maintenance trên Kaggle và bộ NASA Turbofan
-Engine. Bài làm chọn NASA C-MAPSS vì mỗi động cơ có chuỗi cảm biến theo cycle cho
-tới khi hỏng, và tập test có nhãn RUL thật để đánh giá. Bộ Kaggle là bảng phân loại
-lỗi, mỗi dòng là một lần đo độc lập, không có chuỗi chạy đến khi hỏng của từng
-máy nên không phù hợp với yêu cầu xử lý chuỗi thời gian và dự đoán thời điểm bảo trì.
+Bài làm dùng bộ NASA Turbofan Engine (C-MAPSS). Toàn bộ dữ liệu phân tích trong báo
+cáo được tải trực tiếp từ cổng dữ liệu mở của NASA (NASA Open Data Portal), không
+lấy từ bản sao của bên thứ ba. Bộ
+dữ liệu do Trung tâm Prognostics của NASA Ames công bố, kèm bài báo mô tả cách mô
+phỏng của Saxena và cộng sự~\cite{saxena2008damage}. Bảng~\ref{tab:data-source}
+ghi lại nguồn và lần tải dùng cho báo cáo.
+
+\begin{table}[H]
+\centering
+\caption[Nguồn và lần tải dữ liệu]{Nguồn và lần tải dữ liệu NASA C-MAPSS dùng trong báo cáo.}
+\label{tab:data-source}
+\small
+\begin{tabularx}{\linewidth}{@{}p{0.27\linewidth}X@{}}
+\toprule
+Mục & Giá trị\\\midrule
+Đơn vị công bố & NASA Ames Research Center, Prognostics Center of Excellence\\
+Trang bộ dữ liệu & \url{https://data.nasa.gov/dataset/cmapss-jet-engine-simulated-data}\\
+Link tải gói & \url{https://data.nasa.gov/docs/legacy/CMAPSSData.zip}\\
+Kích thước gói & 12.425.978 byte\\
+MD5 của gói & \texttt{79a22f36e80606c69d0e9e4da5bb2b7a}\\
+File dữ liệu & 12 file: \texttt{train\_}, \texttt{test\_}, \texttt{RUL\_} cho FD001--FD004;
+  báo cáo phân tích chính trên \texttt{train\_FD001.txt}, \texttt{test\_FD001.txt},
+  \texttt{RUL\_FD001.txt}\\
+Lần tải đối chiếu & 09/10/2026, 02:52 giờ Việt Nam; cả 12 file trùng SHA-256 với bản
+  trong \filepath{data/raw}\\
+Lệnh tải lại & \texttt{python -m cmapss.data.acquire -{}-dest data/raw}\\
+Hồ sơ tải & \filepath{outputs/acquisition/manifest.json} (link, thời điểm, kích
+  thước, SHA-256 từng file)\\\bottomrule
+\end{tabularx}
+\end{table}
+
+Người đọc có thể tự kiểm tra: tải gói từ link trên, tính MD5 (trên Windows dùng
+\texttt{certutil -hashfile CMAPSSData.zip MD5}) và so với giá trị trong bảng. Nếu
+trùng, dữ liệu trong bài làm đúng là bản gốc NASA công bố. Cách script kiểm tra từng
+file được mô tả ở Mục~\ref{sec:dp-acquire}.
 
 NASA C-MAPSS mô phỏng các chuỗi vận hành đến khi hỏng của một đội động cơ
 turbofan cùng loại~\cite{nasaCmapssDataset,saxena2008damage}. Mỗi động cơ bắt đầu

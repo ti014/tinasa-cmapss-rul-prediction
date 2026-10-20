@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import argparse
 
-from cmapss.modeling.improvement import ImprovementConfig, run_improvement_experiment
+from cmapss.modeling.improvement.config import ImprovementConfig
+from cmapss.modeling.improvement.runner import run_improvement_experiment
 
 
 def build_parser() -> argparse.ArgumentParser:

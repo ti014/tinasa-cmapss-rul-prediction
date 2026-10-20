@@ -2,6 +2,7 @@
 
 from pathlib import Path
 
+import joblib
 import numpy as np
 import pandas as pd
 import pytest
@@ -11,6 +12,7 @@ from cmapss.features.contracts import ROLLING_FEATURE_COLUMNS
 from cmapss.modeling.contracts import (
     FINAL_PREDICTION_COLUMNS,
     FOLD_ASSIGNMENT_COLUMNS,
+    MODELING_FEATURE_COLUMNS,
     MODEL_METRIC_COLUMNS,
     OOF_PREDICTION_COLUMNS,
 )
@@ -18,6 +20,7 @@ from cmapss.modeling.metrics import bootstrap_metric_intervals, nasa_score_compo
 from cmapss.modeling.early_warning import build_warning_events
 from cmapss.modeling.pipeline import (
     ModelingConfig,
+    WeightedMedianRegressor,
     build_group_folds,
     engine_equal_sample_weights,
     evaluate_final_predictions,
@@ -209,7 +212,7 @@ def test_modeling_pipeline_writes_artifacts_and_final_evaluation(tmp_path: Path)
     result = run_modeling_pipeline(
         feature_path,
         target_path,
-        config=ModelingConfig(n_splits=3, candidate_models=("median_baseline", "ridge_alpha_1")),
+        config=ModelingConfig(n_splits=3, hgb_max_iter=5, hgb_min_samples_leaf=2),
     )
     payload = write_modeling_artifacts(result, tmp_path / "modeling")
     final_predictions = pd.read_parquet(tmp_path / "modeling" / "predictions" / "final_predictions.parquet")
@@ -220,7 +223,72 @@ def test_modeling_pipeline_writes_artifacts_and_final_evaluation(tmp_path: Path)
     assert tuple(result.oof_predictions.columns) == OOF_PREDICTION_COLUMNS
     assert tuple(result.model_metrics.columns) == MODEL_METRIC_COLUMNS
     assert tuple(final_predictions.columns) == FINAL_PREDICTION_COLUMNS
-    assert payload["selected_model"] in {"median_baseline", "ridge_alpha_1"}
+    assert payload["selected_model"] in result.config.candidate_models
     assert payload["row_counts"]["final_predictions"] == 3
     assert final_payload["metrics"]["n_engines"] == 3
     assert (tmp_path / "modeling" / "models" / "selected_model.joblib").exists()
+    restored = joblib.load(tmp_path / "modeling" / "models" / "selected_model.joblib")
+    X = features.loc[:, list(MODELING_FEATURE_COLUMNS)]
+    np.testing.assert_array_equal(restored.predict(X), result.selected_estimator.predict(X))
+
+
+@pytest.mark.parametrize("kind", ["config", "median"])
+def test_legacy_joblib_resolves_pipeline_classes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, kind: str,
+) -> None:
+    """Artifact lưu với module path cũ vẫn nạp được sau khi tách module."""
+    value = (
+        ModelingConfig(n_splits=3)
+        if kind == "config"
+        else WeightedMedianRegressor().fit(np.zeros((2, 1)), np.array([2., 8.]), np.array([1., 3.]))
+    )
+    artifact = tmp_path / "legacy.joblib"
+    with monkeypatch.context() as patch:
+        patch.setattr(type(value), "__module__", "cmapss.modeling.pipeline")
+        joblib.dump(value, artifact)
+
+    restored = joblib.load(artifact)
+
+    assert type(restored) is type(value)
+    if kind == "config":
+        assert restored == value
+    else:
+        np.testing.assert_array_equal(restored.predict(np.zeros((3, 1))), [8., 8., 8.])
+
+
+def test_cli_writes_predictions_before_reading_labels(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """CLI giữ ranh giới train/test khi phối hợp các module đã tách."""
+    from cmapss.modeling.baseline import cli, evaluation
+
+    features = pd.concat([
+        _feature_rows("train", {engine: 3 for engine in range(1, 7)}),
+        _feature_rows("test", {1: 2, 2: 2, 3: 2}),
+    ], ignore_index=True).sort_values(["split", "engine_id", "cycle"]).reset_index(drop=True)
+    feature_path, target_path = tmp_path / "features.parquet", tmp_path / "targets.parquet"
+    features.to_parquet(feature_path, index=False)
+    _targets_from_features(features).to_parquet(target_path, index=False)
+    label_path = tmp_path / "labels.txt"
+    label_path.write_text("10\n20\n30\n", encoding="utf-8")
+    output = tmp_path / "modeling"
+    reads = []
+    original_reader = evaluation.read_test_labels
+
+    def read_labels(path):
+        predictions = pd.read_parquet(output / "predictions/final_predictions.parquet")
+        assert len(predictions) == 3
+        assert "rul" not in predictions.columns
+        reads.append(path)
+        return original_reader(path)
+
+    monkeypatch.setattr(evaluation, "read_test_labels", read_labels)
+    monkeypatch.setattr(cli, "ModelingConfig", lambda: ModelingConfig(
+        n_splits=3, candidate_models=("median_baseline",), bootstrap_resamples=10,
+    ))
+
+    assert cli.main([
+        "--rolling-features", str(feature_path), "--train-targets", str(target_path),
+        "--test-labels", str(label_path), "--output-dir", str(output),
+    ]) == 0
+    assert reads == [str(label_path)]

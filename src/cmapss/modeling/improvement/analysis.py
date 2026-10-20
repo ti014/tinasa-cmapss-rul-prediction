@@ -48,7 +48,8 @@ def paired_comparison(baseline: pd.DataFrame, candidate: pd.DataFrame, resamples
 
 
 def write_outer_comparison(predictions: pd.DataFrame, output: Path, resamples: int, seed: int) -> None:
-    from cmapss.modeling.improvement import _metrics, _write_json
+    from cmapss.modeling.improvement.selection import _metrics
+    from cmapss.modeling.improvement.artifact_io import _write_json
     summaries, engine_tables, comparisons = [], {}, []
     reference_keys = None
     for stage in ("baseline", "windows", "parameters", "weights"):

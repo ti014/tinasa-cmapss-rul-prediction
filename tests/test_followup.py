@@ -79,7 +79,7 @@ def test_cap_does_not_change_validation_truth_and_cache_detects_tampering(tmp_pa
 
 @pytest.mark.parametrize("module_entry", [False, True])
 def test_nested_runner_writes_predictions_before_reading_test_labels(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, module_entry: bool) -> None:
-    import cmapss.modeling.followup as runner
+    from cmapss.modeling.followup import cli, runner
     observations = synthetic_observations()
     silver = tmp_path / "outputs/etl/silver"
     silver.mkdir(parents=True)
@@ -107,13 +107,12 @@ def test_nested_runner_writes_predictions_before_reading_test_labels(tmp_path: P
         import subprocess
         import sys
 
-        monkeypatch.setattr(runner, "StudyConfig", lambda: config)
+        monkeypatch.setattr(cli, "StudyConfig", lambda: config)
         monkeypatch.setattr(sys, "argv", ["followup", "--datasets", "FD001", "--repo-root", str(tmp_path), "--output-root", "study"])
-        with pytest.warns(RuntimeWarning, match="found in sys.modules"):
-            runpy.run_module("cmapss.modeling.followup", run_name="__main__")
+        runpy.run_module("cmapss.modeling.followup", run_name="__main__")
         # A fresh interpreter cannot resolve __main__.RecipeModel; this catches
         # the real serialization failure specific to python -m execution.
-        subprocess.run([sys.executable, "-c", "import joblib,sys; m=joblib.load(sys.argv[1]); assert type(m).__module__ == 'cmapss.modeling.followup'",
+        subprocess.run([sys.executable, "-c", "import joblib,sys; m=joblib.load(sys.argv[1]); assert type(m).__module__ == 'cmapss.modeling.followup.estimators'",
                         str(output / "selected_model.joblib")], check=True, capture_output=True)
         result = json.loads((output / "run_info.json").read_text(encoding="utf-8"))
     else:

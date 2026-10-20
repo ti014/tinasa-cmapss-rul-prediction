@@ -14,7 +14,7 @@ from threadpoolctl import threadpool_limits
 
 from cmapss.features.rolling import build_rolling_features, read_silver_observations
 from cmapss.modeling.improvement import _metrics
-from cmapss.modeling.improvement_analysis import engine_metrics, paired_comparison
+from cmapss.modeling.improvement.analysis import engine_metrics, paired_comparison
 from cmapss.project import IMPROVEMENT_RUN
 from cmapss.provenance import verify_source_snapshot
 

@@ -11,7 +11,7 @@ import pandas as pd
 from threadpoolctl import threadpool_limits
 
 from cmapss.modeling.improvement import _metrics
-from cmapss.modeling.improvement_analysis import engine_metrics, paired_comparison
+from cmapss.modeling.improvement.analysis import engine_metrics, paired_comparison
 from cmapss.project import FOLLOWUP_RUN
 from cmapss.provenance import verify_source_snapshot
 

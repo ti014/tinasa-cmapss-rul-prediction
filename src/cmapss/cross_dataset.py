@@ -15,7 +15,7 @@ import pandas as pd
 from cmapss.data.contracts import DATASET_IDS, KEY
 from cmapss.etl.pandas_pipeline import PandasETLResult, run_pandas_etl, write_pandas_artifacts
 from cmapss.features.rolling import run_rolling_feature_pipeline, write_rolling_feature_artifacts
-from cmapss.modeling.pipeline import (
+from cmapss.modeling.baseline import (
     ModelingConfig,
     evaluate_predictions_from_path,
     run_modeling_pipeline,

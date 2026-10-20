@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import hashlib
 from pathlib import Path
 from typing import Any
@@ -32,3 +33,57 @@ def verify_source_snapshot(run: Path, manifest: dict[str, Any], repo_root: Path)
         "working_tree_matches_recorded_source": not working_tree_differences,
         "working_tree_differences": working_tree_differences,
     }
+
+
+def local_source_files(root: Path, entries: tuple[str, ...]) -> tuple[str, ...]:
+    """Collect entry files and their local cmapss imports for source snapshots.
+
+    Args:
+        root: Repository root containing src/cmapss.
+        entries: Repository-relative source paths to start from.
+
+    Returns:
+        Sorted paths including imported modules and package initializers.
+
+    Raises:
+        FileNotFoundError: An explicit source path is missing.
+    """
+    pending = list(entries)
+    found: set[str] = set()
+    while pending:
+        name = pending.pop()
+        if name in found:
+            continue
+        path = root / name
+        if not path.is_file():
+            raise FileNotFoundError(f"source missing: {name}")
+        found.add(name)
+        if not name.startswith("src/"):
+            continue
+        package = Path(name).parent.relative_to("src").as_posix().replace("/", ".")
+        parents = Path(name).parent
+        while parents != Path("src"):
+            initializer = (parents / "__init__.py").as_posix()
+            if (root / initializer).is_file():
+                pending.append(initializer)
+            parents = parents.parent
+        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
+            modules: list[str] = []
+            if isinstance(node, ast.Import):
+                modules = [alias.name for alias in node.names]
+            elif isinstance(node, ast.ImportFrom):
+                if node.level:
+                    parts = package.split(".")
+                    base = ".".join(parts[:len(parts) - node.level + 1])
+                    module = ".".join(filter(None, (base, node.module)))
+                else:
+                    module = node.module or ""
+                modules = [module, *(f"{module}.{alias.name}" for alias in node.names)]
+            for module in modules:
+                if not module.startswith("cmapss"):
+                    continue
+                candidate = Path("src") / Path(*module.split("."))
+                for local in (candidate.with_suffix(".py"), candidate / "__init__.py"):
+                    if (root / local).is_file():
+                        pending.append(local.as_posix())
+    return tuple(sorted(found))

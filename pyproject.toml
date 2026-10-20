@@ -26,9 +26,9 @@ dependencies = [
 cmapss-validate = "cmapss.validate:main"
 cmapss-etl = "cmapss.etl.cli:main"
 cmapss-features = "cmapss.features.cli:main"
-cmapss-modeling = "cmapss.modeling.cli:main"
+cmapss-modeling = "cmapss.modeling.baseline.cli:main"
 cmapss-cross-dataset = "cmapss.cross_dataset:main"
-cmapss-model-improvement = "cmapss.modeling.improvement_cli:main"
+cmapss-model-improvement = "cmapss.modeling.improvement.cli:main"
 cmapss-tree-comparison = "cmapss.modeling.tree_comparison.runner:main"
 
 [project.optional-dependencies]

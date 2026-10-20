@@ -1,3 +1,0 @@
-procedure,pooled_rmse_lower,fold_rmse_wins,fold_rmse_wins_2_of_3,endpoint_mae_not_worse,endpoint_nasa_not_worse,on_time_not_worse,burden_not_worse,pilot_continue_candidate
-similarity_k5,False,0,False,False,False,False,False,False
-similarity_k10,False,0,False,False,False,False,False,False

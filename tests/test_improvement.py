@@ -10,7 +10,7 @@ from cmapss.modeling.improvement import (
     make_hgb_candidates,
     _fit_predict, _metrics, _select_candidate, _inner_splits,
 )
-from cmapss.modeling.improvement_analysis import paired_comparison
+from cmapss.modeling.improvement.analysis import paired_comparison
 
 
 def test_low_rul_weights_sum_to_one_per_engine() -> None:
@@ -121,8 +121,8 @@ def test_fit_cache_reuses_predictions_and_invalidates_changed_data(tmp_path, mon
 
 def test_runner_writes_predictions_before_test_labels(tmp_path, monkeypatch) -> None:
     import json
-    import cmapss.modeling.improvement as runner
-    import cmapss.modeling.improvement_analysis as analysis
+    from cmapss.modeling.improvement import runner
+    import cmapss.modeling.improvement.analysis as analysis
     source = tmp_path / "input.bin"
     source.write_bytes(b"fixture")
     output = tmp_path / "run"

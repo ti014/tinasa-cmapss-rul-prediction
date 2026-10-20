@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 import pandas as pd
 
+from cmapss.data.contracts import KEY
 from cmapss.modeling import audit_study as audit
 from cmapss.modeling.lightgbm_comparison import analysis as tree_analysis
 
@@ -222,7 +223,7 @@ def _engine_tables(
     audited_cfg = _tree_config(cfg).audit_config()
     for procedure, frame in predictions.groupby("procedure", sort=True):
         scored = tree_analysis._validate_predictions(frame)
-        keys_truth = scored.loc[:, [*audit.KEY, "y_true"]]
+        keys_truth = scored.loc[:, [*KEY, "y_true"]]
         if reference is None:
             reference = keys_truth
         else:

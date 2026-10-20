@@ -14,6 +14,7 @@ from cmapss.data.contracts import MEASUREMENTS, OBSERVATION_COLUMNS
 from cmapss.data.readers import read_test_labels
 from cmapss.data.targets import make_train_targets
 from cmapss.modeling import comparison_runner as common
+from cmapss.modeling.comparison_runner import runner as lifecycle
 from cmapss.modeling.lightgbm_comparison import cache as lgbm_cache
 from cmapss.modeling.lightgbm_comparison import runner as lgbm
 from cmapss.modeling.tree_comparison import cache as xgb_cache
@@ -75,7 +76,7 @@ def create_inputs(root: Path) -> None:
 def test_studies_share_real_folds_receipts_and_reporting(tmp_path, monkeypatch):
     """Both adapters retain model differences through the entire lifecycle."""
     create_inputs(tmp_path)
-    monkeypatch.setattr(common, "ProcessPoolExecutor", thread_pool)
+    monkeypatch.setattr(lifecycle, "ProcessPoolExecutor", thread_pool)
     outputs = []
     for runner, cache, study, iterations in (
         (xgb, xgb_cache, "tree_comparison", {"xgb_n_estimators": 20}),
@@ -164,7 +165,8 @@ def test_studies_share_real_folds_receipts_and_reporting(tmp_path, monkeypatch):
 def test_shared_source_is_frozen_and_workers_remain_picklable(runner, study, model):
     root = Path(__file__).resolve().parents[1]
     sources = runner._source_files(root)
-    assert "src/cmapss/modeling/comparison_runner.py" in sources
+    for module in ("__init__", "contracts", "artifact_io", "provenance", "training", "evaluation", "runner"):
+        assert f"src/cmapss/modeling/comparison_runner/{module}.py" in sources
     assert f"src/cmapss/modeling/{study}/runner.py" in sources
     other = "lightgbm_comparison" if study == "tree_comparison" else "tree_comparison"
     assert not any(f"/{other}/" in name for name in sources)

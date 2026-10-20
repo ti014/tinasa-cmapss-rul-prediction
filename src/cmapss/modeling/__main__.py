@@ -1,6 +1,6 @@
 """Entry point `python -m cmapss.modeling`."""
 
-from cmapss.modeling.cli import main
+from cmapss.modeling.baseline.cli import main
 
 
 if __name__ == "__main__":

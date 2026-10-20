@@ -1,0 +1,31 @@
+{
+  "author": "Phan Nguyễn Mai Phương — MSHV 25002711",
+  "generated_at_utc": "2026-10-18T07:49:34+00:00",
+  "hadoop_version": "Hadoop 3.4.3",
+  "spark_version": "4.0.1",
+  "hdfs_paths": {
+    "bronze": "/cmapss/bronze/fd001",
+    "silver": "/cmapss/silver/observations",
+    "gold_mapreduce": "/cmapss/gold/mapreduce_engine_summary",
+    "gold_spark": "/cmapss/gold/spark_engine_summary"
+  },
+  "spark_silver_rows": 33727,
+  "spark_silver_null_values": 0,
+  "mapreduce_vs_pandas": {
+    "rows_reference": 200,
+    "rows_candidate": 200,
+    "mismatched_cells": 0,
+    "exact_match": true
+  },
+  "spark_vs_pandas": {
+    "rows_reference": 200,
+    "rows_candidate": 200,
+    "mismatched_cells": 0,
+    "exact_match": true
+  },
+  "seconds": {
+    "mapreduce_job": 20.7,
+    "spark_job": 13.4,
+    "total": 53.5
+  }
+}

@@ -1,0 +1,82 @@
+packageJobJar: [/tmp/hadoop-unjar10027270038052291644/] [] /tmp/streamjob12098241691600665655.jar tmpDir=null
+2026-10-18 07:48:52 INFO  DefaultNoHARMFailoverProxyProvider:64 - Connecting to ResourceManager at resourcemanager/172.19.0.5:8032
+2026-10-18 07:48:52 INFO  DefaultNoHARMFailoverProxyProvider:64 - Connecting to ResourceManager at resourcemanager/172.19.0.5:8032
+2026-10-18 07:48:53 INFO  JobResourceUploader:907 - Disabling Erasure Coding for path: /tmp/hadoop-yarn/staging/hadoop/.staging/job_1792309696401_0001
+2026-10-18 07:48:53 INFO  FileInputFormat:267 - Total input files to process : 2
+2026-10-18 07:48:53 INFO  JobSubmitter:203 - number of splits:3
+2026-10-18 07:48:54 INFO  JobSubmitter:299 - Submitting tokens for job: job_1792309696401_0001
+2026-10-18 07:48:54 INFO  JobSubmitter:300 - Executing with tokens: []
+2026-10-18 07:48:54 INFO  Configuration:2898 - resource-types.xml not found
+2026-10-18 07:48:54 INFO  ResourceUtils:476 - Unable to find 'resource-types.xml'.
+2026-10-18 07:48:54 INFO  YarnClientImpl:356 - Submitted application application_1792309696401_0001
+2026-10-18 07:48:54 INFO  Job:1681 - The url to track the job: http://resourcemanager:8088/proxy/application_1792309696401_0001/
+2026-10-18 07:48:54 INFO  Job:1726 - Running job: job_1792309696401_0001
+2026-10-18 07:49:00 INFO  Job:1747 - Job job_1792309696401_0001 running in uber mode : false
+2026-10-18 07:49:00 INFO  Job:1754 -  map 0% reduce 0%
+2026-10-18 07:49:05 INFO  Job:1754 -  map 33% reduce 0%
+2026-10-18 07:49:06 INFO  Job:1754 -  map 67% reduce 0%
+2026-10-18 07:49:07 INFO  Job:1754 -  map 100% reduce 0%
+2026-10-18 07:49:10 INFO  Job:1754 -  map 100% reduce 100%
+2026-10-18 07:49:11 INFO  Job:1765 - Job job_1792309696401_0001 completed successfully
+2026-10-18 07:49:11 INFO  Job:1772 - Counters: 54
+	File System Counters
+		FILE: Number of bytes read=539640
+		FILE: Number of bytes written=2334701
+		FILE: Number of read operations=0
+		FILE: Number of large read operations=0
+		FILE: Number of write operations=0
+		HDFS: Number of bytes read=5748630
+		HDFS: Number of bytes written=3624
+		HDFS: Number of read operations=14
+		HDFS: Number of large read operations=0
+		HDFS: Number of write operations=2
+		HDFS: Number of bytes read erasure-coded=0
+	Job Counters 
+		Launched map tasks=3
+		Launched reduce tasks=1
+		Rack-local map tasks=3
+		Total time spent by all maps in occupied slots (ms)=11772
+		Total time spent by all reduces in occupied slots (ms)=3922
+		Total time spent by all map tasks (ms)=5886
+		Total time spent by all reduce tasks (ms)=1961
+		Total vcore-milliseconds taken by all map tasks=5886
+		Total vcore-milliseconds taken by all reduce tasks=1961
+		Total megabyte-milliseconds taken by all map tasks=3013632
+		Total megabyte-milliseconds taken by all reduce tasks=1004032
+	Map-Reduce Framework
+		Map input records=33727
+		Map output records=33727
+		Map output bytes=472180
+		Map output materialized bytes=539652
+		Input split bytes=323
+		Combine input records=0
+		Combine output records=0
+		Reduce input groups=200
+		Reduce shuffle bytes=539652
+		Reduce input records=33727
+		Reduce output records=200
+		Spilled Records=67454
+		Shuffled Maps =3
+		Failed Shuffles=0
+		Merged Map outputs=3
+		GC time elapsed (ms)=40
+		CPU time spent (ms)=4140
+		Physical memory (bytes) snapshot=1129615360
+		Virtual memory (bytes) snapshot=9419902976
+		Total committed heap usage (bytes)=1089470464
+		Peak Map Physical memory (bytes)=291700736
+		Peak Map Virtual memory (bytes)=2359422976
+		Peak Reduce Physical memory (bytes)=267407360
+		Peak Reduce Virtual memory (bytes)=2357121024
+	Shuffle Errors
+		BAD_ID=0
+		CONNECTION=0
+		IO_ERROR=0
+		WRONG_LENGTH=0
+		WRONG_MAP=0
+		WRONG_REDUCE=0
+	File Input Format Counters 
+		Bytes Read=5748307
+	File Output Format Counters 
+		Bytes Written=3624
+2026-10-18 07:49:11 INFO  StreamJob:1029 - Output directory: /cmapss/gold/mapreduce_engine_summary

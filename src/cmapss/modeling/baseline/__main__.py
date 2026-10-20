@@ -1,0 +1,7 @@
+"""Entry point cho python -m cmapss.modeling.baseline."""
+
+from cmapss.modeling.baseline.cli import main
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

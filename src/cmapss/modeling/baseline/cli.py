@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-import argparse
 from pathlib import Path
+import argparse
 
-from cmapss.modeling.pipeline import (
+from cmapss.modeling.baseline import (
     ModelingConfig,
     evaluate_predictions_from_path,
     run_modeling_pipeline,

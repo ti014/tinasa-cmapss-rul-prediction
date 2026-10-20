@@ -179,7 +179,7 @@ tại với snapshot. Logic feature, fold, fit và lựa chọn trong snapshot k
 
 ```text
 src/cmapss/features/enhanced.py       # feature nhân quả và normalizer
-src/cmapss/modeling/followup.py       # nested selection, fit, test boundary
+src/cmapss/modeling/followup/runner.py       # nested selection, fit, test boundary
 src/cmapss/etl/rolling_spark.py       # 126 rolling features bằng Spark
 src/cmapss/etl/scalability.py         # benchmark theo stage, process-tree RSS
 src/cmapss/followup_results.py        # loader dùng chung dashboard/notebook

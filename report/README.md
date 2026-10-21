@@ -3,7 +3,7 @@
 **Học viên:** Phan Nguyễn Mai Phương · **MSHV:** 25002711.
 
 [Bản PDF](main.pdf) được biên dịch từ [main.tex](main.tex), cập nhật ngày
-12/10/2026. Báo cáo trình bày Đề tài 8 — phân tích dữ liệu IoT và bảo trì dự đoán
+21/10/2026. Báo cáo trình bày Đề tài 8 — phân tích dữ liệu IoT và bảo trì dự đoán
 trên NASA C-MAPSS FD001, theo thứ tự rubric: pipeline dữ liệu (6.1), khử nhiễu và
 cửa sổ thời gian (6.2), xu hướng và bất thường (6.3), dự đoán RUL (6.4), cảnh báo
 sớm (6.5), báo cáo dự đoán thời điểm cần bảo trì (6.6) và thử nghiệm mở rộng (6.7).

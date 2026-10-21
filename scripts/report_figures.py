@@ -54,7 +54,7 @@ def window_example() -> Path:
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10.5, 3.6), gridspec_kw={"width_ratios": [1.6, 1]})
     ax1.axvspan(70.5, 100.5, color=BLUE, alpha=0.10, lw=0)
     ax1.plot(engine["cycle"], engine["sensor_11"], color=GRAY, lw=1.2, label="sensor_11 của động cơ train 1")
-    ax1.plot(window["cycle"], window["sensor_11"], color=BLUE, lw=2, label="30 cycles trong window (71–100)")
+    ax1.plot(window["cycle"], window["sensor_11"], color=BLUE, lw=2, label="30 cycle trong window (71–100)")
     ax1.hlines(row["sensor_11__mean"], 71, 100, color=INK, lw=1.2, ls="--", label="mean của window")
     k = window["cycle"].to_numpy()
     fit = row["sensor_11__mean"] + row["sensor_11__slope"] * (k - k.mean())
@@ -73,7 +73,7 @@ def window_example() -> Path:
     ax1.text(0.02, 0.97, text, transform=ax1.transAxes, va="top", ha="left", family=FONT,
              fontsize=8, color=INK, bbox={"facecolor": "white", "edgecolor": LIGHT_GRAY, "boxstyle": "round,pad=0.4"})
     ax1.set(xlabel="cycle", ylabel="giá trị sensor_11 (đơn vị gốc)",
-            title="(a) Một dòng đặc trưng = 6 thống kê trên 30 cycles gần nhất")
+            title="(a) Một dòng đặc trưng = 6 thống kê trên 30 cycle gần nhất")
     ax1.legend(loc="lower right", fontsize=7.5)
 
     ax2.axvspan(0.5, 29.5, color=LIGHT_GRAY, alpha=0.5, lw=0)
@@ -82,7 +82,7 @@ def window_example() -> Path:
     ax2.scatter([100], [92], s=36, color=ORANGE, edgecolor="white", lw=1.5, zorder=5)
     ax2.annotate("cycle 100: RUL = 192 − 100 = 92", xy=(100, 92), xytext=(108, 140), fontsize=8, color=INK,
                  arrowprops={"arrowstyle": "-", "color": INK_2, "lw": 0.8})
-    ax2.set(xlabel="cycle", ylabel="RUL (cycles)", title="(b) Nhãn RUL = cycle cuối − cycle hiện tại", ylim=(0, 200))
+    ax2.set(xlabel="cycle", ylabel="RUL (cycle)", title="(b) Nhãn RUL = cycle cuối − cycle hiện tại", ylim=(0, 200))
     fig.tight_layout()
     path = OUT / "window_example.png"
     style_figure(fig)
@@ -104,9 +104,9 @@ def oof_pred_vs_true() -> Path:
     ax.plot([0, 360], [0, 360], color=INK_2, lw=1, ls="--", label="dự đoán đúng (y = x)")
     ax.plot(centers, binned, color=ORANGE, lw=2, marker="o", ms=3.5, label="dự đoán trung bình theo khoảng RUL")
     ax.axhline(145, color=ORANGE, lw=0.8, ls=":")
-    ax.annotate("dự đoán trung bình ≈ 145 cycles\ndù RUL thật lớn hơn nhiều", xy=(290, 136), xytext=(285, 205),
+    ax.annotate("dự đoán trung bình ≈ 145 cycle\ndù RUL thật lớn hơn nhiều", xy=(290, 136), xytext=(285, 205),
                 fontsize=8, color=INK, ha="center", arrowprops={"arrowstyle": "-", "color": INK_2, "lw": 0.8})
-    ax.set(xlabel="RUL thật (cycles)", ylabel="RUL dự đoán OOF (cycles)", xlim=(0, 362), ylim=(0, 260),
+    ax.set(xlabel="RUL thật (cycle)", ylabel="RUL dự đoán OOF (cycle)", xlim=(0, 362), ylim=(0, 260),
            title="Dự đoán OOF của HGB trên 17.731 window train")
     ax.grid(axis="both")
     cb = fig.colorbar(hb, ax=ax, pad=0.02)
@@ -137,7 +137,7 @@ def warning_vs_lifetime() -> Path:
     ax.text(0.98, 0.95, f"r = {vn(r)}", transform=ax.transAxes, ha="right", va="top", fontsize=9, color=INK)
     ax.text(0.98, 0.05, "δ > 0: cảnh báo sau khi RUL thật đã dưới 30", transform=ax.transAxes, ha="right",
             fontsize=7.5, color=INK_2)
-    ax.set(xlabel="tuổi thọ của động cơ (cycle hỏng)", ylabel="độ lệch δ so với ngưỡng (cycles)",
+    ax.set(xlabel="tuổi thọ của động cơ (cycle hỏng)", ylabel="độ lệch δ so với ngưỡng (cycle)",
            title="Thời điểm cảnh báo đầu tiên theo tuổi thọ, 100 động cơ train")
     ax.grid(axis="both")
     ax.legend(loc="upper center", fontsize=8, ncol=3, bbox_to_anchor=(0.5, -0.18))
@@ -177,7 +177,7 @@ def transfer_shift() -> Path:
     for box, color in zip(parts["boxes"], colors):
         box.set(facecolor=color, edgecolor="white", lw=1.5)
     ax2.set_xticks([2, 6, 10], ["test FD002", "test FD003", "test FD004"])
-    ax2.set(ylabel="RUL (cycles)", title="(b) Mô hình FD001 dự đoán gần như hằng số trên FD002, FD004")
+    ax2.set(ylabel="RUL (cycle)", title="(b) Mô hình FD001 dự đoán gần như hằng số trên FD002, FD004")
     handles = [plt.Rectangle((0, 0), 1, 1, color=c) for c in (LIGHT_GRAY, BLUE, ORANGE)]
     ax2.legend(handles, ["RUL thật", "dự đoán, huấn luyện nội bộ", "dự đoán của mô hình FD001"], fontsize=7.5,
                loc="upper center", ncol=3, bbox_to_anchor=(0.5, -0.22))
@@ -214,7 +214,7 @@ def cross_dataset_mae() -> Path:
             ax.text(hi + 1.2, i + offset, vn(mae), va="center", fontsize=7.5, color=INK)
     ax.set_yticks(range(len(targets)), [f"test {t}" for t in targets])
     ax.invert_yaxis()
-    ax.set(xlabel="MAE theo động cơ (cycles), khoảng tin cậy bootstrap 95%", xlim=(0, 75),
+    ax.set(xlabel="MAE theo động cơ (cycle), khoảng tin cậy bootstrap 95%", xlim=(0, 75),
            title="Ma trận đánh giá với window 10 cycles")
     ax.grid(axis="x")
     ax.grid(axis="y", visible=False)

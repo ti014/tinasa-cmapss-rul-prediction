@@ -1,19 +1,13 @@
 \section{Kết quả}
 \label{sec:results}
 
-\noindent\textit{Mục này trả lời câu hỏi buổi sáng ``hôm nay đưa động cơ nào vào
-xưởng?'' theo từng bước, từ dữ liệu sạch đến lịch bảo trì. Mỗi con số ghi rõ tập:
-train (dự đoán OOF theo dõi suốt đời 100 động cơ) hoặc test (mỗi động cơ một dự
-đoán tại cycle cuối).}
-
 Kết quả được trình bày theo đúng thứ tự của pipeline: dữ liệu được thu thập,
 kiểm tra và lưu trữ (Mục~\ref{sec:res-etl}); tín hiệu được khử nhiễu và tổng hợp
 theo window (Mục~\ref{sec:res-denoise}); xu hướng suy giảm và dấu hiệu bất thường
 được phát hiện (Mục~\ref{sec:res-trend}); RUL được dự đoán
 (Mục~\ref{sec:res-model}); chuyển thành cảnh báo sớm (Mục~\ref{sec:res-warning});
 và cuối cùng thành báo cáo dự đoán thời điểm cần bảo trì cho từng động cơ
-(Mục~\ref{sec:res-maintenance}). Các thử nghiệm ngoài luồng chính được gom ở
-Mục~\ref{sec:res-extended}. Trừ khi ghi khác, mọi số liệu thuộc FD001.
+(Mục~\ref{sec:res-maintenance}). Trừ khi ghi khác, mọi số liệu thuộc FD001.
 
 \subsection{Pipeline dữ liệu và chất lượng dữ liệu}
 \label{sec:res-etl}
@@ -204,8 +198,7 @@ $z$ & $k$ & Phát hiện & Lead time nhỏ nhất & Lead time trung vị & Tỷ 
 \end{tabular}
 \end{table}
 
-Kết luận chính không phụ thuộc vào lựa chọn tham số: cả 9 cấu hình đều phát hiện
-đủ 100 động cơ, và lead time nhỏ nhất luôn từ 50 cycle trở lên, lớn hơn ngưỡng
+Cả 9 cấu hình đều phát hiện đủ 100 động cơ, và lead time nhỏ nhất luôn từ 50 cycle trở lên, lớn hơn ngưỡng
 cảnh báo mức hai (30 cycle). Điều thay đổi là sự đánh đổi giữa thời gian báo trước
 và rủi ro báo quá sớm. Cấu hình $z = 2$, $k = 3$ cho trung vị lead time lớn nhất
 (136 cycle) nhưng báo 17 động cơ ngay sau đoạn tham chiếu. Cấu hình $z = 4$,
@@ -257,10 +250,14 @@ NASA score & 1.513,2577 & [743,4999; 2.476,2743]\\\bottomrule
 \end{tabular}
 \end{table}
 
+Hình~\ref{fig:final-true-pred} đối chiếu RUL thật và dự đoán tại cycle cuối của mỗi
+động cơ test. Các điểm lệch khỏi đường chéo cho thấy sai số phụ thuộc mức RUL,
+là cơ sở phân tích nguy cơ dự đoán dư RUL ở phần tiếp theo.
+
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.5\linewidth]{../outputs/modeling/figures/final_true_vs_predicted.png}
-\caption[RUL thật và dự đoán test]{RUL thật và RUL dự đoán của 100 động cơ test. Đường chéo ứng với dự đoán hoàn hảo.}
+\caption[RUL thật và dự đoán test]{RUL thật và RUL dự đoán của 100 động cơ test FD001, đơn vị cycle. Đường chéo ứng với dự đoán hoàn hảo.}
 \label{fig:final-true-pred}
 \end{figure}
 
@@ -276,7 +273,7 @@ lớn nhất đều là dự đoán cao (lệch 37,6--57,5 cycle, ví dụ độ
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.5\linewidth]{../outputs/modeling/figures/final_residuals_by_rul.png}
-\caption[Sai số theo RUL test]{Sai số (dự đoán trừ thật) theo RUL thật của 100 động cơ test.}
+\caption[Sai số theo RUL test]{Sai số (dự đoán trừ thật) theo RUL thật của 100 động cơ test FD001; cả hai trục có đơn vị cycle.}
 \label{fig:final-residuals}
 \end{figure}
 
@@ -337,16 +334,17 @@ kế hoạch bảo trì.
 
 \subsection{Báo cáo dự đoán thời điểm cần bảo trì}
 \label{sec:res-maintenance}
-Đây là sản phẩm đặc thù của Đề tài 8: mỗi động cơ test nhận một dòng gồm cycle
+Lịch bảo trì biểu diễn mỗi động cơ test bằng một dòng gồm cycle
 hiện tại, RUL dự đoán, cycle dự kiến cần bảo trì và trạng thái
 (Mục~\ref{sec:maintenance-method}). Bảng~\ref{tab:maintenance-schedule} trích các
 dòng tiêu biểu trong 100 dòng; bảng đầy đủ nằm trong
-\filepath{outputs/maintenance/tables/maintenance_schedule.csv}.
+\filepath{outputs/maintenance/tables/maintenance_schedule.csv}. Động cơ 90 minh họa trường hợp đã có bất thường nhưng RUL dự đoán vẫn trên ngưỡng, nên được theo dõi tăng cường thay vì chỉ định bảo trì ngay.
 
 \begin{table}[H]
 \centering\small
 \caption[Lịch bảo trì dự đoán]{Trích lịch bảo trì dự đoán cho động cơ test, sắp theo mức ưu tiên.
-Cycle bảo trì là lúc RUL dự đoán chạm 30; cột bất thường là cycle Health Index
+Cycle bảo trì bằng cycle hiện tại cộng phần RUL dự đoán vượt quá 30, làm tròn
+xuống (Công thức~\eqref{eq:maintenance}); cột bất thường là cycle Health Index
 bắt đầu báo bất thường (-- là chưa có).}
 \label{tab:maintenance-schedule}
 \begin{tabular}{rrrrrrrl}
@@ -365,9 +363,9 @@ bắt đầu báo bất thường (-- là chưa có).}
 
 Hình~\ref{fig:fleet-status} cho thấy tình trạng toàn đội tại điểm quan sát cuối:
 21 động cơ cần bảo trì ngay, 59 động cơ đã có dấu hiệu bất thường nhưng RUL dự đoán
-còn trên 30, và 20 động cơ bình thường. Hai động cơ (1 và 85) chỉ có 31 và 34
-cycle nên chưa đủ dữ liệu để đánh giá bất thường; quy tắc hiện tại xếp cả hai vào
-nhóm bình thường do RUL dự đoán trên 130, chứ hệ thống chưa xác nhận chúng khỏe.
+còn trên 30, và 20 động cơ bình thường. Động cơ 1 và 85 chỉ có 31 và 34 cycle, chưa
+đủ 35 cycle để xét bất thường, nên được xếp vào nhóm bình thường chỉ dựa trên RUL dự
+đoán (trên 130 cycle).
 
 \begin{figure}[H]
 \centering
@@ -394,11 +392,11 @@ Sau khi lịch đã được ghi ra file, nhãn test mới được dùng để 
 $\leq30$), 21 động cơ được báo đúng ở mức cần bảo trì, và không động cơ nào được
 báo cần bảo trì khi RUL thật còn trên 30. Bốn động cơ còn lại (18, 37, 40, 90) có
 RUL dự đoán 31--38 nên được xếp đến hạn sau 1--8 cycle; chúng vẫn nằm ở mức theo
-dõi tăng cường nên không bị bỏ sót hoàn toàn. Nếu bật đèn đỏ ở ngưỡng 40, ngưỡng được
-đề xuất từ phân tích độ nhạy trên train (Mục~\ref{sec:res-warning}), thì trên test hệ
-thống bắt đủ 25/25 động cơ cần bảo trì, đổi lại 3 động cơ bị báo sớm (RUL thật 34, 38
-và 69 cycle). Lịch chính giữ ngưỡng 30 vì ngưỡng này được chốt trước khi đọc nhãn test. Cả 20 động cơ bình thường đều có RUL
-thật trên 60. Sai số tuyệt đối trung bình của số cycle còn lại đến lúc bảo trì là
+dõi tăng cường nên không bị bỏ sót hoàn toàn. Lịch chính dùng ngưỡng 30 vì ngưỡng này
+được chọn trước khi đọc nhãn test. Nếu dùng ngưỡng 40 như ở
+Bảng~\ref{tab:warning-alignment}, cả 25 động cơ đều vào nhóm cần bảo trì, nhưng có
+thêm 3 động cơ bị xếp quá sớm (RUL thật 34, 38 và 69 cycle). Cả 20 động cơ bình
+thường đều có RUL thật trên 60. Sai số tuyệt đối trung bình của số cycle còn lại đến lúc bảo trì là
 14,21 cycle.
 
 \begin{table}[H]
@@ -428,20 +426,15 @@ mô hình dự đoán dư RUL (Mục~\ref{sec:res-errors}). Cách vận hành d�
 chứng việc cập nhật này sẽ sửa kịp 12 trường hợp trên. Kết luận rút ra là không nên
 chốt lịch bảo trì xa chỉ từ một lần dự đoán.
 
-\subsection{Vì sao cần big data}
+\subsection{Khả năng mở rộng của quy trình tính toán}
 \label{sec:res-scaling}
-\noindent\textit{Phần này trả lời: với dữ liệu lớn hơn FD001 nhiều lần, một máy chạy
-Pandas còn theo kịp không?}
-
-FD001 chỉ khoảng 5,7 MB, nên câu hỏi được trả lời bằng đo đạc thay vì lập luận. Dữ
+FD001 có dung lượng khoảng 5,7 MB; khả năng mở rộng được đánh giá bằng thực nghiệm. Dữ
 liệu được nhân bản 1×, 10×, 50×, 100× và 200× với ID động cơ mới, rồi Pandas và
 Spark \texttt{local[4]} cùng chạy phần tính toán: đọc Parquet, tổng hợp theo động cơ
 và tạo 126 đặc trưng window 30 cycle (Bảng~\ref{tab:scaling},
 Hình~\ref{fig:scaling}). Ở 100×, Pandas mất 1.075 giây, Spark 196 giây, nhanh hơn
 khoảng 5,5 lần. Ở 200×, Pandas không xong trong giới hạn 30 phút, còn Spark hoàn tất
-trong 392 giây. RAM đỉnh của Pandas tăng gần tuyến tính, 12,9 GiB ở 100×; ước tính
-200× cần khoảng 24--26 GiB, sát hoặc vượt 23,4 GiB của máy. Đây là suy luận từ xu
-hướng, chưa đo trực tiếp.
+trong 392 giây. RAM đỉnh của Pandas tăng gần tuyến tính, 12,9 GiB ở 100×.
 
 \begin{table}[H]\centering\small
 \caption[Benchmark quy mô]{Thời gian tính toán (giây, không gồm ghi file) và RAM đỉnh
@@ -459,46 +452,15 @@ Mức & Pandas (giây) & Spark (giây) & Pandas (GiB) & Spark (GiB)\\\midrule
 \centering
 \includegraphics[width=0.92\linewidth]{../slides/figures/benchmark_scaling.png}
 \caption[Benchmark quy mô Pandas và Spark]{Thời gian tính toán và RAM đỉnh theo mức nhân
-bản (trục log). Dấu x là lượt Pandas dừng vì quá 30 phút.}
+bản FD001 (trục hoành logarit); thời gian tính bằng giây, RAM bằng GiB. Dấu x là lượt Pandas dừng vì quá 30 phút.}
 \label{fig:scaling}
 \end{figure}
 
 Phép đo không gồm bước ghi file vì trên Windows thiếu \texttt{winutils}, Spark phải
 gom bảng đặc trưng về driver để ghi bằng PyArrow; bước ghi đầy đủ thất bại từ 50× (vượt
-trần kết quả của driver) và hết heap ở 100×--200×. Đây là giới hạn của môi trường, không
-phải của phần tính toán. Ba điểm cần đọc đúng: Pandas chạy một luồng còn Spark bốn luồng,
-nên một phần chênh lệch đến từ song song hóa; giới hạn 30 phút do bài tự đặt, ngoại suy
-tuyến tính cho Pandas 200× khoảng 35 phút; và với 100 động cơ FD001, bỏ Spark thì lịch
-bảo trì không đổi. Spark cần khi đội động cơ lớn hơn hàng chục lần, và kết quả trên một
-máy chưa chứng minh lợi ích khi thêm máy; nguồn: \filepath{outputs/benchmarks/20261021/}.
-
-\subsection{Thử nghiệm mở rộng}
-\label{sec:res-extended}
-\label{sec:res-nested}
-\label{sec:res-alignment}
-\label{sec:res-latest-comparison}
-\label{sec:res-transfer}
-\label{sec:res-arima}
-Ngoài luồng chính, một số thử nghiệm được chạy để hiểu giới hạn của mô hình. Chúng
-không thay đổi mô hình hay chính sách cảnh báo ở trên; chi tiết và artifact được
-lưu trong \filepath{experiments/} và \filepath{outputs/experiments/}.
-
-\paragraph{Cải thiện mô hình.} Nested cross-validation thử window 10/20/30, 24 cấu
-hình siêu tham số và ba phương án tăng trọng số cho vùng RUL thấp; quy trình chọn
-trên toàn bộ train quay về đúng cấu hình gốc, nên dự đoán test không đổi. Thêm cột
-\texttt{cycle} và 42 đặc trưng lịch sử (169 đặc trưng) giảm MAE OOF từ 20,21 xuống
-17,00 cycle trên cùng các fold, nhưng làm tỷ lệ cảnh báo kịp thời ở ngưỡng 30 giảm
-từ 51\% xuống 45\% và chưa được kiểm chứng bằng một lần đánh giá độc lập, nên chưa
-thay mô hình chính. Similarity-based RUL thua HGB ở cả 3/3 fold và bị dừng.
-
-\paragraph{Chuyển sang FD002--FD004.} Với window 10 cycle, mô hình huấn luyện trên
-FD001 có MAE 47,39--60,32 cycle khi áp dụng trực tiếp lên ba subset còn lại, so với
-22,36--28,33 cycle khi mỗi subset tự huấn luyện, tức tăng 1,7--2,7 lần.
-Nguyên nhân chính là điều kiện vận hành khác nhau (Mục~\ref{sec:disc-transfer}).
-
-
-\paragraph{Dự báo Health Index bằng ARIMA.} Trên 10 động cơ chọn trước, ARIMA dự
-báo 30\% cuối chuỗi Health Index với MAE trung bình 0,4110, thấp hơn hai baseline
-\texttt{drift} (0,7469) và \texttt{last\_value} (0,9478). Tuy vậy ARIMA chỉ tốt hơn
-\texttt{drift} ở 7/10 động cơ và khoảng dự đoán 95\% chỉ bao phủ 21--97\% điểm thật,
-nên đây là phân tích mô tả, không dùng để cảnh báo.
+trần kết quả của driver) và hết heap ở 100×--200×. Lỗi nằm ở bước ghi qua driver; bài
+chưa thử ghi kết quả ở quy mô này. Ba điểm cần đọc đúng: Pandas chạy một luồng còn Spark
+bốn luồng, nên một phần chênh lệch đến từ song song hóa; giới hạn 30 phút do bài tự đặt;
+và với 100 động cơ FD001, bỏ Spark thì lịch bảo trì không đổi. Spark chỉ cho lợi thế rõ
+khi dữ liệu lớn gấp hàng chục lần, và mọi phép đo đều chạy trên một máy; nguồn:
+\filepath{outputs/benchmarks/20261021/}.

@@ -11,10 +11,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from cmapss.project import IMPROVEMENT_RUN
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "outputs"
-IMPROVE = ROOT / IMPROVEMENT_RUN
 ALIGN = OUT / "course_alignment" / "20261007"
 
 
@@ -44,6 +42,9 @@ def eda() -> dict:
     partial = const[(const["constant_engines"] > 0) & (const["constant_engines"] < const["total_engines"])]
     return {
         "lifetime": {k: float(life[k]) for k in ("count", "min", "50%", "max", "mean")},
+        # Số động cơ hỏng trước trung vị: chi phí của một lịch bảo trì chung cho cả đội.
+        "n_fail_before_median": int(
+            (pd.read_csv(OUT / "eda" / "tables" / "engine_lifetimes.csv")["last_cycle"] < life["50%"]).sum()),
         "always_constant": sorted(always, key=lambda s: (s.split("_")[0], int(s.split("_")[1]))),
         "partially_constant": partial[["measurement", "constant_engines"]].to_dict("records"),
     }
@@ -64,22 +65,6 @@ def statistics() -> dict:
             inf["n_positive"].eq(inf["n_pairs"]) | inf["n_negative"].eq(inf["n_pairs"]),
             "sensor",
         ].tolist(),
-    }
-
-
-def timeseries() -> dict:
-    arima = pd.read_csv(OUT / "timeseries" / "tables" / "forecast_metrics.csv")
-    base = pd.read_csv(OUT / "timeseries" / "tables" / "baseline_metrics.csv")
-    mae = {"ARIMA": float(arima["mae"].mean())}
-    for name, frame in base.groupby("baseline_name"):
-        mae[name] = float(frame["mae"].mean())
-    drift = base.loc[base["baseline_name"].eq("drift")].set_index("engine_id")["mae"]
-    return {
-        "n_engines": int(len(arima)),
-        "mae": mae,
-        "n_better_than_drift": int((arima.set_index("engine_id")["mae"] < drift).sum()),
-        "coverage_min": float(arima["coverage_95"].min()),
-        "coverage_max": float(arima["coverage_95"].max()),
     }
 
 
@@ -162,7 +147,7 @@ def maintenance() -> dict:
 
 
 def _threshold_check(evaluation: pd.DataFrame, flag_at: float, need_at: float) -> dict:
-    """Số động cơ test bị báo, báo đúng, bắt được và báo sớm khi bật đèn đỏ ở `flag_at`."""
+    """Số động cơ test bị báo, báo đúng, bắt được và báo sớm khi phát cảnh báo mức hai ở `flag_at`."""
     flagged = evaluation["y_pred"].le(flag_at)
     need = evaluation["y_true"].le(need_at)
     return {"flagged": int(flagged.sum()), "correct": int((flagged & need).sum()),
@@ -243,60 +228,6 @@ def pipeline() -> dict:
     }
 
 
-def improvement() -> dict:
-    ablation = pd.read_csv(IMPROVE / "ablation_metrics.csv").set_index("stage")
-    paired = pd.read_csv(IMPROVE / "paired_comparison.csv")
-    low = paired[(paired["stage"] == "weights") & (paired["metric"] == "low_rul_engine_mae")].iloc[0]
-    manifest = read_json(IMPROVE / "search_manifest.json")["identity"]["config"]
-    inner = pd.read_csv(IMPROVE / "final_selection_metrics.csv")
-    pick = {
-        "baseline": inner[(inner["candidate_id"] == "baseline") & (inner["stage"] == "parameters")].iloc[0],
-        "hgb_08": inner[inner["candidate_id"] == "hgb_08"].iloc[0],
-        "strong_low_rul": inner[inner["candidate_id"] == "strong_low_rul"].iloc[0],
-    }
-    return {
-        "outer_splits": manifest["outer_splits"],
-        "inner_splits": manifest["inner_splits"],
-        "n_hgb_candidates": manifest["n_hgb_candidates"],
-        "outer": {
-            stage: {
-                "mae": float(ablation.loc[stage, "mean_engine_mae"]),
-                "low_mae": float(ablation.loc[stage, "low_rul_engine_mae"]),
-                "late": int(ablation.loc[stage, "late_or_missed_count"]),
-                "rows": int(ablation.loc[stage, "n_rows"]),
-            }
-            for stage in ("baseline", "weights")
-        },
-        "low_delta_ci": [float(low["delta"]), float(low["ci_lower"]), float(low["ci_upper"])],
-        "inner": {
-            key: {
-                "mae": float(row["mean_engine_mae"]),
-                "low_mae": float(row["low_rul_engine_mae"]),
-                "late": int(row["late_or_missed_count"]),
-            }
-            for key, row in pick.items()
-        },
-        "decision": read_json(IMPROVE / "decision.json")["default_model"],
-    }
-
-
-def transfer() -> dict:
-    matrix = read_json(OUT / "cross_dataset" / "matrix.json")
-    return {
-        "window": matrix["window_cycles"],
-        "rows": [
-            {
-                "source": e["source_dataset"],
-                "target": e["target_dataset"],
-                "type": e["evaluation_type"],
-                "mae": e["metrics"]["mean_engine_mae"],
-                "n_engines": e["metrics"]["n_engines"],
-            }
-            for e in matrix["evaluations"]
-        ],
-    }
-
-
 def diagnostics() -> dict:
     diag = read_json(OUT / "diagnostics" / "error_diagnostics.json")
     oof = {r["true_rul_bin"]: r["mean_prediction"] for r in diag["oof_hgb_by_true_rul"]}
@@ -308,15 +239,6 @@ def diagnostics() -> dict:
         "late_mean_life": life["failure_cycle_by_timing"]["after_threshold"]["mean"],
         "early_mean_life": life["failure_cycle_by_timing"]["before_threshold"]["mean"],
         "life_delay_r": life["pearson_failure_cycle_vs_threshold_delay"],
-        "transfer": {
-            k.split("_to_")[1]: {
-                "inside_range": v.get("mean_share_test_values_inside_fd001_train_range"),
-                "pred_std": v["prediction_std"],
-                "mean_signed_error": v["mean_signed_error"],
-            }
-            for k, v in diag["transfer"].items()
-            if k.startswith("FD001_to_")
-        },
     }
 
 
@@ -358,31 +280,89 @@ def benchmark_scaling() -> dict:
                             frame["status"].isin(("failed", "timeout")), "scale"]
         if not stopped.empty:
             summary["first_pandas_stop_scale"] = int(stopped.min())
+            if "spark" in times.columns and stopped.min() in times.index:
+                summary["spark_seconds_at_stop"] = float(times.loc[stopped.min(), "spark"])
     return {"records": records, "metadata": metadata, "summary": summary,
             "metadata_pending": not info.exists(),
             "source": source.relative_to(ROOT).as_posix()}
 
 
-def main() -> None:
-    from cmapss.followup_results import load_followup_results
-    from cmapss.project import FOLLOWUP_RUN
+SQL_EXAMPLE = """SELECT s.engine_id, s.n_cycles, t.cycle, t.rul
+FROM engine_summary AS s
+JOIN train_targets AS t
+  ON t.split = s.split AND t.engine_id = s.engine_id
+WHERE s.split = 'train' AND s.engine_id = 1
+  AND t.cycle IN (1, 100, 192);"""
 
-    followup, followup_paired = load_followup_results(ROOT)
+
+def data_platform() -> dict:
+    """Số liệu phần dữ liệu và hạ tầng: thu thập, chất lượng, các lớp lưu trữ, HDFS, truy vấn."""
+    import re
+    import sqlite3
+
+    import pyarrow.parquet as pq
+
+    from cmapss.data.readers import read_observations
+
+    manifest = read_json(OUT / "acquisition/manifest.json")
+    obs = pd.read_parquet(OUT / "etl/silver/observations.parquet")
+    steps = obs.groupby(["split", "engine_id"])["cycle"].agg(
+        gaps=lambda c: int((c.diff().dropna() != 1).sum()), first="min")
+    shapes = {}
+    for name, rel in (("observations", "etl/silver/observations.parquet"),
+                      ("train_targets", "etl/silver/train_targets.parquet"),
+                      ("engine_summary", "etl/gold/engine_summary.parquet"),
+                      ("rolling_features", "features/gold/rolling_features.parquet")):
+        meta = pq.ParquetFile(OUT / rel).metadata
+        shapes[name] = [meta.num_rows, meta.num_columns]
+    raw_columns = ["engine_id", "cycle", "setting_1", "setting_2", "sensor_2", "sensor_4", "sensor_11", "sensor_21"]
+    raw = read_observations(ROOT / "data/raw/train_FD001.txt", split="train")
+    with sqlite3.connect(OUT / "etl/gold/etl.sqlite") as connection:
+        sql_rows = connection.execute(SQL_EXAMPLE).fetchall()
+    engine1 = obs.query("split == 'train' and engine_id == 1").set_index("cycle")["sensor_11"]
+    job = (OUT / "hdfs/mapreduce_job.txt").read_text(encoding="utf-8")
+    fsck = (OUT / "hdfs/hdfs_fsck.txt").read_text(encoding="utf-8")
+    counter = lambda label: int(re.search(rf"{label}=(\d+)", job).group(1))  # noqa: E731
+    listing = [line.split()[-1] for line in (OUT / "hdfs/hdfs_listing.txt").read_text(encoding="utf-8").splitlines()]
+    return {
+        "archive_bytes": manifest["archive_bytes"],
+        "n_files": len(manifest["files"]),
+        "retrieved_at_utc": manifest["retrieved_at_utc"],
+        "source_url": manifest["source_url"],
+        "quality": {
+            "rows": len(obs),
+            "missing_values": int(obs.isna().sum().sum()),
+            "duplicate_keys": int(obs.duplicated(["split", "engine_id", "cycle"]).sum()),
+            "cycle_gaps": int(steps["gaps"].sum()),
+            "engines_not_starting_at_1": int(steps["first"].ne(1).sum()),
+        },
+        "shapes": shapes,
+        "raw_sample": {"columns": raw_columns, "rows": raw[raw_columns].head(4).values.tolist(),
+                       "n_columns": raw.shape[1] - 1},
+        "sql": {"query": SQL_EXAMPLE, "rows": [list(row) for row in sql_rows]},
+        "rolling_mean_sensor_11": {
+            str(cycle): float(engine1.rolling(30).mean().loc[cycle]) for cycle in (30, 100)},
+        "mapreduce": {"map_tasks": counter("Launched map tasks"), "reduce_tasks": counter("Launched reduce tasks"),
+                      "input_records": counter("Map input records"),
+                      "output_records": counter("Reduce output records")},
+        "fsck": {"status": re.search(r"Status: (\w+)", fsck).group(1),
+                 "blocks": int(re.search(r"Total blocks \(validated\):\s*(\d+)", fsck).group(1))},
+        "hdfs_listing": [path for path in listing if path.startswith("/cmapss/") and "." in path.rsplit("/", 1)[-1]],
+    }
+
+
+def main() -> None:
     benchmark = pd.read_csv(OUT / "benchmarks/20260929/measurements.csv")
     benchmark = benchmark.groupby(["engine", "scale"], as_index=False).median(numeric_only=True)
     # Pandas không có JVM heap; bỏ trường không dùng để JSON không chứa NaN.
     benchmark = benchmark.drop(columns=["spark_driver_heap_bytes"], errors="ignore")
     data = {
-        "provenance": {"improvement_run": IMPROVEMENT_RUN.as_posix(), "followup_run": FOLLOWUP_RUN.as_posix()},
-        "followup": followup.to_dict(orient="records"),
-        "followup_paired": followup_paired.to_dict(orient="records"),
         "stage_benchmark": benchmark.to_dict(orient="records"),
         "benchmark_scaling": benchmark_scaling(),
         "diagnostics": diagnostics(),
         "subsets": subsets(),
         "eda": eda(),
         "statistics": statistics(),
-        "timeseries": timeseries(),
         "modeling": modeling(),
         "maintenance": maintenance(),
         "degradation": read_json(OUT / "degradation/summary.json"),
@@ -393,12 +373,11 @@ def main() -> None:
         ].to_dict("records"),
         "noise_summary": pd.read_csv(OUT / "degradation/tables/noise_summary.csv").to_dict("records"),
         "hdfs": read_json(OUT / "hdfs/summary.json"),
+        "data_platform": data_platform(),
         "benchmark_parity": read_json(OUT / "benchmarks/20260929/run_info.json")["parity"],
         "sensitivity": pd.read_csv(OUT / "degradation/tables/anomaly_sensitivity.csv").query("signal == 'ewma'").to_dict("records"),
         "alignment": alignment(),
         "pipeline": pipeline(),
-        "improvement": improvement(),
-        "transfer": transfer(),
     }
     target = ROOT / "slides" / "slide_data.json"
     target.write_text(json.dumps(data, ensure_ascii=False, indent=2, allow_nan=False) + "\n", encoding="utf-8")

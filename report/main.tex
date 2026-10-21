@@ -71,6 +71,7 @@
 {\Large Phát hiện bất thường, dự đoán RUL và cảnh báo sớm\\ trên dữ liệu cảm biến NASA C-MAPSS\par}
 \vspace{1.5cm}
 \begin{tabular}{ll}
+Giảng viên hướng dẫn: & TS. Võ Thị Thanh Vân\\
 Học viên thực hiện: & Phan Nguyễn Mai Phương\\
 Mã số học viên: & 25002711\\
 Ngành: & Khoa học máy tính
@@ -82,32 +83,35 @@ Ngành: & Khoa học máy tính
 \pagenumbering{roman}
 \section*{Tóm tắt}
 \addcontentsline{toc}{section}{Tóm tắt}
-Mỗi sáng, người phụ trách bảo trì một đội động cơ phải trả lời một câu hỏi: hôm nay
-đưa động cơ nào vào xưởng? Đưa vào quá sớm thì tốn chi phí, quá muộn thì động cơ có
-thể hỏng giữa chừng. Báo cáo thực hiện Đề tài 8 (Phân tích dữ liệu IoT và bảo trì dự
-đoán) để trả lời câu hỏi đó từ dữ liệu cảm biến mô phỏng NASA C-MAPSS, subset FD001:
-100 động cơ train chạy đến khi hỏng để học, và 100 động cơ test bị cắt giữa chừng,
-có đáp án riêng để chấm.
+Bảo trì dự đoán sử dụng dữ liệu cảm biến để phát hiện suy giảm và xác định thời
+điểm bảo trì trước khi thiết bị hỏng. Báo cáo thực hiện Đề tài 8 (Phân tích dữ liệu
+IoT và bảo trì dự đoán), với mục tiêu xây dựng quy trình phát hiện bất thường,
+dự đoán RUL (tuổi thọ còn lại) và lập lịch bảo trì theo ngưỡng. Dữ liệu mô phỏng
+NASA C-MAPSS, subset FD001, gồm 100 động cơ train được quan sát đến khi hỏng và
+100 động cơ test có chuỗi bị cắt trước khi hỏng, kèm nhãn RUL để đánh giá.
 
-Câu trả lời được xây qua hai đèn cảnh báo. Đèn vàng báo động cơ bắt đầu yếu: sau khi
-lọc nhiễu bằng EWMA (giảm khoảng 86\% dao động ngắn hạn), 21 sensor được gộp thành
-một Health Index; khi chỉ số tụt quá 3 độ lệch chuẩn so với 30 cycle đầu của chính
-động cơ đó, đèn vàng bật. Trên train, đèn vàng bật ở cả 100/100 động cơ, trung vị
-121 cycle trước khi hỏng. Đèn đỏ báo động cơ còn khoảng 30 cycle: mô hình
-HistGradientBoosting đọc 30 cycle gần nhất của sensor gốc và ước lượng thời gian sử
-dụng còn lại (RUL). Trên test, mỗi động cơ một dự đoán tại cycle cuối, sai lệch trung
-bình (MAE) là 15,35 cycle, và chỉ 4,38 cycle khi động cơ sắp hỏng.
+Phương pháp kết hợp hai mức cảnh báo. Ở mức một, EWMA (làm mượt có trọng số mũ)
+giảm khoảng 86\% dao động ngắn hạn trên train; 21 sensor được tổng hợp thành Health Index
+(HI, chỉ số sức khỏe). Quy tắc phát hiện dựa trên mức giảm quá 3 độ lệch chuẩn so
+với 30 cycle đầu của từng động cơ. Trên train, quy tắc phát hiện 100/100 động cơ,
+với thời gian báo trước trung vị 121 cycle. Ở mức hai, HistGradientBoosting (HGB)
+sử dụng đặc trưng của 30 cycle gần nhất từ sensor gốc để dự đoán RUL và cảnh báo
+tại ngưỡng 30 cycle. Trên test, mỗi động cơ được đánh giá tại cycle cuối: MAE
+(sai số tuyệt đối trung bình) là 15,35 cycle, và 4,38 cycle ở nhóm RUL thật không
+vượt quá 30 cycle.
 
-Mô hình có xu hướng lạc quan: 74/100 động cơ test được đoán sống lâu hơn thực tế. Khi
-theo dõi suốt đời 100 động cơ train bằng dự đoán chéo (OOF), chỉ 51\% được báo kịp
-thời ở ngưỡng 30; ngưỡng 40 nâng tỷ lệ này lên 94\%. Ghép hai đèn, báo cáo lập lịch
-bảo trì cho 100 động cơ test: 21 động cơ được báo vào xưởng ngay và cả 21 đều đúng; 4
-động cơ khác cũng cần bảo trì nhưng được xếp đến hạn sau 1--8 cycle.
+Mô hình dự đoán cao hơn RUL thật ở 74/100 động cơ test. Trên toàn chuỗi của 100
+động cơ train, dự đoán OOF (từ mô hình không huấn luyện trên động cơ được đánh giá)
+cho tỷ lệ cảnh báo kịp thời 51\% ở ngưỡng 30 cycle; tăng ngưỡng lên 40 cycle đưa
+tỷ lệ này lên 94\%. Lịch bảo trì kết hợp hai mức cảnh báo trên 100 động cơ test
+xác định 21 động cơ cần bảo trì ngay và cả 21 đều đúng theo nhãn RUL; 4 động cơ
+khác cũng cần bảo trì nhưng được xếp đến hạn sau 1--8 cycle.
 
 Dữ liệu được tổ chức theo ba lớp Bronze, Silver và Gold, xử lý bằng cả Pandas và
-PySpark với kết quả khớp tuyệt đối, và chạy trên HDFS, MapReduce một node.
-Khi nhân bản dữ liệu 100 lần, Spark tính nhanh hơn Pandas khoảng 5,5 lần; ở 200 lần,
-Pandas không xong trong 30 phút còn Spark hoàn tất trong 392 giây.
+PySpark với kết quả khớp tuyệt đối trong phạm vi đối chiếu; HDFS và MapReduce được
+triển khai trên một node. Khi nhân bản dữ liệu 100 lần, Spark tính nhanh hơn Pandas
+khoảng 5,5 lần; ở 200 lần, Pandas chưa hoàn tất sau 30 phút còn Spark hoàn tất trong
+392 giây. Các thời gian này chỉ đo tính toán, không gồm bước ghi kết quả.
 Kết quả chỉ áp dụng cho dữ liệu mô phỏng; dữ liệu không có chi phí bảo trì nên báo cáo
 không đề xuất lịch bảo trì tối ưu.
 
@@ -121,6 +125,7 @@ phát hiện bất thường; time window; RUL; cảnh báo sớm; lịch bảo 
 \clearpage
 \input{sections/glossary}
 \listoffigures
+\clearpage
 \listoftables
 \clearpage
 \pagenumbering{arabic}
@@ -137,9 +142,6 @@ phát hiện bất thường; time window; RUL; cảnh báo sớm; lịch bảo 
 \input{sections/discussion}
 \clearpage
 \input{sections/conclusion}
-\clearpage
-% Phụ lục cấu hình và mapping artifact được giữ ở report/sections/appendix.tex
-% và handoff/FINAL_HANDOFF.md; không đưa vào PDF chính để bảo đảm giới hạn 40 trang.
 \clearpage
 \phantomsection
 \addcontentsline{toc}{section}{Tài liệu tham khảo}

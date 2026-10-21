@@ -1,9 +1,6 @@
 \section{Phương pháp}
 \label{sec:method}
 
-\noindent\textit{Mục này trả lời: hai đèn cảnh báo và lịch bảo trì được tính ra
-sao. Đèn vàng đến từ Health Index, đèn đỏ đến từ mô hình RUL, lịch ghép cả hai.}
-
 \subsection{Tổng quan pipeline}
 Hình~\ref{fig:pipeline} tách nhánh A (dự đoán RUL) và nhánh B (theo dõi tín hiệu). Rolling features
 đọc trực tiếp Silver observations; Gold \texttt{engine\_summary} là bảng tổng hợp
@@ -19,8 +16,8 @@ luồng huấn luyện RUL bằng Pandas/scikit-learn.
 \includegraphics[width=0.64\linewidth]{figures/pipeline.pdf}
 \caption[Pipeline xử lý dữ liệu]{Luồng xử lý dữ liệu. Bước 1--3 chuẩn bị dữ liệu; nhánh A dự đoán RUL,
 nhánh B theo dõi tín hiệu và chỉ học trên train. Ô nét đứt (chạy lại trên Hadoop)
-chỉ kiểm tra lại bảng tổng hợp động cơ, không đi vào mô hình. Đáp án test chỉ được
-mở sau khi đã lưu dự đoán; lịch bảo trì kết hợp hai nhánh. Số liệu trong hình là của FD001.}
+chỉ kiểm tra lại bảng tổng hợp động cơ, không đi vào mô hình. Nhãn test chỉ dùng để
+đánh giá sau khi đã lưu dự đoán; lịch bảo trì kết hợp hai nhánh. Số liệu trong hình là của FD001.}
 \label{fig:pipeline}
 \end{figure}
 
@@ -47,7 +44,7 @@ Tạo đặc trưng & Pandas, PySpark & 126 đặc trưng window 30 cycle \\
 Mô hình & scikit-learn & GroupKFold, Ridge, HistGradientBoosting \\
 Đánh giá, cảnh báo & scikit-learn, SciPy & MAE, RMSE, NASA score, bootstrap, lead time \\
 Lịch bảo trì & Pandas & Cycle cần bảo trì và trạng thái cho 100 động cơ test \\
-Trực quan hóa & Matplotlib, Seaborn, Streamlit & Hình trong báo cáo, dashboard chỉ đọc kết quả \\
+Trực quan hóa & Matplotlib, Altair, Streamlit & Hình trong báo cáo, dashboard chỉ đọc kết quả \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -184,21 +181,3 @@ thường}. Health Index của động cơ test dùng đúng scaler, PCA và h�
 fit trên train, không fit lại. Động cơ có ít hơn 35 cycle (30 cycle tham chiếu và
 5 cycle liên tiếp) được ghi là chưa đủ dữ liệu để đánh giá bất thường. Bảng được
 ghi ra file trước; chỉ sau đó \texttt{RUL\_FD001.txt} mới được đọc để kiểm tra.
-
-\subsection{Thử nghiệm mở rộng}
-\label{sec:nested-method}
-\label{sec:transfer-method}
-\label{sec:arima-method}
-Ba thử nghiệm phụ dùng cùng nguyên tắc chia theo động cơ và đọc nhãn test muộn:
-\begin{itemize}
-\item \textbf{Cải thiện mô hình}: nested GroupKFold (5 fold ngoài, 3 fold trong)
-      chọn window, siêu tham số và trọng số chỉ bằng fold trong; tiêu chí chấp
-      nhận được chốt trước khi chạy~\cite{sklearnNestedCV2026,sklearnGroupedCV}.
-\item \textbf{Chuyển miền}: mô hình chọn và huấn luyện trên FD001 được áp dụng
-      nguyên trạng lên test FD002--FD004, so với mô hình huấn luyện nội bộ từng
-      subset. Window 10 cycle được dùng vì động cơ test ngắn nhất của FD004 chỉ
-      có 19 cycle, nên kết quả không so trực tiếp với window 30.
-\item \textbf{ARIMA}: trên 10 động cơ train chọn trước, Health Index được chia
-      70\% đầu để fit ARIMA (bậc chọn bằng AIC) và 30\% cuối để đánh giá dự báo,
-      so với hai baseline \texttt{last\_value} và \texttt{drift}.
-\end{itemize}

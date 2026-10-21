@@ -10,32 +10,29 @@ template nên chỉnh sửa được trong PowerPoint.
 
 [Sổ tay thuyết trình](../handoff/SPEECH_SCRIPT_VI.pdf) ([nguồn LaTeX](../handoff/SPEECH_SCRIPT_VI.tex))
 đặt hình từng slide kèm chỗ cần chỉ, lời đọc và câu chuyển slide; phần demo dashboard
-(sau slide 19) có ảnh chụp từng bước. Ảnh slide trong sổ tay nằm ở
+(sau slide 18) có ảnh chụp từng bước. Ảnh slide trong sổ tay nằm ở
 `handoff/assets/slides/`; khi sửa deck, xuất lại ảnh bằng
 `scripts/export_slides.ps1 -PreviewDirectory handoff/assets/slides` rồi đổi tên thành
 `slide01.png`...`slide20.png`.
 
 ## Cấu trúc bài nói
 
-Deck gồm 20 slide, thứ tự bám rubric và cùng thứ tự với mục Kết quả của báo cáo.
+Deck gồm 20 slide theo mạch trong [`handoff/STORYLINE.md`](../handoff/STORYLINE.md);
+mốc thời gian lấy từ kế hoạch thời gian của sổ tay thuyết trình.
 
-| Phần | Slide | Thời lượng | Nội dung |
+| Phần | Slide | Hết phần lúc | Nội dung |
 |---|---|---|---|
-| Bìa và lộ trình | 1--2 | 0:55 | Đề tài, bốn con số chính, năm câu hỏi |
-| 1. Bài toán và dữ liệu | 3--5 | 2:25 | RUL, đối chiếu yêu cầu đề tài, lý do chọn C-MAPSS, ranh giới nhãn test |
-| 2. Pipeline dữ liệu | 6--8 | 2:15 | Pipeline 1–3, A1–A5, B1–B4 và năm bước quy trình dữ liệu; đối chiếu Pandas--PySpark--Hadoop; EDA |
-| 3. Khử nhiễu và cửa sổ thời gian | 9--10 | 1:50 | EWMA span 10, cửa sổ 30 cycle → 126 đặc trưng, chuẩn hóa |
-| 4. Xu hướng và bất thường | 11--12 | 2:00 | Kiểm định đầu/cuối, Health Index phát hiện bất thường |
-| 5. Dự đoán RUL và cảnh báo | 13--16 | 4:25 | MAE test và GroupKFold, phân tích sai số, hai mức cảnh báo (OOF train), lịch bảo trì 100 động cơ test |
-| 6. Mở rộng và kết luận | 17--19 | 2:30 | Thử nghiệm mở rộng, Q1--Q5, khó khăn, bài học và giới hạn |
-| Demo dashboard | sau 19 | 2:30 | Trình diễn artifact đã tạo |
-| Cảm ơn | 20 | 0:10 | Mời đặt câu hỏi; tổng thời gian 19:00 |
+| Giới thiệu | 1–3 | 1:25 | Bìa, bài toán và định nghĩa RUL, quy trình năm bước |
+| Dữ liệu và hạ tầng | 4–12 | 8:05 | Bốn tập con C-MAPSS, cấu trúc bản ghi, chất lượng dữ liệu, Bronze–Silver–Gold, HDFS/MapReduce/YARN, PySpark đối chiếu Pandas, truy vấn SQL và Spark SQL, sáu bước biến đổi, mở rộng quy mô 1×–200× |
+| Phân tích và dự đoán | 13–18 | 12:15 | Làm mượt EWMA, xu hướng suy giảm, Health Index và cảnh báo mức một, mô hình RUL, cảnh báo mức hai và ngưỡng 40, lịch bảo trì |
+| Demo dashboard | sau 18 | 14:15 | Trình diễn artifact đã tạo |
+| Kết luận | 19 | 14:50 | Kết luận, hạn chế, hướng phát triển |
+| Cảm ơn | 20 | 15:00 | Mời đặt câu hỏi |
 
-Slide 6 dùng cùng cách gọi với Hình 5 của báo cáo: bước 1–3 chuẩn bị dữ liệu,
-nhánh A dự đoán RUL (A1–A5), nhánh B theo dõi tín hiệu chỉ học trên train
-(B1–B4), ô nét đứt là bước chạy lại trên Hadoop để đối chiếu bảng tổng hợp động
-cơ. Lịch bảo trì nhận RUL dự đoán từ A4 và trạng thái bất thường từ B4.
-Pandas/PySpark đối chiếu ETL và rolling features (A1–A2).
+Slide 3 chia quy trình thành năm bước: slide 4–12 trình bày bước 1–3 (thu thập,
+lưu trữ, xử lý), slide 13–18 trình bày bước 4–5 (phân tích, cảnh báo và lịch bảo
+trì). FD002–FD004 chỉ đi qua bước ETL; mô hình chỉ được huấn luyện và đánh giá
+trên FD001.
 
 ## Luồng dựng deck
 
@@ -43,9 +40,9 @@ Pandas/PySpark đối chiếu ETL và rolling features (A1–A2).
 outputs/ (JSON, CSV, PNG đã nghiệm thu)
   │  cmapss.degradation / cmapss.maintenance tạo artifact nếu cần tái tính
   │  slides/extract_slide_data.py   đọc artifact đã có
-  │  slides/slide_figures.py        vẽ lại hình cho slide từ dữ liệu đã lưu
+  │  slides/slide_figures.py        vẽ hình benchmark quy mô (chưa có module vẽ)
   ▼
-slides/slide_data.json + slides/figures/ + outputs/degradation/ + outputs/maintenance/ + outputs/hdfs/
+slides/slide_data.json + slides/figures/benchmark_scaling.png + hình gốc trong outputs/
   │  slides/build_presentation.py   python-pptx trên template IUH
   ▼
 slides/cmapss_fd001_presentation.pptx
@@ -54,12 +51,14 @@ slides/cmapss_fd001_presentation.pptx
 slides/cmapss_fd001_presentation.pdf
 ```
 
-Biểu đồ ở slide 7 và 17 là chart native của PowerPoint, nhãn số dùng dấu phẩy thập
-phân ở mọi máy chiếu. Tám hình matplotlib (slide 8, 9, 11–16) được
-`slides/slide_figures.py` vẽ lại vào `slides/figures/` từ dữ liệu raw và artifact
-trong `outputs/`: đúng kích thước ô trên slide, chữ từ 9,5 pt, nhãn tiếng Việt, dấu
-phẩy thập phân, có chú giải màu. Script không huấn luyện lại mô hình và không ghi đè
-hình gốc của pipeline trong `outputs/`.
+Hình trên slide là chính file hình do module và notebook sinh ra, cùng file mà báo
+cáo dùng: `outputs/degradation/figures/`, `outputs/modeling/figures/`,
+`outputs/maintenance/figures/`, hình EDA của notebook 01 và ảnh chụp dashboard trong
+`handoff/assets/dashboard/`. Slide không vẽ lại hình. Riêng hình benchmark quy mô do
+`slides/slide_figures.py` vẽ từ `outputs/benchmarks/20261021/compute_only.csv`.
+
+Mỗi slide chính có một hình và vài con số; tiêu đề là câu kết luận của hình. Chi tiết,
+công thức, giới hạn và nguồn số liệu nằm trong ghi chú người nói của từng slide.
 
 ## Cách build lại
 

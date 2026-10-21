@@ -1,7 +1,6 @@
-"""Compute read-only error diagnostics cited in the report discussion (Section 6).
+"""Compute read-only error diagnostics cited in the report discussion (Section 7).
 
-Reads existing modeling, warning and cross-dataset artifacts plus raw C-MAPSS
-files; trains nothing and never modifies the source artifacts. Writes one JSON
+Reads existing modeling and warning artifacts; trains nothing and never modifies the source artifacts. Writes one JSON
 file to outputs/diagnostics/error_diagnostics.json.
 """
 
@@ -14,16 +13,6 @@ import pandas as pd
 from cmapss.modeling.contracts import RUL_BINS
 
 ROOT = Path(__file__).resolve().parents[1]
-RAW_COLUMNS = ["engine_id", "cycle", "setting_1", "setting_2", "setting_3"] + [
-    f"sensor_{i}" for i in range(1, 22)
-]
-# Sensors with a within-engine trend in FD001 EDA; constant and near-constant
-# sensors are excluded so the range check reflects informative channels.
-RANGE_SENSORS = [f"sensor_{i}" for i in (2, 3, 4, 7, 11, 12, 15, 20, 21)]
-
-
-def read_raw(name: str) -> pd.DataFrame:
-    return pd.read_csv(ROOT / "data/raw" / name, sep=r"\s+", header=None, names=RAW_COLUMNS)
 
 
 def oof_by_true_rul() -> list[dict]:
@@ -71,40 +60,12 @@ def warning_by_lifetime() -> dict:
     }
 
 
-def transfer_diagnostics() -> dict:
-    reference = read_raw("train_FD001.txt")
-    result = {}
-    for source, target in [("FD001", t) for t in ("FD001", "FD002", "FD003", "FD004")] + [
-        (d, d) for d in ("FD002", "FD003", "FD004")
-    ]:
-        path = ROOT / f"outputs/cross_dataset/evaluations/{source}_to_{target}/modeling/predictions/final_evaluation.parquet"
-        frame = pd.read_parquet(path)
-        error = frame["y_pred"] - frame["y_true"]
-        result[f"{source}_to_{target}"] = {
-            "mean_signed_error": float(error.mean()),
-            "share_overpredicted": float((error > 0).mean()),
-            "prediction_mean": float(frame["y_pred"].mean()),
-            "prediction_std": float(frame["y_pred"].std()),
-            "true_mean": float(frame["y_true"].mean()),
-        }
-    for target in ("FD002", "FD003", "FD004"):
-        test = read_raw(f"test_{target}.txt")
-        inside = [
-            float(((test[c] >= reference[c].min()) & (test[c] <= reference[c].max())).mean())
-            for c in RANGE_SENSORS
-        ]
-        result[f"FD001_to_{target}"]["mean_share_test_values_inside_fd001_train_range"] = float(np.mean(inside))
-    return result
-
-
 def main() -> None:
     output = {
-        "description": "Read-only diagnostics for report Section 6; no model is trained.",
-        "range_sensors": RANGE_SENSORS,
+        "description": "Read-only diagnostics for report Section 7; no model is trained.",
         "oof_hgb_by_true_rul": oof_by_true_rul(),
         "test_errors": test_error_share(),
         "warning_by_lifetime": warning_by_lifetime(),
-        "transfer": transfer_diagnostics(),
     }
     target = ROOT / "outputs/diagnostics/error_diagnostics.json"
     target.parent.mkdir(parents=True, exist_ok=True)

@@ -17,7 +17,6 @@ from cmapss.dashboard import (  # noqa: F401  (re-exported for cmapss.reproducib
     DashboardDataError,
     format_metric,
     load_dashboard_data,
-    load_improvement_data,
 )
 
 

@@ -132,7 +132,6 @@ def test_evaluation_protocol_has_distinct_estimands() -> None:
     assert set(protocol["protocol_id"]) == {
         "rul_cv",
         "rul_final",
-        "health_index_forecast",
         "rul_warning_oof",
         "etl_benchmark",
     }

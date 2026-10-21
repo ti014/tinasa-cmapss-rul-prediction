@@ -1,16 +1,5 @@
 {
-  "description": "Read-only diagnostics for report Section 6; no model is trained.",
-  "range_sensors": [
-    "sensor_2",
-    "sensor_3",
-    "sensor_4",
-    "sensor_7",
-    "sensor_11",
-    "sensor_12",
-    "sensor_15",
-    "sensor_20",
-    "sensor_21"
-  ],
+  "description": "Read-only diagnostics for report Section 7; no model is trained.",
   "oof_hgb_by_true_rul": [
     {
       "true_rul_bin": "(-1, 30]",
@@ -102,59 +91,5 @@
       }
     },
     "pearson_failure_cycle_vs_threshold_delay": -0.5575256972807734
-  },
-  "transfer": {
-    "FD001_to_FD001": {
-      "mean_signed_error": 15.075435584785671,
-      "share_overpredicted": 0.72,
-      "prediction_mean": 90.59543558478565,
-      "prediction_std": 51.07428705623092,
-      "true_mean": 75.52
-    },
-    "FD001_to_FD002": {
-      "mean_signed_error": 50.78935136515229,
-      "share_overpredicted": 0.8108108108108109,
-      "prediction_mean": 131.97467955048046,
-      "prediction_std": 13.33216185679221,
-      "true_mean": 81.18532818532819,
-      "mean_share_test_values_inside_fd001_train_range": 0.15157280195084322
-    },
-    "FD001_to_FD003": {
-      "mean_signed_error": 45.34305373257441,
-      "share_overpredicted": 0.83,
-      "prediction_mean": 120.66305373257441,
-      "prediction_std": 55.01163264622016,
-      "true_mean": 75.32,
-      "mean_share_test_values_inside_fd001_train_range": 0.9466605072172679
-    },
-    "FD001_to_FD004": {
-      "mean_signed_error": 49.387381137274176,
-      "share_overpredicted": 0.7943548387096774,
-      "prediction_mean": 135.9398004921129,
-      "prediction_std": 12.715308017924468,
-      "true_mean": 86.5524193548387,
-      "mean_share_test_values_inside_fd001_train_range": 0.14139747550724402
-    },
-    "FD002_to_FD002": {
-      "mean_signed_error": 2.6360647607123693,
-      "share_overpredicted": 0.5366795366795367,
-      "prediction_mean": 83.82139294604055,
-      "prediction_std": 52.52966013919762,
-      "true_mean": 81.18532818532819
-    },
-    "FD003_to_FD003": {
-      "mean_signed_error": 22.845289909105375,
-      "share_overpredicted": 0.75,
-      "prediction_mean": 98.16528990910538,
-      "prediction_std": 63.11058645002019,
-      "true_mean": 75.32
-    },
-    "FD004_to_FD004": {
-      "mean_signed_error": 12.18106455722189,
-      "share_overpredicted": 0.6209677419354839,
-      "prediction_mean": 98.7334839120606,
-      "prediction_std": 62.59108977750797,
-      "true_mean": 86.5524193548387
-    }
   }
 }

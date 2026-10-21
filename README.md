@@ -16,8 +16,8 @@ order does not mean that denoised signals are inputs to the RUL model.
 This repository supports the final report for the Big Data Analytics course,
 **Topic 8 — IoT Data Analysis and Predictive Maintenance**: analyze equipment sensor
 data to detect early signs of abnormal behavior and predict when maintenance is
-needed. The data are the simulated NASA C-MAPSS turbofan engines; the main analysis
-uses FD001, and FD002–FD004 appear only in extended experiments.
+needed. The data are the simulated NASA C-MAPSS turbofan engines. FD002–FD004 only
+go through ETL; the model is trained and evaluated only on FD001.
 
 ## Project Status
 
@@ -39,16 +39,11 @@ Deliverables:
 - [Report PDF](report/main.pdf) (40 pages, [LaTeX source](report/README.md)).
 - [Slides](slides/cmapss_fd001_presentation.pptx) ([PDF](slides/cmapss_fd001_presentation.pdf)),
   20 slides on the IUH template, built by [`slides/build_presentation.py`](slides/build_presentation.py).
-- A nine-page [Streamlit dashboard](app.py) that only reads artifacts.
-- Seven executed notebooks in [`notebooks/`](notebooks/), each identifying the student.
+- An eight-page [Streamlit dashboard](app.py) that only reads artifacts.
+- Five executed notebooks (00, 01, 02, 03, 06) in [`notebooks/`](notebooks/), each identifying the student.
 - [Presenter handbook](handoff/SPEECH_SCRIPT_VI.pdf) (each slide with what to point at and what
   to say, plus the dashboard demo), [handoff package](handoff/FINAL_HANDOFF.md) and
   [course alignment](handoff/COURSE_ALIGNMENT.md).
-
-Extended experiments (nested CV, 42 history features, similarity-based RUL,
-LightGBM, TCN, FD002–FD004 transfer, ARIMA) remain in
-[`experiments/`](experiments/README.md) and `outputs/experiments/`. None of them
-changes the main model or the warning policy.
 
 Installation and step-by-step commands are in Getting Started. The dashboard uses
 the optional `dashboard` dependency group.
@@ -69,7 +64,7 @@ regression as a tool, not as the end goal.
 
 ## Dataset
 
-The repository uses the four simulated run-to-failure NASA C-MAPSS subsets. FD001 is the primary subset for detailed analysis; FD002–FD004 support the supplemental evaluation.
+The repository uses the four simulated run-to-failure NASA C-MAPSS subsets. FD001 is the analyzed and modeled subset; FD002–FD004 only go through ETL.
 
 | Subset | Train rows | Test rows | Train engines | Test engines and labels |
 | --- | ---: | ---: | ---: | ---: |
@@ -87,7 +82,7 @@ Each observation contains:
 - Three operational settings.
 - Twenty-one sensor measurements.
 
-FD001 represents one operating condition and one High-Pressure Compressor degradation mode. FD002–FD004 add operating conditions and fault modes. The signals contain simulated sensor noise. Supplemental FD002–FD004 metrics are recorded in `outputs/cross_dataset`.
+FD001 represents one operating condition and one High-Pressure Compressor degradation mode. FD002–FD004 add operating conditions and fault modes. The signals contain simulated sensor noise.
 
 ### Provenance and Integrity
 
@@ -97,8 +92,7 @@ FD001 represents one operating condition and one High-Pressure Compressor degrad
 - Local provenance notes: [`data/raw/DATA_SOURCE.md`](data/raw/DATA_SOURCE.md)
 
 The data is simulated, not field telemetry. Results support reproducible academic
-comparison with FD001 as the primary subset and FD002–FD004 as supplemental
-evaluations; they do not establish real-world deployment performance.
+analysis of FD001; they do not establish real-world deployment performance.
 
 ## Data Architecture
 
@@ -143,7 +137,7 @@ create 126 features (six summaries for each of 21 sensors).
 | Signal analysis | Pandas, scikit-learn | EWMA, train-fitted Health Index and anomaly status; separate from RUL features |
 | Modeling | scikit-learn | GroupKFold and HistGradientBoostingRegressor |
 | Evaluation | scikit-learn, SciPy | MAE, RMSE, NASA score, bootstrap CI |
-| Visualization | Matplotlib, Seaborn, Streamlit | Figures, dashboard, results |
+| Visualization | Matplotlib, Altair, Streamlit | Figures, dashboard, results |
 
 FD001 is not large enough to claim Big Data by volume alone. The report shows
 scalability through Bronze/Silver/Gold ETL, Parquet, PySpark parity, and 1x/10x/100x benchmarks.
@@ -260,43 +254,6 @@ Example: test engine 90 is at cycle 146 with predicted RUL 31.2, so maintenance 
 due at cycle 147; it is under enhanced monitoring because its Health Index has been
 abnormal since cycle 67.
 
-### FD002–FD004 Evaluation
-
-The raw archive now contains FD001–FD004. The additional matrix uses the same
-pipeline with a 10-cycle window because the shortest FD004 test engine has 19
-cycles; it does not replace the published FD001 result that uses a 30-cycle
-window. Within-subset MAE is 21.9258 on FD001, 22.3556 on FD002, 28.3255 on
-FD003, and 27.2218 on FD004. Keeping the model fit on FD001 frozen and
-transferring it to other subsets gives MAE 60.3215 on FD002, 47.3949 on FD003,
-and 58.5731 on FD004. The FD001 model should therefore not be applied directly
-to another subset without retraining or domain adaptation. See the [transfer
-evaluation artifact](outputs/cross_dataset/README.md).
-
-### ARIMA Analysis
-
-ARIMA is a secondary time-series analysis, not the primary RUL model. The
-implemented pipeline selects 10 representative validation engines, fits the
-StandardScaler/PCA transformation on the other 90 train engines, and transforms
-the selected engines without refitting it. For each selected engine, ARIMA fits
-the first 70% of its Health Index trajectory and forecasts the final 30%. This is
-a separate transformer/protocol from the anomaly and maintenance analysis. It reports:
-
-- Forecast MAE and RMSE.
-- 95% prediction-interval coverage.
-- Augmented Dickey-Fuller stationarity diagnostics.
-- Ljung-Box residual autocorrelation diagnostics.
-
-The current run selects ARIMA order by an AIC grid on each 70% fit segment only.
-All 10 engines have converged fits; forecast MAE is 0.1515--1.0372 and 95%
-prediction-interval coverage is 21.43%--97.03%. ADF does not reject
-non-stationarity on the fit segments. After adjusting Ljung--Box by `p+q`,
-engines 69 and 70 have p-values below 0.05. ARIMA is not applied directly to
-the deterministic training RUL countdown; Health Index forecast is not RUL.
-On the same holdouts, mean MAE is 0.4110 for ARIMA, 0.7469 for drift and 0.9478
-for last-value; this comparison is descriptive and has no claim of statistical
-superiority.
-ARIMA is an extended experiment and is not used for warnings.
-
 ## Big Data Scope
 
 The Big Data component focuses on lifecycle and reproducibility rather than overstating dataset volume:
@@ -321,9 +278,9 @@ and driver-side Arrow export; its timing does not benchmark the HDFS writer.
 The estimand, unit of analysis, split/horizon, metric role, and uncertainty
 method are recorded in
 [`outputs/modeling/tables/evaluation_protocol.csv`](outputs/modeling/tables/evaluation_protocol.csv).
-It keeps OOF train model selection, final test-engine evaluation, Health Index
-trajectory forecasting, train-only low-RUL warning analysis, and the descriptive
-Pandas benchmark as separate protocols. The warning artifact uses a fixed
+It keeps OOF train model selection, final test-engine evaluation, train-only
+low-RUL warning analysis, and the descriptive Pandas benchmark as separate
+protocols. The warning artifact uses a fixed
 `RUL <= 30` threshold on selected-model OOF predictions; it is descriptive and
 does not use test labels.
 
@@ -359,17 +316,18 @@ Current repository structure:
 ```text
 .
 ├── data/
-│   ├── raw/                 # Original FD001–FD004 files and provenance notes
-│   └── archive/             # Data retained for comparison, not active modeling
+│   └── raw/                 # Original FD001–FD004 files and provenance notes
 ├── references/              # Bibliography, reading guide, papers, assignment context
-├── notebooks/               # Executed: 00 data walkthrough, 01 EDA, 02 statistics, 03–06 result review
-├── src/cmapss/              # data/, statistics/, etl/, features/, modeling/, timeseries/,
+├── notebooks/               # Executed: 00 data walkthrough, 01 EDA, 02 statistics, 03 RUL modeling,
+│                            # 06 denoising, anomalies and maintenance
+├── src/cmapss/              # data/, statistics/, etl/, features/, modeling/, timeseries/ (Health Index),
 │                            # degradation/ (EWMA, anomalies), maintenance/ (schedule), hdfs/ (HDFS, MapReduce,
 │                            # Spark on HDFS), data/acquire.py (download + checksums), eda.py, validate.py,
 │                            # dashboard.py (artifact loaders), dashboard_app.py (Streamlit UI)
 ├── infra/hadoop/            # Docker Compose for the single-node Hadoop cluster and Spark client
-├── scripts/                 # Packaging, report figures and improvement-study verification
-├── tests/                   # Data contract, CLI, EDA, statistics, ETL, features, modeling, timeseries, and reproducibility tests
+├── scripts/                 # Packaging, report figures, error diagnostics, course-alignment evidence, slide export
+├── tests/                   # Data contract, CLI, EDA, statistics, ETL, HDFS, features, modeling, Health Index,
+│                            # degradation, maintenance, dashboard and reproducibility tests
 ├── outputs/validation/      # Data-validation reports
 ├── outputs/eda/             # EDA tables, figures, methods, and validation
 ├── outputs/statistics/      # Train-only sensor inference artifacts and validation
@@ -378,10 +336,9 @@ Current repository structure:
 ├── outputs/hdfs/            # HDFS listing, fsck, MapReduce and Spark results, web UI screenshots
 ├── outputs/features/        # Gold rolling feature Parquet and metadata
 ├── outputs/modeling/        # Grouped CV, predictions, model artifact, final metrics
-├── outputs/timeseries/      # Train-only PCA--ARIMA Health Index artifacts
 ├── outputs/degradation/     # EWMA signals, Health Index, anomaly onset cycles
 ├── outputs/maintenance/     # Maintenance schedule for 100 test engines, planning and label check
-├── outputs/cross_dataset/   # FD001–FD004 ETL, features, and transfer results
+├── outputs/cross_dataset/   # Per-subset FD001–FD004 ETL run records (FD002–FD004 go through ETL only)
 ├── assets/diagrams/         # Editable draw.io sources, SVG previews, URL handles
 ├── pyproject.toml           # Package and direct dependencies
 ├── requirements.txt         # Pip installation: local package and runtime libraries
@@ -482,8 +439,7 @@ Test labels are read after predictions or the schedule have been written. In the
 figure, steps 1--3 prepare the data; branch A predicts RUL and branch B tracks the
 signal. The dashed Hadoop box only re-checks the engine summary and does not feed
 RUL modeling. The
-[report pipeline figure](report/figures/pipeline.pdf) shows the same boundaries;
-PCA–ARIMA and FD002–FD004 transfer remain extended experiments.
+[report pipeline figure](report/figures/pipeline.pdf) shows the same boundaries.
 
 ![FD001 overall data pipeline](assets/diagrams/fd001-pipeline.png)
 
@@ -502,11 +458,7 @@ Select the `.venv` Python kernel and **Restart Kernel and Run All Cells**.
 This analyzes only train and creates 12 CSV tables and 14 PNG figures in a new
 `outputs/notebook01/run-*/` directory. Historical fresh-kernel checks covered the
 original EDA artifacts, preserved in `outputs/eda/`.
-The 2026-10-21 test run achieved **492 passed, 1 skipped**;
-the TCN test is skipped because `torch` is unavailable. The 2026-09-29 run
-achieved **198 tests** and remains the historical evidence for data, statistics,
-ETL, feature, modeling, PCA--ARIMA, cross-dataset, dashboard, and end-to-end
-reproducibility checks.
+The 2026-10-21 test run achieved **272 passed**.
 
 ![FD001 train EDA workflow](assets/diagrams/fd001-eda.svg)
 
@@ -665,37 +617,19 @@ MAE 15.3490, RMSE 20.5413, and NASA score 1513.2577 on 100 test engines.
 See [modeling artifacts and validation](outputs/modeling/README.md) for fold
 metrics, final predictions, final evaluation, figures, and limitations.
 
-### Run FD001–FD004 evaluation
+### Run ETL for FD001–FD004
 
-To reproduce the within-subset and transfer matrix, run:
-
-```powershell
-.venv\Scripts\python -m cmapss.cross_dataset `
-  --raw-dir data/raw `
-  --output-root outputs/cross_dataset `
-  --window-cycles 10
-```
-
-The command creates four within-subset evaluations and three FD001 transfer
-evaluations. See the [cross-dataset artifact](outputs/cross_dataset/README.md).
-The matrix uses a 10-cycle window because FD004 has a 19-cycle test engine; it
-does not replace the published FD001 30-cycle result.
-
-### Run the PCA--ARIMA analysis
-
-After ETL and grouped modeling have written their artifacts, run the secondary
-Health Index forecast:
+FD002–FD004 only go through ETL; the model is trained and evaluated only on
+FD001. To rebuild the per-subset ETL records (265,256 observations across the
+four subsets), run the ETL CLI once per subset, for example FD002:
 
 ```powershell
-.venv\Scripts\python -m cmapss.timeseries `
-  --observations outputs/etl/silver/observations.parquet `
-  --fold-assignments outputs/modeling/tables/fold_assignments.csv `
-  --output-dir outputs/timeseries
+.venv\Scripts\python -m cmapss.etl `
+  --dataset-id FD002 `
+  --output-dir outputs/cross_dataset/FD002/etl
 ```
 
-The current artifact contains 20,631 train Health Index rows and 704 holdout
-forecasts from 10 engines. See [PCA--ARIMA artifacts and diagnostics](outputs/timeseries/README.md)
-for the selection rule, metrics, figures, and limitations.
+See the [per-subset ETL artifacts](outputs/cross_dataset/README.md).
 
 ### Run denoising and anomaly detection
 
@@ -726,11 +660,9 @@ schedule, and only then reads `RUL_FD001.txt` to build `status_vs_actual.csv`.
 
 ### Run the result notebooks
 
-Notebooks 01–06 explain each step through a concrete example before expanding to
-the full dataset. Each run writes to `outputs/notebookNN/run-*/`. Notebook 03
-reruns RUL cross-validation and evaluation; notebook 04 refits the Health Index
-and ARIMA. Notebook 05 recomputes metrics and bootstrap intervals from stored
-predictions without repeating the full nested-CV search. Notebook 06 recomputes
+Notebooks 01, 02, 03 and 06 explain each step through a concrete example before
+expanding to the full dataset. Each run writes to `outputs/notebookNN/run-*/`.
+Notebook 03 reruns RUL cross-validation and evaluation. Notebook 06 recomputes
 EWMA, the Health Index, sensitivity grids, and maintenance schedules using stored
 baseline RUL predictions. Each notebook can run in its own kernel with the input
 artifacts supplied in the repository.
@@ -738,8 +670,6 @@ artifacts supplied in the repository.
 | Notebook | Content | Reads |
 |---|---|---|
 | `03_fd001_modeling_evaluation.ipynb` | Run 5-fold CV, select a model, evaluate test and RUL ≤ 30 warnings | Rolling features and train targets; test labels read after writing predictions |
-| `04_fd001_health_index_arima.ipynb` | Fit the Health Index on 90 engines, forecast 10 held-out engines, compare baselines | Raw train and `outputs/modeling/tables/fold_assignments.csv` |
-| `05_cross_dataset_and_improvement.ipynb` | Recompute metrics, ablation and paired CI; check the baseline decision | Cross-dataset predictions, run `20260928_rebuild` and follow-up `20260929` |
 | `06_fd001_degradation_maintenance.ipynb` | EWMA, anomalies, sensitivity grids, maintenance schedule and label check | Raw observations and stored baseline predictions; test labels read after scheduling |
 
 Open them in JupyterLab and run all cells, or execute them from the command line:
@@ -751,14 +681,14 @@ Open them in JupyterLab and run all cells, or execute them from the command line
 ### Run the reproducibility dashboard
 
 Install the optional dashboard dependencies and start Streamlit after the
-modeling, PCA--ARIMA, `cmapss.degradation` and `cmapss.maintenance` artifacts exist:
+modeling, `cmapss.degradation` and `cmapss.maintenance` artifacts exist:
 
 ```powershell
 uv sync --extra dashboard
 uv run --extra dashboard streamlit run app.py
 ```
 
-The dashboard has nine pages in pipeline order. A page can be opened directly with
+The dashboard has eight pages in pipeline order. A page can be opened directly with
 a query string, for example `http://localhost:8501/?page=Lịch bảo trì`.
 
 | Page | Artifacts read | Content |
@@ -770,7 +700,6 @@ a query string, for example `http://localhost:8501/?page=Lịch bảo trì`.
 | Dự đoán RUL (RUL prediction) | `outputs/modeling` | CV model comparison, one test engine, OOF trajectories |
 | Cảnh báo sớm (early warning) | `outputs/modeling/tables` | 30-cycle threshold, timing classes, warning trajectory |
 | Lịch bảo trì (maintenance schedule) | `outputs/maintenance` | 100-engine table, planning chart, per-engine detail, label check |
-| Thử nghiệm mở rộng (extended experiments) | `outputs/cross_dataset`, `outputs/experiments`, `outputs/timeseries` | Tabs: transfer, improvement, ARIMA |
 | Provenance | `run_info.json` | Schema and isolation contract of the run |
 
 Artifact loaders live in `src/cmapss/dashboard.py` and the UI in
@@ -794,8 +723,8 @@ uv run python -m cmapss.reproducibility `
   --evidence-path tmp/e2e-repro-final/validation.json
 ```
 
-The command runs the Pandas ETL path with a 1x benchmark, rolling features,
-grouped RUL modeling and train-only PCA--ARIMA. It uses a fresh output root,
+The command runs the Pandas ETL path with a 1x benchmark, rolling features and
+grouped RUL modeling, then checks the dashboard loader. It uses a fresh output root,
 keeps raw hashes unchanged, and compares persisted tables with numeric tolerance
 `rtol=1e-9`, `atol=1e-9`. PySpark parity and notebook reproducibility remain
 separate checks documented in the validation evidence.
@@ -825,17 +754,9 @@ New-Item -ItemType Directory -Force tmp | Out-Null
 
 Pytest clears its `--basetemp` directory on subsequent runs; reserve it for tests.
 
-The 2026-10-07 code verification achieved **426 passed, 1 skipped** (TCN requires
-the unavailable torch package). Coverage includes custom Bronze boundaries,
-ETL/rolling fault injection, dependency exports and the shared XGBoost/LightGBM
-lifecycle. See the [completed plan](handoff/archive/CODE_RELIABILITY_PLAN_20261007.md)
-and [runtime evidence](handoff/archive/CODE_RELIABILITY_20261007.json) for commands,
-Windows/Linux limits and real spawn worker checks.
-
 </details>
 
-The [report PDF](report/main.pdf) presents the verified FD001 analyses and the
-supplemental FD001–FD004 matrix. See [report instructions](report/README.md)
+The [report PDF](report/main.pdf) presents the verified FD001 analyses. See [report instructions](report/README.md)
 for source organization and PDF build commands.
 
 ## Academic Context

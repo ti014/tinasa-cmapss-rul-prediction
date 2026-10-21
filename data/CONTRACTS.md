@@ -8,8 +8,10 @@ metadata lần chạy, hai hình M2.3b và biên bản validation M2.4 tại
 Silver train targets và Gold engine summary tại `outputs/etl/`; M3.2 đã bổ sung
 Gold rolling features tại `outputs/features/`; mốc modeling đã bổ sung
 cross-validation, final predictions và final metrics tại `outputs/modeling/`.
-M3.4 đã bổ sung Health Index PCA và forecast ARIMA train-only tại
-`outputs/timeseries/`.
+Health Index (StandardScaler và PCA một thành phần fit trên train) nằm trong
+`cmapss.timeseries.health_index`, được `cmapss.degradation` và
+`cmapss.maintenance` dùng. FD002–FD004 chỉ đi qua bước ETL; mô hình chỉ được
+huấn luyện và đánh giá trên FD001.
 PySpark adapter đã chạy parity với Pandas reference trong môi trường local có
 JRE.
 
@@ -359,41 +361,31 @@ targets và test labels.
 
 ### TIMESERIES_HEALTH_INDEX
 
-Phân tích PCA--ARIMA là artifact phụ train-only tại `outputs/timeseries/`.
-Pipeline đọc Silver observations, lọc `split=train`, chuẩn hóa 21 sensor bằng
-`StandardScaler` và fit PCA một thành phần trên toàn bộ train observations.
-PC1 được định hướng bằng tương quan với cycle để Health Index có hướng giảm;
-đây là biểu diễn sensor, không phải nhãn RUL.
+`fit_health_index` trong `cmapss.timeseries.health_index` lọc `split=train`,
+chuẩn hóa 21 sensor bằng `StandardScaler` và fit PCA một thành phần trên train
+observations. PC1 được định hướng bằng tương quan với cycle để Health Index có
+hướng giảm; đây là biểu diễn sensor, không phải nhãn RUL. Kết quả có khóa
+`(split, engine_id, cycle)`, chỉ chứa dòng train và giá trị hữu hạn.
 
-Mười engine được chọn trước khi xem forecast bằng quota cân bằng theo fold trong
-`outputs/modeling/tables/fold_assignments.csv`; trong từng fold, vị trí lifetime
-cách đều được lấy theo thứ tự `n_cycles`, rồi mới fit forecast. Mỗi chuỗi giữ
-đúng thứ tự cycle, dùng 70% đầu để fit và 30% cuối để đánh giá. ARIMA order
-được chọn bằng grid AIC `p,q=0..2`, `d in {0,1}` trên fit segment của chính
-engine đó. Pipeline ghi cả fit failure và diagnostic failure nếu xảy ra.
-
-`tables/health_index.csv` có khóa `(split, engine_id, cycle)` và đúng 20.631
-dòng train. `predictions/arima_forecasts.parquet` chỉ chứa holdout rows, gồm
-Health Index thật, forecast và prediction interval 95%. `forecast_metrics.csv`
-ghi MAE, RMSE và coverage; `diagnostics.csv` ghi ADF trên fit segment và
-Ljung--Box trên residual. Pipeline không đọc test observations hoặc
-`RUL_FD001.txt`, và không dùng forecast để thay đổi danh sách engine.
+`cmapss.degradation` gọi hàm này trên tín hiệu train gốc và sau EWMA để phát hiện
+bất thường. `cmapss.maintenance` dùng lại scaler, PCA, chiều dấu và hệ số chuẩn
+hóa đã fit để transform test, không fit lại tham số trên test. Ví dụ, động cơ
+test 90 có Health Index báo bất thường từ cycle 67 trong
+`outputs/maintenance/tables/maintenance_schedule.csv`.
 
 ### DASHBOARD_REPRODUCIBILITY
 
 Dashboard Streamlit tại `app.py` là consumer read-only của các artifact đã có.
-Dashboard bắt buộc đọc `outputs/modeling` và `outputs/timeseries`, kiểm tra file
-và cột đầu vào trước khi hiển thị, không fit model, không chạy lại ARIMA và
-không đọc `data/raw/RUL_FD001.txt` khi mở trang. Nếu artifact bắt buộc thiếu
+Dashboard bắt buộc đọc `outputs/modeling`, kiểm tra file và cột đầu vào trước
+khi hiển thị, không fit model và không đọc `data/raw/RUL_FD001.txt` khi mở trang. Nếu artifact bắt buộc thiếu
 hoặc sai schema, dashboard hiển thị lỗi đầu vào và không dựng biểu đồ từ dữ liệu
 không đầy đủ.
 
-Các view đã triển khai gồm tổng quan có model comparison, metric final
-evaluation, chi tiết một test engine, Health Index/ARIMA của một validation
-engine và provenance của hai lần chạy.
-Ví dụ, chọn `engine_id=39` trong view Health Index sẽ hiển thị lịch sử Health
-Index, holdout forecast, prediction interval 95% và diagnostics đã lưu trong
-Parquet/CSV; dashboard không tạo lại các giá trị này.
+Dashboard có tám trang: Tổng quan, Dữ liệu & EDA, Khử nhiễu, Xu hướng & bất
+thường, Dự đoán RUL, Cảnh báo sớm, Lịch bảo trì và Provenance.
+Ví dụ, chọn động cơ test 90 ở trang Lịch bảo trì sẽ hiển thị RUL dự đoán 31,2
+cycle và cycle cần bảo trì 147 đã lưu trong `outputs/maintenance/`; dashboard
+không tạo lại các giá trị này.
 
 ## Test labels và phạm vi cô lập
 
@@ -419,14 +411,12 @@ enforcement hoặc branch protection cho toàn repository.
 | --- | --- | --- |
 | Rolling features | Đã có artifact M3.2 tại `outputs/features/gold/rolling_features.parquet`: khóa observation tại cycle cuối window, trailing window đủ 30 cycles, cùng engine/split, không dùng tương lai; giữ 21 sensors; cột `<sensor>__<stat>` với `last`, `mean`, sample `std` (`ddof=1`), `min`, `max`, slope | Chưa có PCA hoặc feature selection; nếu thêm, phải fit trong training fold |
 | Final predictions | Đã có artifact tại `outputs/modeling/predictions/final_predictions.parquet`: khóa `(split, engine_id, cycle)` tại cycle cuối test; một giá trị RUL dự đoán mỗi engine, đúng 100 dòng; tạo trước khi join test labels | Chưa có serving API; chưa clip prediction vì lần chạy hiện tại không sinh giá trị âm |
-| PCA--ARIMA Health Index | Đã có artifact tại `outputs/timeseries/`: PCA fit trên train, 10 engine chọn trước forecast, split 70/30, AIC order selection trên fit segment, MAE/RMSE/coverage/ADF/Ljung--Box | Health Index forecast không phải RUL |
 | Dashboard reproducibility | Đã có `app.py`, optional extra `dashboard`, loader kiểm schema và view RUL/Health Index/provenance đọc từ artifact; loader được kiểm tra trong lệnh tái lập end-to-end | Chưa có serving API; giao diện không tự chạy lại upstream pipeline |
-| End-to-end reproducibility | Đã có `python -m cmapss.reproducibility`: chạy raw → ETL → features → modeling → PCA--ARIMA trong output root mới, đối chiếu 15 bảng, metric, hình, hash raw và dashboard loader | Chưa có serving API; PySpark parity và notebook vẫn là kiểm tra riêng |
+| End-to-end reproducibility | Đã có `python -m cmapss.reproducibility`: chạy raw → ETL → features → modeling trong output root mới, đối chiếu 12 bảng, metric, hình, hash raw và dashboard loader | Chưa có serving API; PySpark parity và notebook vẫn là kiểm tra riêng |
 
 Ví dụ window tại cycle 170 là cycle 141–170 của cùng engine. M3.2 đã hiện
 thực hóa feature transformer và validator cho artifact rolling features. Mốc
-modeling đã tạo metrics và prediction cho FD001; PCA--ARIMA đã có artifact và
-diagnostics. Dashboard đã triển khai dạng read-only và kiểm tra tái lập
+modeling đã tạo metrics và prediction cho FD001. Dashboard đã triển khai dạng read-only và kiểm tra tái lập
 end-to-end đã đạt; PySpark parity và notebook vẫn được kiểm tra riêng.
 
 ## Chạy kiểm tra

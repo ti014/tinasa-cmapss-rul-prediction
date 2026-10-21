@@ -1,38 +1,49 @@
-# Evaluation FD001--FD004
+# ETL theo subset FD001–FD004
 
-Artifact này ghi kết quả chạy cùng pipeline trên bốn subset NASA C-MAPSS và ba
-phép transfer từ FD001. Kết quả được tạo ngày 2026-09-25 từ raw files trong
-`data/raw`.
+**Học viên:** Phan Nguyễn Mai Phương · **MSHV:** 25002711.
 
-## Protocol
+Thư mục này lưu kết quả ETL Pandas của từng subset NASA C-MAPSS, mỗi subset một
+thư mục riêng. FD002–FD004 chỉ đi qua bước ETL; mô hình chỉ được huấn luyện và
+đánh giá trên FD001. Bốn subset không được union thành một bảng chung vì khóa
+`(split, engine_id, cycle)` chưa có `dataset_id`.
 
-- Model candidates và GroupKFold giữ nguyên từ pipeline modeling hiện tại.
-- Mỗi subset có một evaluation nội bộ: train và test thuộc cùng subset.
-- Transfer dùng model đã fit trên toàn bộ train FD001, sau đó dự đoán test của
-  FD002, FD003 hoặc FD004; không fit lại trên target test.
-- Matrix dùng trailing window `10 cycles` vì FD004 có test engine ngắn nhất chỉ
-  19 cycles. Kết quả này không thay thế kết quả FD001 chính thức dùng window 30.
-- Test labels chỉ được đọc sau khi final predictions đã được ghi.
-- Bootstrap dùng 10.000 engine resamples, seed 42.
+## Số bản ghi
 
-## Results
+Số liệu lấy từ `FD00x/etl/run_info.json` (lần chạy ngày 25/09/2026, giờ Việt Nam).
 
-| Source | Target | Type | Mean engine MAE | RMSE | NASA score |
-|---|---|---|---:|---:|---:|
-| FD001 | FD001 | within-subset | 21.9258 | 29.5936 | 8,103.0148 |
-| FD002 | FD002 | within-subset | 22.3556 | 31.3077 | 34,004.9782 |
-| FD003 | FD003 | within-subset | 28.3255 | 41.7606 | 4,109,107.7036 |
-| FD004 | FD004 | within-subset | 27.2218 | 36.9311 | 492,703.0709 |
-| FD001 | FD002 | transfer | 60.3215 | 70.4603 | 14,193,434.0842 |
-| FD001 | FD003 | transfer | 47.3949 | 59.2140 | 59,380,624.2646 |
-| FD001 | FD004 | transfer | 58.5731 | 69.8148 | 14,691,764.3175 |
+| Subset | Observations (train + test) | Train targets | Động cơ train | Động cơ test |
+|---|---:|---:|---:|---:|
+| FD001 | 33.727 | 20.631 | 100 | 100 |
+| FD002 | 87.750 | 53.759 | 260 | 259 |
+| FD003 | 41.316 | 24.720 | 100 | 100 |
+| FD004 | 102.463 | 61.249 | 249 | 248 |
+| Tổng | 265.256 | 160.359 | 709 | 707 |
 
-Transfer từ FD001 làm MAE tăng rõ rệt so với evaluation nội bộ trên target
-subset. Model fit riêng trên FD001 không nên được dùng trực tiếp cho FD002--FD004
-nếu chưa có retraining hoặc domain adaptation.
+Ví dụ: FD002 có 53.759 dòng train và 33.991 dòng test, nên Silver observations có
+87.750 dòng; `engine_summary` có 519 dòng, mỗi dòng một động cơ (260 train, 259 test).
 
-## Files
+## File
 
-- `matrix.json`: bảng tổng hợp toàn bộ evaluation.
-- `FD001/`--`FD004/`: ETL và rolling features theo subset.
-- `evaluations/FD*_to_FD*/`: predictions, metrics, bootstrap CI và context.
+Mỗi `FD00x/etl/` gồm:
+
+- `silver/observations.parquet`: observations train và test, giữ cột `split`.
+- `silver/train_targets.parquet`: RUL train theo `(split, engine_id, cycle)`.
+- `gold/engine_summary.parquet` và `gold/etl.sqlite`: bảng tổng hợp theo động cơ.
+- `run_info.json`: checksum SHA-256 của hai file raw, số dòng, số động cơ và schema.
+
+Gói nộp bài chỉ giữ README này và bốn file `run_info.json`; các file Parquet và
+SQLite tạo lại được bằng lệnh bên dưới.
+
+## Tạo lại
+
+Chạy ETL CLI cho từng subset từ thư mục gốc repository, ví dụ FD002:
+
+```powershell
+uv run --frozen python -m cmapss.etl --dataset-id FD002 --output-dir outputs/cross_dataset/FD002/etl
+```
+
+Đổi `FD002` thành `FD001`, `FD003` hoặc `FD004` cho các subset còn lại. Lệnh đọc
+`data/raw/train_FD00x.txt` và `data/raw/test_FD00x.txt`, kiểm tra schema và số dòng
+theo profile của subset, rồi ghi Silver/Gold cùng `run_info.json`. CLI cũng ghi
+`benchmark.json`; thêm `--benchmark-scales 1 --benchmark-repetitions 1` nếu chỉ cần
+ETL.

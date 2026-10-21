@@ -1,0 +1,43 @@
+{
+  "status": "complete",
+  "author": "Phan Nguy\u1ec5n Mai Ph\u01b0\u01a1ng",
+  "student_id": "25002711",
+  "scales": [
+    1,
+    10,
+    50,
+    100,
+    200
+  ],
+  "repetitions": 1,
+  "parity": {},
+  "python": "3.12.14",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "cpu_logical": 22,
+  "ram_bytes": 25092706304,
+  "spark_master": "local[4]",
+  "spark_partitions": 4,
+  "window": 30,
+  "spark_driver_memory": "12g",
+  "spark_executor_memory": "12g",
+  "rss_sampling_seconds": 0.05,
+  "os_cache_cleared": false,
+  "parquet_writer": "PyArrow on driver; Spark write_seconds includes toArrow collection",
+  "timeout_seconds": 1800.0,
+  "write_output": false,
+  "scope": "local replicated data; no distributed-cluster throughput claim",
+  "source_sha256": "9e031b0d6430512fbce9af344b3110aeeb17429d44f394f28e370130d13560f8",
+  "versions": {
+    "pandas": "2.3.3",
+    "numpy": "2.3.3",
+    "pyarrow": "23.0.1",
+    "pyspark": "4.0.1",
+    "psutil": "7.2.2"
+  },
+  "source_code_sha256": {
+    "scalability.py": "16591cf97a4cc49938769342b3206044192e84ec509030798462ec0fbae0e0e9",
+    "rolling_spark.py": "fdbaa38cbe6847f76cd715475af88f0d7bb451396bf02ff04d37c6260e7b2475",
+    "benchmark.py": "0075293dacaecd0b9d3bf0234f8c692eac9a9aec256087014f643a3d7976a6c9",
+    "pandas_pipeline.py": "b3e563844b51ff179e31bf4a16ff5cad487ccda97e89dd4dfcbacd6dd3e3861f"
+  }
+}

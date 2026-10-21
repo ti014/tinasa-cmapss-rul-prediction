@@ -62,7 +62,8 @@ def _stop_spark(spark) -> None:
         warnings.warn(f"Spark cleanup after JVM shutdown failed: {type(error).__name__}", RuntimeWarning)
 
 
-def worker(engine: str, source: Path, destination: Path) -> dict:
+def worker(engine: str, source: Path, destination: Path, driver_memory: str = "4g",
+           write: bool = True) -> dict:
     """Chạy một lượt trong process mới; mỗi stage đo thời gian đều được thực thi đầy đủ."""
     destination.mkdir(parents=True, exist_ok=True)
     times = {}
@@ -76,8 +77,10 @@ def worker(engine: str, source: Path, destination: Path) -> dict:
 
             spark = (SparkSession.builder.master("local[4]").appName("cmapss-stage-benchmark")
                      .config("spark.ui.enabled", "false")
-                     .config("spark.driver.memory", "4g")
-                     .config("spark.executor.memory", "4g")
+                     .config("spark.driver.memory", driver_memory)
+                     .config("spark.executor.memory", driver_memory)
+                     # Bảng đặc trưng được gom về driver để ghi; bỏ trần 1 GB mặc định của kết quả.
+                     .config("spark.driver.maxResultSize", "0")
                      .config("spark.driver.host", "127.0.0.1")
                      .config("spark.driver.bindAddress", "127.0.0.1")
                      .config("spark.sql.shuffle.partitions", "4")
@@ -116,14 +119,16 @@ def worker(engine: str, source: Path, destination: Path) -> dict:
             feature_rows = features.count()
         times["rolling_seconds"] = time.perf_counter() - stage
         stage = time.perf_counter()
-        if engine == "pandas":
+        if not write:
+            pass  # --no-write: chỉ đo tính toán; bước ghi qua driver của Spark trên Windows hết heap ở 100×
+        elif engine == "pandas":
             features.to_parquet(destination / "features.parquet", index=False)
             summary.to_parquet(destination / "summary.parquet", index=False)
         else:
             import pyarrow.parquet as pq
 
-            # Windows thiếu hỗ trợ ghi Hadoop native, nên xuất qua Arrow;
-            # thời gian stage này tính cả bước gom về driver.
+            # Windows thiếu Hadoop native (winutils) và Python worker của Spark bị crash, nên
+            # gom về driver rồi ghi bằng PyArrow; write_seconds tính cả bước gom này.
             pq.write_table(features.toArrow(), destination / "features.parquet")
             pq.write_table(summary.toArrow(), destination / "summary.parquet")
         times["write_seconds"] = time.perf_counter() - stage
@@ -158,9 +163,14 @@ def main() -> None:
     parser.add_argument("--work-dir", type=Path, default=Path("tmp/scalability-20260929"))
     parser.add_argument("--scales", type=int, nargs="+", default=[1, 10])
     parser.add_argument("--repetitions", type=int, default=3)
+    parser.add_argument("--timeout-seconds", type=float, default=3600)
+    parser.add_argument("--spark-driver-memory", default="4g")
+    parser.add_argument("--engines", nargs="+", choices=("pandas", "spark"), default=["pandas", "spark"])
+    parser.add_argument("--no-write", action="store_true")
     args = parser.parse_args()
     if args.worker:
-        result = worker(args.worker, args.source.resolve(), args.output.resolve())
+        result = worker(args.worker, args.source.resolve(), args.output.resolve(), args.spark_driver_memory,
+                        write=not args.no_write)
         (args.output / "measurement.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
         return
     if args.repetitions < 1 or any(scale < 1 for scale in args.scales):
@@ -175,7 +185,8 @@ def main() -> None:
         digest = hashlib.sha256(source.read_bytes()).hexdigest()
         for repetition in range(1, args.repetitions + 1):
             # Đảo thứ tự thực thi để giảm sai lệch hệ thống theo thứ tự chạy.
-            engines = ["pandas", "spark"] if repetition % 2 else ["spark", "pandas"]
+            order = ["pandas", "spark"] if repetition % 2 else ["spark", "pandas"]
+            engines = [engine for engine in order if engine in args.engines]
             destinations = {}
             for engine in engines:
                 destination = (args.work_dir / f"{engine}_{scale}x_{repetition}").resolve()
@@ -183,30 +194,46 @@ def main() -> None:
                 if (destination / "measurement.json").exists():
                     raise FileExistsError(f"Choose a fresh --work-dir: {destination}")
                 print(f"scale={scale} repetition={repetition} engine={engine}", flush=True)
-                subprocess.run([sys.executable, "-m", "cmapss.etl.scalability", "--worker", engine,
-                                "--source", str(source), "--output", str(destination)], check=True)
-                record = json.loads((destination / "measurement.json").read_text(encoding="utf-8"))
+                started = time.perf_counter()
+                try:
+                    subprocess.run([sys.executable, "-m", "cmapss.etl.scalability", "--worker", engine,
+                                    "--source", str(source), "--output", str(destination),
+                                    "--spark-driver-memory", args.spark_driver_memory,
+                                    *(["--no-write"] if args.no_write else [])],
+                                   check=True, timeout=args.timeout_seconds)
+                    record = json.loads((destination / "measurement.json").read_text(encoding="utf-8"))
+                    record["status"] = "ok"
+                except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as error:
+                    # Lượt hỏng (hết RAM, quá thời gian) là kết quả cần ghi, không dừng cả benchmark.
+                    status = "timeout" if isinstance(error, subprocess.TimeoutExpired) else "failed"
+                    record = {"engine": engine, "status": status,
+                              "elapsed_before_stop_seconds": time.perf_counter() - started}
                 record.update(scale=scale, repetition=repetition, input_sha256=digest)
                 records.append(record)
                 pd.DataFrame(records).to_csv(args.output / "measurements.csv", index=False)
-            if scale == 1:
+            completed = [record for record in records[-len(engines):] if record["status"] == "ok"]
+            if scale == 1 and len(completed) == 2:
                 parity[str(repetition)] = verify_parity(destinations["pandas"], destinations["spark"])
             expected_rows = len(observations) * scale
             expected_features = (len(observations) - 29 * observations.groupby(["split", "engine_id"]).ngroups) * scale
-            for record in records[-2:]:
+            for record in completed:
                 assert record["input_rows"] == expected_rows
                 assert record["feature_rows"] == expected_features
     frame = pd.DataFrame(records)
-    metrics = [column for column in frame if column.endswith("_seconds") or column.endswith("_bytes")]
-    frame.groupby(["engine", "scale"])[metrics].agg(["median", "min", "max"]).to_csv(args.output / "summary.csv")
+    ok = frame.loc[frame["status"].eq("ok")]
+    metrics = [column for column in ok if column.endswith("_seconds") or column.endswith("_bytes")]
+    ok.groupby(["engine", "scale"])[metrics].agg(["median", "min", "max"]).to_csv(args.output / "summary.csv")
+    frame.groupby(["engine", "scale"])["status"].value_counts().unstack(fill_value=0).to_csv(
+        args.output / "status.csv")
     metadata = {"status": "complete", "author": "Phan Nguyễn Mai Phương", "student_id": "25002711",
                 "scales": args.scales, "repetitions": args.repetitions, "parity": parity,
                 "python": platform.python_version(), "platform": platform.platform(),
                 "cpu_logical": os.cpu_count(), "ram_bytes": psutil.virtual_memory().total,
                 "spark_master": "local[4]", "spark_partitions": 4, "window": 30,
-                "spark_driver_memory": "4g", "spark_executor_memory": "4g",
+                "spark_driver_memory": args.spark_driver_memory, "spark_executor_memory": args.spark_driver_memory,
                 "rss_sampling_seconds": 0.05, "os_cache_cleared": False,
                 "parquet_writer": "PyArrow on driver; Spark write_seconds includes toArrow collection",
+                "timeout_seconds": args.timeout_seconds, "write_output": not args.no_write,
                 "scope": "local replicated data; no distributed-cluster throughput claim",
                 "source_sha256": hashlib.sha256(args.source.read_bytes()).hexdigest(),
                 "versions": {name: version(name) for name in ("pandas", "numpy", "pyarrow", "pyspark", "psutil")},

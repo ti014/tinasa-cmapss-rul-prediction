@@ -1,0 +1,11 @@
+engine,scale,failed,ok,timeout
+pandas,1,0,1,0
+pandas,10,0,1,0
+pandas,50,0,1,0
+pandas,100,0,1,0
+pandas,200,0,0,1
+spark,1,0,1,0
+spark,10,0,1,0
+spark,50,1,0,0
+spark,100,1,0,0
+spark,200,1,0,0

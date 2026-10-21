@@ -20,7 +20,7 @@ trình (mục A1).
 
 | # | Mức | Vấn đề | Vị trí | Nguồn đúng |
 |---|---|---|---|---|
-| A1 | Cao | Speech nói "5 cảm biến đổi cùng một hướng ở cả 100 động cơ"; đúng là 12 | `handoff/SPEECH_SCRIPT_VI.tex:357` | `outputs/statistics/tables/sensor_inference.csv`; slide 11 và notebook 02 cell 21 đã đúng |
+| A1 | Đã sửa 21/10 | Speech nói "5 cảm biến đổi cùng một hướng ở cả 100 động cơ"; đúng là 12 | `handoff/SPEECH_SCRIPT_VI.tex:357` | `outputs/statistics/tables/sensor_inference.csv`; slide 11 và notebook 02 cell 21 đã đúng |
 | A2 | Trung bình | Report chỉ nêu 5 sensor (4, 7, 11, 12, 20) nên người đọc dễ hiểu là chỉ có 5 | `report/sections/current-results.tex:137`, `conclusion.tex` (Q3) | như A1 |
 | A3 | Trung bình | Lời nói slide 14: "dự đoán hiếm khi vượt quá khoảng 145 cycle". Thực tế 16,5% dự đoán OOF lớn hơn 145; 145–147 là giá trị **trung bình** khi RUL thật > 150 | `slides/build_presentation.py:875-876` | `outputs/diagnostics/error_diagnostics.json`; câu đúng ở `discussion.tex:15` |
 | A4 | Trung bình | Report nêu hai số test khác nhau: 453 đạt (09/10) và 426 đạt (07/10) | `data-processing.tex:103` và `appendix.tex:51`, `DATA_WALKTHROUGH.md:253` | `handoff/FINAL_HANDOFF.md:69` (453) |

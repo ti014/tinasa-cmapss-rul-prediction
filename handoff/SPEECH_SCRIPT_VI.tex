@@ -354,7 +354,7 @@ gần hỏng. Để chắc đây không phải do may rủi, em so 30 chuyến c
 \num{chính động cơ đó}, giống so ảnh lúc mới mua với ảnh lúc sắp hỏng của cùng một chiếc máy, rồi
 làm kiểm định thống kê.
 
-Kết quả: \num{15 trên 21} cảm biến thay đổi rõ ràng, và có 5 cảm biến đổi cùng một hướng ở
+Kết quả: \num{15 trên 21} cảm biến thay đổi rõ ràng, và có \num{12} cảm biến đổi cùng một hướng ở
 \num{cả 100} động cơ. Tức là động cơ thật sự có dấu hiệu già đi mà mình đo được.
 \extrabox{Kiểm định Wilcoxon, khoảng tin cậy bootstrap 10.000 lần, hiệu chỉnh Benjamini--Hochberg
 cho 21 cảm biến. Sáu cảm biến hằng thì không kiểm định được.}
@@ -666,7 +666,7 @@ Hadoop & 3.4.3 một node trong Docker; MapReduce trên YARN (3 map, 1 reduce) v
 Thu thập & Tải từ data.nasa.gov, MD5 gói khớp, 12/12 file đúng SHA-256 \\
 Khử nhiễu EWMA & Span 10, $\alpha \approx 0{,}18$; giảm 83,6--86,4\% dao động, trung vị 86,3\% \\
 Window & 30 cycles, 21 × 6 = 126 đặc trưng; 17.731 window train, 10.196 window test \\
-Xu hướng & 15/21 sensor thay đổi có ý nghĩa; sensor 4, 7, 11, 12, 20 đổi cùng hướng ở 100/100 động cơ \\
+Xu hướng & 15/21 sensor thay đổi có ý nghĩa; 12 sensor đổi cùng hướng ở 100/100 động cơ, ví dụ sensor 4, 7, 11, 12, 20 \\
 Bất thường & 100/100 động cơ train; trung vị 121 cycle trước khi hỏng (72,5 nếu không khử nhiễu); đã qua khoảng 39\% vòng đời \\
 Độ nhạy bất thường & 9 cấu hình (2/3/4$\sigma$ × 3/5/10 cycle) đều 100/100; lead time nhỏ nhất $\geq$ 50; 2$\sigma$--3 cycle: trung vị 136, 17 báo sớm; 4$\sigma$--10 cycle: 98,5, 0 báo sớm \\
 Mô hình & HistGradientBoosting, GroupKFold 5 fold; MAE CV 20,21 (Ridge 23,99) \\

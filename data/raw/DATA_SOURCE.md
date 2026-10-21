@@ -40,7 +40,11 @@ pipeline đã được đánh giá trên các subset này.
 - `train_FD004.txt`, `test_FD004.txt`, `RUL_FD004.txt`: subset sáu điều kiện vận
   hành và hai fault modes.
 - `readme.txt`: mô tả gốc của toàn bộ gói C-MAPSS.
-- `Damage Propagation Modeling.pdf`: bài báo gốc đi kèm.
+- Bài báo gốc "Damage Propagation Modeling" (Saxena và cs., PHM08) không được lưu trong repository; tải theo liên kết ở phần Nguồn của bản ghi NASA.
+
+## Giấy phép
+
+Bản ghi NASA ghi "License not specified". Dữ liệu được phân phối lại nguyên vẹn, kèm ghi nhận nguồn, và không thuộc giấy phép MIT của mã nguồn. Cần đối chiếu lại với bản ghi nguồn trước khi dùng cho mục đích khác
 
 Theo các file raw đã tải, FD004 có 249 train engines, 248 test engines và 248
 test labels. Con số này khác dòng mô tả FD004 trong `readme.txt`; profile của

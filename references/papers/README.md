@@ -6,7 +6,7 @@ Cập nhật ngày 20/09/2026: **đã có 6/8 bài**, gồm 5 PDF tải từ ngu
 
 | Mã | File trong repository / trạng thái | Số trang | Nguồn |
 | --- | --- | --- | --- |
-| R1 | [Saxena 2008 — Damage Propagation](R1_Saxena_2008_Damage_Propagation.pdf) | 9 | Sao chép nguyên vẹn từ [PDF đi kèm bộ dữ liệu](../../data/raw/Damage%20Propagation%20Modeling.pdf); gói gốc [NASA CMAPSSData.zip](https://data.nasa.gov/docs/legacy/CMAPSSData.zip) |
+| R1 | Saxena 2008 — Damage Propagation (không lưu trong repository) | 9 | Có trong gói [NASA CMAPSSData.zip](https://data.nasa.gov/docs/legacy/CMAPSSData.zip) |
 | R2 | **Chưa tải được** — Lei 2018, Machinery health prognostics | — | [ScienceDirect](https://www.sciencedirect.com/science/article/pii/S0888327017305988) yêu cầu quyền truy cập; chưa tìm thấy bản toàn văn công khai từ tác giả hoặc trường |
 | R3 | Ramasso & Saxena 2014 — C-MAPSS Review | 11 | [PHM Society PDF](https://papers.phmsociety.org/index.php/phmconf/article/download/2512/1473) |
 | R4 | Li, Ding & Sun 2018 — CNN RUL | 29 | [UC Merced / eScholarship PDF](https://escholarship.org/content/qt5ns8r3fs/qt5ns8r3fs.pdf) |

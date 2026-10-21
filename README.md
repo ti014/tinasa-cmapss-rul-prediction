@@ -25,7 +25,7 @@ Main FD001 results:
 
 | Step | Result | Artifacts |
 |---|---|---|
-| Data pipeline | Raw files downloaded from NASA with MD5/SHA-256 checks; schema, key and cycle checks; Silver/Gold Parquet and SQLite; Pandas and PySpark match exactly; at 10× scale local Spark is about 3.4× faster than Pandas | `outputs/acquisition/`, `outputs/etl/`, `outputs/benchmarks/` |
+| Data pipeline | Raw files downloaded from NASA with MD5/SHA-256 checks; schema, key and cycle checks; Silver/Gold Parquet and SQLite; Pandas and PySpark match exactly; at 100× scale local Spark computes about 5.5× faster than Pandas (compute only) | `outputs/acquisition/`, `outputs/etl/`, `outputs/benchmarks/` |
 | Distributed storage | Single-node Hadoop 3.4.3 in Docker: raw FD001 on HDFS; a MapReduce job on YARN and a Spark job reading HDFS both reproduce the Gold engine summary exactly (200/200 engines); `fsck` HEALTHY | `outputs/hdfs/`, `infra/hadoop/` |
 | Denoising | EWMA (span 10) removes about 86% of short-term fluctuation across 14 trending sensors | `outputs/degradation/` |
 | Time windows | 30-cycle window, 21 sensors × 6 statistics = 126 features | `outputs/features/` |
@@ -792,4 +792,4 @@ that use.
 
 ## License and Data Use
 
-No license has been selected for the project source code yet. The NASA Open Data listing currently does not specify a dataset license, so redistribution and reuse should preserve source attribution and be reviewed against the source record before publication. A project license and final data-distribution policy will be added before the repository is presented as reusable software.
+The source code is released under the [MIT License](LICENSE). The NASA C-MAPSS data in `data/raw/` is NASA material; the NASA Open Data record does not specify a dataset license, so it is redistributed unchanged with source attribution (see [`data/raw/DATA_SOURCE.md`](data/raw/DATA_SOURCE.md)) and is not covered by the MIT License. Third-party papers are not included; download them from the links in [`references/papers/README.md`](references/papers/README.md).

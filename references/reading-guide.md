@@ -8,7 +8,7 @@ gợi ý nghiên cứu; chúng không được xem là đã triển khai hoặc 
 
 **Saxena, Goebel, Simon & Eklund (2008). Damage Propagation Modeling for Aircraft Engine Run-to-Failure Simulation.** IEEE PHM 2008, 1–9. Key: `saxena2008damage`.
 
-[DOI](https://doi.org/10.1109/PHM.2008.4711414) · [PDF local](papers/R1_Saxena_2008_Damage_Propagation.pdf).
+[DOI](https://doi.org/10.1109/PHM.2008.4711414).
 
 - **Đọc trước:** Sections II, VI–VII về prognostics, competition data và performance evaluation; sau đó xem Sections III–V nếu cần giải thích mô phỏng vật lý.
 - **Giá trị:** hiểu run-to-failure, sự suy giảm cảm biến và lý do việc dự đoán hỏng quá muộn cần được đánh giá riêng.

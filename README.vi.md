@@ -24,7 +24,7 @@ Kết quả chính trên FD001:
 
 | Bước | Kết quả | Artifact |
 |---|---|---|
-| Pipeline dữ liệu | Tải raw từ NASA có kiểm tra MD5/SHA-256; kiểm tra schema, khóa, cycle liên tục; Silver/Gold Parquet và SQLite; Pandas và PySpark khớp tuyệt đối; ở scale 10×, Spark local nhanh hơn Pandas khoảng 3,4 lần | `outputs/acquisition/`, `outputs/etl/`, `outputs/benchmarks/` |
+| Pipeline dữ liệu | Tải raw từ NASA có kiểm tra MD5/SHA-256; kiểm tra schema, khóa, cycle liên tục; Silver/Gold Parquet và SQLite; Pandas và PySpark khớp tuyệt đối; ở scale 100×, Spark local tính nhanh hơn Pandas khoảng 5,5 lần (không gồm ghi file) | `outputs/acquisition/`, `outputs/etl/`, `outputs/benchmarks/` |
 | Lưu trữ phân tán | Hadoop 3.4.3 một node trong Docker: raw FD001 trên HDFS; job MapReduce trên YARN và job Spark đọc HDFS đều tái tạo đúng bảng Gold (200/200 động cơ); `fsck` HEALTHY | `outputs/hdfs/`, `infra/hadoop/` |
 | Khử nhiễu | EWMA span 10 giảm khoảng 86% dao động ngắn hạn của 14 sensor có xu hướng | `outputs/degradation/` |
 | Cửa sổ thời gian | Window 30 cycle, 21 sensor × 6 thống kê = 126 đặc trưng | `outputs/features/` |
@@ -760,4 +760,4 @@ khi dọn lịch sử để công khai, và mục này là bản ghi về việc
 
 ## Giấy phép và sử dụng dữ liệu
 
-Mã nguồn của repository chưa được chọn giấy phép. Bản ghi NASA Open Data hiện không nêu rõ giấy phép của bộ dữ liệu, vì vậy việc phân phối lại và tái sử dụng phải giữ nguyên ghi nhận nguồn và cần được đối chiếu với bản ghi nguồn trước khi công bố. Giấy phép của repository và chính sách phân phối dữ liệu cuối cùng sẽ được bổ sung trước khi repository được giới thiệu như một phần mềm có thể tái sử dụng.
+Mã nguồn được phát hành theo [giấy phép MIT](LICENSE). Dữ liệu NASA C-MAPSS trong `data/raw/` là tài liệu của NASA; bản ghi NASA Open Data không nêu giấy phép của bộ dữ liệu, nên dữ liệu được phân phối lại nguyên vẹn kèm ghi nhận nguồn (xem [`data/raw/DATA_SOURCE.md`](data/raw/DATA_SOURCE.md)) và không thuộc phạm vi giấy phép MIT. Các bài báo của bên thứ ba không được đưa vào repository; tải theo liên kết trong [`references/papers/README.md`](references/papers/README.md).

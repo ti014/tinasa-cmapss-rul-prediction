@@ -483,7 +483,7 @@ Chọn kernel Python của `.venv` và **Restart Kernel and Run All Cells**.
 Notebook chỉ phân tích train, tạo 12 bảng CSV và 14 hình PNG trong thư mục mới
 `outputs/notebook01/run-*/`. Các kiểm tra tái lập EDA trước đây áp dụng cho bộ
 artifact gốc ở `outputs/eda/`, được giữ nguyên để đối chiếu.
-Bộ kiểm thử ngày 09/10/2026 đạt **453 passed, 1 skipped**; kiểm thử
+Bộ kiểm thử ngày 21/10/2026 đạt **492 passed, 1 skipped**; kiểm thử
 TCN được bỏ qua vì môi trường chưa có `torch`. Lần chạy ngày 29/09/2026 đạt
 **198 tests** và được giữ như bằng chứng lịch sử cho các nhánh dữ liệu, thống kê,
 ETL, đặc trưng, modeling, PCA--ARIMA, đánh giá liên subset, dashboard và tái lập

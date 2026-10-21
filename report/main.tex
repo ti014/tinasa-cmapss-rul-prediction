@@ -82,30 +82,33 @@ Ngành: & Khoa học máy tính
 \pagenumbering{roman}
 \section*{Tóm tắt}
 \addcontentsline{toc}{section}{Tóm tắt}
-Báo cáo thực hiện Đề tài 8 (Phân tích dữ liệu IoT và bảo trì dự đoán) trên bộ dữ
-liệu cảm biến mô phỏng NASA C-MAPSS, phân tích chính trên subset FD001 gồm 100 động
-cơ turbofan chạy đến khi hỏng. Mục tiêu là phát hiện dấu hiệu bất thường và dự đoán
-thời điểm cần bảo trì, kèm biểu đồ xu hướng cảnh báo sớm.
+Mỗi sáng, người phụ trách bảo trì một đội động cơ phải trả lời một câu hỏi: hôm nay
+đưa động cơ nào vào xưởng? Đưa vào quá sớm thì tốn chi phí, quá muộn thì động cơ có
+thể hỏng giữa chừng. Báo cáo thực hiện Đề tài 8 (Phân tích dữ liệu IoT và bảo trì dự
+đoán) để trả lời câu hỏi đó từ dữ liệu cảm biến mô phỏng NASA C-MAPSS, subset FD001:
+100 động cơ train chạy đến khi hỏng để học, và 100 động cơ test bị cắt giữa chừng,
+có đáp án riêng để chấm.
 
-Dữ liệu được kiểm tra schema, khóa và tính liên tục của cycle, rồi lưu theo các lớp
-Bronze, Silver và Gold bằng Parquet và SQLite. ETL và rolling features được viết
-bằng cả Pandas và PySpark; hai implementation khớp hoàn toàn trên cùng input, và ở
-scale $10\times$, Spark local nhanh hơn Pandas khoảng 3,4 lần. Nhánh RUL tổng
-hợp sensor gốc theo window 30 cycle thành 126 đặc trưng. Nhánh phân tích tín hiệu
-khử nhiễu bằng EWMA span 10, giảm khoảng 86\% dao động ngắn hạn mà vẫn giữ xu hướng
-suy giảm, để tạo Health Index và phát hiện bất thường.
+Câu trả lời được xây qua hai đèn cảnh báo. Đèn vàng báo động cơ bắt đầu yếu: sau khi
+lọc nhiễu bằng EWMA (giảm khoảng 86\% dao động ngắn hạn), 21 sensor được gộp thành
+một Health Index; khi chỉ số tụt quá 3 độ lệch chuẩn so với 30 cycle đầu của chính
+động cơ đó, đèn vàng bật. Trên train, đèn vàng bật ở cả 100/100 động cơ, trung vị
+121 cycle trước khi hỏng. Đèn đỏ báo động cơ còn khoảng 30 cycle: mô hình
+HistGradientBoosting đọc 30 cycle gần nhất của sensor gốc và ước lượng thời gian sử
+dụng còn lại (RUL). Trên test, mỗi động cơ một dự đoán tại cycle cuối, sai lệch trung
+bình (MAE) là 15,35 cycle, và chỉ 4,38 cycle khi động cơ sắp hỏng.
 
-Kết quả gồm hai mức cảnh báo. Mức một dùng Health Index từ tín hiệu đã khử nhiễu:
-khi chỉ số giảm quá 3 độ lệch chuẩn so với 30 cycle đầu, cả 100/100 động cơ train
-được phát hiện bất thường trước khi hỏng, trung vị 121 cycle. Mức hai dùng
-HistGradientBoosting dự đoán RUL, đạt MAE 15,35 cycle (khoảng tin cậy 95\%:
-12,73--18,09) và RMSE 20,54 cycle trên 100 động cơ test. Với ngưỡng RUL dự đoán
-$\leq30$ cycle, không động cơ nào bị bỏ lỡ và lead time trung vị là 30 cycle,
-nhưng 49\% cảnh báo bị trễ, tập trung ở động cơ suy giảm nhanh; ngưỡng 40 giảm tỷ
-lệ trễ xuống 6\%. Ghép hai mức cảnh báo, báo cáo lập lịch dự đoán thời điểm cần bảo
-trì cho 100 động cơ test: 21 động cơ được báo cần bảo trì ngay và cả 21 đều đúng;
-4 động cơ còn lại thật sự cần bảo trì được xếp đến hạn sau 1--8 cycle. Kết quả chỉ áp dụng cho dữ liệu mô phỏng; dữ liệu không có chi phí
-bảo trì nên báo cáo không đề xuất lịch bảo trì tối ưu.
+Mô hình có xu hướng lạc quan: 74/100 động cơ test được đoán sống lâu hơn thực tế. Khi
+theo dõi suốt đời 100 động cơ train bằng dự đoán chéo (OOF), chỉ 51\% được báo kịp
+thời ở ngưỡng 30; ngưỡng 40 nâng tỷ lệ này lên 94\%. Ghép hai đèn, báo cáo lập lịch
+bảo trì cho 100 động cơ test: 21 động cơ được báo vào xưởng ngay và cả 21 đều đúng; 4
+động cơ khác cũng cần bảo trì nhưng được xếp đến hạn sau 1--8 cycle.
+
+Dữ liệu được tổ chức theo ba lớp Bronze, Silver và Gold, xử lý bằng cả Pandas và
+PySpark với kết quả khớp tuyệt đối, và chạy trên HDFS, MapReduce một node.
+%%BENCH_ABSTRACT%%
+Kết quả chỉ áp dụng cho dữ liệu mô phỏng; dữ liệu không có chi phí bảo trì nên báo cáo
+không đề xuất lịch bảo trì tối ưu.
 
 \noindent\textbf{Từ khóa:} bảo trì dự đoán; IoT; NASA C-MAPSS; khử nhiễu EWMA;
 phát hiện bất thường; time window; RUL; cảnh báo sớm; lịch bảo trì; PySpark.

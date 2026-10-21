@@ -1,6 +1,9 @@
 \section{Phương pháp}
 \label{sec:method}
 
+\noindent\textit{Mục này trả lời: hai đèn cảnh báo và lịch bảo trì được tính ra
+sao. Đèn vàng đến từ Health Index, đèn đỏ đến từ mô hình RUL, lịch ghép cả hai.}
+
 \subsection{Tổng quan pipeline}
 Hình~\ref{fig:pipeline} tách nhánh A (dự đoán RUL) và nhánh B (theo dõi tín hiệu). Rolling features
 đọc trực tiếp Silver observations; Gold \texttt{engine\_summary} là bảng tổng hợp
@@ -71,7 +74,10 @@ Health Index (HI, chỉ số sức khỏe) gộp 21 sensor thành một chuỗi:
 hướng đã được làm mượt bằng EWMA, 7 sensor gần như không đổi giữ nguyên. Các
 sensor được chuẩn hóa bằng StandardScaler (trừ trung bình, chia độ lệch chuẩn),
 chiếu lên thành phần chính thứ nhất của PCA, đổi dấu để HI giảm theo cycle, rồi
-chuẩn hóa về trung bình 0, độ lệch chuẩn 1. Bước này không dùng nhãn RUL.
+chuẩn hóa về trung bình 0, độ lệch chuẩn 1. Bước này không dùng nhãn RUL. EWMA chỉ
+dùng quá khứ, còn StandardScaler và PCA được học trên train rồi giữ cố định khi áp
+dụng cho test; vì vậy kết quả bất thường trên train là phân tích trên chính tập đã
+học phép biến đổi.
 
 \subsection{Phát hiện dấu hiệu bất thường}
 \label{sec:anomaly-method}

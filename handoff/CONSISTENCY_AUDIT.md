@@ -136,4 +136,4 @@ Kế hoạch và câu chuyện chung: `handoff/STORYLINE.md`. Mốc đọc thử
 | 2 | Lời nói theo 14 slide, câu trả lời big data bằng số đo | Claude | Xong | `11e1a43` |
 | 3 | Report: tóm tắt theo câu chuyện, ghi rõ train/test, sửa chỗ khó hiểu, mục 6.7 big data, giữ 40 trang | Claude | Xong | `9e93512`, `375079f` |
 | 4 | Notebook ghi rõ phục vụ cảnh nào; thứ tự trang dashboard đã khớp | Claude | Xong | xem commit cùng dòng này |
-| 5 | Đọc thử như giám khảo lần 2, so với lần 1 | Codex | Đang làm | |
+| 5 | Đọc thử như giám khảo lần 2 (agent Claude độc lập vì Codex quá tải): điểm khó hiểu 28 → 24, thuật ngữ chưa giải thích khoảng 48 → 31; phát hiện ngưỡng 40 bị bỏ rơi, động cơ 90 là ca sót, lời nói lệch slide, big data chưa nói quyết định có đổi không | Claude | Xong, đã sửa | ``af04d3d``, ``2cf9d9a``, xem commit cùng dòng này |

@@ -328,7 +328,7 @@ không phải một phép join nhiều-nhiều giữa hai bảng: mỗi dòng đ
 đúng một cycle cuối của window.
 
 Việc join đúng khóa quan trọng vì một lỗi nhỏ có thể làm nhân số dòng. Với train
-engine 1 (163 dòng đặc trưng, 192 dòng nhãn), join chỉ theo \texttt{engine\_id}
+động cơ 1 (163 dòng đặc trưng, 192 dòng nhãn), join chỉ theo \texttt{engine\_id}
 ghép mọi dòng đặc trưng với mọi dòng nhãn, tạo ra $163\times192=31.296$ dòng; join
 theo đủ ba khóa trả về đúng 163 dòng. SQLite chưa khai báo ràng buộc khóa ngoại
 (foreign key); thay vào đó, code kiểm tra quan hệ một-một bằng tham số

@@ -62,7 +62,7 @@ observations = observations.sort_values(["split", "engine_id", "cycle"])
 observations = train.unionByName(test).orderBy("split", "engine_id", "cycle")
 \end{lstlisting}
 
-Cột \texttt{split} là cần thiết vì train engine 1 và test engine 1 là hai động cơ
+Cột \texttt{split} là cần thiết vì động cơ train 1 và test engine 1 là hai động cơ
 khác nhau nhưng có cùng \texttt{(engine\_id, cycle)}. Sau khi nối, cặp
 \texttt{(engine\_id, cycle)} bị trùng, còn bộ ba \textbf{\texttt{(split, engine\_id,
 cycle)}} là duy nhất; đây là khóa của mọi bảng ở cấp cycle. File nhãn
@@ -89,7 +89,7 @@ Silver & \filepath{observations.parquet} & 1 cycle của 1 động cơ & $33.727
 Silver & \filepath{train_targets.parquet} & 1 cycle train & $20.631\times4$ & split, engine\_id, cycle \\
 Gold & \filepath{engine_summary.parquet} & 1 động cơ & $200\times5$ & split, engine\_id \\
 Gold & \filepath{etl.sqlite} & hai bảng trên & -- & có index theo khóa \\
-Gold & \filepath{rolling_features.parquet} & 1 window 30 cycles & $27.927\times129$ & split, engine\_id, cycle \\
+Gold & \filepath{rolling_features.parquet} & 1 window 30 cycle & $27.927\times129$ & split, engine\_id, cycle \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -132,16 +132,16 @@ def map_lines(lines, source):
         fields = line.split()
         yield "%s:%04d\t%d" % (split, int(fields[0]), int(fields[1]))
 
-# reduce: keys arrive sorted, so all cycles of one engine are consecutive
+# reduce: keys arrive sorted, so all cycle of one engine are consecutive
 def reduce_lines(lines):
-    current, cycles = None, []
+    current, cycle = None, []
     for line in lines:
         key, value = line.rstrip("\n").split("\t")
         if key != current and current is not None:
             yield summary(current, cycles)       # split, engine, n_cycles, min, max
-            cycles = []
+            cycle = []
         current = key
-        cycles.append(int(value))
+        cycle.append(int(value))
     if current is not None:
         yield summary(current, cycles)
 \end{lstlisting}
@@ -186,7 +186,7 @@ Dữ liệu được lấy ra theo ba cách, tùy loại bảng.
 
 \paragraph{SQL trên SQLite.} Các bảng tổng hợp được truy vấn trực tiếp bằng SQL.
 Truy vấn trong Mã nguồn~\ref{lst:sqlite} join bảng tổng hợp với bảng nhãn để lấy
-số cycle và RUL của train engine 1 tại ba thời điểm.
+số cycle và RUL của động cơ train 1 tại ba thời điểm.
 
 \begin{lstlisting}[language=SparkSQL,caption={Truy vấn SQLite \texttt{outputs/etl/gold/etl.sqlite}.},label={lst:sqlite}]
 SELECT s.engine_id, s.n_cycles, t.cycle, t.rul
@@ -202,20 +202,20 @@ WHERE s.split = 'train' AND s.engine_id = 1 AND t.cycle IN (1, 100, 192);
 
 \paragraph{Lọc và chọn cột trên Parquet bằng Pandas.} Dữ liệu sensor chi tiết được
 đọc từ Parquet, rồi lọc dòng (selection) và chọn cột (projection). Ví dụ, lấy
-\texttt{sensor\_11} của train engine 1 trong cycles 71--100 trả về 30 dòng với giá
+\texttt{sensor\_11} của động cơ train 1 trong cycle 71--100 trả về 30 dòng với giá
 trị trung bình 47,395.
 
 \paragraph{Spark SQL trên Parquet.} Cùng file Parquet có thể được đăng ký thành
 bảng tạm và truy vấn bằng Spark SQL, gồm cả \texttt{GROUP BY}, \texttt{JOIN} và
 window function. Mã nguồn~\ref{lst:sparksql} dùng window function để tính trung
-bình 30 cycles gần nhất của \texttt{sensor\_11}, chính là phép tính của đặc trưng
+bình 30 cycle gần nhất của \texttt{sensor\_11}, chính là phép tính của đặc trưng
 \texttt{sensor\_11\_\_mean}. Kết quả tại cycle 100 (47,395) trùng với kết quả
 Pandas. Phép lọc cycle phải nằm ở truy vấn ngoài: nếu đặt cùng cấp với window
 function, window chỉ nhìn thấy các dòng đã lọc và cho kết quả sai. Spark chạy ở
 chế độ local trên một máy; đây là minh họa cách truy vấn, không phải phép đo hiệu
 năng phân tán.
 
-\begin{lstlisting}[language=SparkSQL,caption={Spark SQL trên \texttt{observations.parquet}: trung bình 30 cycles gần nhất.},label={lst:sparksql}]
+\begin{lstlisting}[language=SparkSQL,caption={Spark SQL trên \texttt{observations.parquet}: trung bình 30 cycle gần nhất.},label={lst:sparksql}]
 SELECT engine_id, cycle, n_rows_in_window, ROUND(mean30, 3) AS mean30
 FROM (
   SELECT engine_id, cycle,
@@ -250,7 +250,7 @@ thước bảng sau mỗi bước.
 2 & 2 bảng $\rightarrow$ observations & UNION theo dòng, sắp theo khóa & $33.727\times27$ \\
 3 & observations train $\rightarrow$ train\_targets & GROUP BY động cơ, lấy $\max(\text{cycle})$; $\text{rul}=\max(\text{cycle})-\text{cycle}$ & $20.631\times4$ \\
 4 & observations $\rightarrow$ engine\_summary & GROUP BY \texttt{(split, engine\_id)}: đếm cycle, lấy cycle đầu và cuối & $200\times5$ \\
-5 & observations $\rightarrow$ rolling\_features & Với mỗi động cơ: window 30 cycles, 6 thống kê $\times$ 21 sensor & $27.927\times129$ \\
+5 & observations $\rightarrow$ rolling\_features & Với mỗi động cơ: window 30 cycle, 6 thống kê $\times$ 21 sensor & $27.927\times129$ \\
 6 & đặc trưng train + nhãn $\rightarrow$ X, y & JOIN theo đủ 3 khóa, bắt buộc một-một & X: $17.731\times126$ \\
 \bottomrule
 \end{tabularx}
@@ -284,19 +284,19 @@ dataset = train_features.merge(train_targets, on=["split", "engine_id", "cycle"]
                                how="left", validate="one_to_one")
 \end{lstlisting}
 
-Hình~\ref{fig:window-example} minh họa bước 5 và bước 3 trên train engine 1. Tại
-cycle 100, window gồm cycles 71--100; sáu thống kê của \texttt{sensor\_11} là giá
+Hình~\ref{fig:window-example} minh họa bước 5 và bước 3 trên động cơ train 1. Tại
+cycle 100, window gồm cycle 71--100; sáu thống kê của \texttt{sensor\_11} là giá
 trị cuối 47,64, trung bình 47,395, độ lệch chuẩn 0,105, min 47,22, max 47,64 và độ
 dốc 0,0037 mỗi cycle. Nhãn của dòng này là $192-100=92$. Giá trị ở cycle 101 trở đi
-không tham gia tính toán. Vì 29 cycle đầu chưa đủ window, một động cơ dài $T$ cycles
+không tham gia tính toán. Vì 29 cycle đầu chưa đủ window, một động cơ dài $T$ cycle
 tạo ra $T-29$ dòng đặc trưng; với FD001 là $20.631-100\times29=17.731$ dòng train và
 $13.096-100\times29=10.196$ dòng test.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\linewidth]{../outputs/diagnostics/figures/window_example.png}
-\caption[Minh họa window và nhãn]{Minh họa bước tạo đặc trưng và nhãn trên train engine 1. (a) Sáu thống kê
-của \texttt{sensor\_11} trên window cycles 71--100 tạo thành phần đặc trưng của dòng
+\caption[Minh họa window và nhãn]{Minh họa bước tạo đặc trưng và nhãn trên động cơ train 1. (a) Sáu thống kê
+của \texttt{sensor\_11} trên window cycle 71--100 tạo thành phần đặc trưng của dòng
 cycle 100. (b) Nhãn RUL giảm tuyến tính về 0 tại cycle hỏng.}
 \label{fig:window-example}
 \end{figure}
@@ -335,7 +335,7 @@ Nhóm cột & Số cột & Vai trò & Trong X? \\\midrule
 \texttt{split}, \texttt{engine\_id}, \texttt{cycle} & 3 & Khóa: join, chia fold theo động cơ & Không \\
 \texttt{setting\_1}--\texttt{setting\_3} & 3 & Điều kiện vận hành & Không \\
 \texttt{sensor\_1}--\texttt{sensor\_21} & 21 & Tín hiệu gốc, dùng qua đặc trưng window; bản EWMA dùng cho Health Index & Không \\
-\texttt{sensor\_k\_\_\{last, mean, std, min, max, slope\}} & 126 & Đặc trưng window 30 cycles & Có \\
+\texttt{sensor\_k\_\_\{last, mean, std, min, max, slope\}} & 126 & Đặc trưng window 30 cycle & Có \\
 \texttt{rul} & 1 & Nhãn (biến mục tiêu $y$) & Là $y$ \\
 \bottomrule
 \end{tabularx}
@@ -350,7 +350,7 @@ với cross-validation.
 \label{sec:dp-relations}
 Hình~\ref{fig:data-relations} và Bảng~\ref{tab:data-relations} mô tả quan hệ giữa
 các bảng. Quan hệ duy nhất có bậc nhiều là giữa động cơ và quan sát (\textbf{1:N}):
-một động cơ có từ 31 đến 362 cycles. Các quan hệ còn lại là \textbf{1:1} hoặc
+một động cơ có từ 31 đến 362 cycle. Các quan hệ còn lại là \textbf{1:1} hoặc
 \textbf{1:0..1}. Mỗi quan hệ được kiểm tra trực tiếp trên dữ liệu trong notebook
 walkthrough; kết quả ghi ở cột cuối của bảng.
 
@@ -370,7 +370,7 @@ quan hệ; ``0..1'' nghĩa là một dòng bên kia có thể có hoặc không 
 \begin{tabularx}{\linewidth}{L{4.4cm} c X}
 \toprule
 Hai bảng & Quan hệ & Kiểm tra trên dữ liệu \\\midrule
-engine\_summary -- observations & 1 : N & Mỗi động cơ có 31--362 cycles \\
+engine\_summary -- observations & 1 : N & Mỗi động cơ có 31--362 cycle \\
 observations (train) -- train\_targets & 1 : 1 & 20.631 / 20.631 dòng khớp khóa \\
 observations -- rolling\_features & 1 : 0..1 & 27.927 dòng có đặc trưng; 5.800 dòng (29 cycle đầu $\times$ 200 động cơ) không có \\
 rolling\_features (train) -- train\_targets & 1 : 1 & 17.731 dòng sau join, đúng bằng số dòng đặc trưng train \\

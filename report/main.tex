@@ -92,18 +92,18 @@ Bronze, Silver và Gold bằng Parquet và SQLite. ETL và rolling features đư
 bằng cả Pandas và PySpark; hai implementation khớp hoàn toàn trên cùng input, và ở
 scale $10\times$, Spark local nhanh hơn Pandas khoảng 3,4 lần. Tín hiệu được khử
 nhiễu bằng EWMA span 10, giảm khoảng 86\% dao động ngắn hạn mà vẫn giữ xu hướng suy
-giảm, rồi tổng hợp theo window 30 cycles thành 126 đặc trưng.
+giảm, rồi tổng hợp theo window 30 cycle thành 126 đặc trưng.
 
 Kết quả gồm hai mức cảnh báo. Mức một dùng Health Index từ tín hiệu đã khử nhiễu:
-khi chỉ số giảm quá 3 độ lệch chuẩn so với 30 cycles đầu, cả 100/100 động cơ train
-được phát hiện bất thường trước khi hỏng, trung vị 121 cycles. Mức hai dùng
-HistGradientBoosting dự đoán RUL, đạt MAE 15,35 cycles (khoảng tin cậy 95\%:
-12,73--18,09) và RMSE 20,54 cycles trên 100 động cơ test. Với ngưỡng RUL dự đoán
-$\leq30$ cycles, không động cơ nào bị bỏ lỡ và lead time trung vị là 30 cycles,
+khi chỉ số giảm quá 3 độ lệch chuẩn so với 30 cycle đầu, cả 100/100 động cơ train
+được phát hiện bất thường trước khi hỏng, trung vị 121 cycle. Mức hai dùng
+HistGradientBoosting dự đoán RUL, đạt MAE 15,35 cycle (khoảng tin cậy 95\%:
+12,73--18,09) và RMSE 20,54 cycle trên 100 động cơ test. Với ngưỡng RUL dự đoán
+$\leq30$ cycle, không động cơ nào bị bỏ lỡ và lead time trung vị là 30 cycle,
 nhưng 49\% cảnh báo bị trễ, tập trung ở động cơ suy giảm nhanh; ngưỡng 40 giảm tỷ
 lệ trễ xuống 6\%. Ghép hai mức cảnh báo, báo cáo lập lịch dự đoán thời điểm cần bảo
 trì cho 100 động cơ test: 21 động cơ được báo cần bảo trì ngay và cả 21 đều đúng;
-4 động cơ còn lại thật sự cần bảo trì được xếp đến hạn sau 1--8 cycles. Kết quả chỉ áp dụng cho dữ liệu mô phỏng; dữ liệu không có chi phí
+4 động cơ còn lại thật sự cần bảo trì được xếp đến hạn sau 1--8 cycle. Kết quả chỉ áp dụng cho dữ liệu mô phỏng; dữ liệu không có chi phí
 bảo trì nên báo cáo không đề xuất lịch bảo trì tối ưu.
 
 \noindent\textbf{Từ khóa:} bảo trì dự đoán; IoT; NASA C-MAPSS; khử nhiễu EWMA;

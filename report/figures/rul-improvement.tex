@@ -6,7 +6,7 @@
 \begin{tikzpicture}[diagram]
 
 \node[dataBox] (baseline) at (0,0) {\cell{1. Chốt mốc so sánh}{Lưu kết quả mô hình gốc (baseline)}{Cùng động cơ, cùng cycle, ngưỡng cảnh báo 30}};
-\node[processBox] (window) at (0,-2.9) {\cell{2. Thử độ dài cửa sổ}{10, 20 hoặc 30 cycles}{Chọn bằng CV 3 phần bên trong}};
+\node[processBox] (window) at (0,-2.9) {\cell{2. Thử độ dài cửa sổ}{10, 20 hoặc 30 cycle}{Chọn bằng CV 3 phần bên trong}};
 \node[processBox] (tune) at (0,-5.0) {\cell{3. Chỉnh tham số mô hình}{24 cấu hình HGB}{Chọn bằng CV 3 phần bên trong}};
 \node[processBox] (weight) at (0,-7.1) {\cell{4. Tăng trọng số mẫu sắp hỏng}{3 phương án}{Giữ cân bằng giữa các động cơ}};
 \node[processBox] (compare) at (0,-10.0) {\cell{5. Chấm trên phần validation}{Gộp 5 phần, so với baseline}{Bootstrap 10.000 lần theo động cơ}};

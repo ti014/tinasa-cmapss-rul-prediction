@@ -27,11 +27,11 @@ Kết quả chính trên FD001:
 | Pipeline dữ liệu | Tải raw từ NASA có kiểm tra MD5/SHA-256; kiểm tra schema, khóa, cycle liên tục; Silver/Gold Parquet và SQLite; Pandas và PySpark khớp tuyệt đối; ở scale 10×, Spark local nhanh hơn Pandas khoảng 3,4 lần | `outputs/acquisition/`, `outputs/etl/`, `outputs/benchmarks/` |
 | Lưu trữ phân tán | Hadoop 3.4.3 một node trong Docker: raw FD001 trên HDFS; job MapReduce trên YARN và job Spark đọc HDFS đều tái tạo đúng bảng Gold (200/200 động cơ); `fsck` HEALTHY | `outputs/hdfs/`, `infra/hadoop/` |
 | Khử nhiễu | EWMA span 10 giảm khoảng 86% dao động ngắn hạn của 14 sensor có xu hướng | `outputs/degradation/` |
-| Cửa sổ thời gian | Window 30 cycles, 21 sensor × 6 thống kê = 126 đặc trưng | `outputs/features/` |
-| Xu hướng và bất thường | 15/21 sensor thay đổi có ý nghĩa giữa đầu và cuối vòng đời; Health Index phát hiện bất thường ở 100/100 động cơ train, trung vị 121 cycles trước khi hỏng | `outputs/statistics/`, `outputs/degradation/` |
-| Dự đoán RUL | HistGradientBoosting, GroupKFold 5 fold theo động cơ; MAE test 15,35 cycles (CI 95%: 12,73--18,09), RMSE 20,54 | `outputs/modeling/` |
-| Cảnh báo sớm | Ngưỡng RUL dự đoán ≤ 30: không bỏ lỡ, lead time trung vị 30 cycles, 49% trễ; ngưỡng 40 giảm trễ còn 6% | `outputs/modeling/tables/` |
-| Lịch bảo trì | 21 động cơ test được báo cần bảo trì ngay và cả 21 đều đúng; 4 động cơ còn lại thật sự cần bảo trì được xếp đến hạn sau 1--8 cycles | `outputs/maintenance/` |
+| Cửa sổ thời gian | Window 30 cycle, 21 sensor × 6 thống kê = 126 đặc trưng | `outputs/features/` |
+| Xu hướng và bất thường | 15/21 sensor thay đổi có ý nghĩa giữa đầu và cuối vòng đời; Health Index phát hiện bất thường ở 100/100 động cơ train, trung vị 121 cycle trước khi hỏng | `outputs/statistics/`, `outputs/degradation/` |
+| Dự đoán RUL | HistGradientBoosting, GroupKFold 5 fold theo động cơ; MAE test 15,35 cycle (CI 95%: 12,73--18,09), RMSE 20,54 | `outputs/modeling/` |
+| Cảnh báo sớm | Ngưỡng RUL dự đoán ≤ 30: không bỏ lỡ, lead time trung vị 30 cycle, 49% trễ; ngưỡng 40 giảm trễ còn 6% | `outputs/modeling/tables/` |
+| Lịch bảo trì | 21 động cơ test được báo cần bảo trì ngay và cả 21 đều đúng; 4 động cơ còn lại thật sự cần bảo trì được xếp đến hạn sau 1--8 cycle | `outputs/maintenance/` |
 
 Sản phẩm bàn giao:
 
@@ -129,7 +129,7 @@ trình huấn luyện RUL lên cụm nhiều máy.
 Mỗi dòng được định danh bởi `(split, engine_id, cycle)`. Một engine có nhiều
 cycle; tại mỗi cycle có 3 operational settings, 21 sensors và nhãn RUL của
 train. Với engine kết thúc ở cycle 200, observation tại cycle 170 có RUL = 30.
-Rolling window tại cycle 170 lấy cycles 141--170 của cùng engine để tạo 126
+Rolling window tại cycle 170 lấy cycle 141--170 của cùng engine để tạo 126
 features (6 phép tóm tắt cho mỗi 21 sensor).
 
 | Bước | Công cụ | Đầu ra chính |
@@ -137,7 +137,7 @@ features (6 phép tóm tắt cho mỗi 21 sensor).
 | Đọc và kiểm tra | Python, Pandas | Schema, khóa, cycle continuity, train RUL |
 | ETL | Pandas, PySpark, Parquet, SQLite | Silver/Gold và parity |
 | Minh họa HDFS | Docker, Hadoop, YARN, MapReduce, Spark | Bronze/Silver trên HDFS và bảng Gold theo động cơ khớp trên một node |
-| Features | Pandas, NumPy; PySpark đối chiếu | Silver observations → window 30 cycles, 126 features |
+| Features | Pandas, NumPy; PySpark đối chiếu | Silver observations → window 30 cycle, 126 features |
 | Phân tích tín hiệu | Pandas, scikit-learn | EWMA, Health Index fit trên train và trạng thái bất thường; tách khỏi features RUL |
 | Modeling | scikit-learn | GroupKFold và HistGradientBoostingRegressor |
 | Đánh giá | scikit-learn, SciPy | MAE, RMSE, NASA score, bootstrap CI |
@@ -201,7 +201,7 @@ thang gốc; rolling feature pipeline không fit một scaler chung.
 
 ### Xây dựng đặc trưng
 
-Biểu diễn đặc trưng đã triển khai sử dụng trailing window dài 30 cycles. Artifact giữ đủ 21 sensors để chưa thực hiện feature selection trên toàn bộ train. Với mỗi sensor, các đặc trưng đã tạo gồm:
+Biểu diễn đặc trưng đã triển khai sử dụng trailing window dài 30 cycle. Artifact giữ đủ 21 sensors để chưa thực hiện feature selection trên toàn bộ train. Với mỗi sensor, các đặc trưng đã tạo gồm:
 
 - Giá trị gần nhất.
 - Trung bình và sample standard deviation (`ddof=1`).
@@ -210,8 +210,8 @@ Biểu diễn đặc trưng đã triển khai sử dụng trailing window dài 3
 
 Window dùng giá trị sensor gốc trong Silver, không dùng tín hiệu EWMA hoặc Health
 Index. Mỗi window chỉ chứa dữ liệu của một động cơ và không sử dụng quan sát tương
-lai. Engine dưới 30 cycles bị từ chối thay vì padding, impute hoặc rút ngắn window.
-29 cycles đầu mỗi động cơ chưa đủ window, nên còn 17.731 dòng features train và
+lai. Engine dưới 30 cycle bị từ chối thay vì padding, impute hoặc rút ngắn window.
+29 cycle đầu mỗi động cơ chưa đủ window, nên còn 17.731 dòng features train và
 10.196 dòng test; chỉ 100 dòng test ở cycle cuối được dùng để dự đoán cuối.
 
 ### Dự đoán RUL
@@ -237,10 +237,10 @@ cậy bootstrap được lưu trong `outputs/modeling/tables/final_metrics.json`
   bước làm mượt trên, fit chỉ trên train và không dùng nhãn RUL. Khi lập lịch bảo
   trì, test dùng lại scaler, PCA, chiều dấu và hệ số chuẩn hóa đã fit; không fit
   lại tham số trên test.
-- **Bất thường (cảnh báo mức 1):** so mỗi động cơ với 30 cycles đầu của chính nó;
-  báo khi `z <= -3` giữ đủ 5 cycles liên tiếp sau đoạn tham chiếu đó. Động cơ có
-  dưới 35 cycles quan sát được ghi là chưa đủ dữ liệu đánh giá bất thường.
-- **Cảnh báo mức 2:** RUL dự đoán ≤ 30 cycles.
+- **Bất thường (cảnh báo mức 1):** so mỗi động cơ với 30 cycle đầu của chính nó;
+  báo khi `z <= -3` giữ đủ 5 cycle liên tiếp sau đoạn tham chiếu đó. Động cơ có
+  dưới 35 cycle quan sát được ghi là chưa đủ dữ liệu đánh giá bất thường.
+- **Cảnh báo mức 2:** RUL dự đoán ≤ 30 cycle.
 - **Lịch bảo trì:** cycle cần bảo trì = cycle hiện tại + max(⌊RUL dự đoán − 30⌋, 0). Trạng thái
   ưu tiên: cần bảo trì (mức 2), theo dõi tăng cường (mức 1), bình thường. Nhãn test
   chỉ được đọc sau khi lịch đã ghi ra file.
@@ -255,7 +255,7 @@ và đang ở mức theo dõi tăng cường vì Health Index đã báo bất th
 ### Đánh giá FD002--FD004
 
 Kho raw đã có đủ FD001--FD004. Ma trận bổ sung dùng cùng pipeline với window 10
-cycles vì test FD004 có engine ngắn nhất 19 cycles; kết quả này không thay thế
+cycle vì test FD004 có engine ngắn nhất 19 cycle; kết quả này không thay thế
 metric chính FD001 dùng window 30. Evaluation nội bộ đạt MAE 21,9258 trên FD001,
 22,3556 trên FD002, 28,3255 trên FD003 và 27,2218 trên FD004. Khi giữ nguyên
 model fit trên FD001 rồi transfer sang dataset khác, MAE là 60,3215 trên FD002,
@@ -311,7 +311,7 @@ Spark local và xuất Arrow qua driver; thời gian đó không đo writer trê
 
 ## Quy trình đánh giá
 
-- Dùng trailing window 30 cycles.
+- Dùng trailing window 30 cycle.
 - Chia các fold validation theo động cơ, không chia ngẫu nhiên các dòng hoặc window chồng lấn.
 - Chỉ fit scaler của Ridge và các mô hình RUL ứng viên trên training fold.
 - Giữ đủ 126 features RUL; mô hình chính không có feature selection hoặc PCA.
@@ -333,7 +333,7 @@ Báo cáo không đặt trước một mức điểm mục tiêu. Kết quả â
 - Trạng thái đội động cơ test và kế hoạch bảo trì: [`fleet_status.png`](outputs/maintenance/figures/fleet_status.png),
   [`maintenance_planning.png`](outputs/maintenance/figures/maintenance_planning.png).
 
-Ngưỡng 30 cycles chưa phải ngưỡng bảo trì tối ưu vì FD001 không có chi phí bảo
+Ngưỡng 30 cycle chưa phải ngưỡng bảo trì tối ưu vì FD001 không có chi phí bảo
 trì, downtime hoặc intervention records.
 
 ## Cấu trúc repository
@@ -517,7 +517,7 @@ không phải lựa chọn đặc trưng (feature selection).
 [File URL mở bằng trình duyệt](assets/diagrams/fd001-statistics.drawio-url.txt) ·
 [Phương pháp, bảng, validation và giới hạn](outputs/statistics/README.md)
 
-Ví dụ: trung vị tuổi thọ của 100 động cơ train là 199 cycles. Sáu sensor hằng
+Ví dụ: trung vị tuổi thọ của 100 động cơ train là 199 cycle. Sáu sensor hằng
 trên toàn train; `sensor_6` biến thiên trên toàn tập nhưng hằng trong 38 động cơ.
 Hai hình suy luận dùng panel riêng cho từng sensor vì các sensor khác thang đo.
 `sensor_6` cho thấy p-value nhỏ không đồng nghĩa với thay đổi lớn theo đơn vị
@@ -653,7 +653,7 @@ Sau khi muốn tái tạo ma trận within-subset và transfer, chạy:
 
 Lệnh tạo bốn lần đánh giá nội bộ và ba lần đánh giá chuyển subset từ FD001. Xem [artifact
 ma trận](outputs/cross_dataset/README.md). Kết quả dùng window 10 vì FD004 có
-test engine ngắn nhất 19 cycles; không thay thế kết quả FD001 window 30.
+test engine ngắn nhất 19 cycle; không thay thế kết quả FD001 window 30.
 
 ### Chạy phân tích PCA--ARIMA
 
@@ -735,7 +735,7 @@ query string, ví dụ `http://localhost:8501/?page=Lịch bảo trì`.
 | Khử nhiễu | `outputs/degradation` | Tín hiệu gốc và sau EWMA theo động cơ/sensor, mức giảm dao động |
 | Xu hướng & bất thường | `outputs/degradation`, `outputs/statistics` | Health Index, ngưỡng 3σ, lúc phát hiện, phân phối thời gian báo trước |
 | Dự đoán RUL | `outputs/modeling` | So sánh model trong CV, một test engine, quỹ đạo OOF |
-| Cảnh báo sớm | `outputs/modeling/tables` | Ngưỡng 30 cycles, phân loại thời điểm, quỹ đạo cảnh báo |
+| Cảnh báo sớm | `outputs/modeling/tables` | Ngưỡng 30 cycle, phân loại thời điểm, quỹ đạo cảnh báo |
 | Lịch bảo trì | `outputs/maintenance` | Bảng 100 động cơ, kế hoạch, chi tiết từng động cơ, kiểm tra bằng nhãn test |
 | Thử nghiệm mở rộng | `outputs/cross_dataset`, `outputs/experiments`, `outputs/timeseries` | Ba tab: chuyển miền, cải thiện, ARIMA |
 | Provenance | `run_info.json` | Schema và isolation contract của lần chạy |
@@ -820,7 +820,7 @@ với dữ liệu và quy trình tái lập tương ứng.
 
 - FD001 là dữ liệu mô phỏng với một điều kiện vận hành và một dạng lỗi.
 - Cycle vận hành không tương đương với giờ hoặc thời gian lịch.
-- Lịch bảo trì dùng ngưỡng 30 cycles cố định, chưa hiệu chuẩn theo chi phí; mức theo dõi tăng cường còn rộng (41/59 động cơ có RUL thật trên 60).
+- Lịch bảo trì dùng ngưỡng 30 cycle cố định, chưa hiệu chuẩn theo chi phí; mức theo dõi tăng cường còn rộng (41/59 động cơ có RUL thật trên 60).
 - Phát hiện bất thường chưa đo được tỷ lệ báo động giả vì không có nhãn thời điểm bắt đầu suy giảm.
 - Thử nghiệm khả năng mở rộng không tạo thêm bằng chứng khoa học độc lập.
 - Hiệu quả trên FD001 không chứng minh khả năng khái quát hóa ngoài thực tế.

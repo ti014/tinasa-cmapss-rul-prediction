@@ -19,7 +19,7 @@ mỗi động cơ được theo dõi đến khi hỏng, nên nhãn RUL được 
 trong đó $T_i$ là cycle cuối cùng (cycle hỏng) của động cơ $i$ và $y_{i,t}$ là
 RUL tại cycle $t$. Ví dụ, một động cơ hỏng ở cycle 200 thì tại cycle 170 có
 RUL bằng 30. Công thức~\eqref{eq:rul} không cắt ngưỡng RUL, nên nhãn ở đầu vòng
-đời có thể lên tới hàng trăm cycles.
+đời có thể lên tới hàng trăm cycle.
 
 Tập test khác ở chỗ chuỗi bị cắt tại một thời điểm trước khi hỏng. NASA cung
 cấp riêng RUL thật tại cycle cuối được quan sát của mỗi động cơ test. Vì vậy,
@@ -207,7 +207,7 @@ trên toàn bộ train, còn \texttt{sensor\_6} chỉ có hai giá trị và kh�
 \texttt{engine\_id}, \texttt{cycle} & 2 & 0 & 20.631 dòng của 100 động cơ; khóa không trùng, cycle liên tục.\\
 Operational settings & 3 & 0 & \texttt{setting\_1} có 158 giá trị, \texttt{setting\_2} có 13 giá trị, \texttt{setting\_3} hằng bằng 100.\\
 Sensor & 21 & 0 & Sáu sensor hằng; \texttt{sensor\_6} hằng trong 38 động cơ.\\
-Nhãn \texttt{rul} & 1 & 0 & Từ 0 đến 361 cycles; trung vị theo dòng là 103 cycles.\\\bottomrule
+Nhãn \texttt{rul} & 1 & 0 & Từ 0 đến 361 cycle; trung vị theo dòng là 103 cycle.\\\bottomrule
 \end{tabularx}
 \end{table}
 
@@ -272,7 +272,7 @@ cách báo cáo xử lý.
 \begin{tabularx}{\linewidth}{L{3.6cm}L{4.4cm}X}
 \toprule Đặc điểm & Ảnh hưởng & Cách xử lý\\\midrule
 Không thiếu giá trị, khóa hợp lệ & Không cần điền dữ liệu. & Giữ nguyên dữ liệu; dừng nếu kiểm tra thất bại.\\
-Độ dài chuỗi khác nhau (128--362 cycles) & Động cơ sống lâu đóng góp nhiều window hơn. & Chia fold, gán trọng số và tính metric theo động cơ.\\
+Độ dài chuỗi khác nhau (128--362 cycle) & Động cơ sống lâu đóng góp nhiều window hơn. & Chia fold, gán trọng số và tính metric theo động cơ.\\
 Sensor hằng hoặc ít biến thiên & Tương quan và kiểm định không xác định. & Giữ trong bảng, đánh dấu ``không xác định''.\\
 Nhiễu cảm biến & Dao động giữa hai cycle liền kề che khuất xu hướng suy giảm. & Làm mượt bằng EWMA chỉ dùng quá khứ (Mục~\ref{sec:denoise-method}); không xóa hoặc thay giá trị gốc.\\
 Không có đơn vị vật lý & Không diễn giải được ý nghĩa vật lý của sensor. & Dùng tên ẩn danh; chênh lệch hiểu theo đơn vị gốc.\\

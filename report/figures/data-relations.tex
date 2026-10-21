@@ -20,12 +20,12 @@ card/.style={font=\sffamily\small\bfseries,text=processStroke,inner sep=1pt}]
 \node[entity] (summary) at (\colA,\rowA) {\entity{Tổng hợp theo động cơ}{\texttt{engine\_summary} · 200 dòng}{Khóa: split, engine\_id}{Số cycle, cycle đầu, cycle cuối}};
 \node[entity] (obs) at (\colB,\rowA) {\entity{Quan sát theo từng cycle}{\texttt{observations} · 33.727 dòng}{Khóa: split, engine\_id, cycle}{3 setting và 21 sensor}};
 \node[entity] (targets) at (\colC,\rowA) {\entity{Nhãn RUL của train}{\texttt{train\_targets} · 20.631 dòng}{Khóa: split, engine\_id, cycle}{RUL = cycle cuối $-$ cycle hiện tại}};
-\node[entity] (features) at (\colB,\rowB) {\entity{Đặc trưng cửa sổ 30 cycles}{\texttt{rolling\_features} · 27.927 dòng}{Khóa: split, engine\_id, cycle}{126 đặc trưng, bắt đầu từ cycle 30}};
+\node[entity] (features) at (\colB,\rowB) {\entity{Đặc trưng cửa sổ 30 cycle}{\texttt{rolling\_features} · 27.927 dòng}{Khóa: split, engine\_id, cycle}{126 đặc trưng, bắt đầu từ cycle 30}};
 \node[entity] (labels) at (\colA,\rowC) {\entity{Đáp án RUL của test}{\texttt{RUL\_FD001.txt} · 100 dòng}{engine\_id = số thứ tự dòng}{RUL thật của động cơ test}};
 \node[entity] (pred) at (\colB,\rowC) {\entity{Dự đoán cho test}{\texttt{final\_predictions} · 100 dòng}{Khóa: split, engine\_id}{Cycle cuối và RUL dự đoán}};
 
 % Cạnh ngang: chú thích phía trên, số dòng tương ứng ở hai đầu phía dưới.
-\draw[rel] (summary) -- node[note,above] {1 động cơ có\\31--362 cycles} (obs);
+\draw[rel] (summary) -- node[note,above] {1 động cơ có\\31--362 cycle} (obs);
 \node[card,below right=2pt and 4pt] at (summary.east) {1};
 \node[card,below left=2pt and 4pt] at (obs.west) {N};
 

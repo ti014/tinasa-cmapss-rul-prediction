@@ -9,10 +9,10 @@ nào. Các số liệu chẩn đoán được tính lại từ artifact đã có
 \subsection{Sai số của mô hình RUL đến từ đâu}
 \label{sec:disc-error}
 Bảng~\ref{tab:oof-by-rul} và Hình~\ref{fig:oof-pred-true} chia sai số OOF của HGB
-trên train theo RUL thật. Mô hình dự đoán tốt ở cuối vòng đời: MAE chỉ 3,67 cycles
+trên train theo RUL thật. Mô hình dự đoán tốt ở cuối vòng đời: MAE chỉ 3,67 cycle
 khi RUL thật không quá 30. Sai số tăng dần khi RUL lớn hơn, và thay đổi hẳn tính
-chất khi RUL vượt khoảng 150 cycles. Ở vùng này, dự đoán trung bình gần như không
-đổi, quanh 145--147 cycles, bất kể RUL thật là 160 hay 300.
+chất khi RUL vượt khoảng 150 cycle. Ở vùng này, dự đoán trung bình gần như không
+đổi, quanh 145--147 cycle, bất kể RUL thật là 160 hay 300.
 
 \begin{table}[H]
 \centering
@@ -22,7 +22,7 @@ Sai số có dấu bằng dự đoán trừ thật.}
 \small
 \begin{tabular}{lrrrr}
 \toprule
-RUL thật (cycles) & Số window & MAE & Sai số có dấu trung bình & Dự đoán trung bình\\\midrule
+RUL thật (cycle) & Số window & MAE & Sai số có dấu trung bình & Dự đoán trung bình\\\midrule
 0--30 & 3.100 & 3,67 & $+1{,}47$ & 16,47\\
 31--60 & 3.000 & 10,68 & $+5{,}59$ & 51,09\\
 61--90 & 3.000 & 20,85 & $+14{,}52$ & 90,02\\
@@ -38,7 +38,7 @@ RUL thật (cycles) & Số window & MAE & Sai số có dấu trung bình & Dự 
 \centering
 \includegraphics[width=0.56\linewidth]{../outputs/diagnostics/figures/oof_pred_vs_true.png}
 \caption[RUL OOF so với thật]{RUL dự đoán OOF so với RUL thật. Đường cam là dự đoán trung bình theo
-từng khoảng 10 cycles: bám sát đường chéo khi RUL nhỏ, nhưng dừng quanh 145 cycles
+từng khoảng 10 cycle: bám sát đường chéo khi RUL nhỏ, nhưng dừng quanh 145 cycle
 khi RUL thật lớn hơn khoảng 150.}
 \label{fig:oof-pred-true}
 \end{figure}
@@ -46,16 +46,16 @@ khi RUL thật lớn hơn khoảng 150.}
 Hiện tượng này khớp với kết quả phát hiện bất thường ở Mục~\ref{sec:res-trend}:
 Health Index đi ngang trong khoảng 39\% đầu vòng đời (trung vị) rồi mới giảm rõ.
 Ở giai đoạn vận hành ổn định, sensor chủ yếu phản ánh dao động đo và khác biệt ban đầu giữa
-các động cơ, nên khó phân biệt một động cơ còn 160 cycles với một động cơ còn 300
-cycles. Điều này cũng giải thích vì sao MAE cross-validation (20,21 cycles) cao hơn
-MAE test (15,35 cycles): 29,5\% số window train có RUL thật trên 125, trong khi RUL
+các động cơ, nên khó phân biệt một động cơ còn 160 cycle với một động cơ còn 300
+cycle. Điều này cũng giải thích vì sao MAE cross-validation (20,21 cycle) cao hơn
+MAE test (15,35 cycle): 29,5\% số window train có RUL thật trên 125, trong khi RUL
 thật của test chỉ từ 7 đến 145.
 
 Ở vùng giữa (RUL 61--125), mô hình có xu hướng dự đoán cao hơn thật khoảng 13--15
-cycles. Mười sai số lớn nhất trên test rơi vào các động cơ có RUL thật 77--137 và
+cycle. Mười sai số lớn nhất trên test rơi vào các động cơ có RUL thật 77--137 và
 đều là dự đoán cao, nên sai số test lặp lại đúng xu hướng đã thấy trên OOF. So với
-nghiên cứu liên quan, Li và cộng sự báo cáo RMSE 12,61 cycles trên FD001 với CNN khi
-cắt nhãn ở 125 cycles~\cite{li2018rul}; RMSE của báo cáo là 20,54 cycles. Hai kết
+nghiên cứu liên quan, Li và cộng sự báo cáo RMSE 12,61 cycle trên FD001 với CNN khi
+cắt nhãn ở 125 cycle~\cite{li2018rul}; RMSE của báo cáo là 20,54 cycle. Hai kết
 quả không so trực tiếp được vì khác số sensor, cách chuẩn hóa và mô hình, nhưng
 khoảng cách gợi ý rằng sáu thống kê trên window có thể làm mất một phần thông tin về
 hình dạng chuỗi.
@@ -63,8 +63,8 @@ hình dạng chuỗi.
 \subsection{Vì sao gần một nửa cảnh báo bị trễ}
 \label{sec:disc-warning}
 Cảnh báo trễ không phân bố đều giữa các động cơ. 49 động cơ bị cảnh báo sau
-ngưỡng có tuổi thọ trung bình 182,8 cycles, trong khi 44 động cơ được cảnh báo
-trước ngưỡng có tuổi thọ trung bình 229,1 cycles. Hệ số tương quan giữa tuổi thọ
+ngưỡng có tuổi thọ trung bình 182,8 cycle, trong khi 44 động cơ được cảnh báo
+trước ngưỡng có tuổi thọ trung bình 229,1 cycle. Hệ số tương quan giữa tuổi thọ
 và độ lệch cảnh báo $\delta_i$ là $-0{,}56$: động cơ càng ngắn đời thì càng bị
 cảnh báo muộn (Hình~\ref{fig:warning-lifetime}).
 
@@ -86,7 +86,7 @@ tỷ lệ trễ từ 49\% xuống 6\% với chi phí báo sớm nhiều hơn kho
 downtime, mà dữ liệu không có.
 
 Hai mức cảnh báo bổ sung cho nhau. Mức một (bất thường trên Health Index) không cần
-nhãn và báo rất sớm, trung vị 121 cycles trước khi hỏng, nhưng chỉ cho biết động cơ
+nhãn và báo rất sớm, trung vị 121 cycle trước khi hỏng, nhưng chỉ cho biết động cơ
 đã lệch khỏi trạng thái vận hành ổn định, không ước lượng thời gian còn lại. Mức hai (RUL dự đoán $\leq30$) cho
 con số cụ thể để lên kế hoạch, nhưng có thể trễ với động cơ suy giảm nhanh. Trong
 vận hành, mức một có thể dùng để tăng tần suất theo dõi, còn mức hai dùng để đặt
@@ -99,9 +99,9 @@ mức hai không có trường hợp dương tính giả, còn mức một rộn
 Với FD002 và FD004, chỉ khoảng 14--15\% giá trị test của 9 sensor có xu hướng nằm
 trong khoảng min--max của train FD001, do sáu điều kiện vận hành đẩy mức sensor ra
 xa điều kiện duy nhất của FD001. Mô hình cây không ngoại suy được, nên dự đoán gần
-như hằng số (độ lệch chuẩn khoảng 13 cycles) và cao hơn RUL thật khoảng 50 cycles.
+như hằng số (độ lệch chuẩn khoảng 13 cycle) và cao hơn RUL thật khoảng 50 cycle.
 Với FD003, giá trị sensor nằm trong miền FD001 (94,7\%) nhưng dự đoán vẫn cao hơn
-thật trung bình 45 cycles; một giả thuyết hợp lý là dạng lỗi fan của FD003 làm sensor
+thật trung bình 45 cycle; một giả thuyết hợp lý là dạng lỗi fan của FD003 làm sensor
 thay đổi khác với suy giảm HPC mà mô hình đã học. Hai kiểu thất bại này cần hai cách
 xử lý: chuẩn hóa theo điều kiện vận hành cho FD002/FD004, và dữ liệu có dạng lỗi
 tương ứng cho FD003.
@@ -141,7 +141,7 @@ Value & Phát hiện bất thường, dự đoán RUL và hai mức cảnh báo 
 \paragraph{Về dữ liệu.} C-MAPSS là dữ liệu mô phỏng; động cơ thực tế có lỗi cảm
 biến, dữ liệu thiếu và điều kiện vận hành phức tạp hơn. Dữ liệu không có chi phí
 bảo trì hay cách quy đổi cycle sang thời gian thực, nên lịch bảo trì ở
-Mục~\ref{sec:res-maintenance} chỉ tính bằng cycle với biên an toàn cố định 30 cycles,
+Mục~\ref{sec:res-maintenance} chỉ tính bằng cycle với biên an toàn cố định 30 cycle,
 chưa tối ưu theo chi phí.
 
 \paragraph{Về đánh giá.} Metric test chỉ đo tại một điểm cắt mỗi động cơ. Kết quả
@@ -169,7 +169,7 @@ cơ suy giảm nhanh; (3) chạy pipeline Spark trên cụm nhiều máy với d
 
 \paragraph{Khó khăn 1: dữ liệu không có nhãn bất thường.} Đề tài yêu cầu phát hiện
 dấu hiệu bất thường, nhưng C-MAPSS không ghi lúc nào động cơ bắt đầu hỏng. Cách xử
-lý là so sánh mỗi động cơ với chính nó trong 30 cycles đầu, giai đoạn vận hành ổn
+lý là so sánh mỗi động cơ với chính nó trong 30 cycle đầu, giai đoạn vận hành ổn
 định, thay vì dựa vào nhãn. Bài học: khi thiếu nhãn, cần xác định rõ trạng thái tham
 chiếu trước khi đo độ lệch, đồng thời nêu rõ đại lượng chưa kiểm chứng được (ở đây là
 tỷ lệ dương tính giả).

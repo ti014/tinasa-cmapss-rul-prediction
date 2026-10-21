@@ -22,7 +22,7 @@ ETL tạo lớp Silver gồm 33.727 quan sát train/test và 20.631 nhãn train,
 Gold gồm 200 dòng engine summary trong Parquet và SQLite. Mọi bảng được đọc lại
 sau khi ghi để kiểm tra. Trên cả ba bảng, kết quả PySpark khớp hoàn toàn với
 Pandas về schema, khóa, số dòng và giá trị; sai khác tuyệt đối lớn nhất bằng 0.
-Rolling features 30 cycles tính bằng Spark cũng khớp toàn bộ 27.927 dòng của
+Rolling features 30 cycle tính bằng Spark cũng khớp toàn bộ 27.927 dòng của
 Pandas với tolerance $10^{-7}$. Trên cụm Hadoop một node, MapReduce và Spark đọc
 dữ liệu từ HDFS cũng cho bảng engine summary khớp tuyệt đối với Pandas (200/200
 động cơ, Mục~\ref{sec:dp-hdfs}).
@@ -49,9 +49,9 @@ driver; dữ liệu nhân bản chỉ phục vụ đo hiệu năng, không dùng
 quả cho thấy lý do giữ implementation Spark khi dữ liệu tăng, nhưng chưa phải bằng
 chứng trên cluster nhiều máy.
 
-Tuổi thọ của 100 động cơ train dao động từ 128 đến 362 cycles
-(Bảng~\ref{tab:lifetime}). Phân phối lệch phải: trung bình 206,31 cycles lớn hơn
-trung vị 199 cycles do một số động cơ sống rất lâu.
+Tuổi thọ của 100 động cơ train dao động từ 128 đến 362 cycle
+(Bảng~\ref{tab:lifetime}). Phân phối lệch phải: trung bình 206,31 cycle lớn hơn
+trung vị 199 cycle do một số động cơ sống rất lâu.
 
 \begin{table}[H]
 \centering
@@ -108,10 +108,10 @@ hiện tại và quá khứ.}
 \label{fig:denoise}
 \end{figure}
 
-Bước tổng hợp theo cửa sổ thời gian dùng window trượt 30 cycles
+Bước tổng hợp theo cửa sổ thời gian dùng window trượt 30 cycle
 (Mục~\ref{sec:features}): mỗi dòng đặc trưng gồm sáu thống kê (giá trị cuối,
 trung bình, độ lệch chuẩn, min, max, độ dốc) của 21 sensor, tổng cộng 126 đặc
-trưng. Trung bình và độ dốc trên 30 cycles cũng làm dịu dao động, nên mô hình RUL
+trưng. Trung bình và độ dốc trên 30 cycle cũng làm dịu dao động, nên mô hình RUL
 dùng trực tiếp tín hiệu gốc qua window thay vì tín hiệu EWMA; tín hiệu EWMA được
 dùng cho Health Index và phát hiện bất thường ở mục kế tiếp.
 
@@ -132,8 +132,8 @@ gần đến hỏng.
 \label{fig:corr}
 \end{figure}
 
-Để kiểm tra xu hướng này bằng thống kê, trung bình 30 cycles cuối được so với 30
-cycles đầu của cùng động cơ. Với 15 sensor không hằng, kiểm định Wilcoxon bác bỏ
+Để kiểm tra xu hướng này bằng thống kê, trung bình 30 cycle cuối được so với 30
+cycle đầu của cùng động cơ. Với 15 sensor không hằng, kiểm định Wilcoxon bác bỏ
 giả thuyết không sau hiệu chỉnh Benjamini--Hochberg. Năm sensor 4, 7, 11, 12 và 20
 thay đổi cùng hướng ở cả 100/100 động cơ (Bảng~\ref{tab:sensor-inference}), tức xu
 hướng suy giảm rất nhất quán trong FD001. Ngược lại, \texttt{sensor\_6} có ý nghĩa
@@ -143,7 +143,7 @@ nghĩa với thay đổi lớn.
 \begin{table}[H]
 \centering
 \caption[Thay đổi sensor]{Thay đổi tiêu biểu giữa đầu và cuối vòng đời; chênh lệch bằng trung
-bình 30 cycles cuối trừ trung bình 30 cycles đầu, theo đơn vị gốc của sensor.}
+bình 30 cycle cuối trừ trung bình 30 cycle đầu, theo đơn vị gốc của sensor.}
 \label{tab:sensor-inference}
 \begin{tabular}{lrrl}
 \toprule Sensor & Trung bình chênh lệch & Khoảng tin cậy 95\% & Hướng\\\midrule
@@ -158,40 +158,40 @@ bình 30 cycles cuối trừ trung bình 30 cycles đầu, theo đơn vị gốc
 \paragraph{Phát hiện dấu hiệu bất thường.} Health Index gộp 21 sensor (14 sensor có xu hướng đã khử nhiễu,
 7 sensor gần như không đổi giữ nguyên) thành một chỉ số duy nhất, bằng 0 ở mức trung bình và giảm dần khi động cơ suy
 giảm. Với quy tắc cố định trước (Mục~\ref{sec:anomaly-method}: giảm quá 3 độ lệch
-chuẩn so với 30 cycles đầu, kéo dài 5 cycles liên tiếp), cả 100/100 động cơ train
+chuẩn so với 30 cycle đầu, kéo dài 5 cycle liên tiếp), cả 100/100 động cơ train
 đều được phát hiện bất thường trước khi hỏng. Số cycle từ lúc phát hiện đến khi
 hỏng có trung vị 121, tứ phân vị 101--149,25, nhỏ nhất 67 và lớn nhất 289. Tính
 theo tuổi thọ, dấu hiệu bất thường xuất hiện ở khoảng 39\% vòng đời (trung vị).
 
 Hình~\ref{fig:anomaly} (trái) minh họa động cơ train 1: Health Index đi ngang
 quanh mức tham chiếu, cắt ngưỡng $3\sigma$ và được báo bất thường ở cycle 84, tức
-108 cycles trước khi hỏng ở cycle 192. Hình bên phải là phân phối thời gian báo
+108 cycle trước khi hỏng ở cycle 192. Hình bên phải là phân phối thời gian báo
 trước trên 100 động cơ.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\linewidth]{../outputs/degradation/figures/anomaly_health_index.png}
 \caption[Phát hiện bất thường bằng Health Index]{Trái: Health Index của động cơ train 1 từ tín hiệu gốc (xám) và
-sau khử nhiễu (xanh); vùng xám là đoạn tham chiếu 30 cycles, đường đứng cam là lúc
+sau khử nhiễu (xanh); vùng xám là đoạn tham chiếu 30 cycle, đường đứng cam là lúc
 phát hiện bất thường. Phải: số cycle từ lúc phát hiện đến khi hỏng của 100 động
 cơ train.}
 \label{fig:anomaly}
 \end{figure}
 
 Khử nhiễu ảnh hưởng trực tiếp đến kết quả này. Cùng quy tắc nhưng áp dụng trên
-Health Index từ tín hiệu gốc thì trung vị thời gian báo trước chỉ còn 72,5 cycles
+Health Index từ tín hiệu gốc thì trung vị thời gian báo trước chỉ còn 72,5 cycle
 (phát hiện ở khoảng 62\% vòng đời), vì độ lệch chuẩn tham chiếu lớn hơn khiến
 ngưỡng $3\sigma$ nằm xa hơn. Báo sớm hơn không tự động là tốt hơn: vì mọi động cơ
 train đều đi đến hỏng và không có nhãn thời điểm bắt đầu suy giảm, báo cáo không
 đo được tỷ lệ báo động giả. Đây là tín hiệu cảnh báo mức một, cho biết động cơ đã
 lệch khỏi trạng thái vận hành ổn định; ước lượng RUL cụ thể đến từ mô hình ở mục kế tiếp.
 
-\paragraph{Độ nhạy của quy tắc phát hiện.} Ngưỡng $3\sigma$ và 5 cycles liên tiếp
+\paragraph{Độ nhạy của quy tắc phát hiện.} Ngưỡng $3\sigma$ và 5 cycle liên tiếp
 được cố định trước khi chạy, nên cần kiểm tra kết luận có phụ thuộc mạnh vào lựa
 chọn này hay không. Bảng~\ref{tab:anomaly-sensitivity} chạy lại quy tắc trên Health
 Index sau khử nhiễu với lưới $z \in \{2, 3, 4\}$ và số cycle liên tiếp
 $k \in \{3, 5, 10\}$. Do không có nhãn bất thường, cột ``Báo sớm'' được dùng làm chỉ
-báo gián tiếp cho độ nhạy quá mức: số động cơ bị báo ngay trong 10 cycles sau đoạn
+báo gián tiếp cho độ nhạy quá mức: số động cơ bị báo ngay trong 10 cycle sau đoạn
 tham chiếu (cycle 31--40), khi suy giảm thực sự khó có thể đã bắt đầu.
 
 \begin{table}[H]
@@ -218,29 +218,29 @@ $z$ & $k$ & Phát hiện & Lead time nhỏ nhất & Lead time trung vị & Tỷ 
 \end{table}
 
 Kết luận chính không phụ thuộc vào lựa chọn tham số: cả 9 cấu hình đều phát hiện
-đủ 100 động cơ, và lead time nhỏ nhất luôn từ 50 cycles trở lên, lớn hơn ngưỡng
-cảnh báo mức hai (30 cycles). Điều thay đổi là sự đánh đổi giữa thời gian báo trước
+đủ 100 động cơ, và lead time nhỏ nhất luôn từ 50 cycle trở lên, lớn hơn ngưỡng
+cảnh báo mức hai (30 cycle). Điều thay đổi là sự đánh đổi giữa thời gian báo trước
 và rủi ro báo quá sớm. Cấu hình $z = 2$, $k = 3$ cho trung vị lead time lớn nhất
-(136 cycles) nhưng báo 17 động cơ ngay sau đoạn tham chiếu. Cấu hình $z = 4$,
-$k = 10$ không có trường hợp báo sớm nhưng mất khoảng 22 cycles báo trước so với
+(136 cycle) nhưng báo 17 động cơ ngay sau đoạn tham chiếu. Cấu hình $z = 4$,
+$k = 10$ không có trường hợp báo sớm nhưng mất khoảng 22 cycle báo trước so với
 cấu hình được chọn. Cấu hình $z = 3$, $k = 5$ nằm giữa hai cực: một trường hợp báo
-sớm và trung vị 121 cycles. Cùng lưới tham số áp dụng trên Health Index từ tín hiệu
+sớm và trung vị 121 cycle. Cùng lưới tham số áp dụng trên Health Index từ tín hiệu
 gốc cũng phát hiện đủ 100 động cơ ở mọi cấu hình nhưng trung vị lead time chỉ từ 52
-đến 103 cycles (bảng đầy đủ trong
+đến 103 cycle (bảng đầy đủ trong
 \texttt{outputs/degradation/tables/anomaly\_sensitivity.csv}).
 
 \subsection{Dự đoán RUL}
 \label{sec:res-model}
 Bảng~\ref{tab:model-cv} so sánh ba mô hình bằng GroupKFold 5 fold theo động cơ.
 HistGradientBoosting với 126 đặc trưng window (HGB) có MAE thấp nhất, 20,21
-cycles, thấp hơn Ridge 3,78 cycles và thấp hơn median baseline hơn một nửa. Độ
+cycle, thấp hơn Ridge 3,78 cycle và thấp hơn median baseline hơn một nửa. Độ
 lệch chuẩn MAE giữa các fold của HGB và Ridge đều dưới 1 cycle, nhỏ hơn khoảng
 cách giữa hai mô hình, nên HGB được chọn làm mô hình chính.
 
 \begin{table}[H]
 \centering
 \caption[So sánh mô hình GroupKFold]{Kết quả GroupKFold 5 fold trên 17.731 window train. MAE và RMSE là
-trung bình giữa 5 fold, tính bằng cycles.}
+trung bình giữa 5 fold, tính bằng cycle.}
 \label{tab:model-cv}
 \begin{tabular}{lrrr}
 \toprule Mô hình & MAE theo động cơ & Độ lệch chuẩn MAE & RMSE\\\midrule
@@ -250,12 +250,12 @@ HGB (chọn) & 20,2143 & 0,9821 & 33,5479\\\bottomrule
 \end{tabular}
 \end{table}
 
-Sau khi huấn luyện lại trên toàn bộ train, HGB đạt MAE 15,35 cycles trên 100 động
+Sau khi huấn luyện lại trên toàn bộ train, HGB đạt MAE 15,35 cycle trên 100 động
 cơ test (Bảng~\ref{tab:final-model-metrics}). Nhãn test chỉ được đọc sau khi 100 dự
 đoán đã được ghi ra file. MAE test thấp hơn MAE cross-validation vì hai con số đo
 trên các tập điểm khác nhau: cross-validation tính trên mọi window, gồm cả đầu đời
 có RUL lớn và khó dự đoán; test chỉ có một điểm ở cuối mỗi chuỗi bị cắt, với RUL
-thật từ 7 đến 145 cycles.
+thật từ 7 đến 145 cycle.
 
 \begin{table}[H]
 \centering
@@ -264,8 +264,8 @@ cậy bootstrap 95\% lấy mẫu lại động cơ 10.000 lần.}
 \label{tab:final-model-metrics}
 \begin{tabular}{lrl}
 \toprule Metric & Giá trị & Khoảng tin cậy 95\%\\\midrule
-MAE (cycles) & 15,3490 & [12,7286; 18,0866]\\
-RMSE (cycles) & 20,5413 & [17,3442; 23,5850]\\
+MAE (cycle) & 15,3490 & [12,7286; 18,0866]\\
+RMSE (cycle) & 20,5413 & [17,3442; 23,5850]\\
 NASA score & 1.513,2577 & [743,4999; 2.476,2743]\\\bottomrule
 \end{tabular}
 \end{table}
@@ -279,11 +279,11 @@ NASA score & 1.513,2577 & [743,4999; 2.476,2743]\\\bottomrule
 
 \label{sec:res-errors}
 Sai số phụ thuộc rõ vào RUL thật (Hình~\ref{fig:final-residuals}): MAE là 4,38
-cycles với 25 động cơ test có RUL thật từ 0 đến 30, 8,77 cycles với nhóm 31--60,
-và khoảng 21,3--21,5 cycles với các nhóm trên 60. Mô hình dự đoán tốt khi động cơ
+cycle với 25 động cơ test có RUL thật từ 0 đến 30, 8,77 cycle với nhóm 31--60,
+và khoảng 21,3--21,5 cycle với các nhóm trên 60. Mô hình dự đoán tốt khi động cơ
 đã gần hỏng, tức đúng vùng quan trọng cho cảnh báo, và kém hơn ở giai đoạn đầu vòng
 đời. Mô hình có xu hướng dự đoán cao: 74/100 dự đoán cao hơn RUL thật; mười sai số
-lớn nhất đều là dự đoán cao (lệch 37,6--57,5 cycles, ví dụ động cơ 23 có RUL thật
+lớn nhất đều là dự đoán cao (lệch 37,6--57,5 cycle, ví dụ động cơ 23 có RUL thật
 113 nhưng được dự đoán 170,5) và chiếm khoảng 75,5\% tổng NASA score.
 
 \begin{figure}[H]
@@ -295,12 +295,12 @@ lớn nhất đều là dự đoán cao (lệch 37,6--57,5 cycles, ví dụ đ�
 
 \subsection{Cảnh báo sớm}
 \label{sec:res-warning}
-Cảnh báo mức hai được phát khi RUL dự đoán $\leq30$ cycles, trên dự đoán OOF của
+Cảnh báo mức hai được phát khi RUL dự đoán $\leq30$ cycle, trên dự đoán OOF của
 HGB. Cả 100 động cơ train đều được cảnh báo ít nhất một lần và không động cơ nào bị
 bỏ lỡ. Về thời điểm, 44 động cơ được cảnh báo trước khi RUL thật chạm 30, 7 động
 cơ đúng lúc và 49 động cơ cảnh báo trễ (nhưng vẫn trước khi hỏng). Lead time, tức
-số cycle từ cảnh báo đầu tiên đến khi hỏng, có trung vị 30 cycles
-(Bảng~\ref{tab:lead-time}); trường hợp trễ nhất chỉ còn 19 cycles.
+số cycle từ cảnh báo đầu tiên đến khi hỏng, có trung vị 30 cycle
+(Bảng~\ref{tab:lead-time}); trường hợp trễ nhất chỉ còn 19 cycle.
 
 \begin{table}[H]
 \centering
@@ -313,7 +313,7 @@ số cycle từ cảnh báo đầu tiên đến khi hỏng, có trung vị 30 cy
 \end{table}
 
 Vì gần một nửa cảnh báo bị trễ, Bảng~\ref{tab:warning-alignment} so sánh thêm
-ngưỡng 40 cycles trên cùng dự đoán. Ngưỡng 40 nâng tỷ lệ cảnh báo kịp thời (trước
+ngưỡng 40 cycle trên cùng dự đoán. Ngưỡng 40 nâng tỷ lệ cảnh báo kịp thời (trước
 hoặc đúng lúc RUL thật chạm 30) từ 51\% lên 94\%, đổi lại tỷ lệ thời gian báo sớm
 tăng từ 1,29\% lên 5,33\%. Đây là phân tích độ nhạy; ngưỡng 40 chưa được hiệu chuẩn
 thành chính sách bảo trì.
@@ -321,7 +321,7 @@ thành chính sách bảo trì.
 \begin{table}[H]
 \centering\small
 \caption[Độ nhạy ngưỡng cảnh báo]{Hai ngưỡng cảnh báo trên cùng dự đoán OOF của HGB, 100 động cơ train.
-Kịp thời là cảnh báo đầu tiên còn ít nhất 30 cycles trước khi hỏng; báo sớm là
+Kịp thời là cảnh báo đầu tiên còn ít nhất 30 cycle trước khi hỏng; báo sớm là
 tỷ lệ cycle bị cảnh báo khi RUL thật còn trên 30, lấy trung bình theo động cơ.}
 \label{tab:warning-alignment}
 \begin{tabular}{rrrr}
@@ -337,13 +337,13 @@ Ngưỡng & Kịp thời & Trễ/bỏ lỡ & Báo sớm (\%) \\
 Hình~\ref{fig:warning-trajectory} ghép hai mức cảnh báo trên động cơ train 1.
 Dấu hiệu bất thường xuất hiện ở cycle 84 (Mục~\ref{sec:res-trend}); RUL dự đoán
 chạm ngưỡng 30 ở cycle 162, đúng lúc RUL thật chạm 30, và động cơ hỏng ở cycle
-192. Như vậy đội vận hành có 108 cycles để theo dõi tăng cường và 30 cycles để lên
+192. Như vậy đội vận hành có 108 cycle để theo dõi tăng cường và 30 cycle để lên
 kế hoạch bảo trì.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.6\linewidth]{../outputs/modeling/figures/warning_trajectory.png}
-\caption[Quỹ đạo cảnh báo]{RUL thật, dự đoán OOF của HGB và ngưỡng 30 cycles của động cơ train 1. Đường
+\caption[Quỹ đạo cảnh báo]{RUL thật, dự đoán OOF của HGB và ngưỡng 30 cycle của động cơ train 1. Đường
 đứng màu tím là cảnh báo đầu tiên; đường đứng màu đen là cycle hỏng.}
 \label{fig:warning-trajectory}
 \end{figure}
@@ -379,20 +379,20 @@ bắt đầu báo bất thường (-- là chưa có).}
 Hình~\ref{fig:fleet-status} cho thấy tình trạng toàn đội tại điểm quan sát cuối:
 21 động cơ cần bảo trì ngay, 59 động cơ đã có dấu hiệu bất thường nhưng RUL dự đoán
 còn trên 30, và 20 động cơ bình thường. Hai động cơ (1 và 85) chỉ có 31 và 34
-cycles nên chưa đủ dữ liệu để đánh giá bất thường; cả hai có RUL dự đoán trên 130
+cycle nên chưa đủ dữ liệu để đánh giá bất thường; cả hai có RUL dự đoán trên 130
 nên được xếp bình thường.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\linewidth]{../outputs/maintenance/figures/fleet_status.png}
 \caption[Trạng thái đội động cơ test]{Trái: RUL dự đoán của 100 động cơ test, sắp tăng dần, tô màu theo trạng
-thái; đường đứt là ngưỡng bảo trì 30 cycles. Phải: số động cơ ở mỗi trạng thái.}
+thái; đường đứt là ngưỡng bảo trì 30 cycle. Phải: số động cơ ở mỗi trạng thái.}
 \label{fig:fleet-status}
 \end{figure}
 
 Hình~\ref{fig:maintenance-planning} chuyển bảng thành kế hoạch: ngoài 21 động cơ
-cần bảo trì ngay, có thêm 14 động cơ đến hạn trong 25 cycles tới và 8 động cơ trong
-khoảng 26--50 cycles. Đội bảo trì có thể dùng biểu đồ này để chuẩn bị nhân lực và
+cần bảo trì ngay, có thêm 14 động cơ đến hạn trong 25 cycle tới và 8 động cơ trong
+khoảng 26--50 cycle. Đội bảo trì có thể dùng biểu đồ này để chuẩn bị nhân lực và
 phụ tùng theo từng đợt.
 
 \begin{figure}[H]
@@ -406,10 +406,10 @@ Sau khi lịch đã được ghi ra file, nhãn test mới được dùng để 
 (Bảng~\ref{tab:maintenance-check}). Trong 25 động cơ thật sự cần bảo trì (RUL thật
 $\leq30$), 21 động cơ được báo đúng ở mức cần bảo trì, và không động cơ nào được
 báo cần bảo trì khi RUL thật còn trên 30. Bốn động cơ còn lại (18, 37, 40, 90) có
-RUL dự đoán 31--38 nên được xếp đến hạn sau 1--8 cycles; chúng vẫn nằm ở mức theo
+RUL dự đoán 31--38 nên được xếp đến hạn sau 1--8 cycle; chúng vẫn nằm ở mức theo
 dõi tăng cường nên không bị bỏ sót hoàn toàn. Cả 20 động cơ bình thường đều có RUL
 thật trên 60. Sai số tuyệt đối trung bình của số cycle còn lại đến lúc bảo trì là
-14,21 cycles.
+14,21 cycle.
 
 \begin{table}[H]
 \centering\small
@@ -431,9 +431,9 @@ nên mức này phù hợp để tăng tần suất kiểm tra, chưa phải đ�
 Ngược lại, lịch cũng có thể quá lạc quan với từng động cơ: động cơ 23 được dự đoán
 cần bảo trì ở cycle 270, trong khi RUL thật 113 cho thấy thời điểm đó vào khoảng
 cycle 213 (Mục~\ref{sec:res-errors}). Tính trên cả 100 động cơ, 12 động cơ có cycle
-bảo trì dự kiến muộn hơn thời điểm hỏng thật từ 4 đến 27 cycles (7 động cơ ở mức
+bảo trì dự kiến muộn hơn thời điểm hỏng thật từ 4 đến 27 cycle (7 động cơ ở mức
 theo dõi tăng cường, 5 động cơ ở mức bình thường). Cả 12 động cơ đều có RUL thật từ
-77 cycles trở lên, tức là lỗi này xảy ra ở các động cơ còn xa thời điểm hỏng, nơi
+77 cycle trở lên, tức là lỗi này xảy ra ở các động cơ còn xa thời điểm hỏng, nơi
 mô hình dự đoán dư RUL (Mục~\ref{sec:res-errors}). Trong vận hành, lịch được tính lại
 mỗi khi có dữ liệu mới, nên với các động cơ này lịch sẽ được cập nhật nhiều lần trước
 khi đến hạn; tuy nhiên kết quả cho thấy không nên chốt lịch bảo trì xa chỉ từ một lần
@@ -454,18 +454,18 @@ lưu trong \filepath{experiments/} và \filepath{outputs/experiments/}.
 hình siêu tham số và ba phương án tăng trọng số cho vùng RUL thấp; quy trình chọn
 trên toàn bộ train quay về đúng cấu hình gốc, nên dự đoán test không đổi. Thêm cột
 \texttt{cycle} và 42 đặc trưng lịch sử (169 đặc trưng) giảm MAE OOF từ 20,21 xuống
-17,00 cycles trên cùng các fold, nhưng làm tỷ lệ cảnh báo kịp thời ở ngưỡng 30 giảm
+17,00 cycle trên cùng các fold, nhưng làm tỷ lệ cảnh báo kịp thời ở ngưỡng 30 giảm
 từ 51\% xuống 45\% và chưa được kiểm chứng bằng một lần đánh giá độc lập, nên chưa
 thay mô hình chính. Similarity-based RUL thua HGB ở cả 3/3 fold và bị dừng.
 
-\paragraph{Chuyển sang FD002--FD004.} Với window 10 cycles, mô hình huấn luyện trên
-FD001 có MAE 47,39--60,32 cycles khi áp dụng trực tiếp lên ba subset còn lại, so với
-22,36--28,33 cycles khi mỗi subset tự huấn luyện, tức tăng 1,7--2,7 lần (Bảng~\ref{tab:cross-dataset}).
+\paragraph{Chuyển sang FD002--FD004.} Với window 10 cycle, mô hình huấn luyện trên
+FD001 có MAE 47,39--60,32 cycle khi áp dụng trực tiếp lên ba subset còn lại, so với
+22,36--28,33 cycle khi mỗi subset tự huấn luyện, tức tăng 1,7--2,7 lần (Bảng~\ref{tab:cross-dataset}).
 Nguyên nhân chính là điều kiện vận hành khác nhau (Mục~\ref{sec:disc-transfer}).
 
 \begin{table}[H]
 \centering\small
-\caption[Đánh giá chuyển miền]{MAE (cycles) khi huấn luyện nội bộ và khi chuyển mô hình FD001,
+\caption[Đánh giá chuyển miền]{MAE (cycle) khi huấn luyện nội bộ và khi chuyển mô hình FD001,
 window 10; khoảng tin cậy 95\% lấy mẫu lại động cơ 10.000 lần.}
 \label{tab:cross-dataset}
 \begin{tabular}{lll}

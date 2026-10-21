@@ -17,6 +17,21 @@ luồng dữ liệu, sơ đồ quan hệ, truy vấn SQL/Spark SQL và code trí
 [`notebooks/00_data_pipeline_walkthrough.ipynb`](../notebooks/00_data_pipeline_walkthrough.ipynb)
 và chạy lần lượt các ô.
 
+**Cập nhật notebook 00 ngày 20/10/2026:** notebook chạy từ raw, tạo và đọc lại
+Silver/Gold Parquet, SQLite, rolling features và đầu vào X/y trong
+`outputs/notebook00/run-*/`. Pandas/PySpark được chạy lại để đối chiếu cả ETL
+và rolling features. Phần Hadoop chạy job thật trong thư mục HDFS riêng
+`/cmapss/notebook00/run-*/`, cần Docker Desktop. Compose project riêng
+`cmapss-notebook00` dùng cổng NameNode 9871 và YARN 8089; các container được giữ chạy
+sau khi hoàn tất. Các đường dẫn và số liệu của artifact lịch sử trong tài liệu
+này vẫn mô tả pipeline chính đã bàn giao; notebook tạo artifact mới cho lần thực hành.
+
+Notebook 01–06 cũng dùng ví dụ cụ thể trước khi tổng hợp toàn tập và ghi kết quả
+riêng trong `outputs/notebookNN/run-*/`. Notebook 03 chạy lại CV và đánh giá RUL;
+notebook 04 fit lại Health Index/ARIMA. Notebook 05 tính lại metric và bootstrap
+từ dự đoán thí nghiệm đã lưu; notebook 06 tính lại EWMA, bất thường và lịch từ
+raw cùng RUL dự đoán baseline. Các artifact gốc tiếp tục được giữ để đối chiếu.
+
 ## Đối chiếu yêu cầu môn học
 
 Brief Đề tài 8 yêu cầu phân tích dữ liệu cảm biến, xử lý nhiều tín hiệu,

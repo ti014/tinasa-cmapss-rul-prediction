@@ -1,6 +1,9 @@
 \section{Cơ sở lý thuyết}
 \label{sec:theory}
 
+\noindent\textit{Mục này trả lời: các công cụ dùng trong bài (EWMA, Health Index,
+mô hình RUL, HDFS và Spark) hoạt động thế nào, ở mức đủ để đọc phần kết quả.}
+
 \subsection{Dự đoán RUL và các nghiên cứu liên quan}
 Prognostics là lĩnh vực nghiên cứu diễn biến suy giảm của hệ thống và thời gian
 còn lại trước khi hỏng. Saxena và cộng sự xây dựng C-MAPSS để có dữ liệu
@@ -135,8 +138,9 @@ ngưỡng nhiều cycle liên tiếp làm giảm thêm cảnh báo sinh ra từ 
 thời điểm phát hiện, nhưng không đo được tỷ lệ báo động giả nếu không có dữ liệu
 động cơ vận hành bình thường đến hết chuỗi quan sát.
 
-Chuỗi Health Index $h_t$ của từng động cơ được mô hình hóa bằng
-ARIMA$(p,d,q)$~\cite{hyndman2021fpp3}:
+ARIMA chỉ phục vụ thử nghiệm mở rộng dự báo Health Index; nó không tham gia hai đèn
+cảnh báo hay lịch bảo trì chính. Chuỗi Health Index $h_t$ của từng động cơ được mô
+hình hóa bằng ARIMA$(p,d,q)$~\cite{hyndman2021fpp3}:
 \begin{equation}
 \phi(B)(1-B)^d h_t = c + \theta(B)\varepsilon_t,
 \label{eq:arima}

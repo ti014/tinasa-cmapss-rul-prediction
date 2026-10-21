@@ -1,6 +1,11 @@
 \section{Kết quả}
 \label{sec:results}
 
+\noindent\textit{Mục này trả lời câu hỏi buổi sáng ``hôm nay đưa động cơ nào vào
+xưởng?'' theo từng bước, từ dữ liệu sạch đến lịch bảo trì. Mỗi con số ghi rõ tập:
+train (dự đoán OOF theo dõi suốt đời 100 động cơ) hoặc test (mỗi động cơ một dự
+đoán tại cycle cuối).}
+
 Kết quả được trình bày theo đúng thứ tự của pipeline: dữ liệu được thu thập,
 kiểm tra và lưu trữ (Mục~\ref{sec:res-etl}); tín hiệu được khử nhiễu và tổng hợp
 theo window (Mục~\ref{sec:res-denoise}); xu hướng suy giảm và dấu hiệu bất thường
@@ -193,7 +198,8 @@ chọn này hay không. Bảng~\ref{tab:anomaly-sensitivity} chạy lại quy t�
 Index sau khử nhiễu với lưới $z \in \{2, 3, 4\}$ và số cycle liên tiếp
 $k \in \{3, 5, 10\}$. Do không có nhãn bất thường, cột ``Báo sớm'' được dùng làm chỉ
 báo gián tiếp cho độ nhạy quá mức: số động cơ bị báo ngay trong 10 cycle sau đoạn
-tham chiếu (cycle 31--40), khi suy giảm thực sự khó có thể đã bắt đầu.
+tham chiếu (cycle 31--40). Con số này chỉ đo mức báo ngay sau đoạn tham chiếu;
+không có nhãn khởi phát nên chưa xác định được đó là báo sai hay suy giảm thật.
 
 \begin{table}[H]
 \centering\small
@@ -380,8 +386,8 @@ bắt đầu báo bất thường (-- là chưa có).}
 Hình~\ref{fig:fleet-status} cho thấy tình trạng toàn đội tại điểm quan sát cuối:
 21 động cơ cần bảo trì ngay, 59 động cơ đã có dấu hiệu bất thường nhưng RUL dự đoán
 còn trên 30, và 20 động cơ bình thường. Hai động cơ (1 và 85) chỉ có 31 và 34
-cycle nên chưa đủ dữ liệu để đánh giá bất thường; cả hai có RUL dự đoán trên 130
-nên được xếp bình thường.
+cycle nên chưa đủ dữ liệu để đánh giá bất thường; quy tắc hiện tại xếp cả hai vào
+nhóm bình thường do RUL dự đoán trên 130, chứ hệ thống chưa xác nhận chúng khỏe.
 
 \begin{figure}[H]
 \centering
@@ -393,8 +399,8 @@ thái; đường đứt là ngưỡng bảo trì 30 cycle. Phải: số động 
 
 Hình~\ref{fig:maintenance-planning} chuyển bảng thành kế hoạch: ngoài 21 động cơ
 cần bảo trì ngay, có thêm 14 động cơ đến hạn trong 25 cycle tới và 8 động cơ trong
-khoảng 26--50 cycle. Đội bảo trì có thể dùng biểu đồ này để chuẩn bị nhân lực và
-phụ tùng theo từng đợt.
+khoảng 26--50 cycle. Các nhóm này tính theo số cycle vận hành còn lại của từng động
+cơ, chưa phải lịch ngày chung; muốn phân công nhân lực cần quy đổi cycle sang giờ bay.
 
 \begin{figure}[H]
 \centering
@@ -435,10 +441,9 @@ cycle 213 (Mục~\ref{sec:res-errors}). Tính trên cả 100 động cơ, 12 đ�
 bảo trì dự kiến muộn hơn thời điểm hỏng thật từ 4 đến 27 cycle (7 động cơ ở mức
 theo dõi tăng cường, 5 động cơ ở mức bình thường). Cả 12 động cơ đều có RUL thật từ
 77 cycle trở lên, tức là lỗi này xảy ra ở các động cơ còn xa thời điểm hỏng, nơi
-mô hình dự đoán dư RUL (Mục~\ref{sec:res-errors}). Trong vận hành, lịch được tính lại
-mỗi khi có dữ liệu mới, nên với các động cơ này lịch sẽ được cập nhật nhiều lần trước
-khi đến hạn; tuy nhiên kết quả cho thấy không nên chốt lịch bảo trì xa chỉ từ một lần
-dự đoán.
+mô hình dự đoán dư RUL (Mục~\ref{sec:res-errors}). Cách vận hành dự kiến là tính lại lịch mỗi khi có dữ liệu mới; báo cáo chưa kiểm
+chứng việc cập nhật này sẽ sửa kịp 12 trường hợp trên. Kết luận rút ra là không nên
+chốt lịch bảo trì xa chỉ từ một lần dự đoán.
 
 \subsection{Thử nghiệm mở rộng}
 \label{sec:res-extended}

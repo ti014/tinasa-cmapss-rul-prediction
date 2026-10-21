@@ -1,6 +1,9 @@
 \section{Tổ chức, truy vấn và biến đổi dữ liệu}
 \label{sec:data-processing}
 
+\noindent\textit{Mục này trả lời: dữ liệu đi từ file text gốc đến bảng đầu vào của
+mô hình như thế nào, và được lưu, truy vấn trên Parquet, SQLite, HDFS ra sao.}
+
 Mục này mô tả cách dữ liệu đi từ các file text gốc đến bảng đầu vào của mô hình,
 theo các câu hỏi về cách gom nhiều file, lưu trữ, truy vấn và biến đổi dữ liệu,
 qua những bước nào, dùng những cột nào, và các bảng quan hệ với nhau ra sao.
@@ -149,7 +152,8 @@ nhiều block trên nhiều DataNode và YARN chạy nhiều map task song song 
 
 \subsection{Truy vấn dữ liệu}
 \label{sec:dp-query}
-Dữ liệu được lấy ra theo ba cách, tùy loại bảng.
+Dữ liệu được lấy ra theo ba cách, tùy loại bảng. Đây là ba cách truy xuất cùng dữ
+liệu đã kiểm tra, không phải ba bước liên tiếp của mô hình bảo trì.
 
 \paragraph{SQL trên SQLite.} Các bảng tổng hợp được truy vấn trực tiếp bằng SQL.
 Truy vấn trong Mã nguồn~\ref{lst:sqlite} join bảng tổng hợp với bảng nhãn để lấy
@@ -291,6 +295,8 @@ với cross-validation.
 
 \subsection{Quan hệ giữa các bảng}
 \label{sec:dp-relations}
+Mỗi window phải ghép đúng một nhãn RUL tại cùng động cơ và cycle; mục này kiểm tra
+khóa để một mẫu không bị nhân thành nhiều dòng huấn luyện.
 Hình~\ref{fig:data-relations} và Bảng~\ref{tab:data-relations} mô tả quan hệ giữa
 các bảng. Quan hệ duy nhất có bậc nhiều là giữa động cơ và quan sát (\textbf{1:N}):
 một động cơ có từ 31 đến 362 cycle. Các quan hệ còn lại là \textbf{1:1} hoặc

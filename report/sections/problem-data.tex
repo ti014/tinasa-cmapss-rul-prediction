@@ -1,6 +1,9 @@
 \section{Giới thiệu}
 \label{sec:intro}
 
+\noindent\textit{Mục này trả lời: bài toán của người làm bảo trì là gì, và báo cáo
+đặt ra những câu hỏi nào để giải nó.}
+
 \subsection{Bối cảnh và bài toán}
 Bảo trì dự đoán cần trả lời hai câu hỏi: thiết bị đã có dấu hiệu bất thường
 chưa, và còn vận hành được bao lâu trước khi hỏng. Câu hỏi thứ hai được đo bằng
@@ -28,9 +31,10 @@ cấp riêng RUL thật tại cycle cuối được quan sát của mỗi độn
 \subsection{Mục tiêu và câu hỏi nghiên cứu}
 Báo cáo thực hiện Đề tài 8 của môn Phân tích dữ liệu lớn: phân tích dữ liệu cảm
 biến thiết bị để phát hiện dấu hiệu bất thường và dự đoán thời điểm cần bảo trì.
-Mục tiêu là xây dựng một pipeline tái lập được, đi qua đủ các bước thu thập, làm
-sạch, chuẩn hóa, tích hợp, lưu trữ và trực quan hóa, rồi tạo ra sản phẩm cuối là
-dự đoán thời điểm cần bảo trì kèm biểu đồ xu hướng cảnh báo sớm. Năm câu hỏi được
+Mục tiêu là biến lịch sử cảm biến thành danh sách động cơ cần bảo trì, và đánh giá
+cảnh báo có cho đội vận hành đủ thời gian chuẩn bị hay không. Để làm được, pipeline
+đi qua các bước thu thập, làm sạch, chuẩn hóa, tích hợp, lưu trữ và trực quan hóa;
+sản phẩm cuối là lịch dự đoán thời điểm cần bảo trì kèm biểu đồ cảnh báo sớm. Năm câu hỏi được
 sắp theo đúng thứ tự pipeline:
 \begin{enumerate}[label=\textbf{Q\arabic*.},leftmargin=2.6em]
 \item Dữ liệu có hợp lệ về schema, khóa và tính liên tục của cycle không, và ETL
@@ -68,6 +72,9 @@ subset FD002--FD004 chỉ dùng trong thử nghiệm mở rộng.
 
 \section{Dữ liệu}
 \label{sec:data}
+
+\noindent\textit{Mục này trả lời: trong tay có những dữ liệu gì, và chúng có đủ
+sạch để dùng không. Ví dụ: động cơ sống ngắn nhất 128 cycle, dài nhất 362 cycle.}
 
 \subsection{Nguồn dữ liệu}
 Bài làm dùng bộ NASA Turbofan Engine (C-MAPSS). Toàn bộ dữ liệu phân tích trong báo

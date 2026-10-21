@@ -189,7 +189,7 @@ def _rul_trajectory_chart(frame: pd.DataFrame, series: dict[str, str], *, marker
         .mark_line(strokeWidth=2)
         .encode(
             x=alt.X("cycle:Q", title="Cycle"),
-            y=alt.Y("RUL:Q", title="RUL (cycles)"),
+            y=alt.Y("RUL:Q", title="RUL (cycle)"),
             color=alt.Color("Đường:N", scale=alt.Scale(domain=names, range=colors), legend=alt.Legend(orient="top")),
             strokeDash=alt.condition(alt.datum["Đường"] == names[0], alt.value([5, 3]), alt.value([1, 0])),
             tooltip=["cycle:Q", "Đường:N", alt.Tooltip("RUL:Q", format=".2f")],
@@ -216,12 +216,12 @@ def page_overview(data: DashboardData, degradation: DegradationData, maintenance
     _metric_row(
         [
             ("Cần bảo trì ngay", f"{maintenance.summary['status_counts']['Cần bảo trì']} động cơ",
-             "RUL dự đoán ≤ 30 cycles tại cycle quan sát cuối."),
+             "RUL dự đoán ≤ 30 cycle tại cycle quan sát cuối."),
             ("Báo cần bảo trì đúng",
              f"{evaluation['n_correct_needs_maintenance']}/{evaluation['n_flagged_needs_maintenance']}",
              "Kiểm tra bằng nhãn test sau khi lịch đã được ghi ra file."),
             ("Bất thường báo trước hỏng", f"{format_metric(anomaly['lead_median'], 0)} cycles",
-             "Trung vị trên 100 động cơ train; Health Index giảm quá 3σ so với 30 cycles đầu."),
+             "Trung vị trên 100 động cơ train; Health Index giảm quá 3σ so với 30 cycle đầu."),
             ("MAE RUL trên test", f"{format_metric(metrics.get('mean_engine_mae', 0), 2)} cycles",
              "Sai số tuyệt đối trung bình tại cycle quan sát cuối của 100 động cơ test."),
         ]
@@ -232,7 +232,7 @@ def page_overview(data: DashboardData, degradation: DegradationData, maintenance
         ("1. Thu thập", "File text train/test/RUL FD001, kiểm tra schema"),
         ("2. ETL", "Pandas = PySpark → Silver Parquet, Gold SQLite"),
         ("3. Khử nhiễu", "EWMA span 10, chỉ dùng quá khứ"),
-        ("4. Window", "30 cycles → 126 đặc trưng"),
+        ("4. Window", "30 cycle → 126 đặc trưng"),
         ("5. Bất thường", "Health Index giảm quá 3σ: cảnh báo mức 1"),
         ("6. RUL", "HGB, GroupKFold theo động cơ"),
         ("7. Bảo trì", "RUL ≤ 30: cảnh báo mức 2, lịch bảo trì"),
@@ -244,7 +244,7 @@ def page_overview(data: DashboardData, degradation: DegradationData, maintenance
     _card(
         "Đọc kết quả trong một câu",
         f"Tại điểm quan sát cuối, {maintenance.summary['status_counts']['Cần bảo trì']} động cơ cần bảo trì ngay và "
-        f"{maintenance.summary['planning']['1–25']} động cơ đến hạn trong 25 cycles tới; mọi động cơ được báo cần bảo trì đều "
+        f"{maintenance.summary['planning']['1–25']} động cơ đến hạn trong 25 cycle tới; mọi động cơ được báo cần bảo trì đều "
         "có RUL thật ≤ 30.",
     )
     with st.expander("Gợi ý thứ tự demo (khoảng 3 phút)"):
@@ -276,7 +276,7 @@ def page_exploration(exploration: ExplorationData) -> None:
             alt.Chart(lifetimes)
             .mark_bar(color=PALETTE["pred"])
             .encode(
-                x=alt.X("n_observations:Q", bin=alt.Bin(step=20), title="Tuổi thọ (cycles)"),
+                x=alt.X("n_observations:Q", bin=alt.Bin(step=20), title="Tuổi thọ (cycle)"),
                 y=alt.Y("count():Q", title="Số động cơ"),
                 tooltip=[alt.Tooltip("count():Q", title="Số động cơ")],
             )
@@ -407,7 +407,7 @@ def page_rul(data: DashboardData) -> None:
         direction = "cao hơn" if record["y_pred"] > record["y_true"] else "thấp hơn"
         _card(
             f"Động cơ {engine_id:03d}",
-            f"Sai số tuyệt đối {format_metric(record['absolute_error'])} cycles; RUL dự đoán {direction} RUL thật. "
+            f"Sai số tuyệt đối {format_metric(record['absolute_error'])} cycle; RUL dự đoán {direction} RUL thật. "
             "Mỗi động cơ test chỉ có một dòng đánh giá tại cycle cuối.",
         )
         evaluation = data.model_evaluation.assign(
@@ -421,8 +421,8 @@ def page_rul(data: DashboardData) -> None:
             alt.Chart(evaluation)
             .mark_circle()
             .encode(
-                x=alt.X("y_true:Q", title="RUL thật (cycles)", scale=alt.Scale(domain=[0, upper])),
-                y=alt.Y("y_pred:Q", title="RUL dự đoán (cycles)", scale=alt.Scale(domain=[0, upper])),
+                x=alt.X("y_true:Q", title="RUL thật (cycle)", scale=alt.Scale(domain=[0, upper])),
+                y=alt.Y("y_pred:Q", title="RUL dự đoán (cycle)", scale=alt.Scale(domain=[0, upper])),
                 color=alt.condition(alt.datum.chosen, alt.value(PALETTE["alert"]), alt.value(PALETTE["pred"])),
                 size=alt.condition(alt.datum.chosen, alt.value(160), alt.value(45)),
                 opacity=alt.condition(alt.datum.chosen, alt.value(1.0), alt.value(0.55)),
@@ -433,8 +433,8 @@ def page_rul(data: DashboardData) -> None:
             alt.Chart(evaluation)
             .mark_circle()
             .encode(
-                x=alt.X("y_true:Q", title="RUL thật (cycles)"),
-                y=alt.Y("residual:Q", title="Dự đoán − thật (cycles)"),
+                x=alt.X("y_true:Q", title="RUL thật (cycle)"),
+                y=alt.Y("residual:Q", title="Dự đoán − thật (cycle)"),
                 color=alt.condition(alt.datum.chosen, alt.value(PALETTE["alert"]), alt.value(PALETTE["pred"])),
                 size=alt.condition(alt.datum.chosen, alt.value(160), alt.value(45)),
                 tooltip=tooltip,
@@ -466,7 +466,7 @@ def page_rul(data: DashboardData) -> None:
         st.altair_chart(_rul_trajectory_chart(trajectory, {"y_true": "RUL thật", "y_pred": "RUL dự đoán (OOF)"}), width="stretch")
         st.caption(
             "Dự đoán chéo theo fold (OOF): mô hình tạo ra các dự đoán này không học động cơ đang xem. Đường chấm ngang là ngưỡng "
-            f"{RUL_THRESHOLD} cycles. Dữ liệu này cũng đã dùng để chọn mô hình, nên đây là đánh giá nội bộ."
+            f"{RUL_THRESHOLD} cycle. Dữ liệu này cũng đã dùng để chọn mô hình, nên đây là đánh giá nội bộ."
         )
 
 
@@ -485,7 +485,7 @@ def page_warning(data: DashboardData) -> None:
         "Cách đọc",
         "Dự đoán ở trang này là dự đoán chéo theo fold (OOF) trên 100 động cơ train: mỗi động cơ được dự đoán bởi mô hình "
         "không học động cơ đó. Đây cũng là dữ liệu dùng để chọn mô hình, nên kết quả có phần lạc quan. Mọi động cơ train "
-        "đều đi đến hỏng, nên không tính được tỷ lệ báo động giả. Ngưỡng 30 cycles chưa hiệu chuẩn theo chi phí bảo trì.",
+        "đều đi đến hỏng, nên không tính được tỷ lệ báo động giả. Ngưỡng 30 cycle chưa hiệu chuẩn theo chi phí bảo trì.",
         kind="limit",
     )
 
@@ -507,7 +507,7 @@ def page_warning(data: DashboardData) -> None:
         st.altair_chart(chart, width="stretch")
         distribution = summary["lead_time_distribution"]
         st.caption(
-            f"Lead time (cycles), n={distribution['n']}: min={distribution['min']}; Q1={distribution['q25']}; "
+            f"Lead time (cycle), n={distribution['n']}: min={distribution['min']}; Q1={distribution['q25']}; "
             f"median={distribution['median']}; Q3={distribution['q75']}; max={distribution['max']}."
         )
     with right:
@@ -519,7 +519,7 @@ def page_warning(data: DashboardData) -> None:
         st.altair_chart(_rul_trajectory_chart(trajectory, {"y_true": "RUL thật", "y_pred": "RUL dự đoán (OOF)"}, marker_cycle=marker), width="stretch")
         st.caption(
             f"Vạch đỏ: cảnh báo đầu tiên tại cycle {event['first_warning_cycle']:.0f}, RUL thật khi đó "
-            f"{event['actual_rul_at_first_warning']:.0f} cycles ({TIMING_LABELS.get(event['warning_timing'], event['warning_timing'])})."
+            f"{event['actual_rul_at_first_warning']:.0f} cycle ({TIMING_LABELS.get(event['warning_timing'], event['warning_timing'])})."
         )
 
     table = events[
@@ -532,8 +532,8 @@ def page_warning(data: DashboardData) -> None:
                     "engine_id": "Động cơ",
                     "first_warning_cycle": "Cycle cảnh báo đầu",
                     "actual_rul_at_first_warning": "RUL thật tại cảnh báo",
-                    "lead_time_to_failure_cycles": "Lead time (cycles)",
-                    "threshold_delay_cycles": "Độ trễ so với ngưỡng (cycles)",
+                    "lead_time_to_failure_cycles": "Lead time (cycle)",
+                    "threshold_delay_cycles": "Độ trễ so với ngưỡng (cycle)",
                     "warning_timing": "Phân loại thời điểm",
                     "missed_warning": "Không từng cảnh báo",
                 }
@@ -549,8 +549,8 @@ def page_cross_dataset(matrix: pd.DataFrame) -> None:
     _card(
         "Cách làm",
         f"Nội bộ: huấn luyện và kiểm tra trong cùng một subset. Chuyển miền: giữ nguyên mô hình học trên FD001 để dự đoán "
-        f"test của FD002–FD004, không học lại. Dùng window {window} cycles vì động cơ test ngắn nhất của FD004 chỉ có "
-        "19 cycles; vì vậy không so trực tiếp với kết quả FD001 chính dùng window 30.",
+        f"test của FD002–FD004, không học lại. Dùng window {window} cycle vì động cơ test ngắn nhất của FD004 chỉ có "
+        "19 cycle; vì vậy không so trực tiếp với kết quả FD001 chính dùng window 30.",
     )
     labeled = matrix.assign(
         Evaluation=lambda frame: frame["source"] + " → " + frame["target"],
@@ -634,7 +634,7 @@ def page_improvement(experiment: ImprovementData) -> None:
     st.dataframe(ablation.rename(columns={"stage": "Phương án", **METRIC_LABELS}), hide_index=True, width="stretch")
     st.caption(
         "Tỷ lệ thời gian báo sớm: tỷ lệ cycle có cảnh báo khi RUL thật còn trên 30, tính riêng từng động cơ rồi lấy trung bình. "
-        "Ngưỡng nghiên cứu là 30 cycles."
+        "Ngưỡng nghiên cứu là 30 cycle."
     )
 
     st.subheader("Chênh lệch so với mô hình gốc và khoảng tin cậy 95%")
@@ -820,7 +820,7 @@ def page_denoise(degradation: DegradationData) -> None:
         )
         st.altair_chart(bars, width="stretch")
     with right:
-        _card("Vai trò trong pipeline", "Tín hiệu EWMA đi vào Health Index và phát hiện bất thường. Mô hình RUL dùng window 30 cycles "
+        _card("Vai trò trong pipeline", "Tín hiệu EWMA đi vào Health Index và phát hiện bất thường. Mô hình RUL dùng window 30 cycle "
               "trên tín hiệu gốc, vì trung bình và độ dốc trên window cũng làm dịu dao động.")
         _card("Giới hạn", "Dữ liệu không có tín hiệu sạch để đối chiếu, nên đây là mức giảm dao động, chưa chứng minh đã loại đúng "
               "nhiễu đo. Span 10 được cố định trước, không tinh chỉnh theo kết quả.", kind="limit")
@@ -860,7 +860,7 @@ def page_anomaly(degradation: DegradationData) -> None:
     layers.append(alt.Chart(pd.DataFrame({"x": [float(event["failure_cycle"])]})).mark_rule(color="black").encode(x="x:Q"))
     st.altair_chart(alt.layer(*layers).properties(height=340).interactive(bind_y=False), width="stretch")
     detection = "chưa phát hiện" if not bool(event["detected"]) else (
-        f"phát hiện bất thường ở cycle {int(event['detection_cycle'])}, tức {int(event['lead_cycles'])} cycles trước khi hỏng")
+        f"phát hiện bất thường ở cycle {int(event['detection_cycle'])}, tức {int(event['lead_cycles'])} cycle trước khi hỏng")
     st.caption(
         f"Động cơ {engine_id:03d}: {detection}; hỏng ở cycle {int(event['failure_cycle'])}. Vùng xám là {config['baseline_cycles']} "
         f"cycles tham chiếu; đường đứt là ngưỡng {config['z_threshold']:g}σ; vạch cam là lúc phát hiện, vạch đen là lúc hỏng."
@@ -879,7 +879,7 @@ def page_anomaly(degradation: DegradationData) -> None:
         st.altair_chart(histogram, width="stretch")
     with right:
         _card("Quy tắc", f"So mỗi động cơ với chính nó ở giai đoạn vận hành ổn định: báo khi Health Index giảm quá {config['z_threshold']:g} độ lệch chuẩn "
-              f"so với {config['baseline_cycles']} cycles đầu, kéo dài {config['persistence']} cycles liên tiếp. Không dùng nhãn RUL.")
+              f"so với {config['baseline_cycles']} cycle đầu, kéo dài {config['persistence']} cycle liên tiếp. Không dùng nhãn RUL.")
         _card("Giới hạn", "Mọi động cơ train đều đi đến hỏng và không có nhãn thời điểm bắt đầu suy giảm, nên chưa đo được trực tiếp "
               "tỷ lệ báo động giả. Đây là cảnh báo mức 1: động cơ đã lệch khỏi trạng thái vận hành ổn định, chưa ước lượng thời gian "
               "còn lại.", kind="limit")
@@ -911,7 +911,7 @@ def page_anomaly(degradation: DegradationData) -> None:
         "nhiều trường hợp báo quá sớm hơn, ngưỡng cao thì ngược lại."
     )
     with st.expander("Hình kiểm định đầu/cuối vòng đời (outputs/statistics)"):
-        _figure("outputs/statistics/figures/effect_size_ci.png", "Chênh lệch trung bình 30 cycles cuối và đầu, khoảng tin cậy 95%")
+        _figure("outputs/statistics/figures/effect_size_ci.png", "Chênh lệch trung bình 30 cycle cuối và đầu, khoảng tin cậy 95%")
 
 
 def page_maintenance(maintenance: MaintenanceData) -> None:
@@ -920,10 +920,10 @@ def page_maintenance(maintenance: MaintenanceData) -> None:
     counts, evaluation = summary["status_counts"], summary["evaluation"]
     _metric_row(
         [
-            ("Cần bảo trì ngay", str(counts["Cần bảo trì"]), "RUL dự đoán ≤ 30 cycles."),
+            ("Cần bảo trì ngay", str(counts["Cần bảo trì"]), "RUL dự đoán ≤ 30 cycle."),
             ("Theo dõi tăng cường", str(counts["Theo dõi tăng cường"]), "Health Index đã báo bất thường, RUL dự đoán > 30."),
             ("Bình thường", str(counts["Bình thường"])),
-            ("Đến hạn trong 25 cycles tới", str(summary["planning"]["1–25"])),
+            ("Đến hạn trong 25 cycle tới", str(summary["planning"]["1–25"])),
         ]
     )
     chosen = st.multiselect("Lọc theo trạng thái", STATUS_ORDER, default=STATUS_ORDER, key="mt_status")
@@ -975,7 +975,7 @@ def page_maintenance(maintenance: MaintenanceData) -> None:
         if pd.notna(row["anomaly_cycle"]):
             layers.append(alt.Chart(pd.DataFrame({"x": [float(row["anomaly_cycle"])]})).mark_rule(color=COLORS["orange"], strokeWidth=2).encode(x="x:Q"))
         st.altair_chart(alt.layer(*layers).properties(height=200), width="stretch")
-        note = "chưa đủ 35 cycles để đánh giá bất thường" if not bool(status["anomaly_evaluable"]) else (
+        note = "chưa đủ 35 cycle để đánh giá bất thường" if not bool(status["anomaly_evaluable"]) else (
             f"bất thường từ cycle {int(row['anomaly_cycle'])}" if pd.notna(row["anomaly_cycle"]) else "chưa có dấu hiệu bất thường")
         st.caption(f"Động cơ {engine_id:03d} đang ở cycle {int(row['current_cycle'])}; {note}. Đường đứt là ngưỡng 3σ của động cơ này.")
 
@@ -986,7 +986,7 @@ def page_maintenance(maintenance: MaintenanceData) -> None:
     with check_right:
         _card("Kết quả", f"{evaluation['n_correct_needs_maintenance']}/{evaluation['n_flagged_needs_maintenance']} động cơ báo cần bảo trì "
               f"có RUL thật ≤ 30. Trong {evaluation['n_actual_needs_maintenance']} động cơ thật sự cần bảo trì, 4 động cơ còn lại có RUL "
-              "dự đoán 31–38 nên đến hạn sau 1–8 cycles và vẫn ở mức theo dõi.")
+              "dự đoán 31–38 nên đến hạn sau 1–8 cycle và vẫn ở mức theo dõi.")
         _card("Giới hạn", "Mức theo dõi còn rộng: 41/59 động cơ ở mức này có RUL thật trên 60. Lịch có thể lạc quan với từng động cơ, "
               "ví dụ động cơ 23. Ngưỡng 30 chưa được hiệu chuẩn theo chi phí bảo trì.", kind="limit")
 

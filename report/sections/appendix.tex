@@ -3,7 +3,7 @@
 Phụ lục này tóm tắt các cấu hình có ảnh hưởng trực tiếp đến kết quả. Báo cáo
 giữ nguyên dữ liệu đầu vào và không thay đổi số liệu trong quá trình biên tập.
 Quy trình tái lập gồm kiểm tra schema và ranh giới train/test, tạo rolling
-features, huấn luyện theo engine, đánh giá trên test và đối chiếu các bảng kết
+features, huấn luyện theo động cơ, đánh giá trên test và đối chiếu các bảng kết
 quả sau khi ghi.
 
 \subsection{Môi trường và cấu hình chính}
@@ -25,10 +25,10 @@ Seed & 42 & Bootstrap metric & 10.000 lần \\
 \end{tabular}
 \end{table}
 
-Bootstrap cuối lấy mẫu lại engine có hoàn lại và giữ số lần xuất hiện của mỗi
-engine khi tính mean engine-level MAE. Wilcoxon dùng 100.000 permutation
-resamples với Benjamini--Hochberg trên 21 sensors. Nhánh PCA--ARIMA fit
-transformer trên 90 engine train và chỉ transform 10 engine được đánh giá; mỗi
+Bootstrap cuối lấy mẫu lại động cơ có hoàn lại và giữ số lần xuất hiện của mỗi
+động cơ khi tính MAE trung bình theo động cơ. Wilcoxon dùng 100.000 permutation
+resamples với Benjamini--Hochberg trên 21 sensor. Nhánh PCA--ARIMA fit
+transformer trên 90 động cơ train và chỉ transform 10 động cơ được đánh giá; mỗi
 chuỗi dùng 70\% đầu để huấn luyện và 30\% cuối để dự báo. Các giá trị này mô tả đúng
 cấu hình đã chạy, không phải mặc định tối ưu cho mọi subset C-MAPSS.
 
@@ -58,7 +58,7 @@ Các kiểm tra này chứng minh hành vi triển khai trong phạm vi đã ch�
 phải thực nghiệm mới về độ chính xác RUL.
 
 CLI ETL và rolling chạy từ CWD khác tạo 33.727 observations, 20.631 train targets,
-200 engine summaries và 27.927 feature rows; hash các file raw trước và sau
+200 dòng \texttt{engine\_summary} và 27.927 feature rows; hash các file raw trước và sau
 không đổi. Môi trường \texttt{--no-dev} có \texttt{psutil} nhưng không có
 pytest, PySpark hoặc JupyterLab vẫn chạy được benchmark Pandas. Bốn requirements
 được export từ lock và kiểm tra bằng \filepath{tests/test_dependency_exports.py}.
@@ -82,7 +82,7 @@ lịch sử, không chỉnh receipt để vượt source guard.
 \toprule
 Nhóm kết quả & Nội dung đối chiếu & Kiểm tra liên quan \\\midrule
 Chất lượng dữ liệu & Schema, khóa và độ liên tục của cycle & Row count, kiểu số hữu hạn và khóa duy nhất \\
-Rolling features & Đặc trưng từ 30 cycle gần nhất & Đủ window, cùng engine và không dùng tương lai \\
+Rolling features & Đặc trưng từ 30 cycle gần nhất & Đủ window, cùng động cơ và không dùng tương lai \\
 Model RUL & Cross-validation và metric test & GroupKFold, sample weighting và test-label join sau prediction \\
 Suy luận sensor & Chênh lệch đầu/cuối vòng đời & Cặp một--một, bootstrap, Wilcoxon và FDR \\
 Health Index & PCA--ARIMA và baseline cùng khoảng dự báo & Đánh giá theo thời gian, hội tụ, chẩn đoán phần dư và tỷ lệ bao phủ \\
@@ -100,6 +100,6 @@ slide đọc bản dựng lại \filepath{20260928\_rebuild/}; hai bản có
 Các bảng chính gồm ablation metrics, paired comparison, test comparison
 và final selection metrics; tên file CSV tương ứng được liệt kê trong hướng
 dẫn thực nghiệm. File \texttt{validation.json}
-ghi kết quả kiểm tra engine separation, cùng khóa đánh giá, baseline không
+ghi kết quả kiểm tra tách động cơ giữa các fold, cùng khóa đánh giá, baseline không
 đổi, paired CI và prediction từ model đã lưu. Cache từng fit chỉ giữ local;
 người tái lập có thể chạy một output directory mới theo cùng cấu hình.

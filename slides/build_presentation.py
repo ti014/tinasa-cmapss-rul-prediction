@@ -40,6 +40,8 @@ TOTAL = 20
 D = json.loads((ROOT / "slides/slide_data.json").read_text(encoding="utf-8"))
 DEG = D["degradation"]
 BENCH = D["benchmark_scaling"]["summary"]
+T40 = D["maintenance"]["threshold_40_test"]
+TRUE90 = next(int(m["y_true"]) for m in D["maintenance"]["missed_engines"] if m["engine_id"] == 90)
 NOISE = {row["sensor"]: row for row in D["noise_summary"]}
 
 # Màu lấy từ template IUH: xanh thương hiệu và vàng của đường viền footer.
@@ -329,7 +331,7 @@ def slide_cover():
          color=GOLD_DARK, align=PP_ALIGN.CENTER)
     items = [
         (f"{MNT['evaluation']['n_correct_needs_maintenance']}/{MNT['evaluation']['n_actual_needs_maintenance']}",
-         "test: báo đúng cần bảo trì"),
+         "test: động cơ cần bảo trì được báo"),
         (f"{vn(M['final']['mean_engine_mae'])}", "test: MAE RUL (cycle)"),
         (f"{vn(DEG['noise_reduction_pct_median'], 0)}%", "giảm dao động sau EWMA"),
         (f"{vn(P['n_sensors'], 0)}", "sensor mỗi cycle"),
@@ -401,8 +403,8 @@ def slide_problem():
                 "Đây là kết quả test tại một điểm cuối mỗi chuỗi.\nRemaining Useful Life (RUL, tuổi thọ còn lại) là số cycle vận hành còn lại "
                 "trước khi hỏng. Ví dụ động cơ hỏng ở cycle 200 thì tại cycle 170 có RUL bằng 30. Đơn vị là cycle; dữ liệu "
                 "không quy đổi ra giờ.\nBảng bên phải đối chiếu từng yêu cầu của đề tài với slide trình bày: chuỗi thời gian "
-                "ở slide 6, 9, 10; làm mượt ở slide 9; cửa sổ thời gian ở slide 10; xu hướng ở slide 11; bất thường ở slide "
-                "12; cảnh báo ở slide 15 và lịch bảo trì ở slide 16.")
+                "ở slide 4, 5; làm mượt ở slide 5; window ở slide 8 và 17; xu hướng ở slide 6; bất thường ở slide 7; cảnh "
+                "báo ở slide 9 và lịch bảo trì ở slide 10.")
     text(s, 0.92, 2.5, 5.3, 0.32, "Định nghĩa RUL", size=15, bold=True, color=BLUE)
     x0, x1, y = 1.0, 5.6, 3.4
     tx = x0 + (x1 - x0) * 170 / 200
@@ -556,8 +558,8 @@ def slide_pipeline():
     x0, bw, step, bh = 3.6, 1.62, 1.79, 1.05
     col = [x0 + i * step for i in range(5)]
     ya, yb = 2.8, 4.4
-    text(s, x0, 2.45, 6.0, 0.3, "A. Dự đoán RUL", size=12.5, bold=True, color=BLUE)
-    text(s, x0, 4.05, 6.0, 0.3, "B. Theo dõi tín hiệu (chỉ học trên train)", size=12.5, bold=True, color=BLUE)
+    text(s, x0, 2.45, 6.0, 0.3, "A. Đèn đỏ: dự đoán RUL", size=12.5, bold=True, color=BLUE)
+    text(s, x0, 4.05, 6.0, 0.3, "B. Đèn vàng: theo dõi tín hiệu (chỉ học trên train)", size=12.5, bold=True, color=BLUE)
     lane_a = [("A1. Lưu bảng", "Gộp train + test;\nSilver, Gold"),
               ("A2. Đặc trưng", f"Cửa sổ 30 cycle\n{P['feature_columns']} đặc trưng"),
               ("A3. Huấn luyện", "HGB, chia 5 phần\ntheo động cơ"),
@@ -586,7 +588,7 @@ def slide_pipeline():
     path(s, [(a4x, ya + bh), (a4x, 4.2), (col[4] + 0.4, 4.2), (col[4] + 0.4, yb - 0.02)])
 
     # Năm bước của quy trình quản lý dữ liệu, gắn với các ô trên sơ đồ.
-    stages = [("Thu thập", "bước 1"), ("Làm sạch", "bước 3; B2 làm mượt"), ("Chuẩn hóa", "kiểu dữ liệu; slide 10"),
+    stages = [("Thu thập", "bước 1"), ("Làm sạch", "bước 3; B2 làm mượt"), ("Chuẩn hóa", "kiểu dữ liệu; StandardScaler"),
               ("Tích hợp", "gộp train + test"), ("Lưu trữ", "Parquet, SQLite, HDFS")]
     cw, cg = 1.676, 0.1
     for i, (head, body) in enumerate(stages):
@@ -651,13 +653,13 @@ def slide_big_data():
         headline = f"Ở {common}×, Spark tính nhanh hơn Pandas khoảng {vn(ratio, 1)} lần"
         notes_result = f"Scale lớn nhất mà cả hai cùng hoàn tất là {common}×; tỷ số thời gian Pandas/Spark là {vn(ratio, 1)}."
     if stop is not None:
-        headline += f"; ở {stop}×, Pandas không xong trong 30 phút"
+        headline += f"; ở {stop}×, Pandas không xong trong giới hạn 30 phút"
     s = content(6, 11, "Dữ liệu lớn cần đo bằng giới hạn thật của máy",
                 headline,
                 "outputs/benchmarks/20261021/compute_only.csv; outputs/benchmarks/20261021/run_info.json",
                 "Thời lượng: 1 phút.\n"
                 f"{notes_result} Mỗi điểm là phần tính toán của một lượt: đọc, tổng hợp và tạo đặc trưng, không gồm ghi file; trên Windows, bước ghi của Spark phải gom về driver và hết heap từ 100×. "
-                "Dấu x là lượt failed hoặc timeout, không phải số đo thành công. RAM của Pandas tăng gần tuyến tính (12,9 GiB ở 100×), nên 200× ước tính cần khoảng 26 GiB, vượt 23,4 GiB của máy; đây là suy luận, chưa đo trực tiếp. Spark là local[4] trên một máy; HDFS và "
+                "Dấu x là lượt failed hoặc timeout, không phải số đo thành công. Giới hạn 30 phút là do bài tự đặt; ngoại suy tuyến tính Pandas 200× cần khoảng 35 phút, và RAM ước tính 24–26 GiB, sát hoặc vượt 23,4 GiB của máy (suy luận, chưa đo). Pandas chạy 1 luồng, Spark 4 luồng, nên một phần chênh lệch đến từ song song hóa. Bước ghi đầy đủ của Spark thất bại từ 50× trên Windows. Spark là local[4] trên một máy; HDFS và "
                 "MapReduce đã chạy trên Docker một node. Vì vậy hình này chứng minh hành vi khi nhân bản dữ liệu trong "
                 "môi trường hiện tại, chưa phải benchmark cluster nhiều node. Khi trình bày, nhấn mạnh điểm chuyển từ "
                 "một máy sang xử lý phân tán cần được xác định bằng dữ liệu phát sinh và thời hạn phản hồi thực tế.")
@@ -673,10 +675,10 @@ def slide_big_data():
     text(s, 9.58, 3.2, 2.62, 2.4, [
         [("Đường liền: ", {"bold": True, "color": GOLD}), ("lượt hoàn tất.", {"color": WHITE})],
         [("Dấu x: ", {"bold": True, "color": GOLD}), ("failed hoặc timeout; không thay bằng số 0.", {"color": WHITE})],
-        [("Phạm vi: ", {"bold": True, "color": GOLD}), ("một máy, local[4], không gồm ghi file.", {"color": WHITE})],
+        [("Phạm vi: ", {"bold": True, "color": GOLD}), ("một máy; Pandas 1 luồng, Spark 4 luồng; không gồm ghi file.", {"color": WHITE})],
+        [("Quyết định: ", {"bold": True, "color": GOLD}), ("với 100 động cơ FD001, bỏ Spark thì lịch không đổi; ""Spark cần khi đội lớn hơn hàng chục lần.", {"color": WHITE})],
     ], size=12.5, color=WHITE, space_after=10)
-    text(s, 9.58, 5.35, 2.62, 0.5, "HDFS/MapReduce: Docker một node", size=12, color=ICE)
-
+    
 
 # ============================================================================ 8. EDA
 def slide_eda():
@@ -940,7 +942,7 @@ def slide_warning():
                 "Thời lượng: 1 phút 20 giây.\nĐây là biểu đồ xu hướng cảnh báo sớm, sản phẩm đặc thù của đề tài, minh họa "
                 "trên động cơ train 1. Đường xanh là RUL thực tế, đường đỏ là RUL dự đoán OOF, đường cam là ngưỡng 30 cycle; "
                 f"động cơ train 1 được cảnh báo ở cycle {example['first_warning_cycle']}, hỏng ở {example['failure_cycle']}. "
-                "Cùng quy tắc này được áp dụng cho động cơ test ở slide 16.\n"
+                "Cùng quy tắc này được áp dụng cho động cơ test ở slide 10.\n"
                 f"Bảng bên phải dùng dự đoán OOF trên 100 động cơ train. Ở ngưỡng 30: {tm['before_threshold']} động cơ được "
                 f"báo trước khi RUL thực tế chạm 30, {tm['at_threshold']} đúng lúc, {tm['after_threshold']} muộn nhưng vẫn "
                 f"trước khi hỏng; không bỏ sót động cơ nào. Thời gian báo trước (lead time) trung vị {vn(ld['median'], 0)} "
@@ -1020,7 +1022,9 @@ def slide_maintenance():
     rect(s, 8.65, 4.72, 3.77, 1.83, BLUE)
     text(s, 8.85, 4.8, 3.4, 1.7, [
         [(f"{ev['n_correct_needs_maintenance']}/{ev['n_actual_needs_maintenance']}", {"bold": True, "color": GOLD, "size": 20}),
-         (f" động cơ có RUL thực tế ≤ 30 được xếp cần bảo trì; {missed['n_engines']} động cơ còn lại đến hạn sau {missed['due_min']}–{missed['due_max']} cycle.", {"color": WHITE})],
+         (f" động cơ có RUL thực tế ≤ 30 được báo; {missed['n_engines']} ca sót đều sát ngưỡng (dự đoán "
+          f"{vn(missed['rul_pred_min'], 0)}–{vn(missed['rul_pred_max'], 0)}). Ngưỡng 40 (chọn từ train): bắt "
+          f"{T40['correct']}/{T40['actual']}, báo sớm {T40['early']}.", {"color": WHITE})],
         [("Giới hạn: ", {"bold": True, "color": GOLD}),
          (f"{late['n_engines']} động cơ còn xa mới hỏng có lịch muộn hơn lúc hỏng {late['delay_min']}–{late['delay_max']} cycle.", {"color": ICE})],
     ], size=11, space_after=6)
@@ -1073,7 +1077,8 @@ def slide_extended():
 def slide_demo():
     example = MNT["example"]
     s = content(6, 13, "Demo dashboard: một dòng trả lời cho động cơ 90",
-                f"Động cơ 90 đang ở cycle {example['current_cycle']}, RUL dự đoán {vn(example['rul_pred'], 1)}; lịch bảo trì ở cycle {example['maintenance_cycle']}",
+                f"Động cơ 90: RUL dự đoán {vn(example['rul_pred'], 1)}, thật {TRUE90}; ca sót sát ngưỡng, lịch ở cycle "
+                f"{example['maintenance_cycle']}, vẫn trước lúc hỏng {TRUE90 - 1} cycle",
                 "outputs/maintenance/tables/maintenance_schedule.csv; app.py",
                 "Thời lượng: 20 giây trước khi chuyển sang dashboard.\n"
                 f"Trên dashboard, mở trang lịch bảo trì và chọn động cơ 90. Tại cycle {example['current_cycle']}, "
@@ -1093,7 +1098,7 @@ def slide_demo():
 def slide_conclusion():
     f = M["final"]
     s = content(6, 12, "Năm câu hỏi đều có câu trả lời, nhưng phạm vi kết luận là FD001",
-                "Trả lời năm câu hỏi nghiên cứu; kết luận chỉ áp dụng cho dữ liệu mô phỏng C-MAPSS FD001",
+                "Năm câu hỏi nghiên cứu (Mục 1.2 báo cáo) theo đúng thứ tự các cảnh; kết luận chỉ áp dụng cho FD001",
                 "report/sections/conclusion.tex; các artifact đã dẫn ở slide 4–11",
                 "Thời lượng: 50 giây.\nQ1: dữ liệu đạt mọi kiểm tra schema, khóa, cycle; Pandas và PySpark khớp tuyệt đối.\n"
                 f"Q2: EWMA giảm khoảng {vn(DEG['noise_reduction_pct_median'])}% dao động; window {P['window']} cycle "
@@ -1180,7 +1185,7 @@ def slide_end():
         [("Phan Nguyễn Mai Phương · MSHV 25002711", {"color": SLATE})],
     ], size=12.5, space_after=4)
     slide.notes_slide.notes_text_frame.text = (
-        "Thời lượng: 10 giây.\nDemo dashboard (khoảng 2,5 phút) đã làm ngay sau slide 19, theo handoff/SPEECH_SCRIPT_VI.pdf. "
+        "Thời lượng: 10 giây.\nDemo dashboard (khoảng 2,5 phút) là slide 13, theo handoff/SPEECH_SCRIPT_VI.pdf. "
         "Cảm ơn quý thầy cô và mời đặt câu hỏi. Không chạy lại huấn luyện khi trình bày."
     )
 

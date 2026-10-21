@@ -115,9 +115,9 @@ của một máy, nên Pandas đủ dùng. Giá trị của phần dữ liệu l
 cách tổ chức: kiểm tra contract trước khi xử lý, lưu dữ liệu theo lớp, và có một
 implementation PySpark cho kết quả giống hệt Pandas. Khi dữ liệu tăng lên (nhiều
 đội động cơ, tần suất lấy mẫu cao hơn), phần ETL và rolling features có thể chuyển
-sang Spark với bằng chứng parity sẵn có; benchmark $10\times$ ở
-Bảng~\ref{tab:followup-benchmark} cho thấy Spark đã nhanh hơn Pandas khoảng 3,4 lần
-ngay trên một máy.
+sang Spark với bằng chứng parity sẵn có. Mục~\ref{sec:res-scaling} cho thấy ngay trên một
+máy, ở 100× Spark tính nhanh hơn Pandas khoảng 5,5 lần, và ở 200× Pandas không xong
+trong 30 phút.
 
 Bảng~\ref{tab:big-data-5v} đối chiếu năm khía cạnh của bài toán với bằng chứng thực
 tế và giới hạn tương ứng.
@@ -130,7 +130,7 @@ tế và giới hạn tương ứng.
 \begin{tabularx}{\linewidth}{L{2.0cm}L{6.0cm}X}
 \toprule
 Khía cạnh & Bằng chứng trong báo cáo & Giới hạn hiện tại \\\midrule
-Volume & 265.256 quan sát từ bốn subset; dữ liệu raw khoảng 44,9 MB; lưu trên HDFS; benchmark nhân bản $10\times$. & Vẫn vừa bộ nhớ một máy; dữ liệu nhân bản chỉ đo chi phí kỹ thuật. \\
+Volume & 265.256 quan sát từ bốn subset; dữ liệu raw khoảng 44,9 MB; lưu trên HDFS; benchmark nhân bản đến 200×. & FD001 gốc vẫn vừa bộ nhớ một máy; ở 200× Pandas không xong trong 30 phút; dữ liệu nhân bản chỉ đo chi phí kỹ thuật. \\
 Velocity & Pipeline batch theo từng subset; khử nhiễu, bất thường và cảnh báo đều tính nhân quả theo cycle. & Chưa có streaming hoặc yêu cầu độ trễ thời gian thực. \\
 Variety & 21 sensor, 3 operational settings, chuỗi run-to-failure, nhãn RUL; lưu qua text, Parquet, SQLite. & Cùng một nguồn cảm biến dạng bảng; chưa có dữ liệu phi cấu trúc. \\
 Veracity & Manifest MD5/SHA-256 của nguồn, contract schema, kiểm tra khóa và cycle, giá trị thiếu, parity Pandas--PySpark--MapReduce, khử nhiễu EWMA. & Chưa kiểm chứng với lỗi cảm biến và dữ liệu thiếu của hệ thống thực. \\

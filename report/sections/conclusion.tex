@@ -8,8 +8,8 @@ sau:
 \begin{enumerate}[label=\textbf{Q\arabic*.},leftmargin=2.6em]
 \item Dữ liệu FD001 (20.631 dòng train, 13.096 dòng test) đạt mọi kiểm tra về
       schema, khóa và tính liên tục của cycle. ETL bằng PySpark khớp hoàn toàn với
-      Pandas trên ba bảng Silver/Gold; ở scale $10\times$, Spark local nhanh hơn
-      Pandas khoảng 3,4 lần. Trên cụm Hadoop một node, MapReduce và Spark đọc dữ
+      Pandas trên ba bảng Silver/Gold; ở 100×, Spark local tính nhanh hơn Pandas
+      khoảng 5,5 lần, và ở 200× Pandas không xong trong 30 phút. Trên cụm Hadoop một node, MapReduce và Spark đọc dữ
       liệu từ HDFS cũng cho kết quả khớp tuyệt đối với Pandas.
 \item EWMA span 10 giảm khoảng 86\% dao động ngắn hạn của 14 sensor có thông tin
       mà vẫn giữ xu hướng suy giảm; window 30 cycle tổng hợp 21 sensor thành 126

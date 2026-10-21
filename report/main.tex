@@ -106,7 +106,8 @@ bảo trì cho 100 động cơ test: 21 động cơ được báo vào xưởng 
 
 Dữ liệu được tổ chức theo ba lớp Bronze, Silver và Gold, xử lý bằng cả Pandas và
 PySpark với kết quả khớp tuyệt đối, và chạy trên HDFS, MapReduce một node.
-%%BENCH_ABSTRACT%%
+Khi nhân bản dữ liệu 100 lần, Spark tính nhanh hơn Pandas khoảng 5,5 lần; ở 200 lần,
+Pandas không xong trong 30 phút còn Spark hoàn tất trong 392 giây.
 Kết quả chỉ áp dụng cho dữ liệu mô phỏng; dữ liệu không có chi phí bảo trì nên báo cáo
 không đề xuất lịch bảo trì tối ưu.
 
@@ -114,7 +115,7 @@ không đề xuất lịch bảo trì tối ưu.
 phát hiện bất thường; time window; RUL; cảnh báo sớm; lịch bảo trì; PySpark.
 \clearpage
 \begin{spacing}{1.1}
-\setcounter{tocdepth}{2}
+\setcounter{tocdepth}{1}
 \tableofcontents
 \end{spacing}
 \clearpage

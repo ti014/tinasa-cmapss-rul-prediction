@@ -30,6 +30,8 @@ dist/
 
 # Jupyter
 .ipynb_checkpoints/
+# Notebooks 00–06 write fresh results for each kernel session.
+/outputs/notebook0[0-6]/
 
 # Environment variables and secrets
 # Local assistant state must never enter the project history.

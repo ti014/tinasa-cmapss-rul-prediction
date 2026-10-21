@@ -164,6 +164,15 @@ selecting 126 feature columns, and joining on `(split, engine_id, cycle)`. It
 also records the actual query boundary: SQLite contains only `engine_summary`
 and `train_targets`; observations are read from Silver Parquet.
 
+[Notebook 00](notebooks/00_data_pipeline_walkthrough.ipynb) runs the pipeline from
+raw inputs, writes Parquet/SQLite, and builds rolling features and model inputs
+in a fresh directory under `outputs/notebook00/`. It executes Pandas/PySpark
+checks and real HDFS jobs, requiring Java, the `etl` extra, and a running Docker
+Desktop. Each HDFS run uses its own directory under `/cmapss/notebook00/`; the
+containers stay running in Compose project `cmapss-notebook00` for inspection
+(NameNode: `http://localhost:9871`, YARN: `http://localhost:8089`). The notebook
+does not train the RUL model.
+
 FD001--FD004 are processed in separate subset directories. The repository does
 not union all four subsets into one table because the current key has no
 `dataset_id`. The implemented relationships are one-to-many from an engine to
@@ -490,9 +499,10 @@ After installing `requirements-dev.txt`, open the notebook from the repository r
 ```
 
 Select the `.venv` Python kernel and **Restart Kernel and Run All Cells**.
-This analyzes only train and recreates 12 CSV tables and 11 PNG figures.
-Validated fresh-kernel runs produced identical EDA artifacts in the same
-environment. The 2026-10-09 test run achieved **453 passed, 1 skipped**;
+This analyzes only train and creates 12 CSV tables and 14 PNG figures in a new
+`outputs/notebook01/run-*/` directory. Historical fresh-kernel checks covered the
+original EDA artifacts, preserved in `outputs/eda/`.
+The 2026-10-09 test run achieved **453 passed, 1 skipped**;
 the TCN test is skipped because `torch` is unavailable. The 2026-09-29 run
 achieved **198 tests** and remains the historical evidence for data, statistics,
 ETL, feature, modeling, PCA--ARIMA, cross-dataset, dashboard, and end-to-end
@@ -511,11 +521,9 @@ After installing `requirements-dev.txt`, open the train-only inference notebook:
 .venv\Scripts\python -m jupyterlab notebooks/02_fd001_inference.ipynb
 ```
 
-Running all cells recreates `outputs/statistics/tables/engine_sensor_pairs.csv`,
-`outputs/statistics/tables/sensor_inference.csv`, `run_info.json`, and
-`validation.json`, together with
-`outputs/statistics/figures/difference_distributions.png` and
-`outputs/statistics/figures/effect_size_ci.png`. For example, the current
+Running all cells creates a new `outputs/notebook02/run-*/` directory containing
+`tables/engine_sensor_pairs.csv`, `tables/sensor_inference.csv`, `run_info.json`,
+`validation.json`, and two figures in `figures/`. For example, the resulting
 artifact has 2,100 engine-sensor pairs and 21 sensor-level inference rows. Six
 globally constant sensors remain in the output as `all_zero_difference`; 15
 testable sensors reject the null after Benjamini-Hochberg FDR under the fixed
@@ -537,6 +545,10 @@ mean and CI. These are train-only findings, not model feature selection. A
 repeated-run check ran the notebook twice from fresh kernels; the two CSV files and two PNG files
 matched, and the runtime audit blocked probes that tried to open `test_FD001.txt`
 and `RUL_FD001.txt`.
+
+The repeated-run validator below writes to `outputs/statistics/` so it can
+compare both runs. Interactive notebook runs use fresh directories under
+`outputs/notebook02/`.
 
 Run the repeated-run statistics validation with:
 
@@ -714,16 +726,21 @@ schedule, and only then reads `RUL_FD001.txt` to build `status_vs_actual.csv`.
 
 ### Run the result notebooks
 
-Notebooks 03–06 read the saved artifacts, plot them and discuss the results. They
-do not fit models or write to `outputs/`; the consistency checks between code and
-artifacts live in `tests/`.
+Notebooks 01–06 explain each step through a concrete example before expanding to
+the full dataset. Each run writes to `outputs/notebookNN/run-*/`. Notebook 03
+reruns RUL cross-validation and evaluation; notebook 04 refits the Health Index
+and ARIMA. Notebook 05 recomputes metrics and bootstrap intervals from stored
+predictions without repeating the full nested-CV search. Notebook 06 recomputes
+EWMA, the Health Index, sensitivity grids, and maintenance schedules using stored
+baseline RUL predictions. Each notebook can run in its own kernel with the input
+artifacts supplied in the repository.
 
 | Notebook | Content | Reads |
 |---|---|---|
-| `03_fd001_modeling_evaluation.ipynb` | Per-fold MAE, test metrics, bootstrap CI, error by RUL range, RUL ≤ 30 warning | `outputs/modeling/tables/*` |
-| `04_fd001_health_index_arima.ipynb` | Health Index trend, ARIMA holdout metrics, naive baselines, ADF/Ljung–Box | `outputs/timeseries/tables/*` |
-| `05_cross_dataset_and_improvement.ipynb` | FD001–FD004 matrix, nested-CV ablation and paired CI | `outputs/cross_dataset/matrix.json`, `outputs/experiments/rul_improvement/20260928_rebuild/*` |
-| `06_fd001_degradation_maintenance.ipynb` | EWMA denoising, Health Index, anomaly detection, maintenance schedule and label check | `outputs/degradation/*`, `outputs/maintenance/*` |
+| `03_fd001_modeling_evaluation.ipynb` | Run 5-fold CV, select a model, evaluate test and RUL ≤ 30 warnings | Rolling features and train targets; test labels read after writing predictions |
+| `04_fd001_health_index_arima.ipynb` | Fit the Health Index on 90 engines, forecast 10 held-out engines, compare baselines | Raw train and `outputs/modeling/tables/fold_assignments.csv` |
+| `05_cross_dataset_and_improvement.ipynb` | Recompute metrics, ablation and paired CI; check the baseline decision | Cross-dataset predictions, run `20260928_rebuild` and follow-up `20260929` |
+| `06_fd001_degradation_maintenance.ipynb` | EWMA, anomalies, sensitivity grids, maintenance schedule and label check | Raw observations and stored baseline predictions; test labels read after scheduling |
 
 Open them in JupyterLab and run all cells, or execute them from the command line:
 

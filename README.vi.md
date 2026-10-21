@@ -161,6 +161,14 @@ giữ `split`, tạo RUL train, tạo rolling window, chọn 126 feature columns
 join theo `(split, engine_id, cycle)`. Tài liệu cũng nêu rõ SQLite chỉ chứa
 `engine_summary` và `train_targets`; observations được đọc từ Silver Parquet.
 
+[Notebook 00](notebooks/00_data_pipeline_walkthrough.ipynb) chạy pipeline từ raw,
+ghi lại Parquet/SQLite, tạo rolling features và dữ liệu X/y trong một thư mục mới
+ở `outputs/notebook00/`. Notebook chạy đối chiếu Pandas/PySpark và job HDFS thật,
+cần Java, optional dependency `etl` và Docker Desktop đang chạy. Dữ liệu HDFS
+của mỗi lần chạy nằm riêng trong `/cmapss/notebook00/`; các container được giữ
+chạy trong Compose project `cmapss-notebook00` để kiểm tra kết quả (NameNode:
+`http://localhost:9871`, YARN: `http://localhost:8089`). Notebook không huấn luyện mô hình RUL.
+
 FD001--FD004 được xử lý riêng trong các thư mục subset. Không union bốn subset
 thành một bảng chung vì khóa hiện tại chưa có `dataset_id`. Quan hệ chính là
 engine--observations một-nhiều; join feature với target và prediction với test
@@ -472,8 +480,9 @@ Sau khi cài `requirements-dev.txt`, mở notebook từ thư mục gốc:
 ```
 
 Chọn kernel Python của `.venv` và **Restart Kernel and Run All Cells**.
-Notebook chỉ phân tích train và tạo lại 12 bảng CSV, 11 hình PNG.
-Các lần kiểm tra với kernel mới tạo tệp EDA giống nhau trong cùng môi trường.
+Notebook chỉ phân tích train, tạo 12 bảng CSV và 14 hình PNG trong thư mục mới
+`outputs/notebook01/run-*/`. Các kiểm tra tái lập EDA trước đây áp dụng cho bộ
+artifact gốc ở `outputs/eda/`, được giữ nguyên để đối chiếu.
 Bộ kiểm thử ngày 09/10/2026 đạt **453 passed, 1 skipped**; kiểm thử
 TCN được bỏ qua vì môi trường chưa có `torch`. Lần chạy ngày 29/09/2026 đạt
 **198 tests** và được giữ như bằng chứng lịch sử cho các nhánh dữ liệu, thống kê,
@@ -493,10 +502,10 @@ Sau khi cài `requirements-dev.txt`, mở notebook suy luận chỉ dùng train:
 .venv\Scripts\python -m jupyterlab notebooks/02_fd001_inference.ipynb
 ```
 
-Chạy toàn bộ cell sẽ tạo lại `outputs/statistics/tables/engine_sensor_pairs.csv`,
-`outputs/statistics/tables/sensor_inference.csv`, `run_info.json` và
-`validation.json`, cùng hai hình trong `outputs/statistics/figures/`. Ví dụ,
-tệp đầu ra hiện tại có 2.100 cặp động cơ--sensor và 21 dòng suy luận theo
+Chạy toàn bộ cell tạo thư mục mới `outputs/notebook02/run-*/`, chứa hai bảng
+`tables/engine_sensor_pairs.csv`, `tables/sensor_inference.csv`, `run_info.json`,
+`validation.json` và hai hình trong `figures/`. Ví dụ, kết quả có 2.100 cặp
+động cơ--sensor và 21 dòng suy luận theo
 sensor. Sáu sensor hằng toàn tập được giữ với trạng thái
 `all_zero_difference`; 15 sensor kiểm định được đều bác bỏ giả thuyết không sau
 Benjamini-Hochberg FDR theo protocol đã chốt. Đây là kết quả chỉ dùng train,
@@ -516,6 +525,9 @@ Hai hình suy luận dùng panel riêng cho từng sensor vì các sensor khác 
 kết quả train-only, chưa phải lựa chọn đặc trưng cho mô hình. Kiểm tra chạy lặp
 notebook hai lần từ fresh kernel cho hai CSV và hai PNG giống nhau; runtime
 audit đã chặn thử nghiệm mở `test_FD001.txt` và `RUL_FD001.txt`.
+
+Lệnh kiểm tra tái lập bên dưới ghi vào `outputs/statistics/` để so sánh hai lần
+chạy. Chạy notebook thông thường vẫn tạo thư mục riêng trong `outputs/notebook02/`.
 
 Có thể chạy lại kiểm tra thống kê bằng:
 
@@ -682,16 +694,20 @@ file, rồi mới đọc `RUL_FD001.txt` để tạo bảng kiểm tra `status_v
 
 ### Chạy notebook phân tích kết quả
 
-Notebook 03–06 đọc artifact đã lưu, vẽ hình và nhận xét kết quả. Chúng không huấn
-luyện mô hình và không ghi vào `outputs/`; phần kiểm tra code khớp với artifact nằm
-trong `tests/`.
+Notebook 01–06 giải thích từng bước qua một ví dụ, rồi mở rộng sang toàn bộ dữ liệu.
+Mỗi lần chạy ghi kết quả riêng trong `outputs/notebookNN/run-*/`. Notebook 03 chạy
+lại cross-validation và đánh giá RUL; notebook 04 fit lại Health Index và ARIMA.
+Notebook 05 tính lại metric/bootstrap từ dự đoán đã lưu, không chạy lại toàn bộ
+quá trình chọn cấu hình nested CV. Notebook 06 tính lại EWMA, Health Index, lưới
+độ nhạy và lịch, dùng RUL dự đoán từ baseline đã lưu. Các notebook dùng artifact
+đầu vào có sẵn trong repo và có thể chạy bằng kernel riêng.
 
 | Notebook | Nội dung | Dữ liệu đọc |
 |---|---|---|
-| `03_fd001_modeling_evaluation.ipynb` | MAE theo fold, metric test, bootstrap CI, sai số theo khoảng RUL, cảnh báo RUL ≤ 30 | `outputs/modeling/tables/*` |
-| `04_fd001_health_index_arima.ipynb` | Xu hướng Health Index, metric holdout ARIMA, naive baseline, ADF/Ljung–Box | `outputs/timeseries/tables/*` |
-| `05_cross_dataset_and_improvement.ipynb` | Ma trận FD001–FD004, ablation và paired CI của nested CV | `outputs/cross_dataset/matrix.json`, `outputs/experiments/rul_improvement/20260928_rebuild/*` |
-| `06_fd001_degradation_maintenance.ipynb` | Khử nhiễu EWMA, Health Index, phát hiện bất thường, lịch bảo trì và kiểm tra bằng nhãn test | `outputs/degradation/*`, `outputs/maintenance/*` |
+| `03_fd001_modeling_evaluation.ipynb` | Chạy 5-fold CV, chọn mô hình, đánh giá test và cảnh báo RUL ≤ 30 | `outputs/features/gold/rolling_features.parquet`, train targets; nhãn test đọc sau khi ghi dự đoán |
+| `04_fd001_health_index_arima.ipynb` | Học Health Index trên 90 động cơ, fit ARIMA cho 10 động cơ giữ riêng, so sánh baseline | Raw train và `outputs/modeling/tables/fold_assignments.csv` |
+| `05_cross_dataset_and_improvement.ipynb` | Tính lại metric, ablation và paired CI; kiểm tra quyết định giữ baseline | Dự đoán cross-dataset, run `20260928_rebuild` và follow-up `20260929` |
+| `06_fd001_degradation_maintenance.ipynb` | EWMA, bất thường, lưới độ nhạy, lịch bảo trì và đối chiếu nhãn test | Raw observations, `outputs/modeling/predictions/final_predictions.parquet`; nhãn test đọc sau khi lập lịch |
 
 Mở notebook trong JupyterLab rồi chạy tất cả các ô, hoặc chạy từ dòng lệnh:
 

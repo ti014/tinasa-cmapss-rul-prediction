@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from cmapss.presentation import COLORS, apply_plot_style, style_figure
+
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -26,6 +28,8 @@ from cmapss.modeling.early_warning import build_warning_events
 from cmapss.modeling.metrics import bootstrap_metric_intervals, summarize_prediction_errors
 
 
+apply_plot_style()
+
 def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
@@ -46,18 +50,19 @@ def _write_warning_figure(
         & oof_predictions["model_name"].eq(str(event["model_name"]))
     ].sort_values("cycle", kind="mergesort")
     fig, ax = plt.subplots(figsize=(8, 4.5))
-    ax.plot(frame["cycle"], frame["y_true"], label="RUL thực tế", color="#2166ac")
-    ax.plot(frame["cycle"], frame["y_pred"], label="RUL dự đoán (OOF)", color="#b2182b")
-    ax.axhline(int(event["rul_threshold"]), color="#f28e2b", linestyle="--", label="Ngưỡng cảnh báo")
+    ax.plot(frame["cycle"], frame["y_true"], label="RUL thực tế", color=COLORS["blue"])
+    ax.plot(frame["cycle"], frame["y_pred"], label="RUL dự đoán (OOF)", color=COLORS["red"])
+    ax.axhline(int(event["rul_threshold"]), color=COLORS["orange"], linestyle="--", label="Ngưỡng cảnh báo")
     ax.axvline(int(event["failure_cycle"]), color="black", linestyle="--", linewidth=0.8, label="Thời điểm hỏng hóc")
     if int(event["first_warning_cycle"]) >= 0:
-        ax.axvline(int(event["first_warning_cycle"]), color="#762a83", linestyle=":", label="Cảnh báo đầu tiên")
+        ax.axvline(int(event["first_warning_cycle"]), color=COLORS["teal"], linestyle=":", label="Cảnh báo đầu tiên")
     ax.set_xlabel("Cycle")
     ax.set_ylabel("RUL (cycle)")
     ax.set_title(f"Quỹ đạo cảnh báo sớm trên dự đoán OOF — động cơ train {int(event['engine_id'])}")
     ax.grid(alpha=0.2)
     ax.legend()
     fig.tight_layout()
+    style_figure(fig)
     fig.savefig(path, dpi=160)
     plt.close(fig)
 

@@ -9,6 +9,8 @@ Ví dụ chạy từ thư mục gốc repository::
 
 from __future__ import annotations
 
+from cmapss.presentation import COLORS, apply_plot_style, style_figure
+
 import argparse
 import hashlib
 import json
@@ -37,9 +39,11 @@ from cmapss.maintenance.report import (
 )
 from cmapss.timeseries.health_index import fit_health_index
 
-STATUS_COLORS = {NEEDS_MAINTENANCE: "#eb6834", WATCH: "#e0a21b", NORMAL: "#2a78d6"}
-INK_2, GRID = "#52514e", "#e8e7e3"
+STATUS_COLORS = {NEEDS_MAINTENANCE: COLORS["orange"], WATCH: COLORS["gold"], NORMAL: COLORS["blue"]}
+INK_2, GRID = COLORS["muted"], COLORS["grid"]
 
+
+apply_plot_style()
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Báo cáo dự đoán thời điểm cần bảo trì FD001")
@@ -78,6 +82,7 @@ def _plot_fleet(schedule: pd.DataFrame, threshold: int, path: Path) -> None:
     right.set_xlabel("Số động cơ", fontsize=8)
     right.set_title("Trạng thái hiện tại", fontsize=9, color=INK_2)
     _style(right)
+    style_figure(fig)
     fig.savefig(path, dpi=200)
     plt.close(fig)
 
@@ -109,6 +114,7 @@ def _plot_planning(planning: pd.DataFrame, path: Path) -> None:
     ax.legend(frameon=False, fontsize=8)
     ax.grid(axis="y", color=GRID, linewidth=0.6)
     _style(ax)
+    style_figure(fig)
     fig.savefig(path, dpi=200)
     plt.close(fig)
 

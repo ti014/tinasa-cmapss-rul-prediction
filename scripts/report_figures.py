@@ -13,6 +13,8 @@ Usage (from the repository root):
 
 from __future__ import annotations
 
+from cmapss.presentation import COLORS, FONT, apply_plot_style, style_figure
+
 from pathlib import Path
 
 import matplotlib
@@ -28,34 +30,13 @@ from cmapss.presentation import format_number_vi as vn
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "outputs/diagnostics/figures"
 
-BLUE, ORANGE, AQUA = "#2a78d6", "#eb6834", "#1baf7a"
-GRAY, LIGHT_GRAY = "#8a8985", "#d9d8d4"
-INK, INK_2 = "#0b0b0b", "#52514e"
+BLUE, ORANGE, AQUA = COLORS["blue"], COLORS["orange"], COLORS["teal"]
+GRAY, LIGHT_GRAY = COLORS["gray"], COLORS["grid"]
+INK, INK_2 = COLORS["ink"], COLORS["muted"]
 
-plt.rcParams.update(
-    {
-        "font.family": "DejaVu Sans",
-        "font.size": 9,
-        "axes.edgecolor": LIGHT_GRAY,
-        "axes.labelcolor": INK_2,
-        "axes.titlesize": 10,
-        "axes.titlecolor": INK,
-        "axes.titleweight": "bold",
-        "axes.titlelocation": "left",
-        "axes.spines.top": False,
-        "axes.spines.right": False,
-        "axes.grid": True,
-        "axes.grid.axis": "y",
-        "grid.color": "#ecebe8",
-        "grid.linewidth": 0.8,
-        "xtick.color": INK_2,
-        "ytick.color": INK_2,
-        "legend.frameon": False,
-        "savefig.dpi": 200,
-        "savefig.bbox": "tight",
-    }
-)
 
+
+apply_plot_style()
 
 def read_raw(name: str) -> pd.DataFrame:
     return read_observations(ROOT / "data/raw" / name, split=name.split("_", 1)[0])
@@ -89,7 +70,7 @@ def window_example() -> Path:
         f"max   = {vn(row['sensor_11__max'])}\n"
         f"slope = {vn(row['sensor_11__slope'], 4)}"
     )
-    ax1.text(0.02, 0.97, text, transform=ax1.transAxes, va="top", ha="left", family="DejaVu Sans Mono",
+    ax1.text(0.02, 0.97, text, transform=ax1.transAxes, va="top", ha="left", family=FONT,
              fontsize=8, color=INK, bbox={"facecolor": "white", "edgecolor": LIGHT_GRAY, "boxstyle": "round,pad=0.4"})
     ax1.set(xlabel="cycle", ylabel="giá trị sensor_11 (đơn vị gốc)",
             title="(a) Một dòng đặc trưng = 6 thống kê trên 30 cycles gần nhất")
@@ -104,6 +85,7 @@ def window_example() -> Path:
     ax2.set(xlabel="cycle", ylabel="RUL (cycles)", title="(b) Nhãn RUL = cycle cuối − cycle hiện tại", ylim=(0, 200))
     fig.tight_layout()
     path = OUT / "window_example.png"
+    style_figure(fig)
     fig.savefig(path)
     plt.close(fig)
     return path
@@ -131,6 +113,7 @@ def oof_pred_vs_true() -> Path:
     cb.set_label("số window (thang log)", color=INK_2)
     ax.legend(loc="upper left", fontsize=8)
     path = OUT / "oof_pred_vs_true.png"
+    style_figure(fig)
     fig.savefig(path)
     plt.close(fig)
     return path
@@ -159,6 +142,7 @@ def warning_vs_lifetime() -> Path:
     ax.grid(axis="both")
     ax.legend(loc="upper center", fontsize=8, ncol=3, bbox_to_anchor=(0.5, -0.18))
     path = OUT / "warning_vs_lifetime.png"
+    style_figure(fig)
     fig.savefig(path)
     plt.close(fig)
     return path
@@ -199,6 +183,7 @@ def transfer_shift() -> Path:
                loc="upper center", ncol=3, bbox_to_anchor=(0.5, -0.22))
     fig.tight_layout()
     path = OUT / "transfer_shift.png"
+    style_figure(fig)
     fig.savefig(path)
     plt.close(fig)
     return path
@@ -235,6 +220,7 @@ def cross_dataset_mae() -> Path:
     ax.grid(axis="y", visible=False)
     ax.legend(loc="upper right", fontsize=8)
     path = OUT / "cross_dataset_mae.png"
+    style_figure(fig)
     fig.savefig(path)
     plt.close(fig)
     return path

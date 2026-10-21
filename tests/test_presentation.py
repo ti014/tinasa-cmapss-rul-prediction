@@ -12,3 +12,18 @@ from cmapss.presentation import format_number_vi
 ])
 def test_vietnamese_numbers(value, digits, expected):
     assert format_number_vi(value, digits) == expected
+
+
+def test_shared_plot_style_keeps_category_labels():
+    from matplotlib import pyplot as plt
+    from cmapss.presentation import COLORS, FONT, apply_plot_style, style_figure
+
+    apply_plot_style()
+    fig, ax = plt.subplots()
+    ax.bar(["Nhóm A", "Nhóm B"], [1.25, 2.5])
+    style_figure(fig)
+    assert plt.rcParams["font.family"] == [FONT]
+    assert ax.yaxis.get_major_formatter()(1.25, 0) == "1,25"
+    assert ax.get_xticklabels()[0].get_text() == "Nhóm A"
+    assert ax.patches[0].get_facecolor()[:3] == pytest.approx((33/255, 64/255, 154/255))
+    plt.close(fig)

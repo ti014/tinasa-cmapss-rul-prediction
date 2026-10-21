@@ -46,21 +46,10 @@ gốc của nguồn. Nguồn, thời điểm tải, kích thước và hash củ
 Mỗi subset có ba file. Hai file quan sát \texttt{train\_FD001.txt} và
 \texttt{test\_FD001.txt} có cùng 26 cột nhưng chứa hai nhóm động cơ khác nhau, nên
 chúng được \textbf{nối theo chiều dòng (union)}, không phải join. Trước khi nối,
-mỗi dòng được gắn thêm cột \texttt{split} để biết nó thuộc tập nào
-(Mã nguồn~\ref{lst:union}). Bảng kết quả của FD001 có $20.631+13.096=33.727$ dòng
+mỗi dòng được gắn thêm cột \texttt{split} để biết nó thuộc tập nào; Pandas dùng
+\texttt{pd.concat}, PySpark dùng \texttt{unionByName}. Bảng kết quả của FD001 có $20.631+13.096=33.727$ dòng
 và 27 cột.
 
-\begin{lstlisting}[language=Python,caption={Đọc và gom hai file quan sát (rút gọn từ
-\texttt{pandas\_pipeline.py} và \texttt{spark\_pipeline.py}).},label={lst:union}]
-# Pandas: read each file, validate 26 fields, add the split column, then union rows
-frames = [read_observations(raw_dir / f"{split}_FD001.txt", split=split)
-          for split in ("train", "test")]
-observations = pd.concat(frames, ignore_index=True)
-observations = observations.sort_values(["split", "engine_id", "cycle"])
-
-# PySpark: the same union on Spark DataFrames
-observations = train.unionByName(test).orderBy("split", "engine_id", "cycle")
-\end{lstlisting}
 
 Cột \texttt{split} là cần thiết vì động cơ train 1 và test engine 1 là hai động cơ
 khác nhau nhưng có cùng \texttt{(engine\_id, cycle)}. Sau khi nối, cặp
@@ -117,34 +106,12 @@ Spark 4.0.1 client. Lệnh \texttt{python -m cmapss.hdfs} thực hiện bốn b�
 \item chạy job MapReduce viết bằng Hadoop Streaming (\texttt{lifetime\_job.py}) trên
       YARN để tính bảng Gold mỗi động cơ một dòng: số cycle, cycle đầu và cycle cuối;
 \item chạy Spark đọc raw từ HDFS, ghi lớp Silver dạng Parquet phân vùng theo
-      \texttt{split} vào \texttt{/cmapss/silver/observations}, rồi đọc lại Parquet
+      \texttt{split} vào \filepath{/cmapss/silver/observations}, rồi đọc lại Parquet
       đó để tính cùng bảng Gold;
 \item tải hai bảng kết quả về và đối chiếu với bảng \texttt{engine\_summary} do ETL
       Pandas tạo.
 \end{enumerate}
 
-\begin{lstlisting}[language=Python,caption={Mapper và reducer của job MapReduce (rút gọn từ
-\texttt{src/cmapss/hdfs/lifetime\_job.py}).},label={lst:mapreduce}]
-# map: one raw line -> "split:engine<TAB>cycle"; the zero-padded id keeps Hadoop's key order
-def map_lines(lines, source):
-    split = split_from_path(source)              # train_FD001.txt -> "train"
-    for line in lines:
-        fields = line.split()
-        yield "%s:%04d\t%d" % (split, int(fields[0]), int(fields[1]))
-
-# reduce: keys arrive sorted, so all cycle of one engine are consecutive
-def reduce_lines(lines):
-    current, cycle = None, []
-    for line in lines:
-        key, value = line.rstrip("\n").split("\t")
-        if key != current and current is not None:
-            yield summary(current, cycles)       # split, engine, n_cycles, min, max
-            cycle = []
-        current = key
-        cycle.append(int(value))
-    if current is not None:
-        yield summary(current, cycles)
-\end{lstlisting}
 
 Bảng~\ref{tab:hdfs} tóm tắt lần chạy ngày 09/10/2026. Hadoop chia input thành ba phần
 (input split) và chạy ba map task cùng một reduce task. Cả MapReduce và Spark đều cho
@@ -256,33 +223,9 @@ thước bảng sau mỗi bước.
 \end{tabularx}
 \end{table}
 
-Mã nguồn~\ref{lst:transform} trích phần code của bước 3, 5 và 6. Bước 3 được viết
-bằng cả Pandas và PySpark với cùng logic.
+Bước 3 được viết bằng cả Pandas và PySpark với cùng logic; code nằm trong
+\texttt{targets.py}, \texttt{spark\_pipeline.py} và \texttt{rolling.py}.
 
-\begin{lstlisting}[language=Python,caption={Tạo nhãn, tạo đặc trưng và join (trích từ
-\texttt{targets.py}, \texttt{spark\_pipeline.py}, \texttt{rolling.py}, \texttt{modeling/pipeline.py}).},label={lst:transform}]
-# Step 3 - Pandas: RUL = last cycle of the engine - current cycle
-last_cycle = observations.groupby("engine_id")["cycle"].transform("max")
-targets["rul"] = last_cycle - observations["cycle"]
-
-# Step 3 - PySpark: the same label with groupBy + join
-max_cycles = train.groupBy("engine_id").agg(F.max("cycle").alias("max_cycle"))
-targets = (train.join(max_cycles, on="engine_id")
-                .withColumn("rul", F.col("max_cycle") - F.col("cycle")))
-
-# Step 5 - for every (split, engine_id) group, sorted by cycle
-rolling = values.rolling(30, min_periods=30)
-feature[f"{sensor}__last"]  = values
-feature[f"{sensor}__mean"]  = rolling.mean()
-feature[f"{sensor}__std"]   = rolling.std(ddof=1)
-feature[f"{sensor}__min"]   = rolling.min()
-feature[f"{sensor}__max"]   = rolling.max()
-feature[f"{sensor}__slope"] = rolling.apply(_slope, raw=True)
-
-# Step 6 - one-to-one join on the full key
-dataset = train_features.merge(train_targets, on=["split", "engine_id", "cycle"],
-                               how="left", validate="one_to_one")
-\end{lstlisting}
 
 Hình~\ref{fig:window-example} minh họa bước 5 và bước 3 trên động cơ train 1. Tại
 cycle 100, window gồm cycle 71--100; sáu thống kê của \texttt{sensor\_11} là giá

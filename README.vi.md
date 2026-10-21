@@ -35,7 +35,7 @@ Kết quả chính trên FD001:
 
 Sản phẩm bàn giao:
 
-- [Báo cáo PDF](report/main.pdf) (50 trang, [nguồn LaTeX](report/README.md)).
+- [Báo cáo PDF](report/main.pdf) (40 trang, [nguồn LaTeX](report/README.md)).
 - [Slide trình bày](slides/cmapss_fd001_presentation.pptx) ([PDF](slides/cmapss_fd001_presentation.pdf)),
   20 slide trên template IUH, dựng bằng [`slides/build_presentation.py`](slides/build_presentation.py).
 - [Dashboard Streamlit](app.py) chín trang, chỉ đọc artifact.

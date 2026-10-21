@@ -3,6 +3,9 @@
 from cmapss.data.contracts import KEY
 from cmapss.features.contracts import ROLLING_FEATURE_VALUE_COLUMNS
 
+# Mốc cuối dành cho nhóm test >90; OOF dùng các mốc chi tiết đến 400.
+RUL_BINS = (-1, 30, 60, 90, 125, 150, 200, 400, 10_000)
+
 MODELING_SCHEMA_VERSION = 3
 MODELING_SEED = 42
 MODELING_N_SPLITS = 5

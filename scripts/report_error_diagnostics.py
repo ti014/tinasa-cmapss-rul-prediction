@@ -11,6 +11,8 @@ import json
 import numpy as np
 import pandas as pd
 
+from cmapss.modeling.contracts import RUL_BINS
+
 ROOT = Path(__file__).resolve().parents[1]
 RAW_COLUMNS = ["engine_id", "cycle", "setting_1", "setting_2", "setting_3"] + [
     f"sensor_{i}" for i in range(1, 22)
@@ -18,7 +20,6 @@ RAW_COLUMNS = ["engine_id", "cycle", "setting_1", "setting_2", "setting_3"] + [
 # Sensors with a within-engine trend in FD001 EDA; constant and near-constant
 # sensors are excluded so the range check reflects informative channels.
 RANGE_SENSORS = [f"sensor_{i}" for i in (2, 3, 4, 7, 11, 12, 15, 20, 21)]
-OOF_BINS = [-1, 30, 60, 90, 125, 150, 200, 400]
 
 
 def read_raw(name: str) -> pd.DataFrame:
@@ -29,7 +30,7 @@ def oof_by_true_rul() -> list[dict]:
     oof = pd.read_parquet(ROOT / "outputs/modeling/predictions/oof_predictions.parquet")
     oof = oof[oof["model_name"] == "hist_gradient_boosting"].copy()
     oof["error"] = oof["y_pred"] - oof["y_true"]
-    bins = pd.cut(oof["y_true"], OOF_BINS)
+    bins = pd.cut(oof["y_true"], RUL_BINS[:-1])
     table = oof.groupby(bins, observed=True).agg(
         n_rows=("error", "size"),
         mae=("absolute_error", "mean"),
@@ -46,7 +47,7 @@ def test_error_share() -> dict:
     final = pd.read_parquet(ROOT / "outputs/modeling/predictions/final_evaluation.parquet")
     final = final.sort_values("absolute_error", ascending=False)
     total = final["nasa_score_component"].sum()
-    bins = pd.cut(final["y_true"], [-1, 30, 60, 90, 10_000])
+    bins = pd.cut(final["y_true"], (*RUL_BINS[:4], RUL_BINS[-1]))
     by_bin = final.groupby(bins, observed=True)["absolute_error"].agg(["mean", "size"])
     return {
         "top10_share_of_nasa_score": float(final["nasa_score_component"].head(10).sum() / total),

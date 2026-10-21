@@ -35,6 +35,7 @@ OUT = ROOT / "slides/figures"
 BLUE, GOLD, RED, TEAL = COLORS["blue"], COLORS["gold"], COLORS["red"], COLORS["teal"]
 INK, SLATE, LINE, GRAY = COLORS["ink"], COLORS["muted"], COLORS["grid"], COLORS["gray"]
 DPI = 220
+STOP_LABELS = {"timeout": "quá 30 phút", "failed": "lỗi"}
 
 
 apply_plot_style()
@@ -96,23 +97,17 @@ def benchmark_scaling() -> None:
                          color=colors[engine], linewidth=1.8, label=labels[engine])
         stopped = rows.loc[rows["status"].isin(("failed", "timeout"))]
         if not stopped.empty:
-            # Khi worker dừng trước khi ghi số đo, đặt dấu x tại giới hạn máy để vẫn
-            # cho thấy scale đã thử và không biến thất bại thành số đo thành công.
-            x = stopped["scale"]
-            y_time = stopped["elapsed_before_stop_seconds"]
-            y_ram = (np.full(len(stopped), ram_limit) if np.isfinite(ram_limit)
-                     else np.full(len(stopped), np.nan))
-            axes[0].scatter(x, y_time, marker="x", s=55, linewidths=2, color=colors[engine])
-            axes[1].scatter(x, y_ram, marker="x", s=55, linewidths=2, color=colors[engine])
+            # Lượt dừng giữa chừng chỉ có thời gian lúc dừng; RAM không đo được nên không vẽ
+            # bên hình RAM, tránh biến thất bại thành số đo.
+            axes[0].scatter(stopped["scale"], stopped["elapsed_before_stop_seconds"], marker="x",
+                            s=55, linewidths=2, color=colors[engine])
             for _, row in stopped.iterrows():
-                status = str(row["status"])
+                status = STOP_LABELS[str(row["status"])]
                 axes[0].annotate(status, (row["scale"], row["elapsed_before_stop_seconds"]),
-                                 xytext=(4, 4), textcoords="offset points", fontsize=8,
-                                 color=colors[engine])
-                if np.isfinite(ram_limit):
-                    axes[1].annotate(status, (row["scale"], ram_limit), xytext=(4, 4),
-                                     textcoords="offset points", fontsize=8, color=colors[engine])
+                                 xytext=(-4, 6), textcoords="offset points", fontsize=8,
+                                 ha="right", color=colors[engine])
 
+    axes[0].set_ylim(top=axes[0].get_ylim()[1] * 1.08)  # chừa chỗ cho nhãn dấu x
     axes[0].set_title("Thời gian tính toán (không gồm ghi file)")
     axes[0].set_ylabel("Giây")
     axes[1].set_title("RAM đỉnh của cây process")
@@ -126,8 +121,10 @@ def benchmark_scaling() -> None:
     if np.isfinite(ram_limit):
         axes[1].axhline(ram_limit, color=RED, linestyle="--", linewidth=1.0,
                         label=f"RAM máy: {format_number_vi(ram_limit, 1)} GiB")
-        axes[1].text(0.02, 0.97, f"RAM máy {format_number_vi(ram_limit, 1)} GiB",
-                     transform=axes[1].transAxes, va="top", fontsize=8, color=RED)
+        axes[1].set_ylim(top=ram_limit * 1.15)
+        axes[1].annotate(f"RAM máy {format_number_vi(ram_limit, 1)} GiB", (0.02, ram_limit),
+                         xycoords=("axes fraction", "data"), xytext=(0, 3),
+                         textcoords="offset points", va="bottom", fontsize=8, color=RED)
     _save(fig, "benchmark_scaling.png")
 
 

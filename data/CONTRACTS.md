@@ -21,8 +21,6 @@ JRE.
   giá cuối; đây là nguồn public của các quy tắc pipeline.
 - [Nguồn FD001](raw/DATA_SOURCE.md) và [mô tả NASA](raw/readme.txt): 26 cột,
   ý nghĩa cycle, engine, train/test và ánh xạ nhãn.
-- Kế hoạch cục bộ `docs/plans/active/2026-09-21-cmapss-rul-final-report.md`:
-  raw RUL, window 30 cycles, 100 final predictions và phạm vi triển khai.
 - Quy tắc đã được yêu cầu triển khai trong đợt data contract ngày 2026-09-22.
 
 Các kiểm tra không tự điền giá trị thiếu, loại dòng lỗi, nối engine giữa split,
@@ -150,10 +148,10 @@ Mỗi engine dùng tạo cặp phải bắt đầu ở cycle 1 và liên tục. 
 
 ### PAIR_WINDOW
 
-Mỗi engine phải có ít nhất 60 cycles. Đoạn đầu cố định là 1–30; nếu `T_i` là
+Mỗi engine phải có ít nhất 60 cycle. Đoạn đầu cố định là 1–30; nếu `T_i` là
 cycle cuối thì đoạn cuối là `T_i-29`–`T_i`. Hai đoạn có đúng 30 observations
-và không chồng nhau. Engine 59 cycles bị từ chối, không rút ngắn window hoặc
-bỏ engine để tiếp tục chạy. Ví dụ engine dài 200 cycles dùng 1–30 và 171–200.
+và không chồng nhau. Engine 59 cycle bị từ chối, không rút ngắn window hoặc
+bỏ engine để tiếp tục chạy. Ví dụ engine dài 200 cycle dùng 1–30 và 171–200.
 
 ### PAIR_SENSOR
 
@@ -179,7 +177,7 @@ null, NaN hoặc Infinity.
 ### PAIR_DIFFERENCE
 
 `difference = late_mean - early_mean` trước khi làm tròn để trình bày. Ví dụ
-sensor bằng cycle trong engine 60 cycles có `early_mean=15,5`,
+sensor bằng cycle trong engine 60 cycle có `early_mean=15,5`,
 `late_mean=45,5` và `difference=30`. Validator yêu cầu đúng kết quả `float64`
 của phép trừ này, không dùng relative tolerance có thể chấp nhận chênh lệch
 khác ở thang giá trị lớn.
@@ -310,7 +308,7 @@ tuyến tính least-squares theo vị trí 1--30 trong chính window. Ví dụ n
 `mean=15,5`, `std` là độ lệch chuẩn mẫu của 1--30, `min=1`, `max=30` và
 `slope=1`.
 
-Mỗi engine phải có ít nhất 30 cycles để tạo rolling features. Engine dưới 30
+Mỗi engine phải có ít nhất 30 cycle để tạo rolling features. Engine dưới 30
 cycles bị từ chối bằng rule `ROLLING_WINDOW`; pipeline không tự rút ngắn window,
 không padding và không impute. Với FD001 hiện tại, artifact có 17.731 train
 windows, 10.196 test windows, 126 feature columns và 27.927 dòng tổng cộng.
@@ -409,7 +407,7 @@ enforcement hoặc branch protection cho toàn repository.
 
 | Artifact | Quy tắc đã chốt | Phần chưa triển khai |
 | --- | --- | --- |
-| Rolling features | Đã có artifact M3.2 tại `outputs/features/gold/rolling_features.parquet`: khóa observation tại cycle cuối window, trailing window đủ 30 cycles, cùng engine/split, không dùng tương lai; giữ 21 sensors; cột `<sensor>__<stat>` với `last`, `mean`, sample `std` (`ddof=1`), `min`, `max`, slope | Chưa có PCA hoặc feature selection; nếu thêm, phải fit trong training fold |
+| Rolling features | Đã có artifact M3.2 tại `outputs/features/gold/rolling_features.parquet`: khóa observation tại cycle cuối window, trailing window đủ 30 cycle, cùng engine/split, không dùng tương lai; giữ 21 sensors; cột `<sensor>__<stat>` với `last`, `mean`, sample `std` (`ddof=1`), `min`, `max`, slope | Chưa có PCA hoặc feature selection; nếu thêm, phải fit trong training fold |
 | Final predictions | Đã có artifact tại `outputs/modeling/predictions/final_predictions.parquet`: khóa `(split, engine_id, cycle)` tại cycle cuối test; một giá trị RUL dự đoán mỗi engine, đúng 100 dòng; tạo trước khi join test labels | Chưa có serving API; chưa clip prediction vì lần chạy hiện tại không sinh giá trị âm |
 | Dashboard reproducibility | Đã có `app.py`, optional extra `dashboard`, loader kiểm schema và view RUL/Health Index/provenance đọc từ artifact; loader được kiểm tra trong lệnh tái lập end-to-end | Chưa có serving API; giao diện không tự chạy lại upstream pipeline |
 | End-to-end reproducibility | Đã có `python -m cmapss.reproducibility`: chạy raw → ETL → features → modeling trong output root mới, đối chiếu 12 bảng, metric, hình, hash raw và dashboard loader | Chưa có serving API; PySpark parity và notebook vẫn là kiểm tra riêng |
@@ -428,12 +426,12 @@ hai file này giữ nguyên phiên bản từ `uv.lock`. Không cần uv khi cà
 Nếu đã dùng uv, từ thư mục gốc chỉ cần:
 
 ```powershell
-uv run cmapss-validate
+uv run --frozen cmapss-validate
 ```
 
 Lệnh tự chuẩn bị môi trường trước khi kiểm tra dữ liệu. Thêm
 `--check-test-labels` nếu cần kiểm tra riêng tính toàn vẹn nhãn test; dùng
-`uv run pytest` cho kiểm thử khi phát triển.
+`uv run --frozen python -m pytest` cho kiểm thử khi phát triển.
 
 Dependency trực tiếp nằm trong `pyproject.toml`; `uv.lock` khóa cả dependency
 bắc cầu. Môi trường được kiểm chứng ở đợt đầu là Python 3.12.14 trên Windows.

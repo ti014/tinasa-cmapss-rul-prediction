@@ -1,6 +1,9 @@
 """
 Nghiên cứu FD001 bằng nested cross-validation: chọn mô hình tại 50/70/90% tuổi thọ và
 hiệu chuẩn cảnh báo trên inner OOF; tuổi thọ không là feature.
+
+Report không trình bày nghiên cứu này; package được giữ vì
+scripts/build_course_alignment_evidence.py dùng hàm đọc cảnh báo ngưỡng 30/40.
 """
 
 from __future__ import annotations
@@ -22,11 +25,11 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--output-dir", default="outputs/experiments/audit_remediation/20261005")
     parser.add_argument("--fit-threads", type=int, default=4)
     parser.add_argument("--skip-test-evaluation", action="store_true")
-    parser.add_argument("--dry-run", action="store_true", help="2x2 folds, two candidates,20 rounds,20 resamples, no test labels")
+    parser.add_argument("--dry-run", action="store_true", help="chạy thử: 2x2 fold, hai ứng viên, 20 vòng boosting, 20 lần bootstrap, không đọc nhãn test")
     args = parser.parse_args(argv)
     if args.dry_run:
         if args.output_dir == parser.get_default("output_dir"):
-            parser.error("--dry-run requires a separate explicit --output-dir")
+            parser.error("--dry-run cần --output-dir riêng, khác thư mục mặc định")
         config = AuditStudyConfig(outer_splits=2, inner_splits=2,
                                   candidate_ids=("hgb_baseline", "hgb_history"),
                                   hgb_max_iter=20, bootstrap_resamples=20,

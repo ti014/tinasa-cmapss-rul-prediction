@@ -3,7 +3,6 @@
 
 data/raw/*.txt -text
 # Source snapshots are evidence: preserve their recorded SHA-256 bytes on every OS.
-outputs/experiments/**/source_snapshot/** -text
 outputs/benchmarks/**/source_snapshot/** -text
 *.pdf binary
 *.png binary

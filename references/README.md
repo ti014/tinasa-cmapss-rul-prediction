@@ -72,8 +72,8 @@ Báo cáo có [cơ sở lý thuyết](../report/sections/theory.tex) và
 - Những ví dụ về window, mô hình và ngưỡng cảnh báo là **đề xuất thực nghiệm**, không phải yêu cầu bắt buộc của giảng viên hoặc kết quả đã quan sát.
 
 Ví dụ: nếu một động cơ train kết thúc ở cycle 200 thì RUL tại cycle 170 bằng
-30 cycles. Lịch sử cảm biến từ cycle 141 đến 170 có thể tạo thành một window
-dài 30 cycles để dự đoán nhãn này. Đây là ví dụ về cách xây dựng dữ liệu, không
+30 cycle. Lịch sử cảm biến từ cycle 141 đến 170 có thể tạo thành một window
+dài 30 cycle để dự đoán nhãn này. Đây là ví dụ về cách xây dựng dữ liệu, không
 phải kết quả của mô hình.
 
 PDF để đọc offline được tập hợp trong [papers/](papers/README.md). Bảng này ghi rõ file đã có, nguồn tải và bài chưa tải được. R1 được sao chép từ PDF gốc trong `data/raw/`; file dữ liệu gốc được giữ nguyên. `references/` không bị loại trừ bởi `.gitignore` hiện tại.

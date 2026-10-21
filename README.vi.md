@@ -149,7 +149,7 @@ năng xử lý dữ liệu quy mô lớn.
 
 Tài liệu walkthrough xử lý dữ liệu giải thích
 theo đúng artifact hiện có cách đọc hai file observations, `union` train/test,
-giữ `split`, tạo RUL train, tạo rolling window, chọn 126 feature columns và
+giữ `split`, tạo RUL train, tạo window 30 cycle, chọn 126 feature columns và
 join theo `(split, engine_id, cycle)`. Tài liệu cũng nêu rõ SQLite chỉ chứa
 `engine_summary` và `train_targets`; observations được đọc từ Silver Parquet.
 
@@ -437,7 +437,7 @@ Chọn kernel Python của `.venv` và **Restart Kernel and Run All Cells**.
 Notebook chỉ phân tích train, tạo 12 bảng CSV và 14 hình PNG trong thư mục mới
 `outputs/notebook01/run-*/`. Các kiểm tra tái lập EDA trước đây áp dụng cho bộ
 artifact gốc ở `outputs/eda/`, được giữ nguyên để đối chiếu.
-Bộ kiểm thử ngày 21/10/2026 có **272 kiểm thử đạt**.
+Bộ kiểm thử ngày 21/10/2026 có **270 kiểm thử đạt**.
 
 ![Quy trình EDA train FD001](assets/diagrams/fd001-eda.svg)
 
@@ -650,8 +650,8 @@ Cài dependency tùy chọn và khởi động Streamlit sau khi đã có artifa
 `cmapss.degradation` và `cmapss.maintenance`:
 
 ```powershell
-uv sync --extra dashboard
-uv run --extra dashboard streamlit run app.py
+uv sync --frozen --extra dashboard
+uv run --frozen --extra dashboard streamlit run app.py
 ```
 
 Dashboard có tám trang, sắp theo thứ tự pipeline. Có thể mở thẳng một trang bằng
@@ -682,7 +682,7 @@ sánh nội dung bảng, metric, hình, checksum raw và dashboard loader với 
 đã có:
 
 ```powershell
-uv run python -m cmapss.reproducibility `
+uv run --frozen python -m cmapss.reproducibility `
   --output-root tmp/e2e-repro-final `
   --repo-root . `
   --evidence-path tmp/e2e-repro-final/validation.json
@@ -706,7 +706,7 @@ là các kiểm tra riêng, đã được ghi trong evidence.
 - `requirements*.txt` được xuất từ `uv.lock` và giữ nguyên phiên bản đã khóa,
   kể cả dependency bắc cầu. `pyproject.toml` vẫn khai báo metadata của gói.
   Môi trường đã kiểm chứng là Python 3.12.14 trên Windows.
-- Nếu đã dùng uv, có thể chạy `uv run cmapss-validate`; không bắt buộc cài uv
+- Nếu đã dùng uv, có thể chạy `uv run --frozen cmapss-validate`; không bắt buộc cài uv
   khi dùng cách cài bằng pip ở trên.
 
 Nếu pytest không có quyền truy cập Temp trên Windows, dùng thư mục riêng:

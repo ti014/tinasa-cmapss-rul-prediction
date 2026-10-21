@@ -2399,54 +2399,6 @@
     }
   ],
   "alignment": {
-    "main_predictor": "hgb169",
-    "baseline": "hgb126",
-    "trajectory": {
-      "hgb126": {
-        "mean_engine_mae": 20.21434071942267,
-        "rmse": 33.63590238186899,
-        "nasa_score": 188498133.99528173
-      },
-      "hgb169": {
-        "mean_engine_mae": 17.000946016902613,
-        "rmse": 29.80684578955247,
-        "nasa_score": 24032889.07429517
-      }
-    },
-    "endpoint": {
-      "hgb126": {
-        "mean_engine_mae": 15.257716625761082,
-        "rmse": 22.346152921553973,
-        "nasa_score": 23558.871676392293
-      },
-      "hgb169": {
-        "mean_engine_mae": 9.891336299046634,
-        "rmse": 14.991333002405216,
-        "nasa_score": 2065.130414870366
-      }
-    },
-    "delta": {
-      "trajectory_mae": {
-        "value": -3.2133947025200555,
-        "ci_lower": -4.458626488416785,
-        "ci_upper": -1.9219821949232885
-      },
-      "trajectory_rmse": {
-        "value": -3.829056592316519,
-        "ci_lower": -5.564858916589852,
-        "ci_upper": -2.0651560210711244
-      },
-      "endpoint_mae": {
-        "value": -5.366380326714449,
-        "ci_lower": -6.931976038367887,
-        "ci_upper": -3.808272686508981
-      },
-      "endpoint_rmse": {
-        "value": -7.354819919148758,
-        "ci_lower": -9.716216674388662,
-        "ci_upper": -5.052806433581146
-      }
-    },
     "warning_policies": [
       {
         "model": "hgb126",
@@ -2480,14 +2432,6 @@
         "early_alarm_burden": 0.0555273444320502,
         "median_lead_time": 38.0
       }
-    ],
-    "calibrated169_on_time_rate": 0.94,
-    "limitations": [
-      "No new model fitting or test-label read was performed.",
-      "Paired bootstrap is conditional on saved predictions and excludes refit, seed and selection uncertainty.",
-      "Historical inspection means this evidence is not an independent blind confirmation.",
-      "The 126-versus-169 comparison changes feature representation as well as feature count; it does not isolate architecture.",
-      "Causal smoothing descriptors do not identify true sensor noise and do not establish RUL benefit."
     ]
   },
   "pipeline": {

@@ -452,7 +452,7 @@ Select the `.venv` Python kernel and **Restart Kernel and Run All Cells**.
 This analyzes only train and creates 12 CSV tables and 14 PNG figures in a new
 `outputs/notebook01/run-*/` directory. Historical fresh-kernel checks covered the
 original EDA artifacts, preserved in `outputs/eda/`.
-The 2026-10-21 test run achieved **272 passed**.
+The 2026-10-21 test run achieved **270 passed**.
 
 ![FD001 train EDA workflow](assets/diagrams/fd001-eda.svg)
 
@@ -677,8 +677,8 @@ Install the optional dashboard dependencies and start Streamlit after the
 modeling, `cmapss.degradation` and `cmapss.maintenance` artifacts exist:
 
 ```powershell
-uv sync --extra dashboard
-uv run --extra dashboard streamlit run app.py
+uv sync --frozen --extra dashboard
+uv run --frozen --extra dashboard streamlit run app.py
 ```
 
 The dashboard has eight pages in pipeline order. A page can be opened directly with
@@ -710,7 +710,7 @@ temporary root and compare table content, metrics, figures, raw hashes and the
 dashboard loader with the checked-in artifacts:
 
 ```powershell
-uv run python -m cmapss.reproducibility `
+uv run --frozen python -m cmapss.reproducibility `
   --output-root tmp/e2e-repro-final `
   --repo-root . `
   --evidence-path tmp/e2e-repro-final/validation.json
@@ -735,7 +735,7 @@ separate checks documented in the validation evidence.
 - `requirements*.txt` is exported from `uv.lock`, retaining pinned direct and
   transitive dependencies. `pyproject.toml` still declares package metadata.
   The validated environment is Python 3.12.14 on Windows.
-- Existing uv users can run `uv run cmapss-validate`. The pip workflow above
+- Existing uv users can run `uv run --frozen cmapss-validate`. The pip workflow above
   does not require uv.
 
 If pytest cannot access the Windows Temp directory, use a dedicated directory:

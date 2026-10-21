@@ -1,8 +1,8 @@
 # Thống kê suy luận FD001 train
 
 Artifact đã xuất các tệp thống kê suy luận từ
-`data/raw/train_FD001.txt`. Phân tích so sánh giá trị trung bình của 30 cycles
-đầu và 30 cycles cuối trong cùng một động cơ train, cho từng sensor. Đây là
+`data/raw/train_FD001.txt`. Phân tích so sánh giá trị trung bình của 30 cycle
+đầu và 30 cycle cuối trong cùng một động cơ train, cho từng sensor. Đây là
 bằng chứng thống kê trên train, không phải lựa chọn đặc trưng (feature selection)
 và không đọc `test_FD001.txt` hoặc `RUL_FD001.txt`. Artifact gồm hai hình:
 phân phối `difference` theo engine và mean paired difference kèm bootstrap CI
@@ -95,7 +95,7 @@ Cấu hình được cố định trong `SensorInferenceConfig` trước khi ch�
 
 | Thành phần | Giá trị |
 | --- | --- |
-| Window | 30 cycles đầu và 30 cycles cuối của mỗi động cơ train |
+| Window | 30 cycle đầu và 30 cycle cuối của mỗi động cơ train |
 | Chênh lệch | `late_mean - early_mean` |
 | Bootstrap | Percentile CI 95%, 10.000 resamples, seed 42 |
 | Wilcoxon | Two-sided, `zero_method="wilcox"`, không continuity correction |
@@ -130,7 +130,7 @@ này vẫn nằm trong bảng, có CI suy biến tại 0 và `test_status =
 all_zero_difference`.
 
 15 sensor còn lại kiểm định được và đều có p-value đã hiệu chỉnh xấp xỉ
-`0,000028` trong cấu hình permutation hiện tại. Theo protocol đầu/cuối 30 cycles
+`0,000028` trong cấu hình permutation hiện tại. Theo protocol đầu/cuối 30 cycle
 trên train FD001, các sensor này có chênh lệch có hệ thống giữa đầu và cuối vòng
 đời sau hiệu chỉnh FDR. Ví dụ cụ thể:
 
@@ -153,7 +153,7 @@ phối theo engine thay vì chỉ đọc một số tổng hợp.
 
 ## Giới hạn
 
-Kết quả chỉ áp dụng cho tập train FD001 và định nghĩa hai đoạn 30 cycles tuyệt
+Kết quả chỉ áp dụng cho tập train FD001 và định nghĩa hai đoạn 30 cycle tuyệt
 đối. Kết quả không chứng minh quan hệ nhân quả, không xác định thời điểm bắt đầu
 suy giảm và không chứng minh hiệu quả dự đoán ngoài mẫu. Danh sách sensor bác
 bỏ giả thuyết không sau FDR không được dùng để chọn đặc trưng trên toàn train

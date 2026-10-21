@@ -39,18 +39,18 @@ trung vị 199 cycle do một số động cơ sống rất lâu.
 \begin{tabular}{lr@{\qquad}lr}
 \toprule Thống kê & Giá trị & Thống kê & Giá trị\\\midrule
 Trung bình & 206,31 & Độ lệch chuẩn & 46,34\\
-Nhỏ nhất & 128 & Lớn nhất & 362\\
-Tứ phân vị 25\% & 177 & Trung vị & 199\\
-Tứ phân vị 75\% & 229,25 & Số động cơ & 100\\\bottomrule
+Nhỏ nhất & 128,00 & Lớn nhất & 362,00\\
+Tứ phân vị 25\% & 177,00 & Trung vị & 199,00\\
+Tứ phân vị 75\% & 229,25 & & \\\bottomrule
 \end{tabular}
 \end{table}
 
-\subsection{Xử lý nhiễu và tổng hợp theo cửa sổ thời gian}
+\subsection{Xử lý nhiễu và tổng hợp theo window}
 \label{sec:res-denoise}
 Tín hiệu sensor gốc dao động mạnh giữa hai cycle liền kề, che khuất xu hướng suy
 giảm chậm. EWMA span 10 (Mục~\ref{sec:denoise-method}) giảm độ lệch chuẩn của sai
 phân bậc một từ 83,6\% đến 86,4\% trên 14 sensor có thông tin, trung vị 86,3\%
-(Bảng~\ref{tab:noise}). Ví dụ, với \texttt{sensor\_4}, độ lệch chuẩn của bước nhảy
+(Bảng~\ref{tab:noise}). Ví dụ, với sensor 4, độ lệch chuẩn của bước nhảy
 giữa hai cycle giảm từ 5,70 xuống 0,78. Mức giảm gần như bằng nhau ở mọi sensor;
 điều này phù hợp với giả định dao động ngắn hạn gần độc lập giữa các cycle, nhưng
 không chứng minh đó là nhiễu đo thuần túy vì dữ liệu không có tín hiệu sạch để
@@ -76,20 +76,20 @@ Sensor & Tín hiệu gốc & Sau EWMA & Mức giảm\\\midrule
 \end{table}
 
 Hình~\ref{fig:denoise} cho thấy hiệu quả trên động cơ train 1. Đường xám là tín
-hiệu gốc; đường xanh sau EWMA vẫn giữ đúng hướng tăng của \texttt{sensor\_11} và
-\texttt{sensor\_4}, đặc biệt là đoạn tăng nhanh sau cycle 150, nhưng bỏ đi phần lớn
+hiệu gốc; đường xanh sau EWMA vẫn giữ đúng hướng tăng của sensor 11 và
+sensor 4, đặc biệt là đoạn tăng nhanh sau cycle 150, nhưng bỏ đi phần lớn
 các gai ngắn hạn.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\linewidth]{../outputs/degradation/figures/denoise_before_after.png}
-\caption[Tín hiệu trước và sau khử nhiễu]{Tín hiệu \texttt{sensor\_11} và \texttt{sensor\_4} của động cơ train 1
+\caption[Tín hiệu trước và sau khử nhiễu]{Tín hiệu sensor 11 và sensor 4 của động cơ train 1
 trước (xám) và sau (xanh) khi làm mượt bằng EWMA span 10. EWMA chỉ dùng giá trị
 hiện tại và quá khứ.}
 \label{fig:denoise}
 \end{figure}
 
-Bước tổng hợp theo cửa sổ thời gian dùng window 30 cycle
+Bước tổng hợp dùng window 30 cycle
 (Mục~\ref{sec:features}): mỗi dòng đặc trưng gồm sáu thống kê (giá trị cuối,
 trung bình, độ lệch chuẩn, min, max, độ dốc) của 21 sensor, tổng cộng 126 đặc
 trưng. Trung bình và độ dốc trên 30 cycle cũng làm dịu dao động, nên mô hình RUL
@@ -102,8 +102,8 @@ dùng cho Health Index và phát hiện bất thường ở mục kế tiếp.
 Tương quan Spearman giữa từng sensor và RUL được tính riêng trong mỗi động cơ,
 rồi tóm tắt qua 100 động cơ (Hình~\ref{fig:corr}). Sáu sensor hằng (1, 5, 10, 16,
 18, 19) không có tương quan xác định. Nhiều sensor có tương quan mạnh và nhất quán,
-ví dụ \texttt{sensor\_11} (trung vị $-0{,}8190$) và \texttt{sensor\_12} (trung vị
-$0{,}8075$): \texttt{sensor\_11} tăng và \texttt{sensor\_12} giảm khi động cơ tiến
+ví dụ sensor 11 (trung vị $-0{,}8190$) và sensor 12 (trung vị
+$0{,}8075$): sensor 11 tăng và sensor 12 giảm khi động cơ tiến
 gần đến hỏng.
 
 \begin{figure}[H]
@@ -118,7 +118,7 @@ cycle đầu của cùng động cơ. Với 15 sensor không hằng, kiểm đ�
 giả thuyết không sau hiệu chỉnh Benjamini--Hochberg. Có 12 sensor thay đổi cùng
 hướng ở cả 100/100 động cơ; Bảng~\ref{tab:sensor-inference} trích năm sensor
 tiêu biểu là 4, 7, 11, 12 và 20, tức xu
-hướng suy giảm rất nhất quán trong FD001. Ngược lại, \texttt{sensor\_6} có ý nghĩa
+hướng suy giảm rất nhất quán trong FD001. Ngược lại, sensor 6 có ý nghĩa
 thống kê nhưng trung bình chênh lệch chỉ khoảng 0,00045: p-value nhỏ không đồng
 nghĩa với thay đổi lớn.
 
@@ -214,7 +214,7 @@ gốc cũng phát hiện đủ 100 động cơ ở mọi cấu hình nhưng trun
 \subsection{Dự đoán RUL}
 \label{sec:res-model}
 Bảng~\ref{tab:model-cv} so sánh ba mô hình bằng GroupKFold 5 fold theo động cơ.
-HistGradientBoosting với 126 đặc trưng window (HGB) có MAE thấp nhất, 20,21
+HGB với 126 đặc trưng window có MAE thấp nhất, 20,21
 cycle, thấp hơn Ridge 3,78 cycle và thấp hơn median baseline hơn một nửa. Độ
 lệch chuẩn MAE giữa các fold của HGB và Ridge đều dưới 1 cycle, nhỏ hơn khoảng
 cách giữa hai mô hình, nên HGB được chọn làm mô hình chính.

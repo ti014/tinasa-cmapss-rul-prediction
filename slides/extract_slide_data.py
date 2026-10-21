@@ -1,7 +1,8 @@
 """Gom số liệu dùng trên slide từ artifact đã nghiệm thu trong outputs/.
 
 Chạy: uv run --frozen python slides/extract_slide_data.py
-Đầu ra: slides/slide_data.json. Script chỉ đọc artifact, không huấn luyện lại.
+Đầu ra: slides/slide_data.json và outputs/benchmarks/20261021/compute_only.csv (bảng ghép
+thời gian tính toán của Pandas và Spark). Script không huấn luyện lại.
 """
 
 from __future__ import annotations
@@ -156,55 +157,20 @@ def _threshold_check(evaluation: pd.DataFrame, flag_at: float, need_at: float) -
 
 
 def alignment() -> dict:
-    """Đọc kết quả đối chiếu HGB126/HGB169 đã lưu, không huấn luyện lại."""
-    summary = read_json(ALIGN / "summary.json")
-    metrics = pd.read_csv(ALIGN / "model_metrics.csv")
-    ci = pd.read_csv(ALIGN / "paired_bootstrap_ci.csv")
+    """Đọc chính sách cảnh báo ngưỡng 30/40 đã lưu, không huấn luyện lại."""
     warning = pd.read_csv(ALIGN / "warning_fixed_policies.csv")
-
-    def row(model: str, panel: str) -> dict:
-        r = metrics[(metrics["model"] == model) & (metrics["panel"] == panel)].iloc[0]
-        return {
-            "mean_engine_mae": float(r["mean_engine_mae"]),
-            "rmse": float(r["rmse"]),
-            "nasa_score": float(r["nasa_score"]),
+    policies = [
+        {
+            "model": str(r["model"]),
+            "threshold": int(r["threshold"]),
+            "on_time_rate": float(r["on_time_rate"]),
+            "late_or_missed_rate": float(r["late_or_missed_rate"]),
+            "early_alarm_burden": float(r["early_alarm_burden"]),
+            "median_lead_time": float(r["median_lead_time"]),
         }
-
-    def delta(panel: str, metric: str) -> dict:
-        r = ci[(ci["panel"] == panel) & (ci["metric"] == metric)].iloc[0]
-        return {
-            "value": float(r["delta_right_minus_left"]),
-            "ci_lower": float(r["ci_lower"]),
-            "ci_upper": float(r["ci_upper"]),
-        }
-
-    policies = []
-    for _, r in warning.iterrows():
-        policies.append(
-            {
-                "model": str(r["model"]),
-                "threshold": int(r["threshold"]),
-                "on_time_rate": float(r["on_time_rate"]),
-                "late_or_missed_rate": float(r["late_or_missed_rate"]),
-                "early_alarm_burden": float(r["early_alarm_burden"]),
-                "median_lead_time": float(r["median_lead_time"]),
-            }
-        )
-    return {
-        "main_predictor": summary["recommendation"]["main_predictor"],
-        "baseline": "hgb126",
-        "trajectory": {m: row(m, "trajectory") for m in ("hgb126", "hgb169")},
-        "endpoint": {m: row(m, "endpoint_50_70_90") for m in ("hgb126", "hgb169")},
-        "delta": {
-            "trajectory_mae": delta("trajectory", "mean_engine_mae"),
-            "trajectory_rmse": delta("trajectory", "rmse"),
-            "endpoint_mae": delta("endpoint_50_70_90", "mean_engine_mae"),
-            "endpoint_rmse": delta("endpoint_50_70_90", "rmse"),
-        },
-        "warning_policies": policies,
-        "calibrated169_on_time_rate": float(summary["calibrated169_reference"]["on_time_rate"]),
-        "limitations": summary["limitations"],
-    }
+        for _, r in warning.iterrows()
+    ]
+    return {"warning_policies": policies}
 
 
 def pipeline() -> dict:
@@ -253,7 +219,7 @@ def benchmark_scaling() -> dict:
                "first_pandas_stop_scale": None}
     if (folder / "measurements.csv").exists() and spark_run.exists():
         # So phần tính toán: Pandas lấy lượt đầy đủ trừ bước ghi; Spark lấy lượt --no-write,
-        # vì trên Windows bước ghi của Spark phải gom về driver và hết heap từ 100×.
+        # vì trên Windows bước ghi của Spark phải gom về driver và thất bại từ 50×.
         pandas_rows = pd.read_csv(folder / "measurements.csv").query("engine == 'pandas'").copy()
         pandas_rows["pipeline_seconds"] -= pandas_rows["write_seconds"]
         frame = pd.concat([pandas_rows, pd.read_csv(spark_run)], ignore_index=True)

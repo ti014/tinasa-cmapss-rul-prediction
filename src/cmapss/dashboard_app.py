@@ -198,9 +198,9 @@ def page_overview(data: DashboardData, degradation: DegradationData, maintenance
         ("2. ETL", "Pandas = PySpark → Silver Parquet, Gold SQLite"),
         ("3. Khử nhiễu", "EWMA span 10, chỉ dùng quá khứ"),
         ("4. Window", "30 cycle → 126 đặc trưng"),
-        ("5. Bất thường", "Health Index giảm quá 3σ: cảnh báo mức 1"),
+        ("5. Bất thường", "Health Index giảm quá 3σ: cảnh báo mức một"),
         ("6. RUL", "HGB, GroupKFold theo động cơ"),
-        ("7. Bảo trì", "RUL ≤ 30: cảnh báo mức 2, lịch bảo trì"),
+        ("7. Bảo trì", "RUL ≤ 30: cảnh báo mức hai, lịch bảo trì"),
     ]
     for column, (title, body) in zip(st.columns(len(steps)), steps):
         column.markdown(f'<div class="step"><b>{title}</b><br>{body}</div>', unsafe_allow_html=True)
@@ -212,13 +212,13 @@ def page_overview(data: DashboardData, degradation: DegradationData, maintenance
         f"{maintenance.summary['planning']['1–25']} động cơ đến hạn trong 25 cycle tới; mọi động cơ được báo cần bảo trì đều "
         "có RUL thật ≤ 30.",
     )
-    with st.expander("Gợi ý thứ tự demo (khoảng 3 phút)"):
+    with st.expander("Gợi ý thứ tự demo (khoảng 2 phút)"):
         st.markdown(
-            "1. **Lịch bảo trì**: bảng 100 động cơ, chọn động cơ 90 hoặc 34 để xem chi tiết.\n"
-            "2. **Khử nhiễu**: động cơ 1, sensor_11: tín hiệu gốc và sau EWMA.\n"
-            "3. **Xu hướng & bất thường**: Health Index của động cơ 1, cycle phát hiện 84.\n"
-            "4. **Cảnh báo sớm**: RUL dự đoán chạm ngưỡng 30 ở cycle 162.\n"
-            "5. **Dự đoán RUL**: so sánh mô hình và một động cơ test cụ thể."
+            "1. **Lịch bảo trì**: bảng 100 động cơ, chọn động cơ 90 để xem chi tiết.\n"
+            "2. **Khử nhiễu**: động cơ 1, sensor 11: tín hiệu gốc và sau EWMA.\n"
+            "3. **Xu hướng & bất thường**: Health Index của động cơ 1.\n"
+            "4. **Cảnh báo sớm**: RUL dự đoán của động cơ 1 chạm ngưỡng 30.\n"
+            "5. **Tổng quan**: quay lại trang này để kết demo."
         )
 
 
@@ -621,7 +621,7 @@ def page_anomaly(degradation: DegradationData) -> None:
         _card("Quy tắc", f"So mỗi động cơ với chính nó ở giai đoạn vận hành ổn định: báo khi Health Index giảm quá {config['z_threshold']:g} độ lệch chuẩn "
               f"so với {config['baseline_cycles']} cycle đầu, kéo dài {config['persistence']} cycle liên tiếp. Không dùng nhãn RUL.")
         _card("Giới hạn", "Mọi động cơ train đều đi đến hỏng và không có nhãn thời điểm bắt đầu suy giảm, nên chưa đo được trực tiếp "
-              "tỷ lệ báo động giả. Đây là cảnh báo mức 1: động cơ đã lệch khỏi trạng thái vận hành ổn định, chưa ước lượng thời gian "
+              "tỷ lệ báo động giả. Đây là cảnh báo mức một: động cơ đã lệch khỏi trạng thái vận hành ổn định, chưa ước lượng thời gian "
               "còn lại.", kind="limit")
     st.subheader("Độ nhạy của quy tắc theo ngưỡng z và số cycle liên tiếp")
     signal_label = st.radio("Health Index", ["Sau khử nhiễu", "Tín hiệu gốc"], horizontal=True, key="an_sens_signal")
@@ -670,7 +670,11 @@ def page_maintenance(maintenance: MaintenanceData) -> None:
     view = schedule.loc[schedule["status"].isin(chosen)].copy()
     view["rul_pred"] = view["rul_pred"].round(1)
     view["anomaly_cycle"] = view["anomaly_cycle"].astype("Int64")
-    st.dataframe(view[list(SCHEDULE_LABELS)].rename(columns=SCHEDULE_LABELS), width="stretch", hide_index=True, height=300)
+    st.dataframe(
+        view[list(SCHEDULE_LABELS)].rename(columns=SCHEDULE_LABELS)
+        .style.format({"RUL dự đoán": lambda v: format_metric(v, 1)}),
+        width="stretch", hide_index=True, height=300,
+    )
     st.caption("Cycle cần bảo trì = cycle hiện tại + (RUL dự đoán − 30), làm tròn xuống. Bảng sắp theo mức ưu tiên.")
 
     left, right = st.columns([1.2, 1])
@@ -725,7 +729,7 @@ def page_maintenance(maintenance: MaintenanceData) -> None:
         st.dataframe(maintenance.check.rename(columns={"status": "Trạng thái dự đoán"}), width="stretch", hide_index=True)
     with check_right:
         _card("Kết quả", f"{evaluation['n_correct_needs_maintenance']}/{evaluation['n_flagged_needs_maintenance']} động cơ báo cần bảo trì "
-              f"có RUL thật ≤ 30. Trong {evaluation['n_actual_needs_maintenance']} động cơ thật sự cần bảo trì, 4 động cơ còn lại có RUL "
+              f"có RUL thật ≤ 30. Trong {evaluation['n_actual_needs_maintenance']} động cơ thật sự cần bảo trì, {evaluation['n_actual_needs_maintenance'] - evaluation['n_correct_needs_maintenance']} động cơ còn lại có RUL "
               "dự đoán 31–38 nên đến hạn sau 1–8 cycle và vẫn ở mức theo dõi.")
         _card("Giới hạn", "Mức theo dõi còn rộng: 41/59 động cơ ở mức này có RUL thật trên 60. Lịch có thể lạc quan với từng động cơ, "
               "ví dụ động cơ 23. Ngưỡng 30 chưa được hiệu chuẩn theo chi phí bảo trì.", kind="limit")

@@ -55,7 +55,6 @@ SENSOR_INFERENCE_COLUMNS = (
     "fdr_reject",
     "test_status",
 )
-FD001_ROWS = {"train": 20_631, "test": 13_096}
 FD001_ENGINE_COUNT = 100
 DATASET_PROFILES: dict[str, dict[str, int]] = {
     "FD001": {"train_rows": 20_631, "test_rows": 13_096, "train_engines": 100, "test_engines": 100},

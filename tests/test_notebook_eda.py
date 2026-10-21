@@ -3,16 +3,15 @@
 import pandas as pd
 import pytest
 
-from cmapss.eda import engine_cycle_correlations, engine_lifetimes, within_engine_variability
+from cmapss.eda import engine_lifetimes, within_engine_variability
 
 
-def test_variability_and_correlations_keep_engines_separate():
+def test_variability_keeps_engines_separate():
     data = pd.DataFrame({"split": ["train"] * 6, "engine_id": [1]*3 + [2]*3,
                          "cycle": [1, 2, 3]*2, "sensor": [1, 2, 3, 3, 2, 1], "constant": [7]*6})
     within, counts = within_engine_variability(data, ["sensor", "constant"])
     assert within.loc[within.measurement.eq("sensor"), "std"].tolist() == [1, 1]
     assert counts.set_index("measurement").loc["constant", "constant_engines"] == 2
-    assert engine_cycle_correlations(data, "sensor").tolist() == pytest.approx([1, -1])
     with pytest.raises(ValueError, match="chỉ nhận dữ liệu train"):
         within_engine_variability(data.assign(split="test"), ["sensor"])
 

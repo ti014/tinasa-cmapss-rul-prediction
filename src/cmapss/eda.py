@@ -43,14 +43,6 @@ def within_engine_variability(data: pd.DataFrame, columns: Sequence[str]) -> tup
     return within, counts
 
 
-def engine_cycle_correlations(data: pd.DataFrame, column: str) -> pd.Series:
-    """Tính Spearman rho giữa cycle và một đại lượng trong từng động cơ train."""
-    _require_train(data)
-    return data.groupby("engine_id").apply(
-        lambda group: spearmanr(group.cycle, group[column]).statistic, include_groups=False,
-    )
-
-
 def describe_measurements(data: pd.DataFrame, columns: Sequence[str]) -> pd.DataFrame:
     """Thống kê mô tả cho từng cột settings/sensors, một dòng mỗi cột.
 

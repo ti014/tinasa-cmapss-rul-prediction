@@ -21,7 +21,7 @@ op/.style={note,fill=white}]
 
 % Hàng 3: ba bảng dẫn xuất (Silver và Gold).
 \node[dataBox] (targets) at (\colA,-5.8) {\cell{Nhãn RUL của train}{Silver · \texttt{train\_targets.parquet}}{20.631 dòng; có cột RUL}};
-\node[dataBox] (features) at (\colB,-5.8) {\cell{Đặc trưng cửa sổ 30 cycle}{Gold · \texttt{rolling\_features.parquet}}{27.927 dòng; 126 đặc trưng}};
+\node[dataBox] (features) at (\colB,-5.8) {\cell{Đặc trưng window 30 cycle}{Gold · \texttt{rolling\_features.parquet}}{27.927 dòng; 126 đặc trưng}};
 \node[dataBox] (summary) at (\colC,-5.8) {\cell{Tổng hợp theo động cơ}{Gold · \texttt{engine\_summary}}{200 dòng; 1 dòng = 1 động cơ}};
 \coordinate (split) at (-3,-4.35);
 \draw[line] (obs.south) -- (split);
@@ -30,7 +30,7 @@ op/.style={note,fill=white}]
 \draw[flow] (split) -| node[op,pos=0.8] {gom theo động cơ} (summary.north);
 
 % Hàng 4: dữ liệu cho mô hình và chấm điểm.
-\node[processBox] (xy) at (\colB,-8.7) {\cell{Dữ liệu huấn luyện}{X: 17.731 × 126; y: RUL}{1 dòng = 1 cửa sổ của train}};
+\node[processBox] (xy) at (\colB,-8.7) {\cell{Dữ liệu huấn luyện}{X: 17.731 × 126; y: RUL}{1 dòng = 1 window của train}};
 \node[resultBox] (eval) at (\colC,-8.7) {\cell{Chấm điểm trên test}{Ghép 100 dự đoán với đáp án}{1 dòng = 1 động cơ test}};
 \draw[flow] (targets.south) |- node[op,pos=0.25] {ghép theo 3 khóa} (xy.west);
 \draw[flow] (features.south) -- node[op,pos=0.45] {phần train} (xy.north);

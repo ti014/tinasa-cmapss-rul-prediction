@@ -12,7 +12,7 @@ gợi ý nghiên cứu; chúng không được xem là đã triển khai hoặc 
 
 - **Đọc trước:** Sections II, VI–VII về prognostics, competition data và performance evaluation; sau đó xem Sections III–V nếu cần giải thích mô phỏng vật lý.
 - **Giá trị:** hiểu run-to-failure, sự suy giảm cảm biến và lý do việc dự đoán hỏng quá muộn cần được đánh giá riêng.
-- **Áp dụng đề xuất:** viết phần mô tả dữ liệu, diễn giải nhãn RUL và giới hạn của dữ liệu mô phỏng. Ví dụ, RUL = 30 nghĩa là động cơ còn 30 cycles theo nhãn, không phải xác suất hỏng 30%.
+- **Áp dụng đề xuất:** viết phần mô tả dữ liệu, diễn giải nhãn RUL và giới hạn của dữ liệu mô phỏng. Ví dụ, RUL = 30 nghĩa là động cơ còn 30 cycle theo nhãn, không phải xác suất hỏng 30%.
 - **Giới hạn:** bài gốc mô tả PHM’08 challenge; dùng R3 và README của bộ dữ liệu để phân biệt challenge với FD001.
 - **Đã kiểm chứng:** DOI, metadata hội nghị, trang đầu và Sections VI–VII trong PDF local. Chưa tái lập thí nghiệm của bài báo.
 
@@ -47,9 +47,9 @@ gợi ý nghiên cứu; chúng không được xem là đã triển khai hoặc 
 [DOI](https://doi.org/10.1016/j.ress.2017.11.021) · [Author manuscript tại University of California](https://escholarship.org/content/qt5ns8r3fs/qt5ns8r3fs.pdf).
 
 - **Đọc trước:** Sections 3.1.1–3.1.5 và 3.2.3–3.2.4 về preprocessing, window và ảnh hưởng của nhãn.
-- **Giá trị:** cung cấp một ví dụ cụ thể về dự đoán RUL từ chuỗi đa cảm biến. Bài báo dùng 14 sensor, window mặc định 30 cycles và RUL cap 125; đây là cấu hình của nghiên cứu, không phải mặc định của báo cáo này.
-- **Áp dụng đề xuất:** biểu diễn một mẫu bằng `30 cycles × số sensor được chọn`, sau đó so sánh với baseline chỉ dùng giá trị tại cycle hiện tại.
-- **Giới hạn quan trọng:** thí nghiệm với window dài hơn 31 cycles loại các test engine có chuỗi quá ngắn. Không so sánh kết quả trên tập rút gọn với kết quả trên toàn bộ 100 test engines. Việc dùng RUL cap khác nhau cũng làm thay đổi protocol so sánh.
+- **Giá trị:** cung cấp một ví dụ cụ thể về dự đoán RUL từ chuỗi đa cảm biến. Bài báo dùng 14 sensor, window mặc định 30 cycle và RUL cap 125; đây là cấu hình của nghiên cứu, không phải mặc định của báo cáo này.
+- **Áp dụng đề xuất:** biểu diễn một mẫu bằng `30 cycle × số sensor được chọn`, sau đó so sánh với baseline chỉ dùng giá trị tại cycle hiện tại.
+- **Giới hạn quan trọng:** thí nghiệm với window dài hơn 31 cycle loại các test engine có chuỗi quá ngắn. Không so sánh kết quả trên tập rút gọn với kết quả trên toàn bộ 100 test engines. Việc dùng RUL cap khác nhau cũng làm thay đổi protocol so sánh.
 - **Đã kiểm chứng:** metadata và các phần nêu trên trong author manuscript; chưa tái lập kết quả.
 
 ## R5 — Đánh giá dự đoán có đủ sớm để hành động không
@@ -83,7 +83,7 @@ gợi ý nghiên cứu; chúng không được xem là đã triển khai hoặc 
 
 - **Mục đích đọc:** tìm hiểu event time, processing time, windowing và trade-off giữa độ đầy đủ, latency và chi phí.
 - **Áp dụng đề xuất:** nếu replay dữ liệu để minh họa streaming, giải thích cách nhóm bản ghi và xử lý dữ liệu đến trễ. Ví dụ, bản ghi cycle 99 đến sau cycle 100 có thể làm thay đổi kết quả tổng hợp đã tạo.
-- **Giới hạn:** FD001 không có timestamp thực. Window 30 cycles cho ML khác time window 30 giây của stream processor; mọi ánh xạ cycle sang thời gian replay phải được ghi là mô phỏng.
+- **Giới hạn:** FD001 không có timestamp thực. Window 30 cycle cho ML khác time window 30 giây của stream processor; mọi ánh xạ cycle sang thời gian replay phải được ghi là mô phỏng.
 - **Đã kiểm chứng:** metadata và abstract Google Research; toàn văn VLDB truy cập được. Chưa đánh giá hay triển khai hệ thống streaming.
 
 ## R8 — Cơ sở cho phần Spark/Big Data nếu sử dụng
@@ -118,7 +118,7 @@ Các mục dưới đây được đề xuất từ yêu cầu đề tài và d�
 3. **Nhãn train/test khác cách tính:** train dùng cycle cuối trừ cycle hiện tại. Test đã bị cắt trước khi hỏng, nên nhãn ở cycle cuối lấy từ `RUL_FD001.txt`; không tự gán bằng 0.
 4. **Window không đi qua hai engine:** ví dụ, window 141–170 phải thuộc cùng một engine. Kiểm tra local cho thấy test engine ngắn nhất có 31 dòng; nếu chọn window dài hơn, phải công bố cách xử lý chuỗi ngắn và số engine còn lại trong đánh giá.
 5. **RUL cap là lựa chọn mô hình:** nếu dùng piecewise-linear label, ghi rõ cap train và cách xử lý nhãn evaluation. Không thay đổi nhãn test âm thầm để có điểm đẹp hơn.
-6. **Cảnh báo không phải lịch bảo trì tối ưu:** cảnh báo khi RUL dự đoán ≤ 30 cycles chỉ là quy tắc minh họa. Ngưỡng thực tế cần lead time và chi phí của false alarm/missed alarm; FD001 không cung cấp các thông tin này.
+6. **Cảnh báo không phải lịch bảo trì tối ưu:** cảnh báo khi RUL dự đoán ≤ 30 cycle chỉ là quy tắc minh họa. Ngưỡng thực tế cần lead time và chi phí của false alarm/missed alarm; FD001 không cung cấp các thông tin này.
 7. **Anomaly detection và RUL khác nhau:** FD001 phù hợp nghiên cứu degradation/RUL, nhưng không có sẵn nhãn anomaly cho mọi cycle. Nếu tự tạo nhãn bằng ngưỡng RUL, cần gọi rõ đó là nhãn dẫn xuất.
 
 Ví dụ về thứ tự áp dụng: sau R1–R3, viết một trang mô tả dữ liệu; sau R4,

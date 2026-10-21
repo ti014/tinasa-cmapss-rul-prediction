@@ -60,7 +60,7 @@ Artifact cảnh báo dùng selected-model OOF predictions trên train, với ng�
 với ngưỡng thật và lead time đến failure proxy. Lần chạy hiện tại có cảnh báo ở
 100/100 engine: 44 trước ngưỡng, 7 đúng ngưỡng và 49 sau ngưỡng nhưng trước
 failure; không có warning đầu tiên tại failure hoặc engine không từng cảnh báo.
-Lead time có miền 19--55, Q1=26, median=30, Q3=35 cycles. Đây là evidence mô
+Lead time có miền 19--55, Q1=26, median=30, Q3=35 cycle. Đây là evidence mô
 tả nội bộ: OOF đã dùng để chọn model, FD001 không có cost/downtime/intervention,
 và false-alarm rate là null vì không có engine âm tính theo định nghĩa event.
 
@@ -78,7 +78,7 @@ và false-alarm rate là null vì không có engine âm tính theo định nghĩ
 | RMSE | 20,5413 | [17,3442; 23,5850] |
 | NASA score | 1.513,2577 | [743,4999; 2.476,2743] |
 
-Sai số trung bình thấp nhất ở nhóm RUL thật 0--30 cycles và cao hơn ở các engine
+Sai số trung bình thấp nhất ở nhóm RUL thật 0--30 cycle và cao hơn ở các engine
 còn nhiều RUL. Đây là kết quả trên FD001 mô phỏng, chưa chứng minh khả năng khái
 quát hóa sang điều kiện vận hành hoặc fault mode khác.
 

@@ -60,10 +60,7 @@ ID động cơ chỉ có ý nghĩa trong từng split. Không nối lịch sử 
 cùng ID thành một động cơ. RUL được đo bằng cycle, không phải giờ hoặc ngày.
 
 Trong tập train, RUL tại cycle `t` bằng cycle cuối của động cơ trừ `t`. Ví dụ,
-nếu động cơ hỏng ở cycle 200 thì RUL tại cycle 170 là 30 cycles. Không áp dụng
+nếu động cơ hỏng ở cycle 200 thì RUL tại cycle 170 là 30 cycle. Không áp dụng
 công thức này cho test vì mỗi chuỗi test kết thúc trước khi hỏng; việc tính RUL
 phải sử dụng nhãn đi kèm và độ lệch tại điểm quan sát cuối.
 
-Bộ dữ liệu AI4I trước đây được lưu tại
-`../archive/ai4i/predictive_maintenance.csv`; bộ dữ liệu này không thuộc phạm vi
-phân tích chính.

@@ -51,8 +51,8 @@ row cycle 30.
 ## Quy tắc chống leakage
 
 - Window không vượt qua ranh giới engine hoặc split.
-- Mỗi output row chỉ dùng 30 cycles kết thúc tại chính key của row đó.
-- Engine dưới 30 cycles bị từ chối; pipeline không padding, không impute và
+- Mỗi output row chỉ dùng 30 cycle kết thúc tại chính key của row đó.
+- Engine dưới 30 cycle bị từ chối; pipeline không padding, không impute và
   không rút ngắn window.
 - `RUL_FD001.txt` không được đọc hoặc join ở bước này.
 - Artifact giữ đủ 21 sensors để chưa thực hiện feature selection trên toàn bộ
@@ -63,7 +63,7 @@ row cycle 30.
 
 - `tests/test_features.py`: kiểm tra giá trị tính tay cho sensor bằng cycle,
   sample standard deviation, slope, sensor hằng, không dùng tương lai, không
-  nối qua engine và negative proof cho engine dưới 30 cycles.
+  nối qua engine và negative proof cho engine dưới 30 cycle.
 - Lần chạy FD001 tạo 27.927 dòng, 129 cột gồm 3 khóa và 126 feature columns.
 - Parquet được đọc lại trong test round-trip.
 - `run_info.json` ghi `joins_test_labels=false` và `modeling.status=not_started`.

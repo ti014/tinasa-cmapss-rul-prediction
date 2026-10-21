@@ -1,7 +1,7 @@
 # EDA FD001 trên tập train
 
 EDA đã được chạy trên 20.631 quan sát của 100 động cơ, xuất 12 bảng CSV và 11
-hình PNG. Tuổi thọ quan sát có trung vị 199 cycles; sáu sensor hằng
+hình PNG. Tuổi thọ quan sát có trung vị 199 cycle; sáu sensor hằng
 trên toàn train. Đây là kết quả mô tả, chưa phải kiểm định giả thuyết hoặc
 bằng chứng về hiệu quả dự đoán RUL.
 
@@ -71,11 +71,11 @@ thực cỡ `1e-15`; `n_unique`, không phải std, quyết định trạng thá
 | Nội dung | Kết quả trên train | Bằng chứng |
 | --- | --- | --- |
 | Input | 20.631 quan sát, 100 động cơ; không có giá trị thiếu hoặc khóa trùng | [Input](tables/input_summary.csv) |
-| Tuổi thọ | 128–362 cycles; trung bình 206,31; trung vị 199; Q25–Q75: 177–229,25 | [Thống kê](tables/lifetime_summary.csv), [hình](figures/engine_lifetimes.png) |
-| RUL theo quan sát | 0–361 cycles; trung vị 103 | [Thống kê](tables/rul_summary.csv), [hình](figures/rul_distribution.png) |
+| Tuổi thọ | 128–362 cycle; trung bình 206,31; trung vị 199; Q25–Q75: 177–229,25 | [Thống kê](tables/lifetime_summary.csv), [hình](figures/engine_lifetimes.png) |
+| RUL theo quan sát | 0–361 cycle; trung vị 103 | [Thống kê](tables/rul_summary.csv), [hình](figures/rul_distribution.png) |
 | Cột hằng toàn train | `setting_3`, `sensor_1`, `sensor_5`, `sensor_10`, `sensor_16`, `sensor_18`, `sensor_19` | [Mô tả](tables/measurement_summary.csv) |
 | `sensor_6` | Hai giá trị 21,60/21,61; hằng trong 38/100 động cơ | [Theo động cơ](tables/constant_engine_counts.csv) |
-| Động cơ minh họa | 87: 178 cycles; 26: 199 cycles; 75: 229 cycles | [Quy tắc chọn](tables/example_engines.csv) |
+| Động cơ minh họa | 87: 178 cycle; 26: 199 cycle; 75: 229 cycle | [Quy tắc chọn](tables/example_engines.csv) |
 
 Ba sensor có trị tuyệt đối của trung vị Spearman sensor–RUL lớn nhất trong
 khảo sát này là `sensor_11` (−0,819), `sensor_12` (+0,808) và `sensor_4`

@@ -39,15 +39,13 @@ TOTAL = 20
 
 D = json.loads((ROOT / "slides/slide_data.json").read_text(encoding="utf-8"))
 DEG = D["degradation"]
-BENCH = D["benchmark_scaling"]["summary"]
 T40 = D["maintenance"]["threshold_40_test"]
-TRUE90 = next(int(m["y_true"]) for m in D["maintenance"]["missed_engines"] if m["engine_id"] == 90)
 NOISE = {row["sensor"]: row for row in D["noise_summary"]}
 
 # Màu lấy từ template IUH: xanh thương hiệu và vàng của đường viền footer.
 BLUE, GOLD = COLORS["blue"].lstrip("#"), COLORS["gold"].lstrip("#")
 INK, SLATE, LINE = "1B2733", "5A6B7B", "C9D2E3"
-TINT, GOLD_TINT, WHITE, ICE = "EAF0FA", "FFF4DA", "FFFFFF", "C9D6F0"
+TINT, GOLD_TINT, WHITE = "EAF0FA", "FFF4DA", "FFFFFF"
 RED, TEAL = COLORS["red"].lstrip("#"), COLORS["teal"].lstrip("#")
 PARTS = [
     "Giới thiệu",
@@ -67,13 +65,12 @@ assert HDFS["mapreduce_vs_pandas"]["exact_match"] and HDFS["spark_vs_pandas"]["e
 BENCH_PARITY = D["benchmark_parity"]
 ROLLING_ROWS = {run["features"]["rows"] for run in BENCH_PARITY.values()}
 assert len(ROLLING_ROWS) == 1 and all(run["features"]["all_cells_match"] for run in BENCH_PARITY.values())
-MNT_CHECK = [MNT["status_check"]["columns"], *MNT["status_check"]["data"]]
 SENS = D["sensitivity"]
-SENS_LEAD_MIN = min(float(row["lead_min"]) for row in SENS)
 # Sensor thay đổi cùng chiều ở mọi động cơ train (kiểm định đầu/cuối vòng đời).
 SAME_DIRECTION = D["statistics"]["same_direction"]
 assert {"sensor_4", "sensor_7", "sensor_11", "sensor_12", "sensor_20"} <= set(SAME_DIRECTION)
-SENS_ALL_DETECTED = all(row["n_detected"] == row["n_engines"] for row in SENS)
+# Lời nói slide 15 khẳng định mọi cấu hình trong lưới đều phát hiện đủ động cơ.
+assert all(row["n_detected"] == row["n_engines"] for row in SENS)
 
 
 def rgb(hex_color: str) -> RGBColor:
@@ -508,12 +505,12 @@ def slide_structure():
 def slide_quality():
     q, E = DP["quality"], D["eda"]
     life = E["lifetime"]
-    s = content(2, 6, "Dữ liệu đầy đủ; tuổi thọ động cơ từ 128 đến 362 cycle", "",
+    s = content(2, 6, f"Dữ liệu đầy đủ; tuổi thọ động cơ từ {vn(life['min'], 0)} đến {vn(life['max'], 0)} cycle", "",
                 f"outputs/etl/silver/observations.parquet; {NB01}/engine_lifetimes.png",
                 f"Thời lượng: 40 giây.\nKiểm tra trên {vn(q['rows'], 0)} bản ghi FD001: không có giá trị thiếu, không có "
                 "khóa trùng, cycle của mỗi động cơ bắt đầu từ 1 và liên tục. Khóa của mọi bảng là (split, engine_id, "
                 "cycle): cặp (engine_id, cycle) trùng giữa train và test nên phải thêm cột split.\nBảy cột không đổi ở cả "
-                "100 động cơ: sensor 1, 5, 10, 16, 18, 19 và setting_3; sensor 6 không đổi ở 38/100 động cơ. Các cột này "
+                f"100 động cơ: sensor 1, 5, 10, 16, 18, 19 và setting_3; sensor 6 không đổi ở {E['partially_constant'][0]['constant_engines']}/100 động cơ. Các cột này "
                 "không mang thông tin suy giảm nên không làm mượt; bảng đặc trưng vẫn giữ đủ 21 sensor.\n"
                 "Hình do notebook 01 sinh "
                 f"ra: tuổi thọ trung vị {vn(life['50%'], 0)} cycle, lệch phải. Nếu bảo trì cả đội ở cycle "
@@ -554,7 +551,7 @@ def slide_layers():
 def slide_hadoop():
     mr, hd = DP["mapreduce"], HDFS
     paths = hd["hdfs_paths"]
-    s = content(2, 8, "Lưu trữ và xử lý trên cụm Hadoop: HDFS, MapReduce, YARN", "",
+    s = content(2, 8, f"MapReduce đọc dữ liệu từ HDFS, khớp Pandas {hd['mapreduce_vs_pandas']['rows_candidate']}/{hd['mapreduce_vs_pandas']['rows_candidate']} động cơ", "",
                 "outputs/hdfs/summary.json; outputs/hdfs/mapreduce_job.txt; outputs/hdfs/hdfs_fsck.txt; "
                 "outputs/hdfs/figures/yarn_applications.png",
                 f"Thời lượng: 50 giây.\nCụm {hd['hadoop_version']} một node chạy bằng Docker: NameNode, DataNode cho HDFS; "
@@ -624,7 +621,7 @@ def slide_query():
     sql_lines = DP["sql"]["query"].splitlines()
     result = [["engine_id", "n_cycles", "cycle", "rul"]] + [[str(v) for v in row] for row in DP["sql"]["rows"]]
     mean = DP["rolling_mean_sensor_11"]
-    s = content(2, 10, "Truy vấn dữ liệu bằng SQL trên SQLite và Spark SQL", "",
+    s = content(2, 10, "SQL và Spark SQL trả về đúng nhãn RUL và đặc trưng window", "",
                 "outputs/etl/gold/etl.sqlite; outputs/etl/silver/observations.parquet; report/sections/data-processing.tex",
                 "Thời lượng: 45 giây.\nTruy vấn bên trái chạy trên file etl.sqlite của lớp Gold: JOIN bảng tổng hợp động "
                 "cơ với bảng nhãn theo khóa split và engine_id, lấy RUL của động cơ train 1 tại cycle 1, 100 và 192. Kết "
@@ -660,6 +657,8 @@ def slide_transform():
     def size(key):
         return f"{vn(sh[key][0], 0)} × {sh[key][1]}"
 
+    life1 = M["example_warning"]["failure_cycle"]  # động cơ train 1
+    n_rows1 = life1 - (P["window"] - 1)
     rows = [["#", "Phép biến đổi", "Kết quả", "Kích thước"],
             ["1", "Đọc 2 file text, gán tên và kiểu 26 trường, thêm cột split", "2 bảng có kiểu",
              f"{vn(n_train, 0)} và {vn(sh['observations'][0] - n_train, 0)} dòng"],
@@ -677,7 +676,7 @@ def slide_transform():
                 f"{P['n_sensors']} sensor trên {P['window']} cycle gần nhất, chỉ dùng quá khứ. 29 cycle đầu mỗi động cơ "
                 f"chưa đủ window nên không tạo dòng: {vn(n_train, 0)} − 100 × 29 = {vn(fr['rolling_features_train'], 0)} "
                 "dòng train.\nBước 6 bắt buộc quan hệ một-một. Nếu chỉ join theo engine_id, động cơ train 1 sẽ thành "
-                "163 × 192 = 31.296 dòng thay vì 163 dòng.")
+                f"{n_rows1} × {life1} = {vn(n_rows1 * life1, 0)} dòng thay vì {n_rows1} dòng.")
     table(s, rows, 0.92, 2.15, [0.5, 6.3, 2.2, 2.5], row_h=0.58, size=14, align_right_from=3)
 
 
@@ -734,14 +733,17 @@ def slide_trend():
                 f"{NB01}/selected_sensor_trajectories.png; outputs/statistics/tables/sensor_inference.csv",
                 "Thời lượng: 30 giây.\nHình do notebook 01 sinh ra: tín hiệu gốc của ba động cơ train dài 178, 199 và 229 "
                 "cycle. Sensor 11 tăng dần và sensor 12 giảm dần khi động cơ gần hỏng.\nKiểm định: với mỗi động cơ, lấy "
-                "trung bình 30 cycle cuối trừ 30 cycle đầu; bootstrap 10.000 lần cho khoảng tin cậy; kiểm định Wilcoxon; "
-                f"hiệu chỉnh Benjamini–Hochberg với q = 0,05 trên 21 sensor. Kết quả: {st['n_reject']} sensor thay đổi có "
-                f"ý nghĩa; {len(SAME_DIRECTION)} sensor thay đổi cùng chiều ở cả 100 động cơ; 6 sensor không đổi nên không "
+                f"trung bình {st['comparison_cycles']} cycle cuối trừ {st['comparison_cycles']} cycle đầu; bootstrap "
+                f"{vn(st['resamples'], 0)} lần cho khoảng tin cậy; kiểm định Wilcoxon; "
+                f"hiệu chỉnh Benjamini–Hochberg với q = {vn(st['fdr_q'], 2)} trên {st['n_sensors']} sensor. Kết quả: "
+                f"{st['n_reject']} sensor thay đổi có "
+                f"ý nghĩa; {len(SAME_DIRECTION)} sensor thay đổi cùng chiều ở cả 100 động cơ; {st['n_degenerate']} sensor "
+                "không đổi nên không "
                 "kiểm định được.")
     wide_figure(s, f"{NB01}/selected_sensor_trajectories.png", crop=(0, 0, 1817, 535))
     numbers_below(s, [
         (str(len(SAME_DIRECTION)), "sensor thay đổi cùng chiều ở cả 100 động cơ", BLUE),
-        (f"{st['n_reject']}/{st['n_sensors']}", "sensor thay đổi có ý nghĩa thống kê (q = 0,05)", BLUE),
+        (f"{st['n_reject']}/{st['n_sensors']}", f"sensor thay đổi có ý nghĩa thống kê (q = {vn(st['fdr_q'], 2)})", BLUE),
     ])
 
 
@@ -834,7 +836,7 @@ def slide_maintenance():
     wide_figure(s, "outputs/maintenance/figures/fleet_status.png")
     numbers_below(s, [
         (f"{ev['n_correct_needs_maintenance']}/{ev['n_flagged_needs_maintenance']}", "động cơ được xếp bảo trì ngay đều đúng", BLUE),
-        (str(missed["n_engines"]), f"động cơ cần bảo trì bị sót; RUL dự đoán {vn(missed['rul_pred_min'], 0)}–"
+        (str(missed["n_engines"]), f"động cơ bị sót, RUL dự đoán {vn(missed['rul_pred_min'], 0)}–"
          f"{vn(missed['rul_pred_max'], 0)} cycle", GOLD_DARK),
         (f"{T40['correct']}/{T40['actual']}", "bắt đủ nếu dùng ngưỡng 40 cycle", BLUE),
     ])
@@ -843,7 +845,7 @@ def slide_maintenance():
 # ============================================================================ 19. Kết luận
 def slide_conclusion():
     f, ev = M["final"], MNT["evaluation"]
-    s = content(4, 19, "Kết luận, hạn chế và hướng phát triển", "",
+    s = content(4, 19, "Đạt mục tiêu trên FD001; còn hạn chế về chi phí và quy mô", "",
                 "report/sections/conclusion.tex; report/sections/discussion.tex",
                 "Thời lượng: 35 giây.\nKết luận: pipeline dữ liệu chạy được trên Pandas, PySpark và Hadoop với kết quả "
                 "khớp; Health Index phát hiện bất thường sớm; mô hình RUL và lịch bảo trì cho kết quả tốt ở vùng gần hỏng.\n"

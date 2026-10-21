@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 
-from cmapss.data.contracts import KEY
 from cmapss.features.contracts import ROLLING_FEATURE_VALUE_COLUMNS
 
 # Mốc cuối dành cho nhóm test >90; OOF dùng các mốc chi tiết đến 400.
@@ -15,7 +14,6 @@ MODELING_N_SPLITS = 5
 MODELING_BOOTSTRAP_RESAMPLES = 10_000
 MODELING_PRIMARY_METRIC = "mean_engine_mae"
 MODELING_WARNING_RUL_THRESHOLD = 30
-MODELING_KEY = KEY
 MODELING_FEATURE_COLUMNS = ROLLING_FEATURE_VALUE_COLUMNS
 
 FOLD_ASSIGNMENT_COLUMNS = ("split", "engine_id", "fold")

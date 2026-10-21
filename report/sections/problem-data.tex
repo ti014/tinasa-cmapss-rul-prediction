@@ -37,7 +37,7 @@ sắp theo đúng thứ tự pipeline:
 \item Dữ liệu có hợp lệ về schema, khóa và tính liên tục của cycle không, và ETL
       bằng Pandas và PySpark có cho kết quả giống nhau trên cùng input không?
 \item Nhiễu tín hiệu cảm biến được giảm bao nhiêu sau khử nhiễu, và dữ liệu được
-      tổng hợp theo cửa sổ thời gian như thế nào?
+      tổng hợp theo window 30 cycle như thế nào?
 \item Sensor suy giảm theo xu hướng nào, và có phát hiện được dấu hiệu bất thường
       trước khi động cơ hỏng không?
 \item Dự đoán RUL đạt độ chính xác bao nhiêu trên tập test độc lập?
@@ -196,7 +196,7 @@ không phải cặp \texttt{(engine\_id, cycle)}.
 \subsection{Đặc điểm của tập train FD001}
 Bảng~\ref{tab:column-profile} tóm tắt tập train sau khi gắn nhãn RUL. Không có
 giá trị thiếu và không có khóa trùng. Điểm đáng chú ý là sáu sensor hằng số
-trên toàn bộ train, còn \texttt{sensor\_6} chỉ có hai giá trị và không đổi trong
+trên toàn bộ train, còn sensor 6 chỉ có hai giá trị và không đổi trong
 38/100 động cơ. Chi tiết từng sensor nằm ở Bảng~\ref{tab:sensor-profile}.
 
 \begin{table}[H]

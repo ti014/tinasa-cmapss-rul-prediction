@@ -363,7 +363,21 @@
     "n_sensors": 21,
     "n_reject": 15,
     "n_degenerate": 6,
-    "resamples": 10000
+    "resamples": 10000,
+    "same_direction": [
+      "sensor_2",
+      "sensor_3",
+      "sensor_4",
+      "sensor_7",
+      "sensor_8",
+      "sensor_11",
+      "sensor_12",
+      "sensor_13",
+      "sensor_15",
+      "sensor_17",
+      "sensor_20",
+      "sensor_21"
+    ]
   },
   "timeseries": {
     "n_engines": 10,
@@ -372,6 +386,7 @@
       "drift": 0.7468818036967699,
       "last_value": 0.9477916727232675
     },
+    "n_better_than_drift": 7,
     "coverage_min": 0.2142857142857142,
     "coverage_max": 0.9702970297029704
   },
@@ -411,6 +426,19 @@
     ],
     "n_over": 74,
     "n_under": 26,
+    "low_rul": {
+      "n_engines": 25,
+      "mae": 4.383042419332335
+    },
+    "high_rul_mae": 21.35247665536916,
+    "test_rul_min": 7.0,
+    "test_rul_max": 145.0,
+    "ridge_minus_hgb_mae": 3.7778224278713814,
+    "example_warning": {
+      "engine_id": 1,
+      "first_warning_cycle": 162,
+      "failure_cycle": 192
+    },
     "worst": {
       "engine_id": 23,
       "y_true": 113.0,
@@ -436,6 +464,1737 @@
       }
     }
   },
+  "maintenance": {
+    "author": "Phan Nguyễn Mai Phương — MSHV 25002711",
+    "inputs": {
+      "train": {
+        "path": "data/raw/train_FD001.txt",
+        "sha256": "963b5e22825b34d8b21c69e1aeb4af3e647050eb672ee8834ba4b5d91d2de0f8"
+      },
+      "test": {
+        "path": "data/raw/test_FD001.txt",
+        "sha256": "3cda7109ce17bafb5443f2ac926cfcf88154b941b8c4cf95eb55d1ddd6f52851"
+      },
+      "predictions": {
+        "path": "outputs/modeling/predictions/final_predictions.parquet",
+        "sha256": "53b7a1e09e89efbeb90660e62974736d9eabdc48637fb979ad273ee8bf6bb033"
+      },
+      "labels": {
+        "path": "data/raw/RUL_FD001.txt",
+        "sha256": "a19c8ec94931949d0485bdc35118206e9c81c4547b422efb9cf86f4ceddbceca"
+      }
+    },
+    "rul_threshold": 30,
+    "ewma_span": 10,
+    "anomaly_config": {
+      "baseline_cycles": 30,
+      "z_threshold": 3.0,
+      "persistence": 5
+    },
+    "status_counts": {
+      "Cần bảo trì": 21,
+      "Theo dõi tăng cường": 59,
+      "Bình thường": 20
+    },
+    "n_anomaly_not_evaluable": 2,
+    "planning": {
+      "Ngay bây giờ": 21,
+      "1–25": 14,
+      "26–50": 8,
+      "51–100": 37,
+      "> 100": 20
+    },
+    "schedule_sha256": "74d1367839b0428dc38e1547d230a6558f01e141837820fe223c09fee9d67d6b",
+    "labels_read_after_schedule_written": true,
+    "evaluation": {
+      "n_engines": 100,
+      "n_actual_needs_maintenance": 25,
+      "n_flagged_needs_maintenance": 21,
+      "n_correct_needs_maintenance": 21,
+      "n_actual_needs_with_any_warning": 25,
+      "n_flagged_but_actual_above_threshold": 0,
+      "max_actual_rul_among_flagged": 29.0,
+      "cycles_to_maintenance_mae": 14.21,
+      "median_actual_rul_by_status": {
+        "Cần bảo trì": 16.0,
+        "Theo dõi tăng cường": 89.0,
+        "Bình thường": 114.0
+      }
+    },
+    "schedule": [
+      {
+        "priority": 1,
+        "engine_id": 34,
+        "current_cycle": 203,
+        "rul_pred": 6.1789,
+        "cycles_to_maintenance": 0,
+        "maintenance_cycle": 203,
+        "predicted_failure_cycle": 209,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 70.0,
+        "status": "Cần bảo trì"
+      },
+      {
+        "priority": 2,
+        "engine_id": 81,
+        "current_cycle": 213,
+        "rul_pred": 6.671,
+        "cycles_to_maintenance": 0,
+        "maintenance_cycle": 213,
+        "predicted_failure_cycle": 219,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 80.0,
+        "status": "Cần bảo trì"
+      },
+      {
+        "priority": 3,
+        "engine_id": 76,
+        "current_cycle": 205,
+        "rul_pred": 6.8965,
+        "cycles_to_maintenance": 0,
+        "maintenance_cycle": 205,
+        "predicted_failure_cycle": 211,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 104.0,
+        "status": "Cần bảo trì"
+      },
+      {
+        "priority": 4,
+        "engine_id": 31,
+        "current_cycle": 196,
+        "rul_pred": 8.1032,
+        "cycles_to_maintenance": 0,
+        "maintenance_cycle": 196,
+        "predicted_failure_cycle": 204,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 66.0,
+        "status": "Cần bảo trì"
+      },
+      {
+        "priority": 5,
+        "engine_id": 68,
+        "current_cycle": 187,
+        "rul_pred": 8.7956,
+        "cycles_to_maintenance": 0,
+        "maintenance_cycle": 187,
+        "predicted_failure_cycle": 195,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 101.0,
+        "status": "Cần bảo trì"
+      },
+      {
+        "priority": 6,
+        "engine_id": 49,
+        "current_cycle": 303,
+        "rul_pred": 9.0748,
+        "cycles_to_maintenance": 0,
+        "maintenance_cycle": 303,
+        "predicted_failure_cycle": 312,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 133.0,
+        "status": "Cần bảo trì"
+      },
+      {
+        "priority": 7,
+        "engine_id": 20,
+        "current_cycle": 184,
+        "rul_pred": 9.8732,
+        "cycles_to_maintenance": 0,
+        "maintenance_cycle": 184,
+        "predicted_failure_cycle": 193,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 67.0,
+        "status": "Cần bảo trì"
+      },
+      {
+        "priority": 8,
+        "engine_id": 82,
+        "current_cycle": 162,
+        "rul_pred": 10.6211,
+        "cycles_to_maintenance": 0,
+        "maintenance_cycle": 162,
+        "predicted_failure_cycle": 172,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 52.0,
+        "status": "Cần bảo trì"
+      },
+      {
+        "priority": 9,
+        "engine_id": 35,
+        "current_cycle": 198,
+        "rul_pred": 13.9087,
+        "cycles_to_maintenance": 0,
+        "maintenance_cycle": 198,
+        "predicted_failure_cycle": 211,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 95.0,
+        "status": "Cần bảo trì"
+      },
+      {
+        "priority": 10,
+        "engine_id": 56,
+        "current_cycle": 136,
+        "rul_pred": 14.4761,
+        "cycles_to_maintenance": 0,
+        "maintenance_cycle": 136,
+        "predicted_failure_cycle": 150,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 46.0,
+        "status": "Cần bảo trì"
+      },
+      {
+        "priority": 11,
+        "engine_id": 42,
+        "current_cycle": 156,
+        "rul_pred": 15.1705,
+        "cycles_to_maintenance": 0,
+        "maintenance_cycle": 156,
+        "predicted_failure_cycle": 171,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 62.0,
+        "status": "Cần bảo trì"
+      },
+      {
+        "priority": 12,
+        "engine_id": 36,
+        "current_cycle": 126,
+        "rul_pred": 16.5074,
+        "cycles_to_maintenance": 0,
+        "maintenance_cycle": 126,
+        "predicted_failure_cycle": 142,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 76.0,
+        "status": "Cần bảo trì"
+      },
+      {
+        "priority": 13,
+        "engine_id": 66,
+        "current_cycle": 147,
+        "rul_pred": 17.9922,
+        "cycles_to_maintenance": 0,
+        "maintenance_cycle": 147,
+        "predicted_failure_cycle": 164,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 73.0,
+        "status": "Cần bảo trì"
+      },
+      {
+        "priority": 14,
+        "engine_id": 61,
+        "current_cycle": 159,
+        "rul_pred": 21.2008,
+        "cycles_to_maintenance": 0,
+        "maintenance_cycle": 159,
+        "predicted_failure_cycle": 180,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 85.0,
+        "status": "Cần bảo trì"
+      },
+      {
+        "priority": 15,
+        "engine_id": 24,
+        "current_cycle": 186,
+        "rul_pred": 22.5906,
+        "cycles_to_maintenance": 0,
+        "maintenance_cycle": 186,
+        "predicted_failure_cycle": 208,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 93.0,
+        "status": "Cần bảo trì"
+      },
+      {
+        "priority": 16,
+        "engine_id": 92,
+        "current_cycle": 150,
+        "rul_pred": 22.7707,
+        "cycles_to_maintenance": 0,
+        "maintenance_cycle": 150,
+        "predicted_failure_cycle": 172,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 79.0,
+        "status": "Cần bảo trì"
+      },
+      {
+        "priority": 17,
+        "engine_id": 52,
+        "current_cycle": 189,
+        "rul_pred": 22.8881,
+        "cycles_to_maintenance": 0,
+        "maintenance_cycle": 189,
+        "predicted_failure_cycle": 211,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 121.0,
+        "status": "Cần bảo trì"
+      },
+      {
+        "priority": 18,
+        "engine_id": 53,
+        "current_cycle": 164,
+        "rul_pred": 24.0554,
+        "cycles_to_maintenance": 0,
+        "maintenance_cycle": 164,
+        "predicted_failure_cycle": 188,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 55.0,
+        "status": "Cần bảo trì"
+      },
+      {
+        "priority": 19,
+        "engine_id": 64,
+        "current_cycle": 168,
+        "rul_pred": 26.0304,
+        "cycles_to_maintenance": 0,
+        "maintenance_cycle": 168,
+        "predicted_failure_cycle": 194,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 81.0,
+        "status": "Cần bảo trì"
+      },
+      {
+        "priority": 20,
+        "engine_id": 100,
+        "current_cycle": 198,
+        "rul_pred": 28.0423,
+        "cycles_to_maintenance": 0,
+        "maintenance_cycle": 198,
+        "predicted_failure_cycle": 226,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 97.0,
+        "status": "Cần bảo trì"
+      },
+      {
+        "priority": 21,
+        "engine_id": 41,
+        "current_cycle": 123,
+        "rul_pred": 29.6143,
+        "cycles_to_maintenance": 0,
+        "maintenance_cycle": 123,
+        "predicted_failure_cycle": 152,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 58.0,
+        "status": "Cần bảo trì"
+      },
+      {
+        "priority": 22,
+        "engine_id": 90,
+        "current_cycle": 146,
+        "rul_pred": 31.2191,
+        "cycles_to_maintenance": 1,
+        "maintenance_cycle": 147,
+        "predicted_failure_cycle": 177,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 67.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 23,
+        "engine_id": 37,
+        "current_cycle": 121,
+        "rul_pred": 31.3637,
+        "cycles_to_maintenance": 1,
+        "maintenance_cycle": 122,
+        "predicted_failure_cycle": 152,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 64.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 24,
+        "engine_id": 77,
+        "current_cycle": 162,
+        "rul_pred": 32.7631,
+        "cycles_to_maintenance": 2,
+        "maintenance_cycle": 164,
+        "predicted_failure_cycle": 194,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 71.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 25,
+        "engine_id": 91,
+        "current_cycle": 234,
+        "rul_pred": 33.364,
+        "cycles_to_maintenance": 3,
+        "maintenance_cycle": 237,
+        "predicted_failure_cycle": 267,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 59.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 26,
+        "engine_id": 18,
+        "current_cycle": 133,
+        "rul_pred": 37.3757,
+        "cycles_to_maintenance": 7,
+        "maintenance_cycle": 140,
+        "predicted_failure_cycle": 170,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 69.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 27,
+        "engine_id": 40,
+        "current_cycle": 133,
+        "rul_pred": 38.4593,
+        "cycles_to_maintenance": 8,
+        "maintenance_cycle": 141,
+        "predicted_failure_cycle": 171,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 57.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 28,
+        "engine_id": 3,
+        "current_cycle": 126,
+        "rul_pred": 39.7262,
+        "cycles_to_maintenance": 9,
+        "maintenance_cycle": 135,
+        "predicted_failure_cycle": 165,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 88.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 29,
+        "engine_id": 58,
+        "current_cycle": 176,
+        "rul_pred": 41.8,
+        "cycles_to_maintenance": 11,
+        "maintenance_cycle": 187,
+        "predicted_failure_cycle": 217,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 75.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 30,
+        "engine_id": 46,
+        "current_cycle": 146,
+        "rul_pred": 47.5968,
+        "cycles_to_maintenance": 17,
+        "maintenance_cycle": 163,
+        "predicted_failure_cycle": 193,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 74.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 31,
+        "engine_id": 38,
+        "current_cycle": 125,
+        "rul_pred": 47.6097,
+        "cycles_to_maintenance": 17,
+        "maintenance_cycle": 142,
+        "predicted_failure_cycle": 172,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 58.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 32,
+        "engine_id": 62,
+        "current_cycle": 232,
+        "rul_pred": 48.4962,
+        "cycles_to_maintenance": 18,
+        "maintenance_cycle": 250,
+        "predicted_failure_cycle": 280,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 139.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 33,
+        "engine_id": 32,
+        "current_cycle": 145,
+        "rul_pred": 51.812,
+        "cycles_to_maintenance": 21,
+        "maintenance_cycle": 166,
+        "predicted_failure_cycle": 196,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 74.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 34,
+        "engine_id": 17,
+        "current_cycle": 165,
+        "rul_pred": 52.4491,
+        "cycles_to_maintenance": 22,
+        "maintenance_cycle": 187,
+        "predicted_failure_cycle": 217,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 77.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 35,
+        "engine_id": 93,
+        "current_cycle": 244,
+        "rul_pred": 53.2897,
+        "cycles_to_maintenance": 23,
+        "maintenance_cycle": 267,
+        "predicted_failure_cycle": 297,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 81.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 36,
+        "engine_id": 94,
+        "current_cycle": 133,
+        "rul_pred": 68.4825,
+        "cycles_to_maintenance": 38,
+        "maintenance_cycle": 171,
+        "predicted_failure_cycle": 201,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 78.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 37,
+        "engine_id": 21,
+        "current_cycle": 148,
+        "rul_pred": 70.0409,
+        "cycles_to_maintenance": 40,
+        "maintenance_cycle": 188,
+        "predicted_failure_cycle": 218,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 99.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 38,
+        "engine_id": 72,
+        "current_cycle": 131,
+        "rul_pred": 72.2471,
+        "cycles_to_maintenance": 42,
+        "maintenance_cycle": 173,
+        "predicted_failure_cycle": 203,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 70.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 39,
+        "engine_id": 98,
+        "current_cycle": 121,
+        "rul_pred": 72.8301,
+        "cycles_to_maintenance": 42,
+        "maintenance_cycle": 163,
+        "predicted_failure_cycle": 193,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 64.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 40,
+        "engine_id": 84,
+        "current_cycle": 172,
+        "rul_pred": 74.1603,
+        "cycles_to_maintenance": 44,
+        "maintenance_cycle": 216,
+        "predicted_failure_cycle": 246,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 63.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 41,
+        "engine_id": 43,
+        "current_cycle": 172,
+        "rul_pred": 77.642,
+        "cycles_to_maintenance": 47,
+        "maintenance_cycle": 219,
+        "predicted_failure_cycle": 249,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 73.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 42,
+        "engine_id": 79,
+        "current_cycle": 101,
+        "rul_pred": 80.5914,
+        "cycles_to_maintenance": 50,
+        "maintenance_cycle": 151,
+        "predicted_failure_cycle": 181,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 55.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 43,
+        "engine_id": 97,
+        "current_cycle": 134,
+        "rul_pred": 80.851,
+        "cycles_to_maintenance": 50,
+        "maintenance_cycle": 184,
+        "predicted_failure_cycle": 214,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 86.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 44,
+        "engine_id": 45,
+        "current_cycle": 152,
+        "rul_pred": 81.9302,
+        "cycles_to_maintenance": 51,
+        "maintenance_cycle": 203,
+        "predicted_failure_cycle": 233,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 103.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 45,
+        "engine_id": 10,
+        "current_cycle": 192,
+        "rul_pred": 85.0486,
+        "cycles_to_maintenance": 55,
+        "maintenance_cycle": 247,
+        "predicted_failure_cycle": 277,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 109.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 46,
+        "engine_id": 63,
+        "current_cycle": 155,
+        "rul_pred": 88.5517,
+        "cycles_to_maintenance": 58,
+        "maintenance_cycle": 213,
+        "predicted_failure_cycle": 243,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 140.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 47,
+        "engine_id": 27,
+        "current_cycle": 140,
+        "rul_pred": 88.6238,
+        "cycles_to_maintenance": 58,
+        "maintenance_cycle": 198,
+        "predicted_failure_cycle": 228,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 73.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 48,
+        "engine_id": 80,
+        "current_cycle": 133,
+        "rul_pred": 93.2856,
+        "cycles_to_maintenance": 63,
+        "maintenance_cycle": 196,
+        "predicted_failure_cycle": 226,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 97.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 49,
+        "engine_id": 13,
+        "current_cycle": 195,
+        "rul_pred": 98.9251,
+        "cycles_to_maintenance": 68,
+        "maintenance_cycle": 263,
+        "predicted_failure_cycle": 293,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 122.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 50,
+        "engine_id": 16,
+        "current_cycle": 113,
+        "rul_pred": 100.3782,
+        "cycles_to_maintenance": 70,
+        "maintenance_cycle": 183,
+        "predicted_failure_cycle": 213,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 47.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 51,
+        "engine_id": 29,
+        "current_cycle": 171,
+        "rul_pred": 103.2484,
+        "cycles_to_maintenance": 73,
+        "maintenance_cycle": 244,
+        "predicted_failure_cycle": 274,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 137.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 52,
+        "engine_id": 86,
+        "current_cycle": 110,
+        "rul_pred": 103.4294,
+        "cycles_to_maintenance": 73,
+        "maintenance_cycle": 183,
+        "predicted_failure_cycle": 213,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 91.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 53,
+        "engine_id": 19,
+        "current_cycle": 135,
+        "rul_pred": 104.2414,
+        "cycles_to_maintenance": 74,
+        "maintenance_cycle": 209,
+        "predicted_failure_cycle": 239,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 91.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 54,
+        "engine_id": 51,
+        "current_cycle": 144,
+        "rul_pred": 104.5581,
+        "cycles_to_maintenance": 74,
+        "maintenance_cycle": 218,
+        "predicted_failure_cycle": 248,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 97.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 55,
+        "engine_id": 4,
+        "current_cycle": 106,
+        "rul_pred": 105.2097,
+        "cycles_to_maintenance": 75,
+        "maintenance_cycle": 181,
+        "predicted_failure_cycle": 211,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 59.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 56,
+        "engine_id": 5,
+        "current_cycle": 98,
+        "rul_pred": 105.8949,
+        "cycles_to_maintenance": 75,
+        "maintenance_cycle": 173,
+        "predicted_failure_cycle": 203,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 73.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 57,
+        "engine_id": 74,
+        "current_cycle": 137,
+        "rul_pred": 110.151,
+        "cycles_to_maintenance": 80,
+        "maintenance_cycle": 217,
+        "predicted_failure_cycle": 247,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 93.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 58,
+        "engine_id": 15,
+        "current_cycle": 76,
+        "rul_pred": 110.6771,
+        "cycles_to_maintenance": 80,
+        "maintenance_cycle": 156,
+        "predicted_failure_cycle": 186,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 64.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 59,
+        "engine_id": 70,
+        "current_cycle": 152,
+        "rul_pred": 111.2795,
+        "cycles_to_maintenance": 81,
+        "maintenance_cycle": 233,
+        "predicted_failure_cycle": 263,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 113.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 60,
+        "engine_id": 28,
+        "current_cycle": 158,
+        "rul_pred": 111.463,
+        "cycles_to_maintenance": 81,
+        "maintenance_cycle": 239,
+        "predicted_failure_cycle": 269,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 113.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 61,
+        "engine_id": 57,
+        "current_cycle": 160,
+        "rul_pred": 111.8974,
+        "cycles_to_maintenance": 81,
+        "maintenance_cycle": 241,
+        "predicted_failure_cycle": 271,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 47.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 62,
+        "engine_id": 50,
+        "current_cycle": 74,
+        "rul_pred": 113.3071,
+        "cycles_to_maintenance": 83,
+        "maintenance_cycle": 157,
+        "predicted_failure_cycle": 187,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 66.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 63,
+        "engine_id": 6,
+        "current_cycle": 105,
+        "rul_pred": 114.2123,
+        "cycles_to_maintenance": 84,
+        "maintenance_cycle": 189,
+        "predicted_failure_cycle": 219,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 69.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 64,
+        "engine_id": 59,
+        "current_cycle": 94,
+        "rul_pred": 114.9856,
+        "cycles_to_maintenance": 84,
+        "maintenance_cycle": 178,
+        "predicted_failure_cycle": 208,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 90.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 65,
+        "engine_id": 30,
+        "current_cycle": 143,
+        "rul_pred": 115.479,
+        "cycles_to_maintenance": 85,
+        "maintenance_cycle": 228,
+        "predicted_failure_cycle": 258,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 114.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 66,
+        "engine_id": 48,
+        "current_cycle": 78,
+        "rul_pred": 115.8884,
+        "cycles_to_maintenance": 85,
+        "maintenance_cycle": 163,
+        "predicted_failure_cycle": 193,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 72.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 67,
+        "engine_id": 96,
+        "current_cycle": 97,
+        "rul_pred": 116.0918,
+        "cycles_to_maintenance": 86,
+        "maintenance_cycle": 183,
+        "predicted_failure_cycle": 213,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 87.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 68,
+        "engine_id": 12,
+        "current_cycle": 217,
+        "rul_pred": 117.5591,
+        "cycles_to_maintenance": 87,
+        "maintenance_cycle": 304,
+        "predicted_failure_cycle": 334,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 150.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 69,
+        "engine_id": 7,
+        "current_cycle": 160,
+        "rul_pred": 117.8237,
+        "cycles_to_maintenance": 87,
+        "maintenance_cycle": 247,
+        "predicted_failure_cycle": 277,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 102.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 70,
+        "engine_id": 60,
+        "current_cycle": 147,
+        "rul_pred": 122.0359,
+        "cycles_to_maintenance": 92,
+        "maintenance_cycle": 239,
+        "predicted_failure_cycle": 269,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 100.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 71,
+        "engine_id": 8,
+        "current_cycle": 166,
+        "rul_pred": 125.0839,
+        "cycles_to_maintenance": 95,
+        "maintenance_cycle": 261,
+        "predicted_failure_cycle": 291,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 60.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 72,
+        "engine_id": 95,
+        "current_cycle": 89,
+        "rul_pred": 131.9005,
+        "cycles_to_maintenance": 101,
+        "maintenance_cycle": 190,
+        "predicted_failure_cycle": 220,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 65.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 73,
+        "engine_id": 55,
+        "current_cycle": 113,
+        "rul_pred": 136.5717,
+        "cycles_to_maintenance": 106,
+        "maintenance_cycle": 219,
+        "predicted_failure_cycle": 249,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 76.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 74,
+        "engine_id": 54,
+        "current_cycle": 121,
+        "rul_pred": 136.644,
+        "cycles_to_maintenance": 106,
+        "maintenance_cycle": 227,
+        "predicted_failure_cycle": 257,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 112.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 75,
+        "engine_id": 75,
+        "current_cycle": 88,
+        "rul_pred": 137.2003,
+        "cycles_to_maintenance": 107,
+        "maintenance_cycle": 195,
+        "predicted_failure_cycle": 225,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 88.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 76,
+        "engine_id": 88,
+        "current_cycle": 68,
+        "rul_pred": 155.5686,
+        "cycles_to_maintenance": 125,
+        "maintenance_cycle": 193,
+        "predicted_failure_cycle": 223,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 39.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 77,
+        "engine_id": 65,
+        "current_cycle": 71,
+        "rul_pred": 167.1868,
+        "cycles_to_maintenance": 137,
+        "maintenance_cycle": 208,
+        "predicted_failure_cycle": 238,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 68.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 78,
+        "engine_id": 23,
+        "current_cycle": 130,
+        "rul_pred": 170.4768,
+        "cycles_to_maintenance": 140,
+        "maintenance_cycle": 270,
+        "predicted_failure_cycle": 300,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 99.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 79,
+        "engine_id": 83,
+        "current_cycle": 73,
+        "rul_pred": 181.674,
+        "cycles_to_maintenance": 151,
+        "maintenance_cycle": 224,
+        "predicted_failure_cycle": 254,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 54.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 80,
+        "engine_id": 73,
+        "current_cycle": 112,
+        "rul_pred": 184.2864,
+        "cycles_to_maintenance": 154,
+        "maintenance_cycle": 266,
+        "predicted_failure_cycle": 296,
+        "anomaly_evaluable": true,
+        "anomaly_detected": true,
+        "anomaly_cycle": 82.0,
+        "status": "Theo dõi tăng cường"
+      },
+      {
+        "priority": 81,
+        "engine_id": 11,
+        "current_cycle": 83,
+        "rul_pred": 114.1825,
+        "cycles_to_maintenance": 84,
+        "maintenance_cycle": 167,
+        "predicted_failure_cycle": 197,
+        "anomaly_evaluable": true,
+        "anomaly_detected": false,
+        "anomaly_cycle": null,
+        "status": "Bình thường"
+      },
+      {
+        "priority": 82,
+        "engine_id": 47,
+        "current_cycle": 73,
+        "rul_pred": 114.6915,
+        "cycles_to_maintenance": 84,
+        "maintenance_cycle": 157,
+        "predicted_failure_cycle": 187,
+        "anomaly_evaluable": true,
+        "anomaly_detected": false,
+        "anomaly_cycle": null,
+        "status": "Bình thường"
+      },
+      {
+        "priority": 83,
+        "engine_id": 71,
+        "current_cycle": 68,
+        "rul_pred": 119.3639,
+        "cycles_to_maintenance": 89,
+        "maintenance_cycle": 157,
+        "predicted_failure_cycle": 187,
+        "anomaly_evaluable": true,
+        "anomaly_detected": false,
+        "anomaly_cycle": null,
+        "status": "Bình thường"
+      },
+      {
+        "priority": 84,
+        "engine_id": 26,
+        "current_cycle": 76,
+        "rul_pred": 122.7773,
+        "cycles_to_maintenance": 92,
+        "maintenance_cycle": 168,
+        "predicted_failure_cycle": 198,
+        "anomaly_evaluable": true,
+        "anomaly_detected": false,
+        "anomaly_cycle": null,
+        "status": "Bình thường"
+      },
+      {
+        "priority": 85,
+        "engine_id": 87,
+        "current_cycle": 56,
+        "rul_pred": 123.3764,
+        "cycles_to_maintenance": 93,
+        "maintenance_cycle": 149,
+        "predicted_failure_cycle": 179,
+        "anomaly_evaluable": true,
+        "anomaly_detected": false,
+        "anomaly_cycle": null,
+        "status": "Bình thường"
+      },
+      {
+        "priority": 86,
+        "engine_id": 14,
+        "current_cycle": 46,
+        "rul_pred": 123.8212,
+        "cycles_to_maintenance": 93,
+        "maintenance_cycle": 139,
+        "predicted_failure_cycle": 169,
+        "anomaly_evaluable": true,
+        "anomaly_detected": false,
+        "anomaly_cycle": null,
+        "status": "Bình thường"
+      },
+      {
+        "priority": 87,
+        "engine_id": 33,
+        "current_cycle": 50,
+        "rul_pred": 129.8273,
+        "cycles_to_maintenance": 99,
+        "maintenance_cycle": 149,
+        "predicted_failure_cycle": 179,
+        "anomaly_evaluable": true,
+        "anomaly_detected": false,
+        "anomaly_cycle": null,
+        "status": "Bình thường"
+      },
+      {
+        "priority": 88,
+        "engine_id": 44,
+        "current_cycle": 54,
+        "rul_pred": 130.7837,
+        "cycles_to_maintenance": 100,
+        "maintenance_cycle": 154,
+        "predicted_failure_cycle": 184,
+        "anomaly_evaluable": true,
+        "anomaly_detected": false,
+        "anomaly_cycle": null,
+        "status": "Bình thường"
+      },
+      {
+        "priority": 89,
+        "engine_id": 1,
+        "current_cycle": 31,
+        "rul_pred": 130.9711,
+        "cycles_to_maintenance": 100,
+        "maintenance_cycle": 131,
+        "predicted_failure_cycle": 161,
+        "anomaly_evaluable": false,
+        "anomaly_detected": false,
+        "anomaly_cycle": null,
+        "status": "Bình thường"
+      },
+      {
+        "priority": 90,
+        "engine_id": 67,
+        "current_cycle": 71,
+        "rul_pred": 131.2516,
+        "cycles_to_maintenance": 101,
+        "maintenance_cycle": 172,
+        "predicted_failure_cycle": 202,
+        "anomaly_evaluable": true,
+        "anomaly_detected": false,
+        "anomaly_cycle": null,
+        "status": "Bình thường"
+      },
+      {
+        "priority": 91,
+        "engine_id": 89,
+        "current_cycle": 177,
+        "rul_pred": 132.3397,
+        "cycles_to_maintenance": 102,
+        "maintenance_cycle": 279,
+        "predicted_failure_cycle": 309,
+        "anomaly_evaluable": true,
+        "anomaly_detected": false,
+        "anomaly_cycle": null,
+        "status": "Bình thường"
+      },
+      {
+        "priority": 92,
+        "engine_id": 9,
+        "current_cycle": 55,
+        "rul_pred": 134.5198,
+        "cycles_to_maintenance": 104,
+        "maintenance_cycle": 159,
+        "predicted_failure_cycle": 189,
+        "anomaly_evaluable": true,
+        "anomaly_detected": false,
+        "anomaly_cycle": null,
+        "status": "Bình thường"
+      },
+      {
+        "priority": 93,
+        "engine_id": 2,
+        "current_cycle": 49,
+        "rul_pred": 135.6308,
+        "cycles_to_maintenance": 105,
+        "maintenance_cycle": 154,
+        "predicted_failure_cycle": 184,
+        "anomaly_evaluable": true,
+        "anomaly_detected": false,
+        "anomaly_cycle": null,
+        "status": "Bình thường"
+      },
+      {
+        "priority": 94,
+        "engine_id": 69,
+        "current_cycle": 54,
+        "rul_pred": 141.6987,
+        "cycles_to_maintenance": 111,
+        "maintenance_cycle": 165,
+        "predicted_failure_cycle": 195,
+        "anomaly_evaluable": true,
+        "anomaly_detected": false,
+        "anomaly_cycle": null,
+        "status": "Bình thường"
+      },
+      {
+        "priority": 95,
+        "engine_id": 78,
+        "current_cycle": 72,
+        "rul_pred": 143.0083,
+        "cycles_to_maintenance": 113,
+        "maintenance_cycle": 185,
+        "predicted_failure_cycle": 215,
+        "anomaly_evaluable": true,
+        "anomaly_detected": false,
+        "anomaly_cycle": null,
+        "status": "Bình thường"
+      },
+      {
+        "priority": 96,
+        "engine_id": 85,
+        "current_cycle": 34,
+        "rul_pred": 148.281,
+        "cycles_to_maintenance": 118,
+        "maintenance_cycle": 152,
+        "predicted_failure_cycle": 182,
+        "anomaly_evaluable": false,
+        "anomaly_detected": false,
+        "anomaly_cycle": null,
+        "status": "Bình thường"
+      },
+      {
+        "priority": 97,
+        "engine_id": 22,
+        "current_cycle": 39,
+        "rul_pred": 153.5543,
+        "cycles_to_maintenance": 123,
+        "maintenance_cycle": 162,
+        "predicted_failure_cycle": 192,
+        "anomaly_evaluable": true,
+        "anomaly_detected": false,
+        "anomaly_cycle": null,
+        "status": "Bình thường"
+      },
+      {
+        "priority": 98,
+        "engine_id": 99,
+        "current_cycle": 97,
+        "rul_pred": 155.0372,
+        "cycles_to_maintenance": 125,
+        "maintenance_cycle": 222,
+        "predicted_failure_cycle": 252,
+        "anomaly_evaluable": true,
+        "anomaly_detected": false,
+        "anomaly_cycle": null,
+        "status": "Bình thường"
+      },
+      {
+        "priority": 99,
+        "engine_id": 25,
+        "current_cycle": 48,
+        "rul_pred": 159.0225,
+        "cycles_to_maintenance": 129,
+        "maintenance_cycle": 177,
+        "predicted_failure_cycle": 207,
+        "anomaly_evaluable": true,
+        "anomaly_detected": false,
+        "anomaly_cycle": null,
+        "status": "Bình thường"
+      },
+      {
+        "priority": 100,
+        "engine_id": 39,
+        "current_cycle": 37,
+        "rul_pred": 159.7524,
+        "cycles_to_maintenance": 129,
+        "maintenance_cycle": 166,
+        "predicted_failure_cycle": 196,
+        "anomaly_evaluable": true,
+        "anomaly_detected": false,
+        "anomaly_cycle": null,
+        "status": "Bình thường"
+      }
+    ],
+    "status_check": {
+      "index": [
+        0,
+        1,
+        2
+      ],
+      "columns": [
+        "status",
+        "≤ 30",
+        "31–60",
+        "> 60"
+      ],
+      "data": [
+        [
+          "Cần bảo trì",
+          "21",
+          "0",
+          "0"
+        ],
+        [
+          "Theo dõi tăng cường",
+          "4",
+          "14",
+          "41"
+        ],
+        [
+          "Bình thường",
+          "0",
+          "0",
+          "20"
+        ]
+      ]
+    },
+    "watch_above_60": 41,
+    "normal_min_actual_rul": 77.0,
+    "missed": {
+      "n_engines": 4,
+      "rul_pred_min": 31.2191,
+      "rul_pred_max": 38.4593,
+      "due_min": 1,
+      "due_max": 8
+    },
+    "late": {
+      "n_engines": 12,
+      "min_actual_rul": 77.0,
+      "delay_min": 4,
+      "delay_max": 27
+    }
+  },
+  "degradation": {
+    "author": "Phan Nguyễn Mai Phương — MSHV 25002711",
+    "input": {
+      "path": "data/raw/train_FD001.txt",
+      "sha256": "963b5e22825b34d8b21c69e1aeb4af3e647050eb672ee8834ba4b5d91d2de0f8"
+    },
+    "ewma_span": 10,
+    "sensors": [
+      "sensor_2",
+      "sensor_3",
+      "sensor_4",
+      "sensor_7",
+      "sensor_8",
+      "sensor_9",
+      "sensor_11",
+      "sensor_12",
+      "sensor_13",
+      "sensor_14",
+      "sensor_15",
+      "sensor_17",
+      "sensor_20",
+      "sensor_21"
+    ],
+    "noise_reduction_pct_median": 86.27534855806219,
+    "anomaly_config": {
+      "baseline_cycles": 30,
+      "z_threshold": 3.0,
+      "persistence": 5
+    },
+    "anomaly_smoothed": {
+      "n_engines": 100,
+      "n_detected": 100,
+      "lead_min": 67.0,
+      "lead_q1": 101.0,
+      "lead_median": 121.0,
+      "lead_q3": 149.25,
+      "lead_max": 289.0,
+      "n_lead_below_30": 0,
+      "detection_life_fraction_median": 0.3914905004013915
+    },
+    "anomaly_raw_for_comparison": {
+      "n_engines": 100,
+      "n_detected": 100,
+      "lead_min": 43.0,
+      "lead_q1": 60.0,
+      "lead_median": 72.5,
+      "lead_q3": 91.25,
+      "lead_max": 177.0,
+      "n_lead_below_30": 0,
+      "detection_life_fraction_median": 0.6169521967394308
+    },
+    "sensitivity_table": "tables/anomaly_sensitivity.csv",
+    "example_engine": 1,
+    "uses_rul_labels": false,
+    "reads_test_files": false
+  },
+  "example_anomaly": [
+    {
+      "engine_id": 1,
+      "failure_cycle": 192,
+      "baseline_mean": 0.9367995342017224,
+      "baseline_std": 0.0687977886804293,
+      "detection_cycle": 84,
+      "lead_cycles": 108,
+      "detected": true
+    }
+  ],
+  "noise_summary": [
+    {
+      "sensor": "sensor_2",
+      "diff_std_raw": 0.4270057969760225,
+      "diff_std_smoothed": 0.0583195903908901,
+      "reduction_pct": 86.34220172093706
+    },
+    {
+      "sensor": "sensor_3",
+      "diff_std_raw": 5.657544166505188,
+      "diff_std_smoothed": 0.7714907353159377,
+      "reduction_pct": 86.36350485987442
+    },
+    {
+      "sensor": "sensor_4",
+      "diff_std_raw": 5.699366089056248,
+      "diff_std_smoothed": 0.7829446396318778,
+      "reduction_pct": 86.26260135955708
+    },
+    {
+      "sensor": "sensor_7",
+      "diff_std_raw": 0.5773314458672959,
+      "diff_std_smoothed": 0.0788822657626003,
+      "reduction_pct": 86.33674532588478
+    },
+    {
+      "sensor": "sensor_8",
+      "diff_std_raw": 0.0428021711404525,
+      "diff_std_smoothed": 0.005963545529214,
+      "reduction_pct": 86.06718918616298
+    },
+    {
+      "sensor": "sensor_9",
+      "diff_std_raw": 5.903739070916667,
+      "diff_std_smoothed": 0.9240950633708852,
+      "reduction_pct": 84.3472915677589
+    },
+    {
+      "sensor": "sensor_11",
+      "diff_std_raw": 0.1435970940769083,
+      "diff_std_smoothed": 0.0198472048853632,
+      "reduction_pct": 86.17854698735516
+    },
+    {
+      "sensor": "sensor_12",
+      "diff_std_raw": 0.424548854708693,
+      "diff_std_smoothed": 0.0587786198074616,
+      "reduction_pct": 86.15503983686567
+    },
+    {
+      "sensor": "sensor_13",
+      "diff_std_raw": 0.0430167010650917,
+      "diff_std_smoothed": 0.0060193647695695,
+      "reduction_pct": 86.00691215148916
+    },
+    {
+      "sensor": "sensor_14",
+      "diff_std_raw": 4.453183445829207,
+      "diff_std_smoothed": 0.7285038028592856,
+      "reduction_pct": 83.6408310656595
+    },
+    {
+      "sensor": "sensor_15",
+      "diff_std_raw": 0.028531608738005,
+      "diff_std_smoothed": 0.0038835356423847,
+      "reduction_pct": 86.38865519976196
+    },
+    {
+      "sensor": "sensor_17",
+      "diff_std_raw": 1.3388084368205253,
+      "diff_std_smoothed": 0.1835761308598286,
+      "reduction_pct": 86.2880957565673
+    },
+    {
+      "sensor": "sensor_20",
+      "diff_std_raw": 0.1428308664291108,
+      "diff_std_smoothed": 0.01954019514781,
+      "reduction_pct": 86.31934704568344
+    },
+    {
+      "sensor": "sensor_21",
+      "diff_std_raw": 0.0852379727476864,
+      "diff_std_smoothed": 0.0116126534332598,
+      "reduction_pct": 86.37619706461747
+    }
+  ],
+  "hdfs": {
+    "author": "Phan Nguyễn Mai Phương — MSHV 25002711",
+    "generated_at_utc": "2026-10-08T20:01:04+00:00",
+    "hadoop_version": "Hadoop 3.4.3",
+    "spark_version": "4.0.1",
+    "hdfs_paths": {
+      "bronze": "/cmapss/bronze/fd001",
+      "silver": "/cmapss/silver/observations",
+      "gold_mapreduce": "/cmapss/gold/mapreduce_engine_summary",
+      "gold_spark": "/cmapss/gold/spark_engine_summary"
+    },
+    "spark_silver_rows": 33727,
+    "spark_silver_null_values": 0,
+    "mapreduce_vs_pandas": {
+      "rows_reference": 200,
+      "rows_candidate": 200,
+      "mismatched_cells": 0,
+      "exact_match": true
+    },
+    "spark_vs_pandas": {
+      "rows_reference": 200,
+      "rows_candidate": 200,
+      "mismatched_cells": 0,
+      "exact_match": true
+    },
+    "seconds": {
+      "mapreduce_job": 22.4,
+      "spark_job": 14.1,
+      "total": 57.0
+    }
+  },
+  "benchmark_parity": {
+    "1": {
+      "features": {
+        "rows": 27927,
+        "columns": 129,
+        "all_cells_match": true
+      },
+      "summary": {
+        "rows": 200,
+        "columns": 5,
+        "all_cells_match": true
+      }
+    },
+    "2": {
+      "features": {
+        "rows": 27927,
+        "columns": 129,
+        "all_cells_match": true
+      },
+      "summary": {
+        "rows": 200,
+        "columns": 5,
+        "all_cells_match": true
+      }
+    },
+    "3": {
+      "features": {
+        "rows": 27927,
+        "columns": 129,
+        "all_cells_match": true
+      },
+      "summary": {
+        "rows": 200,
+        "columns": 5,
+        "all_cells_match": true
+      }
+    }
+  },
+  "sensitivity": [
+    {
+      "z_threshold": 2.0,
+      "persistence": 3,
+      "n_engines": 100,
+      "n_detected": 100,
+      "lead_min": 78.0,
+      "lead_median": 136.0,
+      "life_fraction_median": 0.2959304388974328,
+      "n_early": 17,
+      "signal": "ewma"
+    },
+    {
+      "z_threshold": 2.0,
+      "persistence": 5,
+      "n_engines": 100,
+      "n_detected": 100,
+      "lead_min": 76.0,
+      "lead_median": 132.5,
+      "life_fraction_median": 0.3279513888888888,
+      "n_early": 8,
+      "signal": "ewma"
+    },
+    {
+      "z_threshold": 2.0,
+      "persistence": 10,
+      "n_engines": 100,
+      "n_detected": 100,
+      "lead_min": 71.0,
+      "lead_median": 124.0,
+      "life_fraction_median": 0.3756387310974503,
+      "n_early": 0,
+      "signal": "ewma"
+    },
+    {
+      "z_threshold": 3.0,
+      "persistence": 3,
+      "n_engines": 100,
+      "n_detected": 100,
+      "lead_min": 77.0,
+      "lead_median": 127.0,
+      "life_fraction_median": 0.3582985018550697,
+      "n_early": 2,
+      "signal": "ewma"
+    },
+    {
+      "z_threshold": 3.0,
+      "persistence": 5,
+      "n_engines": 100,
+      "n_detected": 100,
+      "lead_min": 67.0,
+      "lead_median": 121.0,
+      "life_fraction_median": 0.3914905004013915,
+      "n_early": 1,
+      "signal": "ewma"
+    },
+    {
+      "z_threshold": 3.0,
+      "persistence": 10,
+      "n_engines": 100,
+      "n_detected": 100,
+      "lead_min": 62.0,
+      "lead_median": 110.5,
+      "life_fraction_median": 0.4436538461538462,
+      "n_early": 0,
+      "signal": "ewma"
+    },
+    {
+      "z_threshold": 4.0,
+      "persistence": 3,
+      "n_engines": 100,
+      "n_detected": 100,
+      "lead_min": 62.0,
+      "lead_median": 114.5,
+      "life_fraction_median": 0.4278846153846154,
+      "n_early": 1,
+      "signal": "ewma"
+    },
+    {
+      "z_threshold": 4.0,
+      "persistence": 5,
+      "n_engines": 100,
+      "n_detected": 100,
+      "lead_min": 60.0,
+      "lead_median": 109.0,
+      "life_fraction_median": 0.4504895416110369,
+      "n_early": 1,
+      "signal": "ewma"
+    },
+    {
+      "z_threshold": 4.0,
+      "persistence": 10,
+      "n_engines": 100,
+      "n_detected": 100,
+      "lead_min": 50.0,
+      "lead_median": 98.5,
+      "life_fraction_median": 0.4917647058823529,
+      "n_early": 0,
+      "signal": "ewma"
+    }
+  ],
   "alignment": {
     "main_predictor": "hgb169",
     "baseline": "hgb126",

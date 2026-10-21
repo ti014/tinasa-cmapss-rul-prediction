@@ -41,9 +41,6 @@ Deliverables:
   20 slides on the IUH template, built by [`slides/build_presentation.py`](slides/build_presentation.py).
 - An eight-page [Streamlit dashboard](app.py) that only reads artifacts.
 - Five executed notebooks (00, 01, 02, 03, 06) in [`notebooks/`](notebooks/), each identifying the student.
-- [Presenter handbook](handoff/SPEECH_SCRIPT_VI.pdf) (each slide with what to point at and what
-  to say, plus the dashboard demo), [handoff package](handoff/FINAL_HANDOFF.md) and
-  [course alignment](handoff/COURSE_ALIGNMENT.md).
 
 Installation and step-by-step commands are in Getting Started. The dashboard uses
 the optional `dashboard` dependency group.
@@ -151,7 +148,7 @@ processing.
 
 ### Data access and transformations
 
-The [data-processing walkthrough](handoff/DATA_WALKTHROUGH.md) documents the
+The data-processing walkthrough documents the
 implemented behavior: reading the two observation files, unioning train/test
 rows while retaining `split`, creating train RUL, building rolling windows,
 selecting 126 feature columns, and joining on `(split, engine_id, cycle)`. It
@@ -348,7 +345,6 @@ Current repository structure:
 ├── uv.lock                  # Locked dependency versions
 ├── report/                  # LaTeX source, PDF, figures, and evidence
 ├── slides/                  # 20-slide deck on the IUH template, PDF export, data extractor and builder
-├── handoff/                 # Demo script and final handoff checklist
 ├── app.py                   # Streamlit entry point (calls cmapss.dashboard_app)
 ├── README.md                # English documentation
 └── README.vi.md             # Vietnamese documentation

@@ -8,7 +8,7 @@ template PowerPoint 16:9 của IUH tại
 [`template/`](template/); logo, dải header, footer và slogan là master gốc của
 template nên chỉnh sửa được trong PowerPoint.
 
-[Sổ tay thuyết trình](../handoff/SPEECH_SCRIPT_VI.pdf) ([nguồn LaTeX](../handoff/SPEECH_SCRIPT_VI.tex))
+Sổ tay thuyết trình (`handoff/`, lưu cục bộ, không đưa vào repository công khai)
 đặt hình từng slide kèm chỗ cần chỉ, lời đọc và câu chuyển slide; phần demo dashboard
 (sau slide 18) có ảnh chụp từng bước. Ảnh slide trong sổ tay nằm ở
 `handoff/assets/slides/`; khi sửa deck, xuất lại ảnh bằng
@@ -17,7 +17,7 @@ template nên chỉnh sửa được trong PowerPoint.
 
 ## Cấu trúc bài nói
 
-Deck gồm 20 slide theo mạch trong [`handoff/STORYLINE.md`](../handoff/STORYLINE.md);
+Deck gồm 20 slide theo mạch trong `handoff/STORYLINE.md` (lưu cục bộ);
 mốc thời gian lấy từ kế hoạch thời gian của sổ tay thuyết trình.
 
 | Phần | Slide | Hết phần lúc | Nội dung |

@@ -40,9 +40,6 @@ Sản phẩm bàn giao:
   20 slide trên template IUH, dựng bằng [`slides/build_presentation.py`](slides/build_presentation.py).
 - [Dashboard Streamlit](app.py) tám trang, chỉ đọc artifact.
 - Năm notebook đã chạy (00, 01, 02, 03, 06) trong [`notebooks/`](notebooks/), mỗi notebook ghi họ tên và MSHV.
-- [Sổ tay thuyết trình](handoff/SPEECH_SCRIPT_VI.pdf) (mỗi slide kèm chỗ cần chỉ và lời đọc,
-  có phần demo dashboard), [gói bàn giao](handoff/FINAL_HANDOFF.md) và
-  [đối chiếu yêu cầu môn học](handoff/COURSE_ALIGNMENT.md).
 
 Lệnh cài đặt và chạy từng bước có ở phần Bắt đầu. Dashboard dùng dependency tùy
 chọn `dashboard`.
@@ -150,7 +147,7 @@ năng xử lý dữ liệu quy mô lớn.
 
 ### Cách đọc, truy vấn và biến đổi dữ liệu
 
-Tài liệu [walkthrough xử lý dữ liệu](handoff/DATA_WALKTHROUGH.md) giải thích
+Tài liệu walkthrough xử lý dữ liệu giải thích
 theo đúng artifact hiện có cách đọc hai file observations, `union` train/test,
 giữ `split`, tạo RUL train, tạo rolling window, chọn 126 feature columns và
 join theo `(split, engine_id, cycle)`. Tài liệu cũng nêu rõ SQLite chỉ chứa
@@ -336,7 +333,6 @@ Cấu trúc repository hiện tại:
 ├── uv.lock                  # Phiên bản dependencies đã khóa
 ├── report/                  # Nguồn LaTeX/PDF và hình của báo cáo
 ├── slides/                  # Deck 20 slide trên template IUH, bản PDF, script trích số liệu và builder
-├── handoff/                 # Kịch bản demo và checklist bàn giao cuối
 ├── app.py                   # Entry point Streamlit (gọi cmapss.dashboard_app)
 ├── README.md                # Tài liệu tiếng Anh
 └── README.vi.md             # Tài liệu tiếng Việt

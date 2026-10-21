@@ -23,13 +23,13 @@ này sau mỗi commit.
 | Một bộ bins nhóm RUL dùng chung | A7 | Codex | Xong | `80c5b31` |
 | Thuật ngữ trong report, speech, handoff: cycle, cross-validation, động cơ train N | B1, B3 | Claude | Xong | `ef6f50c` |
 | Một bảng màu, một font, trục dấu phẩy, nhãn hình tiếng Việt | E1, E2, D2, D3 | Codex sửa, Claude test và commit | Xong (485 test đạt) | `cf68703` |
-| Slide đọc số từ `slide_data.json`, sửa câu 145 cycle, đổi "kiểm định chéo" | A3, A9, B3 | Codex | Đang làm | |
-| Notebook: phẩy thập phân, mục "Lưu kết quả", gọi `cmapss.*` | D1, D4, D5, B2 | Codex | Chờ | |
+| Slide đọc số từ `slide_data.json`, sửa câu 145 cycle, đổi "kiểm định chéo" | A3, A9, B3 | Codex sửa; Claude sửa lỗi NaN, test và commit | Xong | `3c45afe` |
+| Notebook: phẩy thập phân, mục "Lưu kết quả", gọi `cmapss.*` | D1, D4, D5, B2 | Codex | Đang làm | |
 | Docstring, comment, thông báo lỗi tiếng Việt; return type | C1, C2, C3 | Codex | Chờ | |
-| Report: 12 sensor, dung lượng 44,9 MB, ghi chú run dựng lại | A2, A6, A8 | Claude | Xong | xem commit kế tiếp |
+| Report: 12 sensor, dung lượng 44,9 MB, ghi chú run dựng lại | A2, A6, A8 | Claude | Xong | `f7b84d3` |
 | Số test trong report và handoff | A4 | Claude | Chờ Codex xong để chạy test lần cuối | |
-| Rút report từ 51 xuống 40 trang (11pt, giãn dòng 1.0, mục lục đến subsection, bỏ 3 listing Python; thêm HI và RUL cap vào glossary) | A5, B4, B6 | Claude | Xong | xem commit kế tiếp |
-| 47,40; thứ tự build deck; FD001–FD004 trong README | E3, E5, E7 | Claude | Xong | xem commit kế tiếp |
+| Rút report từ 51 xuống 40 trang (11pt, giãn dòng 1.0, mục lục đến subsection, bỏ 3 listing Python; thêm HI và RUL cap vào glossary) | A5, B4, B6 | Claude | Xong | `4754428` |
+| 47,40; thứ tự build deck; FD001–FD004 trong README | E3, E5, E7 | Claude | Xong | `f7b84d3` |
 | Ngày cập nhật tài liệu | E4 | Claude | Làm cuối cùng | |
 | Macro `\num` trong speech | E6 | — | Bỏ qua: chỉ ảnh hưởng cách in đậm, sửa 100+ chỗ không đổi nội dung | |
 | Vẽ lại PNG trong `outputs/` mà report nhúng, theo style mới | E1 | Claude | Chờ Codex xong | |

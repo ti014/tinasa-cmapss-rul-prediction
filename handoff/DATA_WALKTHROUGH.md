@@ -4,7 +4,7 @@
 
 Pipeline hiện có đọc từng subset, nối các dòng train/test có cùng schema, lưu
 observations trong Parquet, tạo nhãn train và tổng hợp theo engine. Từ lịch sử
-của từng engine, pipeline tạo 126 đặc trưng trên window 30 cycles để dự đoán RUL.
+của từng engine, pipeline tạo 126 đặc trưng trên window 30 cycle để dự đoán RUL.
 Tài liệu này giải thích hành vi đã triển khai, đối chiếu với code và các artifact
 đã lưu đến 09/10/2026 (gồm EWMA, lịch bảo trì và Hadoop/HDFS một node).
 Lượt đồng bộ ngày 12/10/2026 không chạy lại training hay thay số liệu
@@ -44,8 +44,8 @@ yêu cầu; transcript nhận dạng tiếng nói có lỗi chỉ bổ sung bố
 | Chuỗi cảm biến, nhiều tín hiệu | 21 sensor theo engine/cycle, EDA và thống kê train | Dữ liệu mô phỏng batch, chưa có streaming hoặc thiết bị thật |
 | Chuẩn hóa và time window | Schema/type ở ETL; scaler riêng cho Ridge và Health Index; 30-cycle rolling features | HGB dùng feature theo thang gốc; không có một bước scaling chung trước mọi model |
 | Xử lý nhiễu | EWMA span 10 theo từng động cơ, chỉ dùng quá khứ; giảm trung vị 86,3% dao động ngắn hạn | Không có tín hiệu sạch để chứng minh đã loại đúng nhiễu đo |
-| Xu hướng và bất thường | Quỹ đạo sensor, so sánh đầu/cuối, Health Index; bất thường khi giảm quá 3σ so với 30 cycles đầu | Chưa đo được tỷ lệ báo động giả vì không có nhãn điểm bắt đầu suy giảm |
-| Dự đoán/cảnh báo/lịch bảo trì | RUL test của HGB (MAE 15,35), OOF warning timing 44/7/49, lịch bảo trì 100 động cơ test (21/21 báo cần bảo trì là đúng) | Ngưỡng 30 cycles chưa hiệu chuẩn theo chi phí |
+| Xu hướng và bất thường | Quỹ đạo sensor, so sánh đầu/cuối, Health Index; bất thường khi giảm quá 3σ so với 30 cycle đầu | Chưa đo được tỷ lệ báo động giả vì không có nhãn điểm bắt đầu suy giảm |
+| Dự đoán/cảnh báo/lịch bảo trì | RUL test của HGB (MAE 15,35), OOF warning timing 44/7/49, lịch bảo trì 100 động cơ test (21/21 báo cần bảo trì là đúng) | Ngưỡng 30 cycle chưa hiệu chuẩn theo chi phí |
 | Nội dung xử lý dữ liệu lớn | PySpark ETL/rolling local[4], parity và benchmark I/O 1×/10×; Hadoop một node Docker, Bronze/Silver trên HDFS, MapReduce/Spark đối chiếu engine_summary | Chưa đo hiệu năng cụm nhiều máy; benchmark local ghi qua driver, tách khỏi writer HDFS |
 
 ## 1. Nhiều file được tổ chức và gom thế nào?
@@ -76,7 +76,7 @@ Reader tách mỗi dòng theo whitespace, yêu cầu đúng 26 trường và gá
 `engine_id/cycle` có kiểu int64; settings/sensors có kiểu float64.
 
 Trong **một subset**, Pandas concat hai bảng theo chiều dòng. PySpark thực hiện
-`unionByName`. Cả hai giữ `split` để phân biệt train engine 1 với test engine 1.
+`unionByName`. Cả hai giữ `split` để phân biệt động cơ train 1 với test engine 1.
 Đây là union các observations, không phải join lịch sử train/test với nhau.
 File RUL test được giữ riêng đến đánh giá cuối; dòng thứ i của file thuộc
 test engine i theo quy ước bộ dữ liệu.
@@ -106,7 +106,7 @@ FROM train_targets
 WHERE split = 'train' AND engine_id = 1 AND cycle = 100;
 ```
 
-Kết quả FD001 đã đối chiếu: engine train 1 có 192 cycles, từ 1 đến 192;
+Kết quả FD001 đã đối chiếu: engine train 1 có 192 cycle, từ 1 đến 192;
 target tại cycle 100 là 92. Không có bảng `observations` trong SQLite này.
 
 Để lấy các giá trị sensor, module features đọc
@@ -115,7 +115,7 @@ lọc `split/engine_id/cycle`. Chọn cột khóa cùng sensor cần xem là tha
 projection (lấy một số cột). Đọc Parquet rồi lọc trong bộ nhớ khác với việc đã
 triển khai query engine, SQL trên Parquet hoặc partition pruning.
 
-Ví dụ: lấy `sensor_11` của train engine 1 ở cycles 71–100 sẽ nhận 30 dòng.
+Ví dụ: lấy `sensor_11` của động cơ train 1 ở cycle 71–100 sẽ nhận 30 dòng.
 Giá trị trung bình là 47,395 theo thang gốc. Kết quả này đối chiếu được với
 `sensor_11__mean` tại cycle 100 trong artifact features.
 Dashboard hiện đọc predictions/metrics/Health Index đã sinh, không cung cấp
@@ -166,13 +166,13 @@ mô hình chính.
 Danh sách sensor có correlation cao hoặc có p-value nhỏ trong EDA/statistics
 không được dùng để chọn sensor cho model.
 
-Ví dụ thực tế FD001: train engine 1 kết thúc ở cycle 192. Tại cycle 100,
+Ví dụ thực tế FD001: động cơ train 1 kết thúc ở cycle 192. Tại cycle 100,
 window lấy 30 observations từ 71 đến 100. `sensor_11__last = 47,64`,
-`sensor_11__mean = 47,395`; train target là `192 − 100 = 92` cycles.
+`sensor_11__mean = 47,395`; train target là `192 − 100 = 92` cycle.
 Cycle 101 không tham gia feature tại cycle 100. Join features/targets giữ
-17.731 train rows, không nhân lên thành các tổ hợp cycles.
+17.731 train rows, không nhân lên thành các tổ hợp cycle.
 
-Một engine dài T cycles có T−29 feature rows với window 30.
+Một engine dài T cycle có T−29 feature rows với window 30.
 Tổng FD001: 20.631−100×29 = 17.731 train rows;
 13.096−100×29 = 10.196 test rows. Engine quá ngắn khiến pipeline báo lỗi,
 không tự loại engine, padding hoặc rút ngắn window.
@@ -185,9 +185,9 @@ không tự loại engine, padding hoặc rút ngắn window.
 
 | Hai đối tượng | Quan hệ trong một subset | Cách sử dụng |
 |---|---|---|
-| Engine summary – observations | 1:N theo split/engine | Một engine có nhiều cycles |
+| Engine summary – observations | 1:N theo split/engine | Một engine có nhiều cycle |
 | Train observation – train target | 1:1 theo split/engine/cycle | Một nhãn cho mỗi observation train |
-| Observation ở endpoint – feature row | 1:0..1 theo split/engine/cycle | 29 cycles đầu chưa đủ window; từ cycle 30 có một row |
+| Observation ở endpoint – feature row | 1:0..1 theo split/engine/cycle | 29 cycle đầu chưa đủ window; từ cycle 30 có một row |
 | Train feature – train target tương ứng | 1:1 trên các khóa đủ window | Join có `validate="one_to_one"` trong modeling |
 | Final prediction – test label | 1:1 theo split/engine | Nhãn endpoint, đọc sau khi ghi prediction |
 
@@ -206,7 +206,7 @@ không có foreign key constraint được khai báo trong SQLite hiện tại.
 ## 6. Phần Big Data được thể hiện thế nào?
 
 Rolling features đọc trực tiếp Silver observations, còn engine_summary là nhánh
-tổng hợp riêng. Ví dụ, train engine 1 ở cycle 100 dùng 30 dòng observations từ
+tổng hợp riêng. Ví dụ, động cơ train 1 ở cycle 100 dùng 30 dòng observations từ
 71–100, tạo 126 features rồi join target 92; không dùng bảng 200 dòng động cơ
 để tạo features. Nhánh EWMA/Health Index phân tích train độc lập với RUL. Khi lập
 lịch bảo trì, test được làm mượt bằng EWMA rồi transform bằng scaler/PCA fit trên
@@ -266,9 +266,9 @@ phân tán.
 
 “Trong một subset, chương trình đọc hai file observations cùng schema rồi
 union theo dòng và giữ split. Dữ liệu sensor nằm trong Parquet, bảng tổng hợp
-và nhãn train nằm trong SQLite. Chương trình group theo engine, lấy 30 cycles
+và nhãn train nằm trong SQLite. Chương trình group theo engine, lấy 30 cycle
 gần nhất, tạo 126 features rồi join đúng cycle với RUL train. Engine train 1
-ở cycle 100 dùng cycles 71–100 và có target 92. Quan hệ chính là một engine
+ở cycle 100 dùng cycle 71–100 và có target 92. Quan hệ chính là một engine
 có nhiều observations; join features/targets là một–một. PySpark chạy
 local[4] để kiểm tra ETL và rolling tương đương Pandas, còn modeling dùng
 Pandas/scikit-learn. Benchmark scale 1×/10× có đọc và ghi, nhưng Spark ghi

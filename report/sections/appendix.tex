@@ -19,7 +19,7 @@ Python & 3.12.x & Pandas & 2.3.3 \\
 NumPy & 2.3.3 & SciPy & 1.16.2 \\
 scikit-learn & 1.9.1 & statsmodels & 0.14.5 \\
 PyArrow & 23.0.1 & PySpark & 4.0.1 \\
-Window & 30 cycles & GroupKFold & 5 folds \\
+Window & 30 cycle & GroupKFold & 5 folds \\
 Seed & 42 & Bootstrap metric & 10.000 lần \\
 \bottomrule
 \end{tabular}
@@ -42,7 +42,7 @@ cross-validation; ghi final predictions rồi mới ghép test labels. Kết qu�
 
 Quy trình này kiểm tra khả năng tái lập của lần chạy chính trên FD001 với cấu
 hình đã nêu. Ma trận bổ sung trong \filepath{outputs/cross\_dataset/matrix.json}
-kiểm tra riêng transfer từ FD001 sang FD002--FD004 với window 10 cycles. Kết quả
+kiểm tra riêng transfer từ FD001 sang FD002--FD004 với window 10 cycle. Kết quả
 không chứng minh khả năng mở rộng trên cụm máy, khả năng khái quát tới động cơ thực
 tế hoặc tính phù hợp của metric cho quyết định bảo trì.
 
@@ -82,7 +82,7 @@ lịch sử, không chỉnh receipt để vượt source guard.
 \toprule
 Nhóm kết quả & Nội dung đối chiếu & Kiểm tra liên quan \\\midrule
 Chất lượng dữ liệu & Schema, khóa và độ liên tục của cycle & Row count, kiểu số hữu hạn và khóa duy nhất \\
-Rolling features & Đặc trưng từ 30 cycles gần nhất & Đủ window, cùng engine và không dùng tương lai \\
+Rolling features & Đặc trưng từ 30 cycle gần nhất & Đủ window, cùng engine và không dùng tương lai \\
 Model RUL & Cross-validation và metric test & GroupKFold, sample weighting và test-label join sau prediction \\
 Suy luận sensor & Chênh lệch đầu/cuối vòng đời & Cặp một--một, bootstrap, Wilcoxon và FDR \\
 Health Index & PCA--ARIMA và baseline cùng khoảng dự báo & Đánh giá theo thời gian, hội tụ, chẩn đoán phần dư và tỷ lệ bao phủ \\

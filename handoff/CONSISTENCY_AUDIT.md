@@ -37,9 +37,9 @@ Trong notebook, phần chữ khớp với output do chính notebook in ra (noteb
 
 | # | Khái niệm | Các biến thể đang dùng | Vị trí chính |
 |---|---|---|---|
-| B1 | cycle | "30 cycles" trong report/handoff/README (khoảng 111 lần); "30 cycle" trong notebook/slide/speech; speech còn gọi là "chuyến bay" khoảng 50 lần | `SPEECH_SCRIPT_VI.tex:185` trở đi |
+| B1 (đã sửa phần chữ 21/10) | cycle | "30 cycles" trong report/handoff/README (khoảng 111 lần); "30 cycle" trong notebook/slide/speech; speech còn gọi là "chuyến bay" khoảng 50 lần | `SPEECH_SCRIPT_VI.tex:185` trở đi |
 | B2 | động cơ | "train engine 1", "động cơ train 1", "Engine {id}", "Số engines" | notebook 01 cell 11, 29, 42; notebook 04 cell 16 |
-| B3 | cross-validation | "kiểm định chéo" trong slide và speech, trùng nghĩa với kiểm định giả thuyết ở Mục 3.5 | `build_presentation.py:660, 828, 838, 1001`; `SPEECH_SCRIPT_VI.tex:409` |
+| B3 (đã sửa speech 21/10; slide do Codex) | cross-validation | "kiểm định chéo" trong slide và speech, trùng nghĩa với kiểm định giả thuyết ở Mục 3.5 | `build_presentation.py:660, 828, 838, 1001`; `SPEECH_SCRIPT_VI.tex:409` |
 | B4 | Health Index | HI chỉ định nghĩa ở `methodology.tex:70`, glossary không có; "chỉ số sức khỏe" xuất hiện rải rác | `pipeline.tex:27`, slide `:435, 534`, speech `:272, 345` |
 | B5 | window | "trailing window", "cửa sổ thời gian", "window trượt", "rolling window", "window nhân quả" | theory/glossary, `current-results.tex`, README.md, COURSE_ALIGNMENT |
 | B6 | RUL cap | glossary không định nghĩa; report chỉ nhắc một lần "cắt nhãn ở 125" | `discussion.tex:58` |

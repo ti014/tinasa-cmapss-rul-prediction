@@ -33,7 +33,7 @@ Lý do báo cáo mô tả rõ subset, cách chia dữ liệu và metric. \\
 Lei và cộng sự~\cite{lei2018machinery} & Tổng quan machinery prognostics &
 Bối cảnh chung từ thu thập dữ liệu đến dự đoán RUL. \\
 Li và cộng sự~\cite{li2018rul} & CNN trên window thời gian &
-Tham khảo độ dài window 30 cycles và NASA score. \\
+Tham khảo độ dài window 30 cycle và NASA score. \\
 Zheng và cộng sự~\cite{zheng2017lstm} & LSTM cho dự đoán RUL &
 Hướng deep learning chưa được thực hiện trong báo cáo. \\
 Saxena và cộng sự~\cite{saxena2010metrics} & Metric đánh giá prognostics &
@@ -66,7 +66,7 @@ mỗi động cơ test chỉ đo chất lượng tại điểm cắt đó, khôn
 toàn bộ vòng đời.
 
 \subsection{Trailing window và đặc trưng thống kê}
-Tại cycle $t$, mẫu đầu vào của động cơ $i$ là ma trận gồm $w$ cycles gần nhất:
+Tại cycle $t$, mẫu đầu vào của động cơ $i$ là ma trận gồm $w$ cycle gần nhất:
 \begin{equation}
  W_{i,t}=[\mathbf{x}_{i,t-w+1},\ldots,\mathbf{x}_{i,t}]^{\mathsf T}
  \in\mathbb{R}^{w\times J},\qquad t\geq w,
@@ -75,7 +75,7 @@ Tại cycle $t$, mẫu đầu vào của động cơ $i$ là ma trận gồm $w$
 trong đó $\mathbf{x}_{i,t}$ là vector $J=21$ giá trị sensor tại cycle $t$. Báo
 cáo dùng $w=30$, một độ dài từng được sử dụng cho FD001~\cite{li2018rul}. Window
 chỉ chứa quá khứ và hiện tại, nên không có thông tin từ cycle tương lai; ví dụ,
-mẫu tại cycle 170 dùng cycles 141--170.
+mẫu tại cycle 170 dùng cycle 141--170.
 
 Mỗi cột sensor trong window được tóm tắt bằng sáu thống kê: giá trị cuối, trung
 bình, độ lệch chuẩn mẫu, min, max và độ dốc tuyến tính. Với dãy $z_1,\ldots,z_w$,
@@ -87,7 +87,7 @@ bình, độ lệch chuẩn mẫu, min, max và độ dốc tuyến tính. Với
 \end{equation}
 với $\bar{k}$ và $\bar{z}$ là trung bình của vị trí và của giá trị sensor. Đơn
 vị của $b$ là đơn vị sensor trên một cycle. Giá trị cuối và trung bình cho biết
-mức tín hiệu, còn độ dốc cho biết tín hiệu đang tăng hay giảm trong 30 cycles
+mức tín hiệu, còn độ dốc cho biết tín hiệu đang tăng hay giảm trong 30 cycle
 gần nhất.
 
 \subsection{Khử nhiễu bằng làm mượt hàm mũ}

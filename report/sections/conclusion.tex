@@ -12,20 +12,20 @@ sau:
       Pandas khoảng 3,4 lần. Trên cụm Hadoop một node, MapReduce và Spark đọc dữ
       liệu từ HDFS cũng cho kết quả khớp tuyệt đối với Pandas.
 \item EWMA span 10 giảm khoảng 86\% dao động ngắn hạn của 14 sensor có thông tin
-      mà vẫn giữ xu hướng suy giảm; window 30 cycles tổng hợp 21 sensor thành 126
+      mà vẫn giữ xu hướng suy giảm; window 30 cycle tổng hợp 21 sensor thành 126
       đặc trưng.
 \item 15/21 sensor thay đổi có ý nghĩa thống kê giữa đầu và cuối vòng đời; năm
       sensor 4, 7, 11, 12 và 20 thay đổi cùng hướng ở cả 100 động cơ. Health Index
       từ tín hiệu đã khử nhiễu phát hiện bất thường ở cả 100/100 động cơ train, trung
-      vị 121 cycles trước khi hỏng.
-\item HistGradientBoosting đạt MAE 15,35 cycles (khoảng tin cậy 95\%: 12,73--18,09)
-      và RMSE 20,54 cycles trên 100 động cơ test; sai số nhỏ nhất ở vùng gần hỏng
-      (MAE 4,38 cycles khi RUL thật $\leq30$).
+      vị 121 cycle trước khi hỏng.
+\item HistGradientBoosting đạt MAE 15,35 cycle (khoảng tin cậy 95\%: 12,73--18,09)
+      và RMSE 20,54 cycle trên 100 động cơ test; sai số nhỏ nhất ở vùng gần hỏng
+      (MAE 4,38 cycle khi RUL thật $\leq30$).
 \item Với ngưỡng RUL dự đoán $\leq30$, không động cơ nào bị bỏ lỡ, lead time trung
-      vị 30 cycles, nhưng 49\% cảnh báo bị trễ, tập trung ở động cơ suy giảm nhanh.
+      vị 30 cycle, nhưng 49\% cảnh báo bị trễ, tập trung ở động cơ suy giảm nhanh.
       Ngưỡng 40 giảm tỷ lệ trễ xuống 6\% với thời gian báo sớm tăng khoảng bốn lần.
       Lịch bảo trì cho 100 động cơ test báo cần bảo trì ngay 21 động cơ, đúng cả 21;
-      4 động cơ còn lại thật sự cần bảo trì được xếp đến hạn sau 1--8 cycles.
+      4 động cơ còn lại thật sự cần bảo trì được xếp đến hạn sau 1--8 cycle.
 \end{enumerate}
 
 Sản phẩm chính của báo cáo là lịch dự đoán thời điểm cần bảo trì cho từng động

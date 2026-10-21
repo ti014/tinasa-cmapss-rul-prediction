@@ -16,7 +16,7 @@
 
 % Nhánh A: dự đoán RUL.
 \node[processBox] (etl) at (\colL,-7.2) {\cell{A1. Lưu bảng sạch}{Silver: quan sát, nhãn RUL train}{Gold: tổng hợp động cơ (Parquet, SQLite)}};
-\node[processBox] (features) at (\colL,-9.45) {\cell{A2. Tạo đặc trưng}{Cửa sổ 30 cycles: 21 sensor × 6 thống kê}{126 đặc trưng, 27.927 dòng}};
+\node[processBox] (features) at (\colL,-9.45) {\cell{A2. Tạo đặc trưng}{Cửa sổ 30 cycle: 21 sensor × 6 thống kê}{126 đặc trưng, 27.927 dòng}};
 \node[processBox] (model) at (\colL,-11.7) {\cell{A3. Huấn luyện mô hình}{Chia 5 phần theo động cơ (GroupKFold)}{RUL dự đoán ≤ 30: cảnh báo mức 2}};
 \node[resultBox] (predictions) at (\colL,-13.95) {\cell{A4. Dự đoán 100 động cơ test}{Lưu kết quả}{trước khi mở đáp án}};
 \node[processBox] (eval) at (\colL,-16.2) {\cell{A5. Chấm điểm}{So với RUL thật của test}{MAE, RMSE, NASA score}};
@@ -25,7 +25,7 @@
 \node[processBox] (eda) at (\colR,-7.2) {\cell{B1. Khám phá dữ liệu (EDA)}{Sensor thay đổi thế nào khi máy già đi}{Kiểm định Wilcoxon, hiệu chỉnh FDR}};
 \node[processBox] (denoise) at (\colR,-9.45) {\cell{B2. Làm mượt tín hiệu (EWMA)}{14 sensor có xu hướng, span 10}{Chỉ dùng cycle hiện tại và trước đó}};
 \node[processBox] (hi) at (\colR,-11.7) {\cell{B3. Chỉ số sức khỏe}{Health Index: gộp 21 sensor bằng PCA}{Học trên train, không dùng nhãn RUL}};
-\node[processBox] (anomaly) at (\colR,-13.95) {\cell{B4. Phát hiện bất thường}{Chỉ số ≤ −3 trong 5 cycles liền nhau}{Cảnh báo mức 1}};
+\node[processBox] (anomaly) at (\colR,-13.95) {\cell{B4. Phát hiện bất thường}{Chỉ số ≤ −3 trong 5 cycle liền nhau}{Cảnh báo mức 1}};
 
 % Đáp án test và kết quả cuối.
 \node[dataBox] (labels) at (\colR,-16.2) {\cell{Đáp án test (RUL\_FD001.txt)}{RUL thật của 100 động cơ test}{Chỉ mở sau khi đã lưu dự đoán}};

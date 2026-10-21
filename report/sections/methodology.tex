@@ -40,7 +40,7 @@ Thu thập & Python (urllib), MD5, SHA-256 & File raw và manifest nguồn \\
 ETL & Pandas, PySpark, Parquet, SQLite & Lớp Silver/Gold, báo cáo parity \\
 Lưu trữ phân tán & Docker, Hadoop 3.4.3 (HDFS, YARN, MapReduce), Spark 4.0.1 & Bronze và Silver trên HDFS, bảng Gold từ MapReduce và Spark \\
 Khử nhiễu, bất thường & Pandas, scikit-learn & Tín hiệu EWMA, Health Index, cycle phát hiện bất thường \\
-Tạo đặc trưng & Pandas, PySpark & 126 đặc trưng window 30 cycles \\
+Tạo đặc trưng & Pandas, PySpark & 126 đặc trưng window 30 cycle \\
 Mô hình & scikit-learn & GroupKFold, Ridge, HistGradientBoosting \\
 Đánh giá, cảnh báo & scikit-learn, SciPy & MAE, RMSE, NASA score, bootstrap, lead time \\
 Lịch bảo trì & Pandas & Cycle cần bảo trì và trạng thái cho 100 động cơ test \\
@@ -76,14 +76,14 @@ chuẩn hóa về trung bình 0, độ lệch chuẩn 1. Bước này không dù
 \subsection{Phát hiện dấu hiệu bất thường}
 \label{sec:anomaly-method}
 Mỗi động cơ được so sánh với chính nó ở giai đoạn vận hành ổn định đầu vòng đời.
-Gọi $\mu_i$ và $\sigma_i$ là trung bình và độ lệch chuẩn HI trong 30 cycles đầu
+Gọi $\mu_i$ và $\sigma_i$ là trung bình và độ lệch chuẩn HI trong 30 cycle đầu
 của động cơ $i$. Tại cycle $t>30$,
 \begin{equation}
  z_{i,t}=\frac{h_{i,t}-\mu_i}{\sigma_i}.
  \label{eq:anomaly-z}
 \end{equation}
 Động cơ được báo bất thường tại cycle đầu tiên mà $z_{i,t}\leq-3$ đã giữ liên tiếp
-5 cycles. Ngưỡng 3 độ lệch chuẩn và yêu cầu 5 cycles liên tiếp được cố định trước
+5 cycle. Ngưỡng 3 độ lệch chuẩn và yêu cầu 5 cycle liên tiếp được cố định trước
 khi chạy; yêu cầu liên tiếp giúp một gai đơn lẻ không gây báo động. Ví dụ, nếu
 $\mu_i=0{,}94$ và $\sigma_i=0{,}07$ thì ngưỡng là $0{,}94-3\times0{,}07=0{,}73$.
 Kết quả được tóm tắt bằng số cycle từ lúc phát hiện đến khi hỏng. Vì mọi động cơ
@@ -91,20 +91,20 @@ train đều đi đến hỏng và dữ liệu không ghi thời điểm bắt �
 này không đo được trực tiếp tỷ lệ dương tính giả. Thay vào đó, quy tắc được chạy
 lại trên lưới ngưỡng $z\in\{2,3,4\}$ và số cycle liên tiếp $k\in\{3,5,10\}$; với
 mỗi cấu hình, báo cáo ghi số động cơ phát hiện được, lead time và số động cơ bị báo
-trong 10 cycles ngay sau đoạn tham chiếu, dùng làm chỉ báo gián tiếp cho độ nhạy
+trong 10 cycle ngay sau đoạn tham chiếu, dùng làm chỉ báo gián tiếp cho độ nhạy
 quá mức (kết quả ở Bảng~\ref{tab:anomaly-sensitivity}).
 
 \subsection{Kiểm định xu hướng đầu/cuối vòng đời}
 \label{sec:paired-method}
-Với sensor $s$ của động cơ $i$, báo cáo tính trung bình của 30 cycles đầu và 30
-cycles cuối, rồi lấy chênh lệch:
+Với sensor $s$ của động cơ $i$, báo cáo tính trung bình của 30 cycle đầu và 30
+cycle cuối, rồi lấy chênh lệch:
 \begin{equation}
  E_{i,s}=\frac{1}{30}\sum_{t=1}^{30}x_{i,t,s},\qquad
  L_{i,s}=\frac{1}{30}\sum_{t=T_i-29}^{T_i}x_{i,t,s},\qquad
  \Delta_{i,s}=L_{i,s}-E_{i,s}.
  \label{eq:paired-difference}
 \end{equation}
-Động cơ ngắn nhất dài 128 cycles, nên hai đoạn không bao giờ chồng nhau. Khoảng tin
+Động cơ ngắn nhất dài 128 cycle, nên hai đoạn không bao giờ chồng nhau. Khoảng tin
 cậy 95\% của trung bình chênh lệch dùng bootstrap percentile 10.000 lần lấy mẫu
 lại động cơ, seed 42. Kiểm định Wilcoxon hai phía dùng 100.000 hoán vị, sau đó hiệu
 chỉnh Benjamini--Hochberg với $q=0{,}05$ trên cả 21 sensor. Kết quả mô tả xu hướng
@@ -141,7 +141,7 @@ mẫu lại động cơ có hoàn lại, seed 42.
 \subsection{Cảnh báo sớm}
 \label{sec:warning-method}
 Pipeline chuyển dự đoán OOF trên train thành cảnh báo: động cơ được cảnh báo tại
-cycle đầu tiên mà RUL dự đoán không vượt quá 30 cycles. Ngưỡng 30 được cố định
+cycle đầu tiên mà RUL dự đoán không vượt quá 30 cycle. Ngưỡng 30 được cố định
 trước, không tối ưu trên dữ liệu; ngưỡng 40 chỉ dùng để phân tích độ nhạy. Tập
 train được dùng vì mỗi động cơ có toàn bộ quỹ đạo đến khi hỏng, trong khi test chỉ
 có một điểm cắt.
@@ -175,8 +175,8 @@ Trạng thái được xét theo thứ tự ưu tiên cố định trước khi 
 nếu $\hat y_i\leq30$; \emph{theo dõi tăng cường} nếu Health Index của động cơ đã báo
 bất thường theo quy tắc ở Mục~\ref{sec:anomaly-method}; còn lại là \emph{bình
 thường}. Health Index của động cơ test dùng đúng scaler, PCA và hệ số chuẩn hóa đã
-fit trên train, không fit lại. Động cơ có ít hơn 35 cycles (30 cycles tham chiếu và
-5 cycles liên tiếp) được ghi là chưa đủ dữ liệu để đánh giá bất thường. Bảng được
+fit trên train, không fit lại. Động cơ có ít hơn 35 cycle (30 cycle tham chiếu và
+5 cycle liên tiếp) được ghi là chưa đủ dữ liệu để đánh giá bất thường. Bảng được
 ghi ra file trước; chỉ sau đó \texttt{RUL\_FD001.txt} mới được đọc để kiểm tra.
 
 \subsection{Thử nghiệm mở rộng}
@@ -190,8 +190,8 @@ Ba thử nghiệm phụ dùng cùng nguyên tắc chia theo động cơ và đ�
       nhận được chốt trước khi chạy~\cite{sklearnNestedCV2026,sklearnGroupedCV}.
 \item \textbf{Chuyển miền}: mô hình chọn và huấn luyện trên FD001 được áp dụng
       nguyên trạng lên test FD002--FD004, so với mô hình huấn luyện nội bộ từng
-      subset. Window 10 cycles được dùng vì động cơ test ngắn nhất của FD004 chỉ
-      có 19 cycles, nên kết quả không so trực tiếp với window 30.
+      subset. Window 10 cycle được dùng vì động cơ test ngắn nhất của FD004 chỉ
+      có 19 cycle, nên kết quả không so trực tiếp với window 30.
 \item \textbf{ARIMA}: trên 10 động cơ train chọn trước, Health Index được chia
       70\% đầu để fit ARIMA (bậc chọn bằng AIC) và 30\% cuối để đánh giá dự báo,
       so với hai baseline \texttt{last\_value} và \texttt{drift}.

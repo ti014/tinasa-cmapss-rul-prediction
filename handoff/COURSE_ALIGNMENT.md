@@ -21,9 +21,9 @@ Các nội dung đó chỉ được nêu là giới hạn, không biến thành 
 
 ## Quyết định về mô hình chính
 
-Mô hình chính là HistGradientBoosting với 126 đặc trưng window 30 cycles, chọn bằng
+Mô hình chính là HistGradientBoosting với 126 đặc trưng window 30 cycle, chọn bằng
 GroupKFold 5 fold theo động cơ; đây là mô hình duy nhất có đánh giá test đầy đủ (MAE
-15,35 cycles). Bản 169 đặc trưng (thêm `cycle` và 42 đặc trưng lịch sử) giảm MAE OOF
+15,35 cycle). Bản 169 đặc trưng (thêm `cycle` và 42 đặc trưng lịch sử) giảm MAE OOF
 từ 20,21 xuống 17,00 trên cùng panel trong artifact
 [`outputs/course_alignment/20261007/summary.json`](../outputs/course_alignment/20261007/summary.json),
 nhưng tỷ lệ cảnh báo kịp thời ở ngưỡng 30 giảm từ 51% xuống 45% và chưa có đánh giá
@@ -48,10 +48,10 @@ slide, dashboard và kịch bản dùng cùng một mô hình, một bảng cả
 | Phân tích chuỗi thời gian từ cảm biến | `src/cmapss/data/readers.py`; mỗi quan sát có `engine_id`, `cycle`, 3 settings, 21 sensor; Mục 2 báo cáo | **Đạt** trong phạm vi dữ liệu batch mô phỏng |
 | Xử lý nhiễu tín hiệu | `src/cmapss/degradation/denoise.py`: EWMA span 10, chỉ dùng quá khứ; giảm trung vị 86,3% dao động; hình trước/sau; Mục 5.2 và 6.2 | **Đạt**; giới hạn: không có tín hiệu sạch để đối chiếu |
 | Chuẩn hóa dữ liệu | Kiểm tra schema/kiểu trong ETL; StandardScaler cho Ridge (trong fold) và trước PCA (Health Index) | **Đạt**; HGB dùng thang gốc vì cây không phụ thuộc thang đo |
-| Tổng hợp theo time window | Window nhân quả 30 cycles, 126 đặc trưng; parity Pandas–PySpark | **Đạt** |
-| Phát hiện dấu hiệu bất thường | `src/cmapss/degradation/anomaly.py`: Health Index giảm quá 3σ so với 30 cycles đầu, 5 cycles liên tiếp; 100/100 động cơ train, trung vị 121 cycles trước khi hỏng; phân tích độ nhạy 9 cấu hình (2/3/4σ × 3/5/10 cycles) đều phát hiện 100/100, lead time nhỏ nhất ≥ 50 cycles (Bảng 18); Mục 5.3 và 6.3 | **Đạt**; giới hạn: chưa đo trực tiếp được tỷ lệ báo động giả |
+| Tổng hợp theo time window | Window nhân quả 30 cycle, 126 đặc trưng; parity Pandas–PySpark | **Đạt** |
+| Phát hiện dấu hiệu bất thường | `src/cmapss/degradation/anomaly.py`: Health Index giảm quá 3σ so với 30 cycle đầu, 5 cycle liên tiếp; 100/100 động cơ train, trung vị 121 cycle trước khi hỏng; phân tích độ nhạy 9 cấu hình (2/3/4σ × 3/5/10 cycle) đều phát hiện 100/100, lead time nhỏ nhất ≥ 50 cycle (Bảng 18); Mục 5.3 và 6.3 | **Đạt**; giới hạn: chưa đo trực tiếp được tỷ lệ báo động giả |
 | Trực quan hóa xu hướng suy giảm | Quỹ đạo sensor, kiểm định đầu/cuối, Health Index, quỹ đạo cảnh báo | **Đạt** |
-| Dự đoán thời điểm cần bảo trì | `src/cmapss/maintenance/`: lịch cho 100 động cơ test; 21/21 báo cần bảo trì là đúng; Mục 6.6 | **Đạt** trong phạm vi FD001 và điểm cắt test; giới hạn: 12 động cơ còn xa hỏng (RUL thật ≥ 77) có lịch muộn hơn lúc hỏng 4–27 cycles |
+| Dự đoán thời điểm cần bảo trì | `src/cmapss/maintenance/`: lịch cho 100 động cơ test; 21/21 báo cần bảo trì là đúng; Mục 6.6 | **Đạt** trong phạm vi FD001 và điểm cắt test; giới hạn: 12 động cơ còn xa hỏng (RUL thật ≥ 77) có lịch muộn hơn lúc hỏng 4–27 cycle |
 | Báo cáo dự đoán kèm biểu đồ xu hướng cảnh báo sớm | `outputs/maintenance/tables/maintenance_schedule.csv`, `fleet_status.png`, `maintenance_planning.png`, `warning_trajectory.png`; slide 15–16; trang dashboard Lịch bảo trì | **Đạt** |
 
 ### B. Yêu cầu nộp bài

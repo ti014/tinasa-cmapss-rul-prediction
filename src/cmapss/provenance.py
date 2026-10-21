@@ -1,4 +1,4 @@
-"""Verify immutable experiment sources independently of later repository edits."""
+"""Xác minh nguồn thí nghiệm bất biến, độc lập với các lần sửa repository sau này."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from typing import Any
 
 
 def verify_source_snapshot(run: Path, manifest: dict[str, Any], repo_root: Path) -> dict[str, Any]:
-    """Verify every recorded source and lockfile, using the archived bytes if present."""
+    """Kiểm tra mọi nguồn và lockfile đã ghi nhận, ưu tiên nội dung snapshot nếu có."""
     expected = dict(manifest["identity"]["source_sha256"])
     expected["uv.lock"] = manifest["identity"]["dependencies_sha256"]
     working_tree_differences: list[str] = []
@@ -18,11 +18,11 @@ def verify_source_snapshot(run: Path, manifest: dict[str, Any], repo_root: Path)
         relative = Path(name.replace("\\", "/"))
         current = (repo_root / relative).resolve()
         if not current.is_relative_to(repo_root.resolve()):
-            raise ValueError(f"Source path outside repository: {name}")
+            raise ValueError(f"Đường dẫn nguồn nằm ngoài repository: {name}")
         snapshot = run / "source_snapshot" / relative
         verified = snapshot if snapshot.is_file() else current
         if hashlib.sha256(verified.read_bytes()).hexdigest() != digest:
-            raise ValueError(f"Experiment source checksum mismatch: {name}")
+            raise ValueError(f"Checksum mã nguồn thí nghiệm không khớp: {name}")
         archived += int(snapshot.is_file())
         if not current.is_file() or hashlib.sha256(current.read_bytes()).hexdigest() != digest:
             working_tree_differences.append(relative.as_posix())
@@ -36,17 +36,9 @@ def verify_source_snapshot(run: Path, manifest: dict[str, Any], repo_root: Path)
 
 
 def local_source_files(root: Path, entries: tuple[str, ...]) -> tuple[str, ...]:
-    """Collect entry files and their local cmapss imports for source snapshots.
-
-    Args:
-        root: Repository root containing src/cmapss.
-        entries: Repository-relative source paths to start from.
-
-    Returns:
-        Sorted paths including imported modules and package initializers.
-
-    Raises:
-        FileNotFoundError: An explicit source path is missing.
+    """
+    Thu thập các file đầu vào cùng import cmapss phụ thuộc và __init__.py từ repository;
+    báo FileNotFoundError nếu thiếu nguồn tường minh.
     """
     pending = list(entries)
     found: set[str] = set()
@@ -56,7 +48,7 @@ def local_source_files(root: Path, entries: tuple[str, ...]) -> tuple[str, ...]:
             continue
         path = root / name
         if not path.is_file():
-            raise FileNotFoundError(f"source missing: {name}")
+            raise FileNotFoundError(f"Thiếu mã nguồn: {name}")
         found.add(name)
         if not name.startswith("src/"):
             continue

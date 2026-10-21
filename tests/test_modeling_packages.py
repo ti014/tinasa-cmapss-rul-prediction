@@ -57,7 +57,7 @@ def test_source_closure_follows_nested_relative_imports(tmp_path):
 
     entry = "src/cmapss/modeling/study/__init__.py"
     assert set(local_source_files(tmp_path, (entry,))) == set(sources)
-    with pytest.raises(FileNotFoundError, match="source missing"):
+    with pytest.raises(FileNotFoundError, match="Thiếu mã nguồn"):
         local_source_files(tmp_path, ("src/cmapss/missing.py",))
 
 
@@ -77,7 +77,7 @@ def test_followup_snapshots_nested_modules_and_rejects_changed_sources(tmp_path)
     snapshot = output / "source_snapshot" / module.relative_to(tmp_path)
     assert snapshot.read_bytes() == module.read_bytes()
     module.write_text("# changed estimator\n", encoding="utf-8")
-    with pytest.raises(ValueError, match="Resume mismatch"):
+    with pytest.raises(ValueError, match="Resume không khớp"):
         freeze_manifest(*args)
 
 

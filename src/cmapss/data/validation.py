@@ -1,5 +1,8 @@
 """Validator cho observations, nhãn test và profile C-MAPSS."""
 
+from __future__ import annotations
+
+
 import numpy as np
 import pandas as pd
 from pandas.api.types import is_float_dtype, is_integer_dtype
@@ -35,9 +38,10 @@ def validate_integer(frame: pd.DataFrame, column: str, minimum: int, source: str
 
 
 def validate_observations(frame: pd.DataFrame, *, source: str = "observations") -> None:
-    """Kiểm tra schema, kiểu, khóa duy nhất và cycle liên tục trong từng (split, engine_id).
-
-    Cho phép nhiều split và thứ tự dòng bất kỳ. Không ép số dòng hay cycle bắt đầu từ 1.
+    """
+    Kiểm tra schema, kiểu, khóa duy nhất và cycle liên tục trong từng (split,
+    engine_id). Cho phép nhiều split và thứ tự dòng bất kỳ. Không ép số dòng hay cycle
+    bắt đầu từ 1.
     """
     validate_columns(frame, OBSERVATION_COLUMNS, source)
     if not frame["split"].isin(SPLITS).all():

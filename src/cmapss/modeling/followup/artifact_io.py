@@ -23,7 +23,7 @@ def freeze_manifest(
     repo: Path, output: Path, dataset_id: str, observations: Path, targets: Path,
     candidates: tuple[FeatureRecipe, ...], config: StudyConfig,
 ) -> str:
-    """Hash source files, inputs and config; refuse to resume if any of them changed."""
+    """Hash mã nguồn, đầu vào và cấu hình; từ chối resume khi bất kỳ phần nào thay đổi."""
     source_paths = sorted(path for folder in ("data", "features", "modeling") for path in (repo / "src/cmapss" / folder).rglob("*.py"))
     input_paths = [observations, targets]
     if dataset_id == "FD001" and config.outer_splits == 5:
@@ -38,7 +38,7 @@ def freeze_manifest(
     path = output / "search_manifest.json"
     if path.exists():
         if json.loads(path.read_text(encoding="utf-8"))["identity"] != identity:
-            raise ValueError("Resume mismatch: source, inputs, config or dependencies changed; use a new run directory")
+            raise ValueError("Resume không khớp: mã nguồn, đầu vào, cấu hình hoặc dependency đã đổi; dùng thư mục lần chạy mới")
     else:
         output.mkdir(parents=True, exist_ok=True)
         _write_json(path, {"created_at_utc": datetime.now(timezone.utc).isoformat(), "identity": identity,

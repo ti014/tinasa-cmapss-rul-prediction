@@ -1,10 +1,12 @@
 """Job PySpark chạy trong container: đọc raw từ HDFS, ghi Silver Parquet lên HDFS.
 
-Sau đó đọc lại Parquet vừa ghi và tính bảng mỗi động cơ một dòng (số cycle, cycle
-đầu, cycle cuối), ghi thành CSV trên HDFS để so với MapReduce và Pandas.
-
-    spark-submit spark_job.py hdfs://namenode:8020/cmapss
+Sau đó đọc lại Parquet vừa ghi và tính bảng mỗi động cơ một dòng (số cycle, cycle đầu,
+cycle cuối), ghi thành CSV trên HDFS để so với MapReduce và Pandas. spark-submit
+spark_job.py hdfs://namenode:8020/cmapss
 """
+
+from __future__ import annotations
+
 
 import json
 import sys
@@ -19,7 +21,7 @@ COLUMNS = (
 )
 
 
-def main(base):
+def main(base: str) -> None:
     spark = SparkSession.builder.appName("cmapss-hdfs-fd001").getOrCreate()
     raw = spark.read.text(f"{base}/bronze/fd001/{{train,test}}_FD001.txt").withColumn("path", F.input_file_name())
     fields = F.split(F.trim(F.col("value")), r"\s+")

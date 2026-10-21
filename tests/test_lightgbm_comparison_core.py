@@ -89,7 +89,7 @@ def test_fit_rejects_test_rows_and_nonfinite_features(fitting_frame):
         estimators.fit_predictor(fitting_frame.assign(split="test"), spec, StudyConfig())
     broken = fitting_frame.copy()
     broken.loc[0, FEATURES[0]] = np.nan
-    with pytest.raises(ValueError, match="finite"):
+    with pytest.raises(ValueError, match="hữu hạn"):
         estimators.fit_predictor(broken, spec, StudyConfig())
 
 
@@ -123,14 +123,14 @@ def test_cache_shared_matrix_keeps_one_cycle_column_and_reuses_fit(monkeypatch, 
     corrupted = pd.read_parquet(first)
     corrupted.loc[0, "y_pred"] += 1
     corrupted.to_parquet(first, index=False)
-    with pytest.raises(ValueError, match="checksum"):
+    with pytest.raises(ValueError, match="(?i)checksum"):
         cache.run_fit_task(*args)
 
 
 def test_cache_rejects_overlap_and_refreshes_changed_file(tmp_path, fitting_frame):
     feature_path = tmp_path / "frozen.parquet"
     fitting_frame.to_parquet(feature_path, index=False)
-    with pytest.raises(ValueError, match="disjoint"):
+    with pytest.raises(ValueError, match="không giao"):
         cache.run_fit_task(feature_path, specs()[0], (1, 2), (2, 3), StudyConfig(),
                            tmp_path / "cache", "sourceB")
     before = cache.load_frozen_features(feature_path, "sourceB")

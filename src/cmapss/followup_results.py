@@ -1,4 +1,7 @@
-"""Read completed follow-up artifacts consistently across notebooks and UI."""
+"""Đọc nhất quán artifact follow-up đã hoàn tất cho notebook và giao diện."""
+
+from __future__ import annotations
+
 
 import json
 from pathlib import Path
@@ -9,7 +12,7 @@ from cmapss.project import FOLLOWUP_RUN
 
 
 def load_followup_results(repo_root: str | Path = ".") -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Require all three studies to finish before exposing a combined comparison."""
+    """Yêu cầu cả ba nghiên cứu hoàn tất trước khi cung cấp bảng so sánh chung."""
     root = Path(repo_root) / FOLLOWUP_RUN
     completion = json.loads((root / "completion.json").read_text(encoding="utf-8"))
     if completion.get("status") != "complete" or set(completion.get("datasets", {})) != {"FD001", "FD002", "FD004"}:

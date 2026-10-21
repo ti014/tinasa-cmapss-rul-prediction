@@ -1,8 +1,6 @@
-"""Similarity-based RUL estimator for FD001.
-
-Each window is the last 30 cycles summarized as six 5-cycle block means. A query
-is matched to at most one window per donor engine, and the donor RULs are
-averaged with inverse-distance weights.
+"""
+Ước lượng RUL FD001 bằng similarity: window 30 cycle gồm sáu block mean dài 5 cycle, tối
+đa một window mỗi động cơ cho mẫu; lấy trung bình RUL theo nghịch đảo khoảng cách.
 """
 
 from __future__ import annotations
@@ -31,18 +29,18 @@ def _ordered(frame: pd.DataFrame) -> pd.DataFrame:
 
 
 def _check_prefix(frame: pd.DataFrame, *, name: str) -> None:
-    """Each engine must contain exactly cycles 1..N."""
+    """Mỗi động cơ phải có đúng các cycle 1–N."""
     for ident, group in frame.groupby(["split", "engine_id"], sort=False):
         cycles = group["cycle"].to_numpy(dtype=np.int64)
         expected = np.arange(1, len(cycles) + 1, dtype=np.int64)
         if not np.array_equal(cycles, expected):
-            raise ValueError(f"{name} must contain a complete prefix 1..t for engine {ident}")
+            raise ValueError(f"{name} phải có prefix 1–t đầy đủ cho động cơ {ident}")
 
 
 def _windows(frame: pd.DataFrame, *, window: int, block_size: int) -> tuple[pd.DataFrame, np.ndarray]:
-    """Return endpoint keys and unscaled block-mean representations."""
+    """Trả khóa endpoint và biểu diễn block mean chưa scaling."""
     if window != 30 or block_size != 5 or window % block_size:
-        raise ValueError("pilot requires window=30 and block_size=5")
+        raise ValueError("Pilot cần window=30 và block_size=5")
     rows: list[tuple[str, int, int]] = []
     values: list[np.ndarray] = []
     for (split, engine_id), group in frame.groupby(["split", "engine_id"], sort=True):
@@ -51,7 +49,7 @@ def _windows(frame: pd.DataFrame, *, window: int, block_size: int) -> tuple[pd.D
         cycles = group["cycle"].to_numpy(dtype=np.int64)
         for end in range(window - 1, len(group)):
             segment = raw[end - window + 1 : end + 1]
-            # Blocks are chronological and flattened block-major.
+            # Block theo thời gian và được trải phẳng theo thứ tự block trước.
             profile = segment.reshape(N_BLOCKS, block_size, len(SENSORS)).mean(axis=1)
             rows.append((str(split), int(engine_id), int(cycles[end])))
             values.append(profile.reshape(-1))
@@ -66,7 +64,7 @@ def _engine_key(frame: pd.DataFrame) -> pd.Series:
 
 @dataclass
 class SimilarityModel:
-    """Fitted similarity library and scaler."""
+    """Thư viện similarity và scaler đã fit."""
 
     window: int
     block_size: int
@@ -86,11 +84,11 @@ class SimilarityModel:
         self.library_rul = np.asarray(self.library_rul, dtype=np.float64)
         self.kept_sensor_mask = np.asarray(self.kept_sensor_mask, dtype=bool)
         if self.kept_sensor_mask.shape != (len(SENSORS),) or not self.kept_sensor_mask.any():
-            raise ValueError("kept_sensor_mask must select at least one canonical sensor")
+            raise ValueError("kept_sensor_mask phải chọn ít nhất một sensor chuẩn")
         if self.batch_size < 1 or not 1 <= self.fit_threads <= 4:
-            raise ValueError("batch_size must be positive and fit_threads must be in 1..4")
+            raise ValueError("batch_size phải dương và fit_threads phải từ 1 đến 4")
         if len(self.library_keys) != len(self.library_matrix) or len(self.library_rul) != len(self.library_matrix):
-            raise ValueError("library keys, matrix and RUL must have equal length")
+            raise ValueError("Khóa thư viện, ma trận và RUL phải cùng độ dài")
 
     @property
     def library_features(self) -> np.ndarray:
@@ -105,7 +103,7 @@ class SimilarityModel:
         keys, raw = _windows(_ordered(observations), window=self.window, block_size=self.block_size)
         if raw.size == 0:
             return keys, raw
-        # Scaler was fit on individual raw sensor rows; apply it to every block.
+        # Scaler đã fit trên từng dòng sensor gốc, nên áp dụng cho từng block.
         transformed = self.scaler.transform(raw.reshape(-1, len(SENSORS))).reshape(raw.shape)
         transformed = transformed[:, self._kept_indices]
         return keys, transformed
@@ -117,7 +115,7 @@ class SimilarityModel:
         ).astype(np.int64, copy=False)
 
     def query_keys(self, observations: pd.DataFrame) -> pd.DataFrame:
-        """Keys of the query windows (cycle >= 30)."""
+        """Khóa window truy vấn có cycle >=30."""
         return self._query(observations)[0]
 
     def predict_with_matches(
@@ -126,12 +124,12 @@ class SimilarityModel:
         *,
         neighbors: Iterable[int] = (5, 10),
     ) -> tuple[pd.DataFrame, dict[int, np.ndarray], pd.DataFrame]:
-        """Predict for each k and also return the ten closest donor matches."""
+        """Dự đoán cho từng k và trả mười mẫu từ động cơ cho gần nhất."""
         ks = tuple(dict.fromkeys(int(k) for k in neighbors))
         if not ks or any(k < 1 or k > 10 for k in ks):
-            raise ValueError("neighbors must contain positive k values no larger than 10")
+            raise ValueError("neighbors phải gồm các giá trị k dương không lớn hơn 10")
         if not self.library_matrix.size:
-            raise ValueError("similarity library is empty")
+            raise ValueError("Thư viện similarity rỗng")
         keys, query_matrix = self._query(observations)
         if query_matrix.size == 0:
             return keys, {k: np.empty(0, dtype=np.float64) for k in ks}, pd.DataFrame()
@@ -148,7 +146,7 @@ class SimilarityModel:
         with threadpool_limits(limits=self.fit_threads):
             for start in range(0, len(query_matrix), self.batch_size):
                 block = query_matrix[start : start + self.batch_size]
-                # Norm identity keeps allocation O(batch * n_reference), not O(... * features).
+                # Đồng nhất thức norm giữ bộ nhớ O(batch × n_reference), không nhân thêm số features.
                 qnorm = np.einsum("ij,ij->i", block, block)
                 distances = (qnorm[:, None] + library_norm[None, :] - 2.0 * block @ self.library_matrix.T) / self.library_matrix.shape[1]
                 distances = np.maximum(distances, 0.0)
@@ -158,7 +156,7 @@ class SimilarityModel:
                     idx = donor_parts[donor]
                     local_distances = distances[:, idx]
                     donor_best_dist[:, donor_position] = local_distances.min(axis=1)
-                    # Library rows are endpoint-cycle ascending per donor, so argmin resolves ties earliest.
+                    # Dòng thư viện tăng theo cycle endpoint của động cơ cho, nên argmin chọn mẫu sớm nhất khi hòa.
                     donor_best_idx[:, donor_position] = idx[np.argmin(local_distances, axis=1)]
                 for local in range(len(block)):
                     order = np.lexsort((donor_engine_numbers, donor_best_dist[local]))[:10]
@@ -206,7 +204,7 @@ def _validate_query(observations: pd.DataFrame, fit_keys: frozenset[tuple[str, i
     _check_prefix(_ordered(observations), name="query observations")
     overlap = {(str(split), int(engine)) for split, engine in observations[["split", "engine_id"]].drop_duplicates().itertuples(index=False)} & set(fit_keys)
     if overlap:
-        raise ValueError(f"query engines overlap fitting library: {sorted(overlap)}")
+        raise ValueError(f"Động cơ truy vấn giao với thư viện fit: {sorted(overlap)}")
 
 
 def fit_similarity(
@@ -218,24 +216,24 @@ def fit_similarity(
     batch_size: int = 128,
     fit_threads: int = 4,
 ) -> SimilarityModel:
-    """Fit the scaler and window library on train engines only."""
+    """Fit scaler và thư viện window chỉ trên động cơ train."""
     if batch_size < 1 or not 1 <= fit_threads <= 4:
-        raise ValueError("batch_size must be positive and fit_threads must be in 1..4")
+        raise ValueError("batch_size phải dương và fit_threads phải từ 1 đến 4")
     validate_observations(observations, source="similarity fit observations")
     if not observations["split"].eq("train").all():
-        raise ValueError("similarity fit observations must contain only split=train")
+        raise ValueError("Observations fit similarity chỉ được chứa split=train")
     _check_prefix(_ordered(observations), name="fit observations")
     validate_train_targets(observations, targets)
     if window != WINDOW or block_size != BLOCK_SIZE:
-        raise ValueError("pilot requires window=30 and block_size=5")
+        raise ValueError("Pilot cần window=30 và block_size=5")
     train_keys = frozenset((str(split), int(engine)) for split, engine in observations[["split", "engine_id"]].drop_duplicates().itertuples(index=False))
     scaler = StandardScaler()
     raw = observations.loc[:, list(SENSORS)].to_numpy(dtype=np.float64)
     engine_labels = observations["engine_id"].to_numpy()
     counts = pd.Series(engine_labels).value_counts().to_dict()
     sample_weight = np.array([1.0 / counts[int(e)] for e in engine_labels], dtype=np.float64)
-    # Constant sensors can give a tiny negative weighted variance, so sklearn
-    # warns on sqrt. The variance is clamped right below.
+    # Sensor hằng có thể tạo variance có trọng số âm rất nhỏ, khiến sklearn
+    # cảnh báo khi lấy sqrt; variance được chặn ngay bên dưới.
     with warnings.catch_warnings():
         warnings.filterwarnings(
             "ignore",
@@ -248,7 +246,7 @@ def fit_similarity(
     scaler.scale_ = np.sqrt(scaler.var_)
     keep = np.asarray(scaler.var_ > 1e-16, dtype=bool)
     if not keep.any():
-        raise ValueError("all sensors have near-zero fit standard deviation")
+        raise ValueError("Độ lệch chuẩn fit của mọi sensor gần bằng 0")
     scaler.scale_[~keep] = 1.0
     keys, raw_windows = _windows(_ordered(observations), window=window, block_size=block_size)
     matrix = scaler.transform(raw_windows.reshape(-1, len(SENSORS))).reshape(raw_windows.shape)

@@ -1,4 +1,4 @@
-"""HGB regressor fit and predict for the three feature arms."""
+"""Fit và dự đoán HGB cho ba nhánh features."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ from cmapss.modeling.lightgbm_comparison.estimators import engine_total_one_weig
 
 @dataclass
 class FittedHGB:
-    """Fitted HGB model with its feature order and fit metadata."""
+    """Mô hình HGB đã fit với thứ tự features và metadata huấn luyện."""
 
     arm_id: str
     feature_columns: tuple[str, ...]
@@ -26,30 +26,29 @@ class FittedHGB:
     weight_metadata: dict[str, Any]
 
     def predict(self, frame: pd.DataFrame) -> np.ndarray:
-        """Predict raw RUL from the arm's feature columns."""
+        """Dự đoán RUL gốc từ các cột features của nhánh."""
         values = frame.loc[:, list(self.feature_columns)].to_numpy(dtype="float64")
         if not np.isfinite(values).all():
-            raise ValueError("nonfinite inference features")
+            raise ValueError("Features suy luận không hữu hạn")
         with threadpool_limits(limits=self.weight_metadata["fit_threads"]):
             prediction = np.asarray(self.model.predict(values), dtype="float64")
         if prediction.shape != (len(frame),) or not np.isfinite(prediction).all():
-            raise ValueError("malformed or nonfinite predictions")
+            raise ValueError("Dự đoán sai cấu trúc hoặc không hữu hạn")
         return prediction
 
 
 def fit_predictor(train: pd.DataFrame, arm_id: str, config: StudyConfig) -> FittedHGB:
-    """Fit raw RUL with one total unit of sample weight per engine.
-
-    For example, engines with 100 and 200 rows receive row weights 1/100 and
-    1/200 respectively.
+    """
+    Fit RUL gốc với tổng trọng số một mỗi động cơ; động cơ 100/200 dòng có trọng số mỗi
+    dòng 1/100 và 1/200.
     """
     spec = feature_spec(arm_id)
     if train.empty or not train.split.eq("train").all() or "rul" not in train:
-        raise ValueError("fitting requires nonempty train-only raw targets")
+        raise ValueError("Fit cần nhãn gốc không rỗng, chỉ thuộc train")
     values = train.loc[:, list(spec.feature_columns)].to_numpy(dtype="float64")
     target = train.rul.to_numpy(dtype="float64")
     if not np.isfinite(values).all() or not np.isfinite(target).all() or (target < 0).any():
-        raise ValueError("fitting features and raw targets must be finite")
+        raise ValueError("Features fit và nhãn gốc phải hữu hạn")
     weights = engine_total_one_weights(train)
     parameters = dict(
         loss="squared_error", learning_rate=config.hgb_learning_rate,

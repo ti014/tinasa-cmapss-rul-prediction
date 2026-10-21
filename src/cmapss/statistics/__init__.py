@@ -1,5 +1,8 @@
 """API công khai cho phân tích sensor đầu/cuối đời trên FD001."""
 
+from __future__ import annotations
+
+
 from .config import SensorInferenceConfig
 from .inference import (
     adjust_sensor_pvalues,

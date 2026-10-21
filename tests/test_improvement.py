@@ -39,7 +39,7 @@ def test_hgb_candidates_are_deterministic_and_unique() -> None:
 
 def test_low_rul_weights_reject_unknown_scheme() -> None:
     frame = pd.DataFrame({"engine_id": [1], "cycle": [30], "rul": [0]})
-    with pytest.raises(ValueError, match="unknown weight scheme"):
+    with pytest.raises(ValueError, match="Cách gán trọng số chưa biết"):
         low_rul_weights(frame, "unknown")
 
 
@@ -50,7 +50,7 @@ def test_weights_at_rul_boundaries() -> None:
 
 def test_engine_leakage_is_rejected_before_fit() -> None:
     frame = pd.DataFrame({"engine_id": [1]})
-    with pytest.raises(ValueError, match="engines overlap"):
+    with pytest.raises(ValueError, match="giao nhau"):
         _fit_predict(frame, frame, {}, "uniform", 42)
 
 
@@ -91,7 +91,7 @@ def test_paired_bootstrap_preserves_known_constant_difference() -> None:
     baseline = pd.DataFrame({"mae": [2., 4., 6.]}, index=[1, 2, 3])
     result = paired_comparison(baseline, baseline-1, 100, 42).iloc[0]
     assert result.delta == result.ci_lower == result.ci_upper == -1
-    with pytest.raises(ValueError, match="identical engine IDs"):
+    with pytest.raises(ValueError, match="cùng ID động cơ"):
         paired_comparison(baseline, baseline.iloc[::-1], 10, 42)
 
 

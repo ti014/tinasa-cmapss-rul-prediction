@@ -43,9 +43,9 @@ def fit_health_index(
 ) -> HealthIndexResult:
     """Fit scaler/PCA trên train engines và trả Health Index (PC1 chuẩn hóa).
 
-    Test observations bị loại trước khi fit. Nếu có ``fit_engine_ids``, chỉ các
-    engine đó dùng để fit và chọn hướng/scale; engine còn lại chỉ được transform,
-    để engine dùng cho forecast không rò rỉ vào transformer.
+    Test observations bị loại trước khi fit. Nếu có ``fit_engine_ids``, chỉ các engine
+    đó dùng để fit và chọn hướng/scale; engine còn lại chỉ được transform, để engine
+    dùng cho forecast không rò rỉ vào transformer.
     """
     validate_observations(observations, source="timeseries observations")
     train = (
@@ -54,7 +54,7 @@ def fit_health_index(
         .reset_index(drop=True)
     )
     if train.empty:
-        raise ContractError("TRAIN_ONLY", "health index", "cần train observations để fit PCA")
+        raise ContractError("TRAIN_ONLY", "Health Index", "cần train observations để fit PCA")
 
     available_engine_ids = tuple(sorted(int(value) for value in train["engine_id"].unique()))
     if fit_engine_ids is None:
@@ -62,12 +62,12 @@ def fit_health_index(
     else:
         resolved_fit_engine_ids = tuple(sorted({int(value) for value in fit_engine_ids}))
         if not resolved_fit_engine_ids:
-            raise ContractError("HEALTH_INDEX_FIT", "health index", "cần ít nhất một engine để fit transformer")
+            raise ContractError("HEALTH_INDEX_FIT", "Health Index", "cần ít nhất một engine để fit transformer")
         unknown = set(resolved_fit_engine_ids).difference(available_engine_ids)
         if unknown:
             raise ContractError(
                 "HEALTH_INDEX_FIT",
-                "health index",
+                "Health Index",
                 f"fit_engine_ids không thuộc train observations: {sorted(unknown)}",
             )
 
@@ -84,7 +84,7 @@ def fit_health_index(
     )
     scale = float(np.std(oriented_scores, ddof=0))
     if not np.isfinite(scale) or scale == 0.0:
-        raise ContractError("HEALTH_INDEX_SCALE", "health index", "PC1 không có độ biến thiên hữu hạn")
+        raise ContractError("HEALTH_INDEX_SCALE", "Health Index", "PC1 không có độ biến thiên hữu hạn")
     center = float(np.mean(oriented_scores))
     all_scores = pca.transform(scaler.transform(train.loc[:, list(SENSORS)].to_numpy(dtype="float64"))).ravel()
     oriented_all_scores = orientation_sign * all_scores
@@ -107,12 +107,12 @@ def validate_health_index(frame: pd.DataFrame) -> None:
     """Kiểm tra schema, train-only, khóa và giá trị Health Index."""
     validate_columns(frame, HEALTH_INDEX_COLUMNS, "health index")
     if not frame["split"].eq("train").all():
-        raise ContractError("TRAIN_ONLY", "health index", "Health Index phải chỉ thuộc split train")
+        raise ContractError("TRAIN_ONLY", "Health Index", "Health Index phải chỉ thuộc split train")
     if frame.duplicated(list(KEY)).any():
-        raise ContractError("HEALTH_INDEX_KEY", "health index", "trùng khóa observation")
+        raise ContractError("HEALTH_INDEX_KEY", "Health Index", "trùng khóa observation")
     values = frame["health_index"].to_numpy(dtype="float64")
     if not np.isfinite(values).all():
-        raise ContractError("HEALTH_INDEX_NUMERIC", "health index", "Health Index phải hữu hạn")
+        raise ContractError("HEALTH_INDEX_NUMERIC", "Health Index", "Health Index phải hữu hạn")
 
 
 def select_validation_engines(
@@ -123,13 +123,13 @@ def select_validation_engines(
 ) -> pd.DataFrame:
     """Chọn engine đại diện theo fold và lifetime.
 
-    Mỗi fold nhận quota gần bằng nhau; trong fold, lấy các engine ở vị trí cách
-    đều theo lifetime tăng dần. Chỉ dùng metadata train, không dùng kết quả forecast.
+    Mỗi fold nhận quota gần bằng nhau; trong fold, lấy các engine ở vị trí cách đều theo
+    lifetime tăng dần. Chỉ dùng metadata train, không dùng kết quả forecast.
     """
     validate_observations(observations, source="timeseries engine selection")
     required_folds = {"split", "engine_id", "fold"}
     if not required_folds.issubset(fold_assignments.columns):
-        raise ContractError("FOLD_ASSIGNMENT", "timeseries engine selection", "thiếu split, engine_id hoặc fold")
+        raise ContractError("FOLD_ASSIGNMENT", "chọn động cơ phân tích chuỗi thời gian", "thiếu split, engine_id hoặc fold")
     train = observations.loc[observations["split"].eq("train")]
     lifetimes = (
         train.groupby(["split", "engine_id"], sort=True)["cycle"]
@@ -141,7 +141,7 @@ def select_validation_engines(
     folds["split"] = folds["split"].astype("string")
     merged = lifetimes.merge(folds, on=["split", "engine_id"], how="inner", validate="one_to_one")
     if len(merged) != len(lifetimes):
-        raise ContractError("FOLD_ASSIGNMENT", "timeseries engine selection", "mọi train engine phải có đúng một fold")
+        raise ContractError("FOLD_ASSIGNMENT", "chọn động cơ phân tích chuỗi thời gian", "mọi train engine phải có đúng một fold")
     available = merged.sort_values(["fold", "n_cycles", "engine_id"], kind="mergesort")
     fold_values = sorted(int(value) for value in available["fold"].unique())
     if n_engines < 1 or n_engines > len(available):

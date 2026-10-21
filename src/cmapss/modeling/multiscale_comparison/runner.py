@@ -1,4 +1,4 @@
-"""Nested, causal HGB comparison for the three multi-scale feature arms."""
+"""So sánh HGB nested chỉ dùng quá khứ cho ba nhánh features đa thang."""
 
 from __future__ import annotations
 
@@ -43,7 +43,7 @@ def _sha(path: Path) -> str:
 
 
 def _runtime_versions() -> dict[str, str]:
-    """Package versions recorded in the run identity."""
+    """Phiên bản package ghi trong định danh lần chạy."""
     names = ("python", "numpy", "pandas", "sklearn", "joblib", "pyarrow",
              "scipy", "threadpoolctl")
     return {
@@ -58,11 +58,11 @@ def _json(path: Path, value: object) -> None:
 
 
 def _build_union(observations: pd.DataFrame, targets: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Merge all arms and raw targets into one union matrix."""
+    """Ghép mọi nhánh với nhãn gốc thành một ma trận hợp nhất."""
     arms = build_feature_arms(observations)
     base = arms[BASELINE_ARM].merge(targets, on=list(KEY), how="left", validate="one_to_one")
     if base.rul.isna().any():
-        raise ValueError("raw train labels do not cover baseline keys")
+        raise ValueError("Nhãn train gốc không phủ khóa baseline")
     union = base.loc[:, [*KEY, *feature_spec(BASELINE_ARM).feature_columns, "rul"]].copy()
     for arm in ARMS[1:]:
         additions = arms[arm].loc[:, list(dict.fromkeys((*KEY, *feature_spec(arm).feature_columns)))
@@ -72,14 +72,14 @@ def _build_union(observations: pd.DataFrame, targets: pd.DataFrame) -> tuple[pd.
     train = union[union.split.eq("train")].sort_values(["engine_id", "cycle"], kind="mergesort").reset_index(drop=True)
     test = pd.concat([arms[arm] for arm in []], ignore_index=True) if False else None
     if len(train) != 17731 or train.engine_id.nunique() != 100:
-        raise ValueError(f"unexpected train panel {len(train)} rows/{train.engine_id.nunique()} engines")
+        raise ValueError(f"Bảng train ngoài dự kiến {len(train)} rows/{train.engine_id.nunique()} engines")
     if not np.isfinite(train[list(ALL_FEATURES) + ["rul"]].to_numpy(dtype="float64")).all():
-        raise ValueError("union train matrix contains nonfinite values")
+        raise ValueError("Ma trận train hợp nhất chứa giá trị không hữu hạn")
     return union, arms[BASELINE_ARM]
 
 
 def _make_train_test(observations: pd.DataFrame, targets: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Return the union train matrix (with raw RUL) and the test feature matrix."""
+    """Trả ma trận train hợp nhất kèm RUL gốc và ma trận features test."""
     arms = build_feature_arms(observations)
     base = arms[BASELINE_ARM]
     union = base.merge(targets, on=list(KEY), how="left", validate="one_to_one")
@@ -93,7 +93,7 @@ def _make_train_test(observations: pd.DataFrame, targets: pd.DataFrame) -> tuple
     test = union[union.split.eq("test")].drop(columns=["rul"], errors="ignore")
     test = test.sort_values(["engine_id", "cycle"], kind="mergesort").reset_index(drop=True)
     if len(train) != 17731 or len(test) != 10196:
-        raise ValueError(f"unexpected frozen rows train={len(train)} test={len(test)}")
+        raise ValueError(f"Số dòng cố định ngoài dự kiến train={len(train)} test={len(test)}")
     return train, test
 
 
@@ -109,26 +109,26 @@ def _assignments(root: Path, train: pd.DataFrame, config: StudyConfig) -> pd.Dat
                         for e in sorted(train.iloc[val].engine_id.unique()))
         table = pd.DataFrame(rows)
     if table.engine_id.duplicated().any() or set(table.engine_id) != set(train.engine_id.unique()):
-        raise ValueError("outer assignments must cover each engine once")
+        raise ValueError("Outer assignment phải phủ mỗi động cơ một lần")
     if set(table.outer_fold) != set(range(1, config.outer_splits + 1)):
-        raise ValueError("outer assignment fold count mismatch")
+        raise ValueError("Số fold trong outer assignment không khớp")
     return table.sort_values("engine_id").reset_index(drop=True)
 
 
 def _prediction(path: str | Path, arm: str, frame: pd.DataFrame) -> pd.DataFrame:
     prediction = pd.read_parquet(path)
     if not prediction.candidate_id.eq(arm).all():
-        raise ValueError("fit cache arm mismatch")
+        raise ValueError("Nhánh fit-cache không khớp")
     expected = frame.loc[:, list(KEY)].reset_index(drop=True)
     if not prediction[list(KEY)].reset_index(drop=True).equals(expected):
-        raise ValueError("fit cache keys do not match validation frame")
+        raise ValueError("Khóa fit-cache không khớp bảng validation")
     return prediction
 
 
 def _inner_stage(frame: pd.DataFrame, outer_fold: int, config: StudyConfig,
                  matrix_path: Path, cache_dir: Path, identity: str,
                  output: Path) -> tuple[dict[str, dict], dict[str, pd.DataFrame], dict]:
-    """Run inner CV for every arm, calibrate its warning policy and pick an arm."""
+    """Chạy inner cross-validation từng nhánh, hiệu chuẩn cảnh báo và chọn nhánh."""
     splitter = GroupKFold(config.inner_splits)
     folds = list(splitter.split(frame, frame.rul, frame.engine_id))
     assignments = []
@@ -194,35 +194,35 @@ def _save_final_model(train: pd.DataFrame, arm: str, config: StudyConfig,
 
 
 def _evaluate_test(final: pd.DataFrame, labels_path: Path, output: Path, config: StudyConfig) -> dict:
-    # Must run before test labels are read.
+    # Phải chạy trước khi đọc nhãn test.
     required = [output / "selection.json", output / "outer_decision_before_test.json",
                 output / "final_predictions.parquet", output / "final_predictions_receipt.json"]
     required.extend(output / "models" / arm / name
                     for arm in ARMS for name in ("model.joblib", "model.json"))
     if not all(path.is_file() for path in required):
-        raise ValueError("test labels require frozen selection, decision, models and predictions")
+        raise ValueError("Chỉ đọc nhãn test sau khi cố định lựa chọn, quyết định, mô hình và dự đoán")
     receipt = json.loads((output / "final_predictions_receipt.json").read_text(encoding="utf-8"))
     selection = json.loads((output / "selection.json").read_text(encoding="utf-8"))
     decision = json.loads((output / "outer_decision_before_test.json").read_text(encoding="utf-8"))
     if selection.get("test_labels_read_for_selection") is not False:
-        raise ValueError("final arm must be frozen before test labels")
+        raise ValueError("Phải cố định nhánh cuối trước khi đọc nhãn test")
     if receipt.get("test_labels_read") is not False or receipt.get("saved_model_replay_exact") is not True:
-        raise ValueError("final prediction replay receipt is incomplete")
+        raise ValueError("Biên nhận tái tạo dự đoán cuối chưa đầy đủ")
     if receipt.get("predictions_sha256") != _sha(output / "final_predictions.parquet"):
-        raise ValueError("final prediction receipt checksum mismatch")
+        raise ValueError("Checksum biên nhận dự đoán cuối không khớp")
     if json.loads((output / "outer_decision_before_test.json").read_text(encoding="utf-8")) != decision:
-        raise ValueError("outer decision changed before test reporting")
+        raise ValueError("Quyết định outer đã đổi trước khi báo cáo test")
     for arm in ARMS:
         model = output / "models" / arm / "model.joblib"
         metadata = json.loads((output / "models" / arm / "model.json").read_text(encoding="utf-8"))
         if metadata.get("model_sha256") != _sha(model) or receipt.get("models_sha256", {}).get(arm) != _sha(model):
-            raise ValueError(f"model receipt checksum mismatch: {arm}")
+            raise ValueError(f"Checksum biên nhận mô hình không khớp: {arm}")
     labels = read_test_labels(labels_path).rename(columns={"rul": "y_true"})
     rows = []
     for procedure, frame in final.groupby("procedure", sort=True):
         joined = frame.merge(labels, on=["split", "engine_id"], how="outer", validate="one_to_one", indicator=True)
         if not joined._merge.eq("both").all():
-            raise ValueError("test labels do not match final endpoints")
+            raise ValueError("Nhãn test không khớp endpoint cuối")
         scored = add_prediction_errors(joined.drop(columns="_merge").rename(columns={"y_pred": "y_pred"}))
         metrics = {"procedure": procedure, **summarize_prediction_errors(scored)}
         rows.append(metrics)
@@ -241,22 +241,22 @@ def run_multiscale_comparison(*, repo_root: str | Path | None = None,
                               output_dir: str | Path = "outputs/experiments/multiscale_comparison/20261006_study01",
                               config: StudyConfig | None = None,
                               evaluate_test: bool = True) -> dict:
-    """Run the complete nested comparison and reporting-only test evaluation."""
+    """Chạy so sánh nested đầy đủ; đánh giá test chỉ để báo cáo."""
     started = time.perf_counter()
     root = Path(repo_root).resolve() if repo_root else Path(__file__).resolve().parents[4]
     config = config or StudyConfig()
     output = (root / output_dir).resolve() if not Path(output_dir).is_absolute() else Path(output_dir).resolve()
     if not output.is_relative_to(root) or "multiscale_comparison" not in output.parts:
-        raise ValueError("output must stay under outputs/experiments/multiscale_comparison")
+        raise ValueError("Output phải nằm dưới outputs/experiments/multiscale_comparison")
     observations_path = (root / observations_path).resolve() if not Path(observations_path).is_absolute() else Path(observations_path).resolve()
     targets_path = (root / targets_path).resolve() if not Path(targets_path).is_absolute() else Path(targets_path).resolve()
     labels_path = (root / test_labels_path).resolve() if not Path(test_labels_path).is_absolute() else Path(test_labels_path).resolve()
     output.mkdir(parents=True, exist_ok=True)
     if any(output.iterdir()) and not (output / "manifest.json").exists():
-        raise ValueError("nonempty output has no manifest")
+        raise ValueError("Output không rỗng nhưng thiếu manifest")
     if not (output / "manifest.json").exists():
-        # Snapshot all local sources, not only this package, so later source
-        # changes can be detected.
+        # Chụp mọi mã nguồn local, không chỉ package này, để phát hiện
+        # thay đổi mã nguồn về sau.
         source_files = [
             *sorted((root / "src/cmapss").rglob("*.py")),
             root / "experiments/MULTISCALE_FEATURE_PROTOCOL.md",
@@ -342,8 +342,8 @@ def run_multiscale_comparison(*, repo_root: str | Path | None = None,
     audit._write_parquet(outer, output / "outer_predictions.parquet")
     audit._write_parquet(events, output / "warning_events.parquet")
     decision = write_readouts(outer, events, config, output)
-    # Check the baseline arm against the published HGB outer predictions
-    # before any test label is read.
+    # Đối chiếu nhánh baseline với dự đoán HGB outer đã công bố
+    # trước khi đọc bất kỳ nhãn test nào.
     reference_path = root / "outputs/experiments/lightgbm_comparison/20261005_study01/outer_predictions.parquet"
     replay = {"applicable": bool(config.scientific and reference_path.is_file()), "passed": False}
     if config.scientific and reference_path.is_file():
@@ -361,7 +361,7 @@ def run_multiscale_comparison(*, repo_root: str | Path | None = None,
                   "reference": str(reference_path.relative_to(root)),
                   "passed": bool(keys_match and truth_match and max_delta is not None and max_delta <= 1e-8)}
         if not replay["passed"]:
-            raise ValueError("published HGB baseline replay failed")
+            raise ValueError("Tái tạo baseline HGB công bố thất bại")
     _json(output / "baseline_replay.json", replay)
     _json(output / "outer_decision_before_test.json", decision)
     final_choices, _, final_choice = _inner_stage(train, 0, config, matrix_path, cache_dir, identity, output)
@@ -411,7 +411,7 @@ def main(argv: list[str] | None = None) -> None:
                              hgb_max_iter=20, fit_threads=args.fit_threads)
     result = run_multiscale_comparison(repo_root=args.repo_root, output_dir=args.output_dir,
                                        config=config, evaluate_test=not (args.skip_test_evaluation or args.dry_run))
-    # Windows console may still use cp1252 even though persisted artifacts are UTF-8.
+    # Console Windows có thể còn dùng cp1252 dù artifact trên đĩa là UTF-8.
     print(json.dumps(audit._json_value(result), ensure_ascii=True, indent=2), flush=True)
 
 

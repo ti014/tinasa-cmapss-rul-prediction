@@ -20,11 +20,9 @@ HISTORY_FEATURES = ("cycle",) + tuple(
 
 @dataclass(frozen=True)
 class CandidateSpec:
-    """One model variant.
-
-    ``history`` adds cycle and sensor values relative to the first 30 cycles.
-    ``prune`` drops features that are constant in the fitting fold.
-    ``target_cap`` clips training labels only. ``loss`` applies to HGB only.
+    """
+    Biến thể mô hình: history thêm cycle và độ lệch từ 30 cycle đầu, prune bỏ cột hằng
+    trong fold, target_cap chỉ cắt nhãn train; loss chỉ dùng cho HGB.
     """
 
     candidate_id: str
@@ -37,7 +35,7 @@ class CandidateSpec:
 
 
 def make_candidate_specs() -> tuple[CandidateSpec, ...]:
-    """Six HGB variants and four Ridge alphas."""
+    """Sáu biến thể HGB và bốn giá trị alpha của Ridge."""
     return (
         CandidateSpec("hgb_baseline"),
         CandidateSpec("hgb_pruned", prune=True),
@@ -52,11 +50,9 @@ def make_candidate_specs() -> tuple[CandidateSpec, ...]:
 
 @dataclass(frozen=True)
 class AuditStudyConfig:
-    """Study settings.
-
-    ``thresholds`` and ``persistences`` form the warning-policy grid.
-    ``lead_requirement`` is the minimum lead (cycles) for a warning to count as
-    on time; ``target_on_time_rate`` is the on-time rate a policy should reach.
+    """
+    Cấu hình nghiên cứu: lưới thresholds/persistences, lead_requirement tối thiểu và
+    target_on_time_rate mục tiêu.
     """
 
     outer_splits: int = 5
@@ -74,27 +70,27 @@ class AuditStudyConfig:
 
     def __post_init__(self) -> None:
         if min(self.outer_splits, self.inner_splits) < 2:
-            raise ValueError("at least two inner and outer folds are required")
+            raise ValueError("Cần ít nhất hai inner fold và hai outer fold")
         if min(self.bootstrap_resamples, self.fit_threads, self.hgb_max_iter) < 1:
-            raise ValueError("resamples, threads and iterations must be positive")
+            raise ValueError("Số lượt lấy mẫu, luồng và vòng lặp phải dương")
         if not self.endpoint_fractions or tuple(sorted(set(self.endpoint_fractions))) != self.endpoint_fractions:
-            raise ValueError("endpoint fractions must be unique and increasing")
+            raise ValueError("Các tỷ lệ endpoint phải duy nhất và tăng dần")
         if any(not 0 < fraction < 1 for fraction in self.endpoint_fractions):
-            raise ValueError("endpoint fractions must be strictly inside (0, 1)")
+            raise ValueError("Các tỷ lệ endpoint phải nằm hẳn trong (0, 1)")
         available = {spec.candidate_id for spec in make_candidate_specs()}
         if (not self.candidate_ids or len(set(self.candidate_ids)) != len(self.candidate_ids)
                 or not set(self.candidate_ids).issubset(available)
                 or "hgb_baseline" not in self.candidate_ids):
-            raise ValueError("candidate IDs must be unique, known and include hgb_baseline")
+            raise ValueError("ID ứng viên phải duy nhất, đã biết và gồm hgb_baseline")
         if not 0 < self.target_on_time_rate <= 1 or self.lead_requirement < 1:
-            raise ValueError("warning target must be in (0, 1] and lead positive")
+            raise ValueError("Mục tiêu cảnh báo phải thuộc (0, 1] và lead phải dương")
         if (not self.thresholds or not self.persistences
                 or any(value < 0 for value in self.thresholds)
                 or any(value < 1 for value in self.persistences)):
-            raise ValueError("warning grids must be nonempty and valid")
+            raise ValueError("Lưới cảnh báo phải không rỗng và hợp lệ")
         if (tuple(sorted(set(self.thresholds))) != self.thresholds
                 or tuple(sorted(set(self.persistences))) != self.persistences):
-            raise ValueError("warning grids must be unique and increasing")
+            raise ValueError("Lưới cảnh báo phải duy nhất và tăng dần")
         for threshold in self.thresholds:
             for persistence in self.persistences:
                 WarningPolicy(threshold, persistence)
@@ -102,7 +98,7 @@ class AuditStudyConfig:
 
 @dataclass(frozen=True)
 class WarningPolicy:
-    """Warn after ``persistence`` consecutive predictions with RUL <= ``threshold``."""
+    """Cảnh báo sau persistence dự đoán liên tiếp có RUL không vượt threshold."""
 
     threshold: int
     persistence: int
@@ -112,4 +108,4 @@ class WarningPolicy:
                 or not isinstance(self.threshold, (int, np.integer))
                 or not isinstance(self.persistence, (int, np.integer))
                 or self.threshold < 0 or self.persistence < 1):
-            raise ValueError("invalid warning policy")
+            raise ValueError("Chính sách cảnh báo không hợp lệ")

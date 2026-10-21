@@ -27,7 +27,7 @@ from cmapss.modeling.improvement.selection import _metrics
 
 
 def run_study(dataset_id: str, repo: Path, output: Path, config: StudyConfig, *, evaluate_test: bool = True) -> dict[str, Any]:
-    """Run the nested study for one dataset and write all artifacts to ``output``."""
+    """Chạy nested cross-validation một dataset và ghi mọi artifact vào output."""
     started = time.perf_counter()
     source = repo / ("outputs/etl" if dataset_id == "FD001" else f"outputs/cross_dataset/{dataset_id}/etl")
     observation_path, target_path = source / "silver/observations.parquet", source / "silver/train_targets.parquet"

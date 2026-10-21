@@ -1,4 +1,7 @@
-"""Spark implementation of the same 126 trailing-window sensor features."""
+"""Tạo cùng 126 đặc trưng window sensor bằng Spark."""
+
+from __future__ import annotations
+
 
 from typing import Any
 
@@ -6,15 +9,14 @@ from cmapss.data.contracts import KEY, SENSORS
 
 
 def build_spark_rolling_features(observations: Any, window_cycles: int = 30) -> Any:
-    """Build causal, engine-local features on already validated Silver data.
-
-    Example: a sensor equal to cycle has slope 1 and mean 15.5 at cycle 30.
-    Validation of the input contract is performed before benchmark replication.
+    """
+    Tạo features theo động cơ từ Silver đã kiểm tra, chỉ dùng quá khứ; sensor bằng cycle
+    có slope 1 và mean 15,5 tại cycle 30.
     """
     from pyspark.sql import Window, functions as F
 
     if window_cycles < 2:
-        raise ValueError("window_cycles must be at least 2")
+        raise ValueError("window_cycles phải ít nhất bằng 2")
     window = Window.partitionBy("split", "engine_id").orderBy("cycle").rowsBetween(1 - window_cycles, 0)
     columns = [F.col(key) for key in KEY]
     for sensor in SENSORS:

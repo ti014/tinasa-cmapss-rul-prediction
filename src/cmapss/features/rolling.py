@@ -1,7 +1,7 @@
 """Tạo rolling features từ Silver observations.
 
-Chỉ dùng observations; không đọc `RUL_FD001.txt` và không fit gì trên dữ liệu,
-nên không có rò rỉ nhãn hay thống kê toàn tập.
+Chỉ dùng observations; không đọc `RUL_FD001.txt` và không fit gì trên dữ liệu, nên không
+có rò rỉ nhãn hay thống kê toàn tập.
 """
 
 from __future__ import annotations
@@ -127,9 +127,9 @@ def build_rolling_features(
 
     Mỗi dòng dùng đúng `window_cycles` observations kết thúc tại cycle của dòng đó,
     trong cùng engine/split; không dùng cycle tương lai. Output gồm khóa và 126 cột
-    `<sensor>__<stat>` (21 sensor x 6 thống kê). Engine không đủ cycle thì raise ContractError.
-
-    Ví dụ: sensor bằng cycle, window 30, dòng cycle 30 có mean=15.5, slope=1.
+    `<sensor>__<stat>` (21 sensor x 6 thống kê). Engine không đủ cycle thì raise
+    ContractError. Ví dụ: sensor bằng cycle, window 30, dòng cycle 30 có mean=15.5,
+    slope=1.
     """
     ordered = _require_windowable_observations(observations, window_cycles=window_cycles)
     frames = [

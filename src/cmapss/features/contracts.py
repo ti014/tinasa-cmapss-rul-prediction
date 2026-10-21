@@ -1,5 +1,8 @@
 """Contract cho Gold rolling features FD001."""
 
+from __future__ import annotations
+
+
 from cmapss.data.contracts import KEY, SENSORS
 
 FEATURE_SCHEMA_VERSION = 1

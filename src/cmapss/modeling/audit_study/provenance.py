@@ -48,10 +48,10 @@ BASELINE_FILES = (
 
 def _initialize_run(output: Path, repo_root: Path, inputs: tuple[Path, ...],
                     config: AuditStudyConfig) -> tuple[dict[str, Any], str]:
-    """Write the manifest and source snapshot, or check them when resuming."""
+    """Ghi manifest và snapshot mã nguồn hoặc kiểm tra chúng khi resume."""
     allowed = repo_root / "outputs/experiments/audit_remediation"
     if output == allowed or allowed not in output.parents:
-        raise ValueError("study output must be a new run under outputs/experiments/audit_remediation")
+        raise ValueError("Output phải là lần chạy mới dưới outputs/experiments/audit_remediation")
     source_names = local_source_files(repo_root, SOURCE_FILES)
     sources = {name: _sha256(repo_root / name) for name in source_names}
     baseline = {name: _sha256(repo_root / name) for name in BASELINE_FILES}
@@ -71,16 +71,16 @@ def _initialize_run(output: Path, repo_root: Path, inputs: tuple[Path, ...],
     if path.exists():
         saved = json.loads(path.read_text(encoding="utf-8"))
         if saved["identity"] != identity:
-            raise ValueError("resume mismatch: source, input, config, dependency or baseline changed")
+            raise ValueError("Resume không khớp: mã nguồn, đầu vào, cấu hình, dependency hoặc baseline đã đổi")
         for name, digest in sources.items():
             if _sha256(output / "source_snapshot" / name) != digest:
-                raise ValueError("source snapshot checksum mismatch")
+                raise ValueError("Checksum snapshot mã nguồn không khớp")
         if _sha256(output / "source_snapshot/uv.lock") != identity["dependency_lock_sha256"]:
-            raise ValueError("dependency snapshot checksum mismatch")
+            raise ValueError("Checksum snapshot dependency không khớp")
         manifest = saved
     else:
         if any(output.iterdir()):
-            raise ValueError("run directory is nonempty without a manifest; choose a new output")
+            raise ValueError("Thư mục lần chạy không rỗng nhưng thiếu manifest; chọn output mới")
         for name in source_names + ("uv.lock",):
             destination = output / "source_snapshot" / name
             destination.parent.mkdir(parents=True, exist_ok=True)

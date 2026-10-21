@@ -70,7 +70,7 @@ def test_fit_rejects_labels_and_query_overlap_or_incomplete_prefix() -> None:
     model = fit_similarity(train, _targets(train))
     with pytest.raises(ValueError, match="SCHEMA"):
         fit_similarity(train.assign(rul=0), _targets(train))
-    with pytest.raises(ValueError, match="overlap"):
+    with pytest.raises(ValueError, match="giao"):
         model.predict(train, neighbors=(5,))
     incomplete = _observations([("test", 4, 30, 0.0)]).loc[lambda frame: frame.cycle.ne(2)]
     with pytest.raises(ValueError):

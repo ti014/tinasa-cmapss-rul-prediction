@@ -1,5 +1,8 @@
 """Schema output cho các lớp ETL Silver và Gold."""
 
+from __future__ import annotations
+
+
 from cmapss.data.contracts import OBSERVATION_COLUMNS, TRAIN_TARGET_COLUMNS
 
 ETL_SCHEMA_VERSION = 1

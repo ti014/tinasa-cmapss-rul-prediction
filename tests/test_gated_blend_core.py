@@ -91,18 +91,18 @@ def test_mismatched_pairs_are_rejected(paired_frames, change):
         capped.loc[0, "inner_fold"] = 3
     else:
         capped = capped.drop(columns="inner_fold")
-    with pytest.raises(ValueError, match="exact|unique|both"):
+    with pytest.raises(ValueError, match="chính xác|duy nhất|cùng"):
         blend_predictions(uncapped, capped, GateSpec(60, 150, .5))
 
 
 @pytest.mark.parametrize("values", [[], [[1., 2.]], [True], ["1"], [np.nan], [np.inf], [1 + 2j]])
 def test_malformed_prediction_vectors_are_rejected(values):
-    with pytest.raises(ValueError, match="vector|finite"):
+    with pytest.raises(ValueError, match="vector|hữu hạn"):
         capped_weights(values, GateSpec(30, 150, .5))
 
 
 def test_shape_mismatch_and_wrong_spec_are_rejected():
-    with pytest.raises(ValueError, match="shapes"):
+    with pytest.raises(ValueError, match="shape"):
         blend_vectors([1., 2.], [1.], GateSpec(30, 150, .5))
     with pytest.raises(TypeError, match="GateSpec"):
         capped_weights([1.], None)
@@ -124,8 +124,8 @@ def test_explicit_grid_is_frozen_and_rejects_duplicate_budget():
     assert specs[0].candidate_id == "gate_lo30_hi150_w0.25"
     with pytest.raises(FrozenInstanceError):
         specs[0].upper_rul = 200
-    with pytest.raises(ValueError, match="duplicate"):
+    with pytest.raises(ValueError, match="trùng"):
         build_specs(lower_ruls=(30, 30), upper_ruls=(150,), max_capped_weights=(.5,))
-    with pytest.raises(ValueError, match="nonempty"):
+    with pytest.raises(ValueError, match="không rỗng"):
         build_specs(lower_ruls=(), upper_ruls=(150,), max_capped_weights=(.5,))
 

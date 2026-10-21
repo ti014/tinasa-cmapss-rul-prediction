@@ -15,12 +15,12 @@ from cmapss.features.enhanced import (
 def _join_targets(features: pd.DataFrame, targets: pd.DataFrame) -> pd.DataFrame:
     joined = features.merge(targets.loc[:, [*KEY, "rul"]], on=list(KEY), how="left", validate="one_to_one")
     if joined.rul.isna().any():
-        raise ValueError("Missing RUL target for a training feature row")
+        raise ValueError("Thiếu nhãn RUL cho dòng features train")
     return joined
 
 
 class FeatureStore:
-    """Cache raw features; condition normalization is always fitted inside a fold."""
+    """Cache features gốc; bộ chuẩn hóa điều kiện luôn fit bên trong fold."""
 
     def __init__(self, observations: pd.DataFrame, targets: pd.DataFrame) -> None:
         self.observations = observations.loc[observations.split.eq("train")].copy()
@@ -28,9 +28,9 @@ class FeatureStore:
         self.raw: dict[tuple[int, bool, bool], pd.DataFrame] = {}
 
     def features(self, recipe: FeatureRecipe) -> pd.DataFrame:
-        """Features without fitted preprocessing, built once and cached."""
+        """Tạo và cache một lần các features chưa qua tiền xử lý có học tham số."""
         if recipe.normalize_conditions:
-            raise ValueError("Normalized features must be constructed inside a fold")
+            raise ValueError("Features chuẩn hóa phải được tạo trong fold")
         key = (recipe.window, recipe.history, recipe.settings)
         if key not in self.raw:
             self.raw[key] = _join_targets(build_recipe_features(self.observations, recipe), self.targets)
@@ -39,9 +39,9 @@ class FeatureStore:
     def fold_features(
         self, recipe: FeatureRecipe, train_ids: set[int], validation_ids: set[int], seed: int,
     ) -> tuple[pd.DataFrame, pd.DataFrame, OperatingConditionNormalizer | None]:
-        """Fit preprocessing on train engines and return train/validation features."""
+        """Fit tiền xử lý trên động cơ train rồi trả features train/validation."""
         if train_ids & validation_ids:
-            raise ValueError("Training and validation engines overlap")
+            raise ValueError("Động cơ train và validation giao nhau")
         normalizer = None
         if recipe.normalize_conditions:
             training = self.observations.loc[self.observations.engine_id.isin(train_ids)]

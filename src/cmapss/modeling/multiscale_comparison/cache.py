@@ -1,6 +1,6 @@
-"""Cached HGB fit tasks run in worker processes.
-
-Each cache entry is keyed by the source matrix checksum, arm, config and engine split.
+"""
+Tác vụ fit HGB có cache chạy trong worker; khóa cache gồm checksum ma trận, nhánh, cấu
+hình và cách chia động cơ.
 """
 
 from __future__ import annotations
@@ -29,56 +29,56 @@ ALL_FEATURES = tuple(dict.fromkeys(column for columns in FEATURE_COLUMNS_BY_ARM.
 
 @lru_cache(maxsize=2)
 def _load(path: str, identity: str, file_hash: str) -> tuple[pd.DataFrame, str]:
-    """Load and validate the frozen train matrix once per process."""
+    """Đọc và kiểm tra ma trận train đã cố định một lần mỗi process."""
     if not identity:
-        raise ValueError("source identity must be nonempty")
+        raise ValueError("Định danh nguồn phải không rỗng")
     frame = pd.read_parquet(path)
     columns = list(dict.fromkeys((*KEY, *ALL_FEATURES, "rul")))
     frame = frame.loc[:, columns]
     if frame.empty or frame.duplicated(list(KEY)).any() or not frame.split.eq("train").all():
-        raise ValueError("frozen train keys must be unique and train-only")
+        raise ValueError("Khóa train cố định phải duy nhất và chỉ thuộc train")
     if not np.isfinite(frame[list(ALL_FEATURES) + ["rul"]].to_numpy(dtype="float64")).all() or frame.rul.lt(0).any():
-        raise ValueError("frozen values must be finite and raw targets nonnegative")
+        raise ValueError("Giá trị cố định phải hữu hạn và nhãn gốc không âm")
     lifetime_counts = (frame.cycle + frame.rul).groupby(frame.engine_id).nunique()
     if not lifetime_counts.eq(1).all():
-        raise ValueError("frozen targets must retain raw engine lifetimes")
+        raise ValueError("Nhãn cố định phải giữ tuổi thọ động cơ gốc")
     if _file_digest(Path(path)) != file_hash:
-        raise ValueError("frozen matrix changed during load")
+        raise ValueError("Ma trận cố định đã đổi trong lúc đọc")
     return frame, _frame_digest(frame)
 
 
 def load_frozen_features(path: Path, identity: str) -> pd.DataFrame:
-    """Return a copy of the frozen matrix; the cache is keyed by file checksum."""
+    """Trả bản sao ma trận cố định; cache định danh bằng checksum file."""
     path = Path(path).resolve()
     return _load(str(path), identity, _file_digest(path))[0].copy(deep=True)
 
 
 def _validate(predictions: pd.DataFrame, validation: pd.DataFrame, arm_id: str) -> None:
-    """Check keys, raw truth, arm ID and finiteness of cached predictions."""
+    """Kiểm tra khóa, nhãn thật gốc, ID nhánh và tính hữu hạn của cache dự đoán."""
     if not predictions[list(KEY)].reset_index(drop=True).equals(validation[list(KEY)].reset_index(drop=True)):
-        raise ValueError("cache validation keys differ")
+        raise ValueError("Khóa validation cache khác nhau")
     if not np.array_equal(predictions.y_true, validation.rul):
-        raise ValueError("cache raw truth differs")
+        raise ValueError("Nhãn gốc cache khác nhau")
     if not predictions.candidate_id.eq(arm_id).all() or not np.isfinite(predictions.y_pred).all():
-        raise ValueError("cache candidate/prediction invalid")
+        raise ValueError("Ứng viên/dự đoán cache không hợp lệ")
 
 
 def run_fit_task(feature_path: Path, arm_id: str, fit_ids: tuple[int, ...],
                  validation_ids: tuple[int, ...], config: StudyConfig,
                  cache_dir: Path, identity: str) -> str:
-    """Fit one arm on ``fit_ids``, predict ``validation_ids`` and return the cached parquet path."""
+    """Fit nhánh trên fit_ids, dự đoán validation_ids và trả đường dẫn Parquet cache."""
     spec = feature_spec(arm_id)
     if len(set(fit_ids)) != len(fit_ids) or len(set(validation_ids)) != len(validation_ids):
-        raise ValueError("engine IDs must not repeat")
+        raise ValueError("ID động cơ không được lặp")
     fit_ids, validation_ids = tuple(sorted(fit_ids)), tuple(sorted(validation_ids))
     if not fit_ids or not validation_ids or set(fit_ids) & set(validation_ids):
-        raise ValueError("fit and validation engines must be disjoint and nonempty")
+        raise ValueError("Động cơ fit và validation phải không giao nhau và không rỗng")
     path = Path(feature_path).resolve()
     matrix, source_hash = _load(str(path), identity, _file_digest(path))
     fitting = matrix[matrix.engine_id.isin(fit_ids)].reset_index(drop=True)
     validation = matrix[matrix.engine_id.isin(validation_ids)].reset_index(drop=True)
     if set(fitting.engine_id) != set(fit_ids) or set(validation.engine_id) != set(validation_ids):
-        raise ValueError("requested engines missing from frozen matrix")
+        raise ValueError("Thiếu động cơ được yêu cầu trong ma trận cố định")
     payload = {"source_identity": identity, "source_hash": source_hash,
                "arm_id": arm_id, "feature_columns": list(spec.feature_columns),
                "config": asdict(config), "fit_engine_ids": list(fit_ids),
@@ -91,7 +91,7 @@ def run_fit_task(feature_path: Path, arm_id: str, fit_ids: tuple[int, ...],
     if parquet.exists() and meta.exists():
         metadata = json.loads(meta.read_text(encoding="utf-8"))
         if metadata.get("identity") != normalized or metadata.get("prediction_sha256") != _file_digest(parquet):
-            raise ValueError("cache identity or prediction checksum changed")
+            raise ValueError("Định danh cache hoặc checksum dự đoán đã đổi")
         _validate(pd.read_parquet(parquet), validation, arm_id)
         return str(parquet)
     if parquet.exists() or meta.exists():

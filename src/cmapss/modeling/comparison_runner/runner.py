@@ -34,7 +34,7 @@ def run_comparison(
     root: Path, output: Path, observations: Path, targets: Path, labels: Path,
     config: ComparisonConfig, evaluate_test: bool, backend: ComparisonBackend,
 ) -> dict[str, Any]:
-    """Run outer folds, the final inner selection, final models and optional test scoring."""
+    """Chạy outer fold, lựa chọn inner cuối, mô hình cuối và bước đánh giá test tùy chọn."""
     manifest, identity, train, test, assignments = freeze_inputs(
         root, output, observations, targets, config, backend)
     started = time.perf_counter()
@@ -109,7 +109,7 @@ def run_comparison(
             _progress(output, "final_models", completed_fits=completed, total_fits=len(backend.arms), procedure=arm)
     final_test = test.groupby("engine_id", sort=True, as_index=False).tail(1).reset_index(drop=True)
     if final_test.engine_id.nunique() != test.engine_id.nunique():
-        raise ValueError("final test endpoints do not cover all engines")
+        raise ValueError("Endpoint test cuối không phủ mọi động cơ")
     final_predictions = []
     for arm in backend.arms:
         fitted = joblib.load(model_paths[arm])
@@ -135,7 +135,7 @@ def run_comparison(
     if evaluate_test:
         evaluate_final_test(final, labels, config, output, backend)
     if _read_json(output / "outer_decision_before_test.json") != audit._json_value(decision):
-        raise ValueError("outer decision changed after test reporting")
+        raise ValueError("Quyết định outer đã đổi sau khi báo cáo test")
     result = {"status": "completed", "author": AUTHOR, "source_identity": identity,
               "output_dir": output.relative_to(root).as_posix(), "decision": decision,
               "test_evaluated": evaluate_test, "test_reporting_only": True,

@@ -145,15 +145,9 @@ def staged_artifact_bundle(
     protected_dirs: Sequence[str | Path] = (),
     protected_files: Sequence[str | Path] = (),
 ) -> Iterator[Path]:
-    """Yield thư mục staging; khi thoát, publish các file theo thứ tự ``relative_paths``.
-
-    Nên đặt file metadata cuối danh sách để nó chỉ xuất hiện khi dữ liệu đã đủ.
-    File trong ``output_dir`` không thuộc ``relative_paths`` được giữ nguyên.
-    Nếu rollback cũng lỗi, raise ArtifactRollbackError và giữ workspace để khôi
-    phục tay. Không xử lý nhiều writer đồng thời.
-
-        >>> with staged_artifact_bundle(output, ['data.parquet', 'run_info.json']) as stage:
-        ...     write_data_and_manifest(stage)
+    """
+    Cấp staging và publish theo thứ tự relative_paths; rollback khi lỗi, giữ workspace
+    nếu rollback lỗi; không hỗ trợ nhiều writer đồng thời.
     """
     output = Path(output_dir).resolve()
     paths = tuple(Path(path) for path in relative_paths)

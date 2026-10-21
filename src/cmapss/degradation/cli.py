@@ -1,10 +1,7 @@
 """CLI: khử nhiễu EWMA, Health Index và phát hiện bất thường trên train FD001.
 
-Ví dụ chạy từ thư mục gốc repository::
-
-    uv run --frozen python -m cmapss.degradation
-
-Lệnh chỉ đọc ``data/raw/train_FD001.txt``; không đọc test hoặc nhãn RUL.
+Ví dụ chạy từ thư mục gốc repository:: uv run --frozen python -m cmapss.degradation Lệnh
+chỉ đọc ``data/raw/train_FD001.txt``; không đọc test hoặc nhãn RUL.
 """
 
 from __future__ import annotations

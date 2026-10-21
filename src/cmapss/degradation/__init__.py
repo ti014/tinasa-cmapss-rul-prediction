@@ -3,6 +3,9 @@
 Chỉ dùng train observations, không dùng nhãn RUL.
 """
 
+from __future__ import annotations
+
+
 from cmapss.degradation.anomaly import AnomalyConfig, detect_anomalies, sensitivity_grid
 from cmapss.degradation.denoise import INFORMATIVE_SENSORS, ewma_smooth, noise_summary
 

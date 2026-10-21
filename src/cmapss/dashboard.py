@@ -1,7 +1,4 @@
-"""Loaders for the Streamlit dashboard.
-
-All loaders only read persisted artifacts under ``outputs/``; nothing is written.
-"""
+"""Đọc artifact đã lưu trong outputs/ cho dashboard Streamlit, không ghi dữ liệu."""
 
 from __future__ import annotations
 
@@ -18,41 +15,41 @@ TRAJECTORY_SENSOR_STATS = ("last", "mean")
 
 
 class DashboardDataError(RuntimeError):
-    """Raised when a dashboard input artifact is missing or malformed."""
+    """Báo lỗi khi artifact đầu vào của dashboard bị thiếu hoặc sai cấu trúc."""
 
 
 def _read_json(path: Path) -> dict[str, Any]:
     if not path.is_file():
-        raise DashboardDataError(f"Missing dashboard artifact: {path}")
+        raise DashboardDataError(f"Thiếu artifact dashboard: {path}")
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
-        raise DashboardDataError(f"Could not read dashboard artifact: {path}") from exc
+        raise DashboardDataError(f"Không đọc được artifact dashboard: {path}") from exc
     if not isinstance(payload, dict):
-        raise DashboardDataError(f"Dashboard JSON must contain an object: {path}")
+        raise DashboardDataError(f"JSON dashboard phải chứa một object: {path}")
     return payload
 
 
 def _read_table(path: Path, *, columns: list[str] | None = None) -> pd.DataFrame:
-    """Read a non-empty CSV or Parquet file, chosen by suffix."""
+    """Đọc bảng CSV hoặc Parquet không rỗng theo phần mở rộng của file."""
     if not path.is_file():
-        raise DashboardDataError(f"Missing dashboard artifact: {path}")
+        raise DashboardDataError(f"Thiếu artifact dashboard: {path}")
     try:
         if path.suffix == ".parquet":
             frame = pd.read_parquet(path, columns=columns)
         else:
             frame = pd.read_csv(path, usecols=columns)
     except (OSError, ValueError, ImportError) as exc:
-        raise DashboardDataError(f"Could not read dashboard artifact: {path}") from exc
+        raise DashboardDataError(f"Không đọc được artifact dashboard: {path}") from exc
     if frame.empty:
-        raise DashboardDataError(f"Dashboard artifact is empty: {path}")
+        raise DashboardDataError(f"Artifact dashboard rỗng: {path}")
     return frame
 
 
 def _require_columns(frame: pd.DataFrame, columns: set[str], source: str) -> None:
     missing = sorted(columns.difference(frame.columns))
     if missing:
-        raise DashboardDataError(f"{source} is missing columns: {', '.join(missing)}")
+        raise DashboardDataError(f"{source} thiếu các cột: {', '.join(missing)}")
 
 
 def _read_checked(path: Path, columns: set[str]) -> pd.DataFrame:
@@ -63,7 +60,7 @@ def _read_checked(path: Path, columns: set[str]) -> pd.DataFrame:
 
 @dataclass(frozen=True)
 class DashboardData:
-    """Final FD001 modeling, early-warning and time-series artifacts."""
+    """Artifact cuối của mô hình FD001, cảnh báo sớm và chuỗi thời gian."""
 
     model_metrics: dict[str, Any]
     model_comparison: pd.DataFrame
@@ -141,7 +138,7 @@ def load_dashboard_data(repo_root: str | Path = ".") -> DashboardData:
 
 @dataclass(frozen=True)
 class ImprovementData:
-    """Artifacts of the nested RUL improvement experiment."""
+    """Artifact của thí nghiệm cải thiện RUL bằng nested cross-validation."""
 
     root: Path
     run_info: dict[str, Any]
@@ -154,7 +151,7 @@ class ImprovementData:
 
 
 def load_improvement_data(repo_root: str | Path = ".") -> ImprovementData:
-    """Load the improvement run; fails if it has not been evaluated on test yet."""
+    """Đọc lần chạy cải thiện; dừng nếu chưa đánh giá trên test."""
     root = Path(repo_root).resolve() / IMPROVEMENT_RUN
     info = _read_json(root / "run_info.json")
     if not info.get("test_label_joined"):
@@ -178,7 +175,7 @@ def load_improvement_data(repo_root: str | Path = ".") -> ImprovementData:
 
 @dataclass(frozen=True)
 class ExplorationData:
-    """Train-only descriptive artifacts used by the data exploration page."""
+    """Artifact thống kê mô tả chỉ từ train cho trang khám phá dữ liệu."""
 
     engine_lifetimes: pd.DataFrame
     sensor_rul_summary: pd.DataFrame
@@ -187,11 +184,9 @@ class ExplorationData:
 
 
 def load_exploration_data(repo_root: str | Path = ".") -> ExplorationData:
-    """Load EDA tables and per-cycle train sensor values from Gold features.
-
-    Only ``sensor_*__last`` and ``sensor_*__mean`` of the train split are kept.
-    ``__last`` is the raw reading at that cycle. The first ``window_cycles - 1``
-    cycles of each engine are missing because rolling features need a full window.
+    """
+    Đọc bảng EDA và sensor train từ Gold features; __last là phép đo gốc, __mean là
+    trung bình window; thiếu window_cycles−1 cycle đầu mỗi động cơ.
     """
     root = Path(repo_root).resolve()
     eda = root / "outputs" / "eda" / "tables"
@@ -202,7 +197,7 @@ def load_exploration_data(repo_root: str | Path = ".") -> ExplorationData:
 
         schema_names = pq.read_schema(features_path).names
     except (OSError, ImportError) as exc:
-        raise DashboardDataError(f"Could not read dashboard artifact: {features_path}") from exc
+        raise DashboardDataError(f"Không đọc được artifact dashboard: {features_path}") from exc
     columns = ["split", "engine_id", "cycle"] + [
         name for name in schema_names if name.rsplit("__", 1)[-1] in TRAJECTORY_SENSOR_STATS
     ]
@@ -219,11 +214,11 @@ def load_exploration_data(repo_root: str | Path = ".") -> ExplorationData:
 
 
 def load_cross_dataset(repo_root: str | Path = ".") -> pd.DataFrame:
-    """Flatten ``outputs/cross_dataset/matrix.json`` into one row per evaluation."""
+    """Chuyển outputs/cross_dataset/matrix.json thành bảng một dòng mỗi phép đánh giá."""
     matrix = _read_json(Path(repo_root).resolve() / "outputs" / "cross_dataset" / "matrix.json")
     evaluations = matrix.get("evaluations")
     if not isinstance(evaluations, list) or not evaluations:
-        raise DashboardDataError("matrix.json has no evaluations")
+        raise DashboardDataError("matrix.json không có phép đánh giá")
     rows = []
     for item in evaluations:
         metrics = item["metrics"]
@@ -251,7 +246,7 @@ def format_metric(value: float | int, decimals: int = 4) -> str:
 
 
 def selected_engine_ids(data: DashboardData) -> list[int]:
-    """Sorted engine ids present in the RUL evaluation or Health Index tables."""
+    """Các ID động cơ đã sắp xếp trong bảng đánh giá RUL hoặc Health Index."""
     ids = pd.concat(
         [data.model_evaluation["engine_id"], data.health_index["engine_id"]],
         ignore_index=True,
@@ -265,7 +260,7 @@ def engine_rul_view(data: DashboardData, engine_id: int) -> pd.DataFrame:
 
 
 def engine_oof_trajectory(data: DashboardData, engine_id: int, model_name: str | None = None) -> pd.DataFrame:
-    """Per-cycle out-of-fold RUL predictions for one train engine."""
+    """Dự đoán RUL OOF theo cycle của một động cơ train."""
     model = model_name or data.selected_model
     oof = data.oof_predictions
     view = oof.loc[(oof["engine_id"] == engine_id) & (oof["model_name"] == model)]
@@ -273,7 +268,7 @@ def engine_oof_trajectory(data: DashboardData, engine_id: int, model_name: str |
 
 
 def engine_timeseries_view(data: DashboardData, engine_id: int) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Health Index history and ARIMA holdout forecast for one engine."""
+    """Lịch sử Health Index và dự báo holdout ARIMA của một động cơ."""
     history = data.health_index.loc[data.health_index["engine_id"] == engine_id].copy()
     forecast = data.forecasts.loc[data.forecasts["engine_id"] == engine_id].copy()
     return (
@@ -283,7 +278,7 @@ def engine_timeseries_view(data: DashboardData, engine_id: int) -> tuple[pd.Data
 
 
 def forecast_comparison(data: DashboardData, engine_id: int) -> pd.DataFrame:
-    """ARIMA and naive baseline holdout errors for one engine."""
+    """Sai số holdout của ARIMA và baseline của một động cơ."""
     arima = data.forecast_metrics.loc[data.forecast_metrics["engine_id"] == engine_id, ["mae", "rmse"]]
     arima = arima.assign(method="arima")
     baselines = data.baseline_metrics.loc[data.baseline_metrics["engine_id"] == engine_id]
@@ -292,9 +287,9 @@ def forecast_comparison(data: DashboardData, engine_id: int) -> pd.DataFrame:
 
 
 def sensor_trajectory(exploration: ExplorationData, engine_id: int, sensors: list[str], stat: str) -> pd.DataFrame:
-    """Long frame ``cycle, sensor, value`` for selected train sensors."""
+    """Bảng dài cycle, sensor, value cho các sensor train được chọn."""
     if stat not in TRAJECTORY_SENSOR_STATS:
-        raise ValueError(f"stat must be one of {TRAJECTORY_SENSOR_STATS}")
+        raise ValueError(f"stat phải thuộc {TRAJECTORY_SENSOR_STATS}")
     frame = exploration.sensor_trajectories
     engine = frame.loc[frame["engine_id"] == engine_id]
     columns = {f"{sensor}__{stat}": sensor for sensor in sensors if f"{sensor}__{stat}" in engine.columns}
@@ -303,13 +298,13 @@ def sensor_trajectory(exploration: ExplorationData, engine_id: int, sensors: lis
 
 
 # ---------------------------------------------------------------------------
-# Denoising, anomaly detection and maintenance schedule
+# Khử nhiễu, phát hiện bất thường và lịch bảo trì
 # ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True)
 class DegradationData:
-    """Outputs of ``python -m cmapss.degradation`` on train FD001."""
+    """Đầu ra của python -m cmapss.degradation trên train FD001."""
 
     summary: dict[str, Any]
     noise: pd.DataFrame
@@ -323,7 +318,7 @@ class DegradationData:
 
 
 def load_degradation_data(repo_root: str | Path = ".") -> DegradationData:
-    """Load raw/EWMA signals, Health Index and anomaly detection cycles."""
+    """Đọc tín hiệu gốc/EWMA, Health Index và cycle phát hiện bất thường."""
     base = Path(repo_root).resolve() / "outputs" / "degradation"
     return DegradationData(
         summary=_read_json(base / "summary.json"),
@@ -353,7 +348,7 @@ def engine_signal_view(data: DegradationData, engine_id: int, sensor: str) -> pd
 
 @dataclass(frozen=True)
 class MaintenanceData:
-    """Outputs of ``python -m cmapss.maintenance`` for the 100 test engines."""
+    """Đầu ra của python -m cmapss.maintenance cho 100 động cơ test."""
 
     summary: dict[str, Any]
     schedule: pd.DataFrame
@@ -364,9 +359,9 @@ class MaintenanceData:
 
 
 def load_maintenance_data(repo_root: str | Path = ".") -> MaintenanceData:
-    """Load the maintenance schedule, planning, status check and test Health Index.
-
-    The status check table is precomputed; the raw test label file is never opened here.
+    """
+    Đọc lịch, kế hoạch, bảng đối chiếu đã tính sẵn và Health Index test; không mở nhãn
+    raw test.
     """
     base = Path(repo_root).resolve() / "outputs" / "maintenance"
     tables = base / "tables"

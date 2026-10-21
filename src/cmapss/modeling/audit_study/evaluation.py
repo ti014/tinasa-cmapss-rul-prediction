@@ -14,26 +14,24 @@ from cmapss.modeling.metrics import add_prediction_errors, summarize_prediction_
 
 def build_endpoint_panel(predictions: pd.DataFrame,
                          fractions: tuple[float, ...]) -> pd.DataFrame:
-    """Pick the prediction row at each lifetime fraction for every engine.
-
-    Lifetime is ``cycle + y_true``. The row is at ``floor(fraction * lifetime)``,
-    moved up to the first available cycle if needed
-    (``origin_clamped_to_available_prefix``).
+    """
+    Lấy endpoint tại floor(fraction × tuổi thọ), đẩy lên cycle khả dụng đầu tiên nếu
+    cần; tuổi thọ bằng cycle + y_true.
     """
     if predictions.empty:
-        raise ValueError("empty endpoint prediction input")
+        raise ValueError("Đầu vào dự đoán endpoint rỗng")
     records = []
     for (_, engine), group in predictions.groupby(["split", "engine_id"], sort=True):
         lifetimes = group.cycle.to_numpy(dtype="float64") + group.y_true.to_numpy(dtype="float64")
         if not np.isfinite(lifetimes).all() or not np.all(lifetimes == lifetimes[0]):
-            raise ValueError(f"inconsistent lifetime for engine{engine}")
+            raise ValueError(f"Tuổi thọ không nhất quán với động cơ{engine}")
         lifetime = int(lifetimes[0])
         for fraction in fractions:
             requested = int(np.floor(fraction * lifetime))
             origin = max(int(group.cycle.min()), requested)
             row = group.loc[group.cycle.eq(origin)]
             if len(row) != 1:
-                raise ValueError(f"missing or duplicate endpoint engine{engine}/cycle{origin}")
+                raise ValueError(f"Thiếu hoặc trùng động cơ endpoint{engine}/cycle{origin}")
             record = row.iloc[0].to_dict()
             record.update(endpoint_fraction=fraction, requested_cycle=requested,
                           origin_clamped_to_available_prefix=origin != requested)
@@ -56,28 +54,27 @@ def _model_readout(predictions: pd.DataFrame, config: AuditStudyConfig) -> dict[
 
 
 def select_candidate(records: pd.DataFrame) -> str:
-    """Lowest endpoint MAE; ties broken by endpoint NASA, then candidate ID."""
+    """Chọn endpoint MAE thấp nhất; hòa thì xét NASA score rồi ID ứng viên."""
     columns = ["endpoint_mean_engine_mae", "endpoint_mean_engine_nasa"]
     if records.empty or not np.isfinite(records[columns].to_numpy()).all():
-        raise ValueError("invalid inner model-selection metrics")
+        raise ValueError("Metric chọn mô hình inner không hợp lệ")
     return str(records.sort_values(columns + ["candidate_id"], kind="mergesort").iloc[0].candidate_id)
 
 
 def _alarm_flags(group: pd.DataFrame, policy: WarningPolicy) -> np.ndarray:
-    """True where the last ``persistence`` predictions are all <= threshold."""
+    """Trả True khi persistence dự đoán cuối đều không vượt ngưỡng."""
     below = group.y_pred.le(policy.threshold)
     return below.rolling(policy.persistence, min_periods=policy.persistence).sum().ge(policy.persistence).to_numpy()
 
 
 def warning_events(predictions: pd.DataFrame, policy: WarningPolicy,
                    *, lead_requirement: int) -> pd.DataFrame:
-    """Per-engine warning timing, early-alarm burden and on/off switching.
-
-    ``early_alarm_burden`` is the share of rows with true RUL above
-    ``lead_requirement`` that are in alarm. It is not a false-positive rate.
+    """
+    Đo thời điểm cảnh báo, tỷ lệ cycle báo sớm và chuyển trạng thái theo động cơ;
+    early_alarm_burden không phải tỷ lệ báo nhầm.
     """
     if predictions.empty or not predictions.split.eq("train").all():
-        raise ValueError("warning evaluation requires complete train trajectories")
+        raise ValueError("Đánh giá cảnh báo cần quỹ đạo train đầy đủ")
     rows = []
     for engine, unsorted in predictions.groupby("engine_id", sort=True):
         group = unsorted.sort_values("cycle", kind="mergesort")
@@ -86,7 +83,7 @@ def warning_events(predictions: pd.DataFrame, policy: WarningPolicy,
         if (len(np.unique(cycles)) != len(cycles) or np.any(np.diff(cycles) != 1)
                 or not np.array_equal(actual, cycles[-1] - cycles)
                 or not np.isfinite(group.y_pred.to_numpy()).all()):
-            raise ValueError(f"warning trajectory engine{engine} is not complete/contiguous")
+            raise ValueError(f"Quỹ đạo cảnh báo của động cơ{engine} không đầy đủ hoặc không liên tục")
         alarm = _alarm_flags(group, policy)
         first = np.flatnonzero(alarm)
         lead = float(actual[first[0]]) if len(first) else np.nan
@@ -127,14 +124,13 @@ def _warning_readout(events: pd.DataFrame) -> dict[str, Any]:
 
 
 def choose_policy(records: pd.DataFrame, target_rate: float) -> WarningPolicy:
-    """Pick a warning policy from the grid summary.
-
-    Among policies with on-time rate >= ``target_rate``, take the lowest early
-    burden. If none qualifies, take the highest on-time rate, then lowest burden.
+    """
+    Chọn tỷ lệ báo sớm thấp nhất trong các chính sách đạt target_rate; nếu không có,
+    chọn tỷ lệ kịp thời cao nhất rồi báo sớm thấp nhất.
     """
     valid = records.dropna(subset=["on_time_rate", "early_alarm_burden"])
     if valid.empty:
-        raise ValueError("no evaluable warning policies")
+        raise ValueError("Không có chính sách cảnh báo đánh giá được")
     feasible = valid.loc[valid.on_time_rate.ge(target_rate)]
     if len(feasible):
         ordered = feasible.sort_values(["early_alarm_burden", "threshold", "persistence"])
@@ -146,7 +142,7 @@ def choose_policy(records: pd.DataFrame, target_rate: float) -> WarningPolicy:
 
 
 def _policy_grid(predictions: pd.DataFrame, config: AuditStudyConfig) -> tuple[WarningPolicy, pd.DataFrame]:
-    """Score every grid policy on the given (inner OOF) predictions and pick one."""
+    """Đánh giá mọi chính sách trên inner OOF và chọn một chính sách."""
     rows = []
     for threshold in config.thresholds:
         for persistence in config.persistences:
@@ -162,7 +158,7 @@ def _policy_grid(predictions: pd.DataFrame, config: AuditStudyConfig) -> tuple[W
 
 def _engine_readout(predictions: pd.DataFrame, events: pd.DataFrame,
                      config: AuditStudyConfig) -> pd.DataFrame:
-    """Per-engine endpoint, trajectory and warning metrics."""
+    """Metric endpoint, quỹ đạo và cảnh báo theo động cơ."""
     endpoint = add_prediction_errors(build_endpoint_panel(predictions, config.endpoint_fractions))
     trajectory = add_prediction_errors(predictions)
     result = endpoint.groupby("engine_id").agg(
@@ -179,9 +175,9 @@ def _engine_readout(predictions: pd.DataFrame, events: pd.DataFrame,
 
 def _paired_comparison(baseline: pd.DataFrame, candidate: pd.DataFrame,
                        config: AuditStudyConfig) -> pd.DataFrame:
-    """Bootstrap CI of the per-engine difference (candidate - baseline)."""
+    """Bootstrap CI của chênh lệch ứng viên − baseline theo động cơ."""
     if not baseline.index.equals(candidate.index):
-        raise ValueError("paired engine metrics need identical ordered IDs")
+        raise ValueError("Metric ghép cặp cần cùng ID động cơ theo đúng thứ tự")
     rng = np.random.default_rng(config.seed)
     indices = rng.integers(0, len(baseline), size=(config.bootstrap_resamples, len(baseline)))
     rows = []

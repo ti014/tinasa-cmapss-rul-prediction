@@ -1,7 +1,10 @@
-"""TCN comparison study on raw FD001 sensor sequences.
-
-PyTorch is imported lazily, so the tree pipeline works without it.
 """
+So sánh TCN trên chuỗi sensor FD001 gốc; chỉ import PyTorch khi cần để nhánh cây chạy
+được khi thiếu torch.
+"""
+
+from __future__ import annotations
+
 
 from .contracts import TCNConfig, TCNSpec, specs
 

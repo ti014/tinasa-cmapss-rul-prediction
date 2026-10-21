@@ -32,7 +32,7 @@ WEIGHT_SCHEMES = {
 
 @dataclass(frozen=True)
 class ImprovementConfig:
-    """Settings for one improvement run."""
+    """Thiết lập cho một lần chạy cải thiện."""
 
     seed: int = 42
     outer_splits: int = 5
@@ -45,17 +45,17 @@ class ImprovementConfig:
 
     def __post_init__(self) -> None:
         if not 1 <= self.n_hgb_candidates <= 243:
-            raise ValueError("n_hgb_candidates must be between 1 and 243")
+            raise ValueError("n_hgb_candidates phải từ 1 đến 243")
         if self.min_cycle != 30 or self.low_rul_threshold != 30:
-            raise ValueError("the accepted protocol fixes min_cycle and threshold at 30")
+            raise ValueError("Protocol đã chấp nhận cố định min_cycle và threshold bằng 30")
         if min(self.inner_splits, self.outer_splits) < 2:
-            raise ValueError("at least two folds are required")
+            raise ValueError("Cần ít nhất hai fold")
         if self.bootstrap_resamples < 1 or self.fit_threads < 1:
-            raise ValueError("resamples and fit_threads must be positive")
+            raise ValueError("Số lượt lấy mẫu và fit_threads phải dương")
 
 
 def make_hgb_candidates(config: ImprovementConfig) -> list[dict[str, Any]]:
-    """Baseline params plus random unique HGB configs (seeded)."""
+    """Tham số baseline và cấu hình HGB ngẫu nhiên không trùng, có seed cố định."""
     candidates: list[dict[str, Any]] = [{**BASELINE_PARAMS}]
     rng = np.random.default_rng(config.seed)
     choices = {

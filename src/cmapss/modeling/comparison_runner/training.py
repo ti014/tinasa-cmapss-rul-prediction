@@ -35,7 +35,7 @@ def fit_batch(
     root: Path, output: Path, manifest: dict[str, Any], identity: str,
     config: ComparisonConfig, stage: str, backend: ComparisonBackend,
 ) -> dict[tuple[str, int], str]:
-    """Run fit tasks in the pool (workers get file paths, not frames)."""
+    """Chạy tác vụ fit trong pool; worker nhận đường dẫn file thay vì DataFrame."""
     _assert_immutable(root, output, manifest)
     futures: dict[Future[str], tuple[str, int]] = {}
     for spec, fitting, validation, fold in tasks:
@@ -61,7 +61,7 @@ def inner_stage(
     frame: pd.DataFrame, fold: int, pool: ProcessPoolExecutor, root: Path,
     output: Path, manifest: dict[str, Any], identity: str, config: ComparisonConfig, backend: ComparisonBackend,
 ) -> tuple[dict[str, dict[str, Any]], dict[str, pd.DataFrame], dict[str, Any]]:
-    """Fit and score candidates on inner folds, calibrate policies, save the selection."""
+    """Fit/đánh giá ứng viên trên inner fold, hiệu chuẩn chính sách và lưu lựa chọn."""
     stage = output / "stages" / (f"outer_{fold}" if fold else "final_inner")
     stage.mkdir(parents=True, exist_ok=True)
     rows, tasks = [], []
@@ -73,7 +73,7 @@ def inner_stage(
         fitting = tuple(sorted(map(int, frame.iloc[fit_index].engine_id.unique())))
         validation = tuple(sorted(map(int, frame.iloc[validation_index].engine_id.unique())))
         if set(fitting) & set(validation):
-            raise ValueError("inner fitting and validation engines overlap")
+            raise ValueError("Động cơ fit và validation inner giao nhau")
         rows.extend({"outer_fold": fold, "inner_fold": inner_fold, "engine_id": engine}
                     for engine in validation)
         tasks.extend((spec, fitting, validation, inner_fold) for spec in candidates.values())
@@ -132,7 +132,7 @@ def final_model_task(
     feature_path: Path, spec: CandidateSpec, config: ComparisonConfig, folder: Path, identity: str,
     backend: ComparisonBackend,
 ) -> str:
-    """Fit on all train rows, save, reload and check that predictions match exactly."""
+    """Fit toàn bộ train, lưu/đọc lại mô hình và kiểm tra dự đoán khớp tuyệt đối."""
     folder.mkdir(parents=True, exist_ok=True)
     model_path, metadata_path = folder / "model.joblib", folder / "model.json"
     train = backend.load_frozen_features(feature_path, identity)
@@ -141,10 +141,10 @@ def final_model_task(
         if (metadata["source_identity"] != identity
                 or metadata["spec"] != audit._json_value(asdict(spec))
                 or metadata["model_sha256"] != _sha(model_path)):
-            raise ValueError("final model checksum or identity mismatch")
+            raise ValueError("Checksum hoặc định danh mô hình cuối không khớp")
         fitted = joblib.load(model_path)
         if fitted.spec != spec:
-            raise ValueError("final model object spec mismatch")
+            raise ValueError("Cấu hình object mô hình cuối không khớp")
         return str(model_path)
     if model_path.exists() or metadata_path.exists():
         interrupted = folder / "interrupted_publications"

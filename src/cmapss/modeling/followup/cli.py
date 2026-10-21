@@ -1,7 +1,7 @@
-"""Nested CV studies for capped targets, history features and operating regimes.
-
-Usage: ``python -m cmapss.modeling.followup --datasets FD001 FD002 FD004``.
-Test labels are read only after the final model and test predictions are saved."""
+"""
+Nested cross-validation cho RUL cap, features lịch sử và điều kiện vận hành; chỉ đọc
+nhãn test sau khi lưu mô hình và dự đoán cuối.
+"""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ from cmapss.project import FOLLOWUP_RUN
 
 
 def main() -> None:
-    """Run the study for each requested dataset."""
+    """Chạy nghiên cứu cho từng dataset được yêu cầu."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--datasets", nargs="+", choices=("FD001", "FD002", "FD004"), default=["FD001", "FD002", "FD004"])
     parser.add_argument("--output-root", type=Path, default=FOLLOWUP_RUN)

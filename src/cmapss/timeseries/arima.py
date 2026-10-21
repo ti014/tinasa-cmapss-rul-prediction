@@ -25,7 +25,7 @@ from cmapss.timeseries.contracts import (
 
 
 class ARIMAConvergenceError(ValueError):
-    """Candidate ARIMA fit returned without a converged optimizer status."""
+    """Báo lỗi khi ứng viên ARIMA trả về trạng thái bộ tối ưu chưa hội tụ."""
 
     def __init__(self, order: tuple[int, int, int], warning_count: int) -> None:
         super().__init__(

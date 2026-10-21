@@ -1,5 +1,8 @@
 """Schema và quy tắc được mô tả trong data/CONTRACTS.md."""
 
+from __future__ import annotations
+
+
 from typing import Literal
 
 Split = Literal["train", "test"]

@@ -136,5 +136,5 @@ def test_paired_comparison_rejects_raw_truth_mismatch():
         _trajectories("hgb_cap125", (1., 3.)),
         _trajectories("selected_pipeline", (3., 1.)),
     ], ignore_index=True))
-    with pytest.raises(ValueError, match="truth|paired|keys"):
+    with pytest.raises(ValueError, match="nhãn|ghép cặp|khóa"):
         analysis.paired_comparisons(predictions, events, _config())

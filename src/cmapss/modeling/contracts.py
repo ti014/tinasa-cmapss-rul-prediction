@@ -1,4 +1,7 @@
-"""Contract cho artifact modeling RUL FD001."""
+"""Contract cho artifact mô hình RUL FD001."""
+
+from __future__ import annotations
+
 
 from cmapss.data.contracts import KEY
 from cmapss.features.contracts import ROLLING_FEATURE_VALUE_COLUMNS

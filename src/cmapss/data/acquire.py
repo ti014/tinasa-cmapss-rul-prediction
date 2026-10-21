@@ -1,11 +1,8 @@
 """Thu thập bộ NASA C-MAPSS từ nguồn công khai và ghi manifest cho tầng Bronze.
 
-Ví dụ chạy từ thư mục gốc repository::
-
-    uv run --frozen python -m cmapss.data.acquire --dest data/raw
-
-Gói ZIP được tải về thư mục tạm, kiểm tra MD5, rồi so SHA-256 của từng file với
-giá trị đã ghi nhận. File đã có trong ``--dest`` chỉ được giữ nguyên khi trùng
+Ví dụ chạy từ thư mục gốc repository:: uv run --frozen python -m cmapss.data.acquire
+--dest data/raw Gói ZIP được tải về thư mục tạm, kiểm tra MD5, rồi so SHA-256 của từng
+file với giá trị đã ghi nhận. File đã có trong ``--dest`` chỉ được giữ nguyên khi trùng
 nội dung; file khác nội dung làm lệnh dừng chứ không bị ghi đè.
 """
 

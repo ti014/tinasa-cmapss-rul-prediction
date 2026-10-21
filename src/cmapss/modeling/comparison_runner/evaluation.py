@@ -20,38 +20,38 @@ from cmapss.modeling.metrics import (
 def evaluate_final_test(
     predictions: pd.DataFrame, labels_path: Path, config: ComparisonConfig, output: Path, backend: ComparisonBackend,
 ) -> dict[str, Any]:
-    """Score final predictions on test labels; requires all models and receipts on disk."""
+    """Đánh giá nhãn test sau khi mọi mô hình và biên nhận đã lưu trên đĩa."""
     required = [output / "selection.json", output / "final_predictions.parquet",
                 output / "final_predictions_receipt.json"]
     required.extend(output / "models" / arm / name
                     for arm in backend.arms for name in ("model.json", "model.joblib"))
     if not all(path.is_file() for path in required):
-        raise ValueError("all choices/models/predictions must precede test label access")
+        raise ValueError("Phải lưu mọi lựa chọn/mô hình/dự đoán trước khi đọc nhãn test")
     receipt = _read_json(output / "final_predictions_receipt.json")
     selection = _read_json(output / "selection.json")
     if (selection.get("test_labels_read_for_selection") is not False
             or selection.get("source_identity") != receipt.get("source_identity")):
-        raise ValueError("final selection must be frozen before test label access")
+        raise ValueError("Phải cố định lựa chọn cuối trước khi đọc nhãn test")
     if receipt.get("test_labels_read") is not False or receipt.get("saved_model_replay_exact") is not True:
-        raise ValueError("final prediction receipt does not prove pre-label replay")
+        raise ValueError("Biên nhận dự đoán cuối chưa chứng minh tái tạo trước khi đọc nhãn")
     if receipt.get("predictions_sha256") != _sha(output / "final_predictions.parquet"):
-        raise ValueError("final prediction receipt checksum mismatch")
+        raise ValueError("Checksum biên nhận dự đoán cuối không khớp")
     try:
         pd.testing.assert_frame_equal(predictions, pd.read_parquet(output / "final_predictions.parquet"),
                                       check_exact=True)
     except AssertionError as error:
-        raise ValueError("test reporting must use the exact persisted predictions") from error
+        raise ValueError("Báo cáo test phải dùng đúng dự đoán đã lưu") from error
     for arm in backend.arms:
         model_path = output / "models" / arm / "model.joblib"
         if receipt.get("models_sha256", {}).get(arm) != _sha(model_path):
-            raise ValueError(f"final model checksum mismatch before test read: {arm}")
+            raise ValueError(f"Checksum mô hình cuối không khớp trước khi đọc test: {arm}")
     labels = backend.read_test_labels(labels_path).rename(columns={"rul": "y_true"})
     evaluations, summaries = [], []
     for procedure, frame in predictions.groupby("procedure", sort=True):
         joined = frame.merge(labels, on=["split", "engine_id"], how="outer",
                              validate="one_to_one", indicator=True)
         if not joined._merge.eq("both").all():
-            raise ValueError("test prediction and label engines differ")
+            raise ValueError("Động cơ dự đoán test và nhãn không khớp")
         evaluation = add_prediction_errors(joined.drop(columns="_merge"))
         evaluations.append(evaluation)
         metrics = {"procedure": procedure, **summarize_prediction_errors(evaluation),

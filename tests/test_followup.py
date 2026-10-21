@@ -55,7 +55,7 @@ def test_normalizer_uses_only_fit_engines_and_never_updates_on_transform() -> No
     assert model.fit_engine_ids_ == (1, 2, 3, 4)
     pd.testing.assert_frame_equal(means, model.means_)
     pd.testing.assert_frame_equal(scales, model.scales_)
-    with pytest.raises(ValueError, match="train observations only"):
+    with pytest.raises(ValueError, match="observations train"):
         OperatingConditionNormalizer().fit(observations)
 
 
@@ -71,9 +71,9 @@ def test_cap_does_not_change_validation_truth_and_cache_detects_tampering(tmp_pa
     pd.testing.assert_frame_equal(actual, again)
     path = next(tmp_path.glob("*.parquet"))
     path.write_bytes(path.read_bytes() + b"corruption")
-    with pytest.raises(ValueError, match="modified"):
+    with pytest.raises(ValueError, match="đã bị sửa"):
         fit_pair(store, recipe, {1, 2, 3, 4}, {5, 6, 7, 8}, config, tmp_path, "frozen")
-    with pytest.raises(ValueError, match="overlap"):
+    with pytest.raises(ValueError, match="giao"):
         fit_pair(store, recipe, {1, 2}, {2, 3}, config, tmp_path, "frozen")
 
 

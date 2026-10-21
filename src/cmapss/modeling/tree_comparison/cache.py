@@ -1,4 +1,4 @@
-"""Fold fitting with an on-disk prediction cache shared across worker processes."""
+"""Fit fold với cache dự đoán trên đĩa dùng chung giữa các worker."""
 
 from __future__ import annotations
 
@@ -24,12 +24,12 @@ from .estimators import fit_predictor
 
 
 def _required_columns() -> tuple[str, ...]:
-    """Key, feature and target columns, deduplicated (``cycle`` is in both KEY and FEATURES)."""
+    """Cột khóa, features và nhãn không trùng; cycle chỉ xuất hiện một lần."""
     return tuple(dict.fromkeys((*KEY, *FEATURES, "rul")))
 
 
 def _frame_digest(frame: pd.DataFrame) -> str:
-    """Hash column order, dtypes and values."""
+    """Hash thứ tự cột, kiểu dữ liệu và giá trị."""
     digest = hashlib.sha256()
     digest.update(repr(tuple(frame.columns)).encode("utf-8"))
     digest.update(repr(tuple(str(dtype) for dtype in frame.dtypes)).encode("utf-8"))
@@ -49,34 +49,34 @@ def _file_digest(path: Path) -> str:
 def _load_frozen_cached(
     path_string: str, identity: str, file_hash: str,
 ) -> tuple[pd.DataFrame, str]:
-    """Read and validate the matrix once per worker; also return its content hash."""
+    """Đọc/kiểm tra ma trận một lần mỗi worker, kèm hash nội dung."""
     path = Path(path_string)
     if not path.is_file():
-        raise FileNotFoundError(f"frozen feature matrix not found: {path}")
+        raise FileNotFoundError(f"Không tìm thấy ma trận features cố định: {path}")
     frame = pd.read_parquet(path)
     required = set(_required_columns())
     missing = sorted(required.difference(frame.columns))
     if missing:
-        raise ValueError(f"frozen feature matrix misses columns: {missing[:5]}")
+        raise ValueError(f"Ma trận features cố định thiếu cột: {missing[:5]}")
     ordered = frame.loc[:, list(_required_columns())].copy()
     if ordered.duplicated(list(KEY)).any():
-        raise ValueError("frozen feature matrix contains duplicate observation keys")
+        raise ValueError("Ma trận features cố định có khóa quan sát trùng")
     if "split" in ordered and not ordered["split"].eq("train").all():
-        raise ValueError("tree comparison worker may read train rows only")
+        raise ValueError("Worker so sánh cây chỉ được đọc dòng train")
     numeric = ordered.loc[:, list(FEATURES) + ["rul"]].to_numpy(dtype="float64")
     if not np.isfinite(numeric).all() or (ordered["rul"] < 0).any():
-        raise ValueError("frozen feature matrix contains nonfinite values or negative RUL")
+        raise ValueError("Ma trận features cố định có giá trị không hữu hạn hoặc RUL âm")
     if not identity:
-        raise ValueError("frozen source identity must be nonempty")
-    # file_hash is part of the lru_cache key, so a parquet replaced at the
-    # same path is reloaded instead of reusing the old matrix.
+        raise ValueError("Định danh nguồn cố định phải không rỗng")
+    # file_hash thuộc khóa lru_cache, nên Parquet bị thay tại cùng đường dẫn
+    # sẽ được đọc lại, không dùng ma trận cũ.
     if _file_digest(path) != file_hash:
-        raise ValueError("frozen feature matrix changed while loading")
+        raise ValueError("Ma trận features cố định đã đổi trong lúc đọc")
     return ordered, _frame_digest(ordered)
 
 
 def load_frozen_features(path: Path, identity: str) -> pd.DataFrame:
-    """Return a copy of the train matrix from the per-worker cache."""
+    """Trả bản sao ma trận train từ cache riêng của worker."""
     resolved = Path(path).resolve()
     frame, _ = _load_frozen_cached(str(resolved), identity, _file_digest(resolved))
     return frame.copy(deep=True)
@@ -101,7 +101,7 @@ def _json_value(value: Any) -> Any:
 
 
 def _atomic_json(path: Path, payload: dict[str, Any]) -> None:
-    # Short temp name: deep worktrees plus a 64-char key can hit Windows MAX_PATH.
+    # Tên tạm ngắn để worktree sâu và khóa 64 ký tự không vượt Windows MAX_PATH.
     temporary = path.with_name(f".{uuid4().hex}.tmp.json")
     temporary.write_text(json.dumps(_json_value(payload), indent=2, sort_keys=True), encoding="utf-8")
     os.replace(temporary, path)
@@ -114,7 +114,7 @@ def _atomic_parquet(path: Path, frame: pd.DataFrame) -> None:
 
 
 def _quarantine_pair(parquet: Path, metadata: Path) -> None:
-    """Move half-written cache files aside instead of deleting them."""
+    """Chuyển file cache ghi dở sang bên cạnh thay vì xóa."""
     if not parquet.exists() and not metadata.exists():
         return
     orphan = parquet.parent / "interrupted_publications"
@@ -152,13 +152,13 @@ def _validate_cached(
     expected = validation.loc[:, list(KEY)].reset_index(drop=True)
     actual = prediction.loc[:, list(KEY)].reset_index(drop=True)
     if not actual.equals(expected):
-        raise ValueError("fit-cache prediction keys do not match validation rows")
+        raise ValueError("Khóa dự đoán fit-cache không khớp dòng validation")
     if not np.array_equal(prediction["y_true"].to_numpy(dtype="float64"), validation["rul"].to_numpy(dtype="float64")):
-        raise ValueError("fit-cache raw truth does not match validation RUL")
+        raise ValueError("Nhãn gốc fit-cache không khớp RUL validation")
     if not prediction["candidate_id"].eq(spec.candidate_id).all():
-        raise ValueError("fit-cache candidate mismatch")
+        raise ValueError("Ứng viên fit-cache không khớp")
     if not np.isfinite(prediction[["y_true", "y_pred"]].to_numpy(dtype="float64")).all():
-        raise ValueError("fit-cache contains nonfinite prediction")
+        raise ValueError("Fit-cache chứa dự đoán không hữu hạn")
 
 
 def run_fit_task(
@@ -170,14 +170,14 @@ def run_fit_task(
     cache_dir: Path,
     identity: str,
 ) -> str:
-    """Fit one candidate on one fold and return the path of the cached predictions.
-
-    ``fit_ids`` and ``validation_ids`` are engine IDs and must not overlap.
+    """
+    Fit ứng viên trên một fold rồi trả đường dẫn cache dự đoán; fit_ids và
+    validation_ids không giao nhau.
     """
     fit_ids = tuple(sorted(set(map(int, fit_ids))))
     validation_ids = tuple(sorted(set(map(int, validation_ids))))
     if not fit_ids or not validation_ids or set(fit_ids) & set(validation_ids):
-        raise ValueError("fit and validation engine IDs must be nonempty and disjoint")
+        raise ValueError("ID động cơ fit và validation phải không rỗng và không giao nhau")
     resolved_feature_path = Path(feature_path).resolve()
     matrix, source_hash = _load_frozen_cached(
         str(resolved_feature_path), identity, _file_digest(resolved_feature_path)
@@ -185,9 +185,9 @@ def run_fit_task(
     train = matrix[matrix["engine_id"].isin(fit_ids)].reset_index(drop=True)
     validation = matrix[matrix["engine_id"].isin(validation_ids)].reset_index(drop=True)
     if set(train["engine_id"].unique()) != set(fit_ids):
-        raise ValueError("fit engine IDs are not fully present in frozen matrix")
+        raise ValueError("Ma trận cố định không chứa đủ ID động cơ fit")
     if set(validation["engine_id"].unique()) != set(validation_ids):
-        raise ValueError("validation engine IDs are not fully present in frozen matrix")
+        raise ValueError("Ma trận cố định không chứa đủ ID động cơ validation")
     cache_dir = Path(cache_dir)
     cache_dir.mkdir(parents=True, exist_ok=True)
     key = _cache_identity(identity, source_hash, spec, config, fit_ids, validation_ids)
@@ -208,9 +208,9 @@ def run_fit_task(
         else:
             metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
             if any(metadata.get(field) != _json_value(value) for field, value in expected_payload.items()):
-                raise ValueError("fit-cache metadata identity mismatch")
+                raise ValueError("Định danh metadata fit-cache không khớp")
             if _sha256(parquet) != metadata.get("prediction_sha256"):
-                raise ValueError("fit-cache prediction checksum mismatch")
+                raise ValueError("Checksum dự đoán fit-cache không khớp")
             cached = pd.read_parquet(parquet)
             _validate_cached(cached, validation, spec)
             return str(parquet)

@@ -30,7 +30,7 @@ def _save_assignments(datasets: dict[int, pd.DataFrame], output: Path, config: I
     else:
         assignments = _outer_assignments(frame, config)
     if assignments.engine_id.duplicated().any() or set(assignments.engine_id) != set(frame.engine_id):
-        raise ValueError("outer assignments must cover each train engine exactly once")
+        raise ValueError("Outer assignment phải phủ đúng một lần mỗi động cơ train")
     destination = output / "outer_assignments.csv"
     if destination.exists():
         pd.testing.assert_frame_equal(pd.read_csv(destination), assignments)
@@ -43,7 +43,7 @@ def _save_assignments(datasets: dict[int, pd.DataFrame], output: Path, config: I
             fit_ids = set(train.iloc[fit_idx].engine_id)
             val_ids = set(train.iloc[val_idx].engine_id)
             if fit_ids & val_ids or (fit_ids | val_ids) & excluded:
-                raise ValueError("nested engine separation failed")
+                raise ValueError("Tách động cơ nested thất bại")
             records.extend({"outer_fold": outer, "inner_fold": inner, "engine_id": int(engine)} for engine in sorted(val_ids))
     inner_path = output / "inner_assignments.csv"
     inner_frame = pd.DataFrame(records)
@@ -62,7 +62,7 @@ def run_improvement_experiment(
     config: ImprovementConfig | None = None,
     evaluate_test: bool = True,
 ) -> dict[str, Any]:
-    """Run the full experiment and write all artifacts to ``output_dir``."""
+    """Chạy toàn bộ thí nghiệm và ghi artifact vào output_dir."""
     run_config = config or ImprovementConfig()
     output_path = Path(output_dir).resolve()
     output_path.mkdir(parents=True, exist_ok=True)
@@ -121,7 +121,7 @@ def run_improvement_experiment(
     (output_path / "run_info.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2, default=_json_safe) + "\n", encoding="utf-8")
     if not evaluate_test:
         return manifest
-    # Test labels are read only after final_predictions is saved.
+    # Chỉ đọc nhãn test sau khi lưu final_predictions.
     evaluation = evaluate_predictions_from_path(output_path / "final_predictions.parquet", test_label_path)
     final_metrics = write_final_evaluation_artifacts(
         evaluation,

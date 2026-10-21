@@ -1,5 +1,8 @@
 """Kiểm tra contract của bảng suy luận sensor FD001."""
 
+from __future__ import annotations
+
+
 import numpy as np
 import pandas as pd
 

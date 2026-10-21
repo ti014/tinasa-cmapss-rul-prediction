@@ -1,5 +1,8 @@
 """Contract cho artifact PCA--ARIMA trên Health Index train FD001."""
 
+from __future__ import annotations
+
+
 TIMESERIES_SCHEMA_VERSION = 3
 TIMESERIES_SEED = 42
 TIMESERIES_N_ENGINES = 10

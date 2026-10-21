@@ -1,9 +1,6 @@
 """CLI: lập báo cáo dự đoán thời điểm cần bảo trì cho 100 động cơ test FD001.
 
-Ví dụ chạy từ thư mục gốc repository::
-
-    uv run --frozen python -m cmapss.maintenance
-
+Ví dụ chạy từ thư mục gốc repository:: uv run --frozen python -m cmapss.maintenance
 ``RUL_FD001.txt`` chỉ được đọc sau khi lịch bảo trì đã được ghi ra file.
 """
 

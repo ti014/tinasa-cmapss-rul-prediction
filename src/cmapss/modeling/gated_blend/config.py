@@ -1,7 +1,6 @@
-"""Configuration for the gated HGB study.
-
-Reuses the 200-iteration HGB models and the original 5x3 engine splits.
-Smoke mode only shrinks the gate grid and bootstrap draws, not the fits.
+"""
+Cấu hình HGB có gate, dùng lại mô hình 200 vòng và chia 5×3 theo động cơ; smoke chỉ giảm
+lưới gate và số lượt bootstrap.
 """
 
 from __future__ import annotations
@@ -15,7 +14,7 @@ from .contracts import GateSpec, build_specs
 
 @dataclass(frozen=True)
 class StudyConfig:
-    """Fixed settings for the gated study. `smoke=True` is never scientific."""
+    """Thiết lập cố định; smoke=True không tạo kết quả khoa học."""
 
     outer_splits: int = 5
     inner_splits: int = 3
@@ -41,12 +40,12 @@ class StudyConfig:
     def __post_init__(self) -> None:
         if (self.outer_splits != 5 or self.inner_splits != 3 or self.seed != 42
                 or self.fit_threads != 4 or self.hgb_max_iter != 200):
-            raise ValueError("derived study requires original 5x3/seed42/HGB200/threads4 contract")
+            raise ValueError("Nghiên cứu dẫn xuất cần giữ protocol gốc 5x3/seed42/HGB200/threads4")
         if (isinstance(self.bootstrap_resamples, bool)
                 or not isinstance(self.bootstrap_resamples, int) or self.bootstrap_resamples < 1):
-            raise ValueError("bootstrap_resamples must be a positive integer")
+            raise ValueError("bootstrap_resamples phải là số nguyên dương")
         if not isinstance(self.smoke, bool):
-            raise ValueError("smoke must be boolean")
+            raise ValueError("smoke phải là boolean")
         if (self.endpoint_fractions != (0.5, 0.7, 0.9)
                 or self.thresholds != (30, 35, 40, 45, 50)
                 or self.persistences != (1, 3, 5) or self.lead_requirement != 30
@@ -55,19 +54,19 @@ class StudyConfig:
                 or any(value != 0.0 for value in (
                     self.endpoint_mae_margin, self.nasa_score_margin,
                     self.warning_rate_margin, self.early_alarm_burden_margin))):
-            raise ValueError("derived study retains original endpoint and warning controls")
+            raise ValueError("Nghiên cứu dẫn xuất phải giữ kiểm soát endpoint và cảnh báo gốc")
         build_specs(lower_ruls=self.lower_ruls, upper_ruls=self.upper_ruls,
                     max_capped_weights=self.max_capped_weights)
 
     @property
     def scientific(self) -> bool:
-        """True only for the full 16-gate grid with at least 10,000 bootstrap draws."""
+        """Chỉ True với đủ 16 gate và ít nhất 10.000 lượt bootstrap."""
         return (not self.smoke and self.bootstrap_resamples >= 10_000
                 and self.lower_ruls == (60., 90.) and self.upper_ruls == (125., 150.)
                 and self.max_capped_weights == (.25, .5, .75, 1.))
 
     def audit_config(self) -> AuditStudyConfig:
-        """Config for the shared endpoint and warning measurement code."""
+        """Cấu hình chung đo endpoint và cảnh báo."""
         return AuditStudyConfig(
             outer_splits=self.outer_splits, inner_splits=self.inner_splits,
             seed=self.seed, fit_threads=self.fit_threads, hgb_max_iter=self.hgb_max_iter,
@@ -79,7 +78,7 @@ class StudyConfig:
 
 
 def specs(config: StudyConfig) -> tuple[GateSpec, ...]:
-    """Gate grid of the config, in Cartesian-product order."""
+    """Lưới gate theo tích Descartes của cấu hình."""
     return build_specs(lower_ruls=config.lower_ruls, upper_ruls=config.upper_ruls,
                        max_capped_weights=config.max_capped_weights)
 

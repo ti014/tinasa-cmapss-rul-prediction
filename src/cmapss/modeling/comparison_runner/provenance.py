@@ -24,7 +24,7 @@ from cmapss.provenance import local_source_files
 
 
 def source_files(root: Path, study_name: str, entrypoint: str) -> tuple[str, ...]:
-    """Study source files plus their cmapss import closure and the entrypoint."""
+    """File nguồn nghiên cứu, các import cmapss phụ thuộc và điểm vào."""
     folder = root / "src/cmapss/modeling" / study_name
     entries = tuple(path.relative_to(root).as_posix() for path in folder.glob("*.py"))
     return local_source_files(root, (*entries, entrypoint))
@@ -39,33 +39,32 @@ def installed_versions(model_package: str) -> dict[str, str]:
 
 
 def _assert_immutable(root: Path, output: Path, manifest: dict[str, Any]) -> None:
-    """Fail if sources, lock file, inputs, folds or frozen features changed."""
+    """Dừng nếu mã nguồn, lockfile, đầu vào, fold hoặc features đã cố định bị thay đổi."""
     identity = manifest["identity"]
     for field in ("source_sha256", "inputs_sha256", "outer_fold_source_sha256"):
         for name, digest in identity[field].items():
             if _sha(root / name) != digest:
-                raise ValueError(f"immutable {field} changed during run: {name}")
+                raise ValueError(f"immutable {field} đã đổi trong lần chạy: {name}")
     if _sha(root / "uv.lock") != identity["dependency_lock_sha256"]:
-        raise ValueError("dependency lock changed during run")
+        raise ValueError("Lockfile dependency đã đổi trong lần chạy")
     if _sha(root / "pyproject.toml") != identity["project_sha256"]:
-        raise ValueError("project metadata changed during run")
+        raise ValueError("Metadata project đã đổi trong lần chạy")
     for name, digest in identity["frozen_features_sha256"].items():
         if _sha(output / name) != digest:
-            raise ValueError(f"frozen feature artifact changed: {name}")
+            raise ValueError(f"Artifact features đã cố định bị đổi: {name}")
 
 
 def freeze_inputs(
     root: Path, output: Path, observations_path: Path, targets_path: Path,
     config: ComparisonConfig, backend: ComparisonBackend,
 ) -> tuple[dict[str, Any], str, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """Snapshot sources and inputs and save the frozen feature matrix before fitting.
-
-    On resume, the stored matrix is reused after checking every hash against
-    the original manifest.
+    """
+    Chụp mã nguồn/đầu vào và lưu ma trận features trước fit; khi resume chỉ dùng lại sau
+    khi kiểm tra toàn bộ hash.
     """
     allowed = root / "outputs/experiments" / backend.study_name
     if output == allowed or not output.is_relative_to(allowed):
-        raise ValueError(f"output must be a new run descendant of {backend.study_name}")
+        raise ValueError(f"Output phải là lần chạy mới dưới {backend.study_name}")
     source_names = backend.source_files(root)
     provenance = audit._json_value({
         "config": asdict(config), "candidates": [asdict(item) for item in backend.specs(config)],
@@ -88,24 +87,24 @@ def freeze_inputs(
         manifest = _read_json(manifest_path)
         expected = {key: manifest["identity"][key] for key in provenance}
         if expected != provenance:
-            raise ValueError("resume mismatch: config/source/input/versions/folds changed")
+            raise ValueError("Resume không khớp: cấu hình/mã nguồn/đầu vào/phiên bản/fold đã đổi")
         _assert_immutable(root, output, manifest)
         for field, directory in (("source_sha256", "source_snapshot"),
                                  ("inputs_sha256", "input_snapshot")):
             for name, digest in manifest["identity"][field].items():
                 if _sha(output / directory / name) != digest:
-                    raise ValueError(f"snapshot checksum mismatch: {name}")
+                    raise ValueError(f"Checksum snapshot không khớp: {name}")
         if _sha(output / "source_snapshot/uv.lock") != provenance["dependency_lock_sha256"]:
-            raise ValueError("dependency snapshot changed")
+            raise ValueError("Snapshot dependency đã đổi")
         if _sha(output / "source_snapshot/pyproject.toml") != provenance["project_sha256"]:
-            raise ValueError("project snapshot changed")
+            raise ValueError("Snapshot project đã đổi")
         train, test = pd.read_parquet(train_path), pd.read_parquet(test_path)
         assignments = pd.read_csv(output / "outer_assignments.csv")
         if _sha(output / "outer_assignments.csv") != manifest["identity"]["outer_assignments_sha256"]:
-            raise ValueError("frozen outer fold assignments changed")
+            raise ValueError("Outer fold assignment đã cố định bị đổi")
     else:
         if any(output.iterdir()):
-            raise ValueError("nonempty run folder has no manifest; choose a fresh output")
+            raise ValueError("Thư mục lần chạy không rỗng nhưng thiếu manifest; chọn output mới")
         for name in (*source_names, "uv.lock", "pyproject.toml"):
             destination = output / "source_snapshot" / name
             destination.parent.mkdir(parents=True, exist_ok=True)
@@ -117,7 +116,7 @@ def freeze_inputs(
         observations = pd.read_parquet(observations_path)
         targets = pd.read_parquet(targets_path)
         if set(observations.split) != {"train", "test"}:
-            raise ValueError("observations require exactly train and test splits")
+            raise ValueError("Observations cần đúng split train và test")
         validate_train_targets(observations[observations.split.eq("train")], targets)
         feature_columns = list(dict.fromkeys((*KEY, *backend.features)))
         features = audit.build_study_features(observations).loc[:, feature_columns]
@@ -127,9 +126,9 @@ def freeze_inputs(
         test = features[features.split.eq("test")].sort_values(
             ["engine_id", "cycle"], kind="mergesort").reset_index(drop=True)
         if train.rul.isna().any() or not np.isfinite(train[list(backend.features)]).all().all():
-            raise ValueError("missing train labels or nonfinite frozen features")
+            raise ValueError("Thiếu nhãn train hoặc features cố định không hữu hạn")
         if len(backend.features) != 169 or not np.isfinite(test[list(backend.features)]).all().all():
-            raise ValueError("comparison requires the complete finite 169-feature matrix")
+            raise ValueError("So sánh cần ma trận 169 features đầy đủ, hữu hạn")
         assignments = audit._outer_assignments(train, config.audit_config(), root)
         assignments.to_csv(output / "outer_assignments.csv", index=False)
         audit._write_parquet(train, train_path)
@@ -155,7 +154,7 @@ def freeze_inputs(
         raw_train = observations[observations.split.eq("train")]
         expected = len(raw_train) - 29 * raw_train.engine_id.nunique()
         if len(train) != expected:
-            raise ValueError("frozen train matrix violates complete window30 boundary")
+            raise ValueError("Ma trận train cố định vi phạm mốc window 30 đầy đủ")
         _write_json(output / "data_boundaries.json", {
             "author": AUTHOR, "window_cycles": 30, "feature_count": len(backend.features),
             "train_rows": len(train), "test_feature_rows": len(test),

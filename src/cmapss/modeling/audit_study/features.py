@@ -11,14 +11,14 @@ from cmapss.features.rolling import build_rolling_features
 def build_study_features(observations: pd.DataFrame) -> pd.DataFrame:
     """30-cycle rolling features plus sensor values relative to the first 30 cycles.
 
-    The reference is the per-engine mean of cycles 1..30, so it is already known
-    at every kept row (cycle >= 30). Adds 42 columns to the 126 rolling features.
+    The reference is the per-engine mean of cycles 1..30, so it is already known at
+    every kept row (cycle >= 30). Adds 42 columns to the 126 rolling features.
     """
     features = build_rolling_features(observations, window_cycles=30)
     initial = observations.loc[observations.cycle.le(30)]
     counts = initial.groupby(["split", "engine_id"]).size()
     if not counts.eq(30).all() or len(counts) != observations.groupby(["split", "engine_id"]).ngroups:
-        raise ValueError("causal history requires exactly cycles1..30 per engine/split")
+        raise ValueError("Features lịch sử chỉ dùng quá khứ cần đúng cycle 1–30 mỗi động cơ/split")
     means = initial.groupby(["split", "engine_id"], sort=True)[list(SENSORS)].mean()
     joined = features.merge(means.add_suffix("__initial_mean"),
                             on=["split", "engine_id"], validate="many_to_one")

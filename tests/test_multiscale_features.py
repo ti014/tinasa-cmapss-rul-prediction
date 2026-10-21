@@ -160,7 +160,7 @@ def test_rejects_labels_or_lifetime_in_observation_schema(column: str) -> None:
 def test_rejects_incomplete_initial_prefix() -> None:
     observations = _observations([("train", 1, 35, 0.0)])
     observations = observations.loc[observations.cycle.ge(2)]
-    with pytest.raises(ValueError, match="exactly cycles1..30"):
+    with pytest.raises(ValueError, match="đúng cycle 1–30"):
         build_feature_arms(observations)
 
 
@@ -171,5 +171,5 @@ def test_rejects_short_engine_without_silently_dropping_it() -> None:
 
 
 def test_rejects_unknown_arm_before_feature_generation() -> None:
-    with pytest.raises(ValueError, match="unknown multiscale feature arm"):
+    with pytest.raises(ValueError, match="Nhánh features đa thang chưa biết"):
         build_arm_features(pd.DataFrame(), "anything")

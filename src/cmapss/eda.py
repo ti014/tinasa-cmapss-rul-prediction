@@ -54,7 +54,8 @@ def engine_cycle_correlations(data: pd.DataFrame, column: str) -> pd.Series:
 def describe_measurements(data: pd.DataFrame, columns: Sequence[str]) -> pd.DataFrame:
     """Thống kê mô tả cho từng cột settings/sensors, một dòng mỗi cột.
 
-    std là sample std (ddof=1). Cột hằng xác định bằng n_unique == 1, không dùng ngưỡng std.
+    std là sample std (ddof=1). Cột hằng xác định bằng n_unique == 1, không dùng ngưỡng
+    std.
     """
     _require_train(data)
     measurements = data[list(columns)]

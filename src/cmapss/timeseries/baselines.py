@@ -1,4 +1,4 @@
-"""Point-forecast baselines evaluated on the same Health Index holdout as ARIMA."""
+"""Đánh giá baseline dự báo điểm trên cùng holdout Health Index với ARIMA."""
 
 from __future__ import annotations
 
@@ -10,11 +10,10 @@ def evaluate_forecast_baselines(
     fit_values: pd.Series | np.ndarray,
     holdout_values: pd.Series | np.ndarray,
 ) -> dict[str, dict[str, float | int]]:
-    """Score last-value and endpoint-drift forecasts without holdout fitting.
-
-    Drift extrapolates the mean change from the first to the last fit value:
-    last + horizon * (last - first) / (n_fit - 1). Both baselines forecast the
-    entire holdout from the prefix boundary, matching ARIMA's forecast origin.
+    """
+    Đánh giá last_value và drift không fit holdout;
+    drift=last+horizon×(last−first)/(n_fit−1), cả hai dự báo toàn bộ holdout từ cuối
+    prefix.
     """
     fit = np.asarray(fit_values, dtype="float64")
     actual = np.asarray(holdout_values, dtype="float64")

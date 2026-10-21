@@ -57,13 +57,13 @@ def test_frozen_matrix_resume_and_tamper_guard(input_repository, monkeypatch):
     resumed = runner._freeze_inputs(*args)
     assert resumed[0] == runner.audit._json_value(manifest) and resumed[1] == identity
     pd.testing.assert_frame_equal(resumed[2], train, check_exact=True)
-    with pytest.raises(ValueError, match="resume mismatch"):
+    with pytest.raises(ValueError, match="Resume không khớp"):
         runner._freeze_inputs(*args[:4], replace(args[4], seed=43))
     matrix_path = args[1] / "frozen_train_features.parquet"
     changed = pd.read_parquet(matrix_path)
     changed.loc[0, FEATURES[0]] += 1
     changed.to_parquet(matrix_path, index=False)
-    with pytest.raises(ValueError, match="feature artifact changed"):
+    with pytest.raises(ValueError, match="Artifact features đã cố định bị đổi"):
         runner._freeze_inputs(*args)
 
 
@@ -71,11 +71,11 @@ def test_source_change_and_frozen_selection_rejected(input_repository):
     args = input_repository
     runner._freeze_inputs(*args)
     (args[0] / "src/study.py").write_text("# changed source\n", encoding="utf-8")
-    with pytest.raises(ValueError, match="resume mismatch"):
+    with pytest.raises(ValueError, match="Resume không khớp"):
         runner._freeze_inputs(*args)
     selection = args[1] / "selection_fixture.json"
     runner._freeze_json(selection, {"candidate_id": "before"})
-    with pytest.raises(ValueError, match="frozen receipt changed"):
+    with pytest.raises(ValueError, match="Biên nhận đã cố định bị đổi"):
         runner._freeze_json(selection, {"candidate_id": "after"})
 
 
@@ -87,7 +87,7 @@ def test_missing_final_artifacts_prevent_test_label_access(tmp_path, monkeypatch
         raise AssertionError("test labels were accessed before final freeze")
 
     monkeypatch.setattr(runner, "read_test_labels", labels)
-    with pytest.raises(ValueError, match="precede|before|missing"):
+    with pytest.raises(ValueError, match="trước|thiếu"):
         runner._evaluate_final_test(pd.DataFrame(), tmp_path / "RUL.txt", StudyConfig(), tmp_path)
     assert touched == []
 
@@ -109,7 +109,7 @@ def test_test_prediction_checksum_rejected_before_labels(tmp_path, monkeypatch):
         folder.mkdir(parents=True)
         (folder / "model.joblib").write_bytes(b"fixture")
         runner._write_json(folder / "model.json", {})
-    with pytest.raises(ValueError, match="checksum"):
+    with pytest.raises(ValueError, match="(?i)checksum"):
         runner._evaluate_final_test(predictions, tmp_path / "RUL.txt", StudyConfig(), tmp_path)
 
 

@@ -1,4 +1,7 @@
-"""Paired per-engine comparisons between the baseline and the improved RUL model."""
+"""So sánh ghép cặp theo động cơ giữa baseline và mô hình RUL cải thiện."""
+
+from __future__ import annotations
+
 
 from cmapss.presentation import COLORS, apply_plot_style, style_figure
 
@@ -11,7 +14,7 @@ from cmapss.modeling.early_warning import build_warning_events
 
 
 def engine_metrics(predictions: pd.DataFrame) -> pd.DataFrame:
-    """Per-engine error and warning metrics."""
+    """Metric sai số và cảnh báo theo động cơ."""
     events, _ = build_warning_events(predictions, model_name="candidate", rul_threshold=30)
     events = events.set_index("engine_id")
     rows = []
@@ -29,9 +32,9 @@ def engine_metrics(predictions: pd.DataFrame) -> pd.DataFrame:
 
 
 def paired_comparison(baseline: pd.DataFrame, candidate: pd.DataFrame, resamples: int, seed: int) -> pd.DataFrame:
-    """Resample matched engine differences; negative values favor candidate."""
+    """Lấy mẫu lại chênh lệch động cơ ghép cặp; giá trị âm có lợi cho ứng viên."""
     if not baseline.index.equals(candidate.index):
-        raise ValueError("paired comparison requires identical engine IDs")
+        raise ValueError("So sánh ghép cặp cần cùng ID động cơ")
     rng = np.random.default_rng(seed)
     indices = rng.integers(0, len(baseline), size=(resamples, len(baseline)))
     rows = []
@@ -120,7 +123,7 @@ def _write_figures(predictions: pd.DataFrame, engine_tables: dict, output: Path)
 
 
 def write_test_comparison(evaluation: pd.DataFrame, output: Path, resamples: int, seed: int) -> None:
-    """Compare test endpoint errors of the baseline snapshot and the selected model."""
+    """So sánh sai số endpoint test của snapshot baseline và mô hình được chọn."""
     from cmapss.modeling.metrics import summarize_prediction_errors
     baseline = pd.read_parquet(output / "baseline_snapshot/predictions/final_evaluation.parquet")
     baseline = baseline.sort_values("engine_id").reset_index(drop=True)

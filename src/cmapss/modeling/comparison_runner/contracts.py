@@ -16,7 +16,7 @@ AUTHOR = {"full_name": "Phan Nguyễn Mai Phương", "student_id": "25002711"}
 
 
 class ComparisonConfig(Protocol):
-    """Settings the lifecycle reads from a study config."""
+    """Các thiết lập vòng đời đọc từ cấu hình nghiên cứu."""
 
     outer_splits: int
     inner_splits: int
@@ -32,7 +32,7 @@ class ComparisonConfig(Protocol):
 
 
 class CandidateSpec(Protocol):
-    """Minimal interface of a study's candidate spec."""
+    """Giao diện tối thiểu của cấu hình ứng viên nghiên cứu."""
 
     candidate_id: str
     family: str
@@ -40,10 +40,7 @@ class CandidateSpec(Protocol):
 
 @dataclass(frozen=True)
 class ComparisonBackend:
-    """Study-specific functions used by the lifecycle.
-
-    Built in the caller or worker and never pickled into the process pool.
-    """
+    """Các hàm riêng của nghiên cứu, dựng tại caller/worker và không pickle vào process pool."""
 
     study_name: str
     arms: tuple[str, ...]

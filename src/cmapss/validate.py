@@ -1,5 +1,8 @@
 """CLI kiểm tra C-MAPSS và xuất báo cáo JSON, không thay đổi raw."""
 
+from __future__ import annotations
+
+
 import argparse
 import hashlib
 import json
@@ -24,8 +27,8 @@ def validate_dataset(
 ) -> dict[str, Any]:
     """Kiểm tra file train/test và trả kết quả kèm checksum nguồn.
 
-    Nhãn test chỉ được đọc khi ``check_test_labels=True``, và chỉ kiểm tra cấu
-    trúc, không join vào observations.
+    Nhãn test chỉ được đọc khi ``check_test_labels=True``, và chỉ kiểm tra cấu trúc,
+    không join vào observations.
     """
     dataset_id = dataset_id.upper()
     if dataset_id not in DATASET_IDS:

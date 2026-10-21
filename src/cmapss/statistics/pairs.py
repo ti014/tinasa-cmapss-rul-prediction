@@ -1,5 +1,8 @@
 """Tạo và kiểm tra bảng cặp sensor đầu/cuối đời trên train FD001."""
 
+from __future__ import annotations
+
+
 import numpy as np
 import pandas as pd
 
@@ -30,7 +33,7 @@ def _require_train_pairs_source(observations: pd.DataFrame) -> None:
     if not observations["split"].eq("train").fillna(False).all():
         raise ContractError(
             "TRAIN_ONLY",
-            "paired sensor analysis",
+            "phân tích sensor ghép cặp",
             "chỉ nhận observations train; không dùng test cho paired analysis",
         )
 
@@ -70,10 +73,9 @@ def _pair_frame(rows: list[dict[str, object]]) -> pd.DataFrame:
 def build_engine_sensor_pairs(observations: pd.DataFrame) -> pd.DataFrame:
     """Mean 30 cycle đầu và 30 cycle cuối cho mỗi (engine train, sensor).
 
-    `difference = late_mean - early_mean`. Đầu/cuối xác định theo giá trị
-    `cycle`, không theo vị trí dòng. Mỗi engine cần ít nhất 60 cycles.
-    Ví dụ: sensor có giá trị bằng cycle, engine dài 60 cycles cho mean đầu
-    15,5, mean cuối 45,5, difference 30.
+    `difference = late_mean - early_mean`. Đầu/cuối xác định theo giá trị `cycle`, không
+    theo vị trí dòng. Mỗi engine cần ít nhất 60 cycles. Ví dụ: sensor có giá trị bằng
+    cycle, engine dài 60 cycles cho mean đầu 15,5, mean cuối 45,5, difference 30.
     """
     _require_train_pairs_source(observations)
     rows: list[dict[str, object]] = []

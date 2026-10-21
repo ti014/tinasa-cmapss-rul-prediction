@@ -84,7 +84,7 @@ def test_source_guard_accepts_complete_matching_provenance_without_reading_predi
 def test_source_changes_fail_before_selection(guarded_source, relative):
     root, source, _ = guarded_source
     (root / relative).write_bytes(b"changed after verification")
-    with pytest.raises(ValueError, match="checksum"):
+    with pytest.raises(ValueError, match="(?i)checksum"):
         runner._guard_source(root, source)
 
 
@@ -93,7 +93,7 @@ def test_missing_source_artifact_and_failed_verification_are_rejected(guarded_so
     verification = json.loads((source / "verification.json").read_text())
     verification["checks"]["all_checks_passed"] = False
     _json(source / "verification.json", verification)
-    with pytest.raises(ValueError, match="verification"):
+    with pytest.raises(ValueError, match="Xác minh"):
         runner._guard_source(root, source)
     (source / "frozen_test_features.parquet").unlink()
     with pytest.raises(FileNotFoundError):
@@ -106,7 +106,7 @@ def test_existing_output_fails_without_loading_source(tmp_path, monkeypatch):
     witness = output / "witness.txt"
     witness.write_text("retain")
     monkeypatch.setattr(runner, "_guard_source", lambda *args: pytest.fail("existing run must fail first"))
-    with pytest.raises(ValueError, match="already exists"):
+    with pytest.raises(ValueError, match="đã tồn tại"):
         runner.run_gated_blend_study(repo_root=tmp_path, output_dir=output, evaluate_test=False)
     assert witness.read_text() == "retain"
 
@@ -135,11 +135,11 @@ def test_cache_requires_exact_raw_truth_and_full_row_coverage(cached_vector):
     broken.loc[0, "y_true"] = 125.
     broken.to_parquet(prediction, index=False)
     _json(metadata, {"prediction_sha256": runner._sha(prediction)})
-    with pytest.raises(ValueError, match="raw truth"):
+    with pytest.raises(ValueError, match="nhãn gốc"):
         runner._load_cached_prediction(root, record, train)
     broken.iloc[:1].to_parquet(prediction, index=False)
     _json(metadata, {"prediction_sha256": runner._sha(prediction)})
-    with pytest.raises(ValueError, match="validation keys"):
+    with pytest.raises(ValueError, match="khóa validation"):
         runner._load_cached_prediction(root, record, train)
 
 
@@ -147,7 +147,7 @@ def test_cache_byte_tampering_is_rejected_before_parquet_read(cached_vector, mon
     root, train, prediction, _, record = cached_vector
     prediction.write_bytes(b"tampered")
     monkeypatch.setattr(pd, "read_parquet", lambda *args, **kwargs: pytest.fail("tampered vector must not load"))
-    with pytest.raises(ValueError, match="checksum"):
+    with pytest.raises(ValueError, match="(?i)checksum"):
         runner._load_cached_prediction(root, record, train)
 
 
@@ -166,7 +166,7 @@ def test_full_grid_and_engineering_mode_are_distinct():
                     lower_ruls=(60.,), upper_ruls=(150.,), max_capped_weights=(.25, .5))
     assert not smoke.scientific and len(specs(smoke)) == 2
     assert smoke.outer_splits == 5 and smoke.inner_splits == 3 and smoke.hgb_max_iter == 200
-    with pytest.raises(ValueError, match="original"):
+    with pytest.raises(ValueError, match="gốc"):
         replace(scientific, hgb_max_iter=20)
 
 
@@ -179,7 +179,7 @@ def test_checksum_rejection_precedes_raw_test_label_access(tmp_path, monkeypatch
         "inference_sha256": "invalid", "outer_decision_sha256": "invalid",
     })
     monkeypatch.setattr(runner, "read_test_labels", lambda *args: pytest.fail("test labels must remain closed"))
-    with pytest.raises(ValueError, match="checksum"):
+    with pytest.raises(ValueError, match="(?i)checksum"):
         runner._evaluate_final_test(output, pd.DataFrame(), output / "raw_labels.txt")
 
 
@@ -205,7 +205,7 @@ def test_snapshot_guard_checks_own_protocol_and_source_artifacts(tmp_path):
     manifest = {"identity": mappings}
     runner._assert_immutable(root, output, manifest)
     (output / "source_artifact_snapshot" / mappings["source_artifact_snapshot_paths"]["source/vector"]).write_bytes(b"corrupt copied vector")
-    with pytest.raises(ValueError, match="immutable"):
+    with pytest.raises(ValueError, match="bất biến"):
         runner._assert_immutable(root, output, manifest)
 
 
@@ -236,7 +236,7 @@ def test_snapshot_filename_collisions_fail_before_any_copy(monkeypatch):
             return "0" * 64
 
     monkeypatch.setattr(runner.hashlib, "sha256", lambda *args: SameDigest())
-    with pytest.raises(ValueError, match="collision"):
+    with pytest.raises(ValueError, match="duy nhất|trùng"):
         runner._artifact_snapshot_paths(("source/first.parquet", "source/second.parquet"))
 
 

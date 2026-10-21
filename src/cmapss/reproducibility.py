@@ -28,20 +28,12 @@ TABLES = (
     ("modeling/predictions/oof_predictions.parquet", "parquet"),
     ("modeling/predictions/final_predictions.parquet", "parquet"),
     ("modeling/predictions/final_evaluation.parquet", "parquet"),
-    ("timeseries/tables/selected_engines.csv", "csv"),
-    ("timeseries/tables/health_index.csv", "csv"),
-    ("timeseries/tables/forecast_metrics.csv", "csv"),
-    ("timeseries/tables/baseline_metrics.csv", "csv"),
-    ("timeseries/tables/diagnostics.csv", "csv"),
-    ("timeseries/predictions/arima_forecasts.parquet", "parquet"),
 )
 
 FIGURES = (
     "modeling/figures/final_true_vs_predicted.png",
     "modeling/figures/final_residuals_by_rul.png",
     "modeling/figures/warning_trajectory.png",
-    "timeseries/figures/health_index_selected_engines.png",
-    "timeseries/figures/arima_forecasts.png",
 )
 
 
@@ -145,9 +137,6 @@ def validate_rebuilt_outputs(output_root: Path, reference_root: Path, raw_dir: P
     _compare_nested_numbers(warning_summary, reference_warning_summary, "warning.summary")
     if warning_summary["split"] != "train_oof" or warning_summary["n_engines"] != 100:
         raise ReproducibilityError("Artifact cảnh báo sớm không phải tóm tắt OOF train của 100 động cơ")
-    time_run = _read_json(output_dir / "timeseries/run_info.json")
-    if time_run["isolation"]["uses_test_labels"] or time_run["isolation"]["uses_test_observations"]:
-        raise ReproducibilityError("Vi phạm contract cô lập PCA–ARIMA")
     figure_results = {}
     for name in FIGURES:
         path = output_dir / name
@@ -166,8 +155,8 @@ def validate_rebuilt_outputs(output_root: Path, reference_root: Path, raw_dir: P
     from app import load_dashboard_data
 
     dashboard = load_dashboard_data(output_root)
-    if len(dashboard.model_evaluation) != 100 or len(dashboard.forecasts) != 704:
-        raise ReproducibilityError("Dashboard không đọc được đúng số động cơ/dòng dự báo dự kiến")
+    if len(dashboard.model_evaluation) != 100:
+        raise ReproducibilityError("Dashboard không đọc được đúng số động cơ test dự kiến")
 
     raw_hashes = {name: _hash(raw_dir / name) for name in ("train_FD001.txt", "test_FD001.txt", "RUL_FD001.txt")}
     reference_etl = _read_json(reference_dir / "etl/run_info.json")
@@ -180,7 +169,7 @@ def validate_rebuilt_outputs(output_root: Path, reference_root: Path, raw_dir: P
     return {
         "status": "passed",
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
-        "scope": "raw FD001 -> Pandas ETL -> rolling features -> grouped RUL modeling -> PCA--ARIMA -> dashboard loader",
+        "scope": "raw FD001 -> Pandas ETL -> rolling features -> grouped RUL modeling -> dashboard loader",
         "output_root": str(output_root),
         "reference_root": str(reference_root),
         "raw_sha256": raw_hashes,
@@ -188,7 +177,7 @@ def validate_rebuilt_outputs(output_root: Path, reference_root: Path, raw_dir: P
         "final_metrics": metrics["metrics"],
         "selected_model": model_run["selected_model"],
         "figures": figure_results,
-        "dashboard": {"test_engines": len(dashboard.model_evaluation), "forecast_rows": len(dashboard.forecasts)},
+        "dashboard": {"test_engines": len(dashboard.model_evaluation)},
         "comparison": "semantic table equality, numeric rtol=1e-9 and atol=1e-9; timestamps and file bytes excluded",
         "limitations": [
             "PySpark parity and notebooks were validated separately; this command runs the Pandas scientific path.",
@@ -235,15 +224,6 @@ def run_end_to_end(
             "--train-targets", str(outputs / "etl/silver/train_targets.parquet"),
             "--test-labels", str(raw / "RUL_FD001.txt"),
             "--output-dir", str(outputs / "modeling"),
-        ],
-        repository,
-    )
-    _run_stage(
-        "cmapss.timeseries",
-        [
-            "--observations", str(outputs / "etl/silver/observations.parquet"),
-            "--fold-assignments", str(outputs / "modeling/tables/fold_assignments.csv"),
-            "--output-dir", str(outputs / "timeseries"),
         ],
         repository,
     )

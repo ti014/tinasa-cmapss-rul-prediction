@@ -23,21 +23,18 @@ Các nội dung đó chỉ được nêu là giới hạn, không biến thành 
 
 Mô hình chính là HistGradientBoosting với 126 đặc trưng window 30 cycle, chọn bằng
 GroupKFold 5 fold theo động cơ; đây là mô hình duy nhất có đánh giá test đầy đủ (MAE
-15,35 cycle). Bản 169 đặc trưng (thêm `cycle` và 42 đặc trưng lịch sử) giảm MAE OOF
-từ 20,21 xuống 17,00 trên cùng panel trong artifact
-[`outputs/course_alignment/20261007/summary.json`](../outputs/course_alignment/20261007/summary.json),
-nhưng tỷ lệ cảnh báo kịp thời ở ngưỡng 30 giảm từ 51% xuống 45% và chưa có đánh giá
-độc lập. Vì vậy bản này chỉ được trình bày như một thử nghiệm mở rộng. Báo cáo,
-slide, dashboard và kịch bản dùng cùng một mô hình, một bảng cảnh báo.
+15,35 cycle). FD002–FD004 chỉ đi qua bước ETL; mô hình chỉ được huấn luyện và đánh
+giá trên FD001. Báo cáo, slide, dashboard và kịch bản dùng cùng một mô hình, một
+bảng cảnh báo.
 
 ## Trọng số chấm đồ án trong đề cương
 
 | Tiêu chí | Trọng số | Bằng chứng trong bản nộp |
 |---|---:|---|
-| Quy trình quản lý dữ liệu: thu thập → làm sạch → chuẩn hóa → tích hợp → lưu trữ | 40% | Mục 4 và 6.1 báo cáo; slide 6–10 (slide 6 gắn năm bước với sơ đồ pipeline); `src/cmapss/{data,etl,features}`; parity và benchmark |
-| Trực quan hóa và truyền đạt kết quả | 25% | Hình khử nhiễu, Health Index, cảnh báo, lịch bảo trì; dashboard chín trang; slide 9–16 |
-| Code, cấu trúc pipeline và tài liệu kỹ thuật | 20% | Package theo bước, notebook 00–06, README song ngữ, bộ test tự động |
-| Trình bày, thuyết minh và phản biện | 15% | Deck 20 slide, kịch bản nói khoảng 19 phút gồm demo 2,5 phút, sổ tay `SPEECH_SCRIPT_VI.pdf` có lời đọc từng slide, demo và câu hỏi phản biện |
+| Quy trình quản lý dữ liệu: thu thập → làm sạch → chuẩn hóa → tích hợp → lưu trữ | 40% | Mục 4 và 6.1 báo cáo; slide 3–12 (slide 3 gắn năm bước với quy trình); `src/cmapss/{data,etl,features}`; parity và benchmark |
+| Trực quan hóa và truyền đạt kết quả | 25% | Hình khử nhiễu, Health Index, cảnh báo, lịch bảo trì; dashboard tám trang; slide 13–18 |
+| Code, cấu trúc pipeline và tài liệu kỹ thuật | 20% | Package theo bước, notebook 00, 01, 02, 03 và 06, README song ngữ, bộ test tự động |
+| Trình bày, thuyết minh và phản biện | 15% | Deck 20 slide, kịch bản nói khoảng 15–16 phút gồm 2 phút demo, sổ tay `SPEECH_SCRIPT_VI.pdf` có lời đọc từng slide, demo và câu hỏi phản biện |
 
 ## Ma trận yêu cầu → bằng chứng → trạng thái
 
@@ -52,14 +49,14 @@ slide, dashboard và kịch bản dùng cùng một mô hình, một bảng cả
 | Phát hiện dấu hiệu bất thường | `src/cmapss/degradation/anomaly.py`: Health Index giảm quá 3σ so với 30 cycle đầu, 5 cycle liên tiếp; 100/100 động cơ train, trung vị 121 cycle trước khi hỏng; phân tích độ nhạy 9 cấu hình (2/3/4σ × 3/5/10 cycle) đều phát hiện 100/100, lead time nhỏ nhất ≥ 50 cycle (Bảng 18); Mục 5.3 và 6.3 | **Đạt**; giới hạn: chưa đo trực tiếp được tỷ lệ báo động giả |
 | Trực quan hóa xu hướng suy giảm | Quỹ đạo sensor, kiểm định đầu/cuối, Health Index, quỹ đạo cảnh báo | **Đạt** |
 | Dự đoán thời điểm cần bảo trì | `src/cmapss/maintenance/`: lịch cho 100 động cơ test; 21/21 báo cần bảo trì là đúng; Mục 6.6 | **Đạt** trong phạm vi FD001 và điểm cắt test; giới hạn: 12 động cơ còn xa hỏng (RUL thật ≥ 77) có lịch muộn hơn lúc hỏng 4–27 cycle |
-| Báo cáo dự đoán kèm biểu đồ xu hướng cảnh báo sớm | `outputs/maintenance/tables/maintenance_schedule.csv`, `fleet_status.png`, `maintenance_planning.png`, `warning_trajectory.png`; slide 15–16; trang dashboard Lịch bảo trì | **Đạt** |
+| Báo cáo dự đoán kèm biểu đồ xu hướng cảnh báo sớm | `outputs/maintenance/tables/maintenance_schedule.csv`, `fleet_status.png`, `maintenance_planning.png`, `warning_trajectory.png`; slide 17–18; trang dashboard Lịch bảo trì | **Đạt** |
 
 ### B. Yêu cầu nộp bài
 
 | Yêu cầu | Bằng chứng | Trạng thái |
 |---|---|---|
 | Báo cáo: bài toán, quy trình xử lý, kết quả, khó khăn và bài học | `report/main.pdf`; Mục 8 "Khó khăn và bài học rút ra" | **Đạt** |
-| Mã nguồn tổ chức theo từng bước pipeline | `src/cmapss/` theo package; notebook 00 (dữ liệu) đến 06 (khử nhiễu, bảo trì) | **Đạt** |
+| Mã nguồn tổ chức theo từng bước pipeline | `src/cmapss/` theo package; notebook 00 (dữ liệu), 01–03 (EDA, thống kê, mô hình RUL) và 06 (khử nhiễu, bảo trì) | **Đạt** |
 | Slide thuyết trình | `slides/cmapss_fd001_presentation.pptx` | **Đạt** |
 | Dữ liệu đã xử lý hoặc script tái tạo | `outputs/` và lệnh tái lập trong `FINAL_HANDOFF.md` | **Đạt** |
 | Một file zip theo cú pháp `Nhom<X>_TenDeTai_BaoCaoCuoiKy` | `dist/Nhom4_PhanTichDuLieuIoTBaoTriDuDoan_BaoCaoCuoiKy.zip`, tạo bằng `scripts/package_submission.py` | **Đạt**; nhóm 4, bài làm cá nhân (cần đăng ký với giảng viên) |
@@ -68,10 +65,10 @@ slide, dashboard và kịch bản dùng cùng một mô hình, một bảng cả
 
 | CLO | Bằng chứng | Trạng thái |
 |---|---|---|
-| CLO1: Big Data, 5V và Data Science | Bảng 5V trong Mục 7.4 báo cáo | **Đạt ở mức khái niệm**; nêu rõ giới hạn volume/velocity |
-| CLO2: Hadoop/HDFS/MapReduce | `infra/hadoop/` (Hadoop 3.4.3 một node trong Docker), `src/cmapss/hdfs/`: raw FD001 trên HDFS, job MapReduce (Hadoop Streaming) trên YARN, `fsck` HEALTHY; Mục 3.7 và 4.4 báo cáo; slide 6–7 | **Đạt ở mức sandbox** đúng phạm vi đề cương (không cần cluster thật); chưa có cụm nhiều máy |
+| CLO1: Big Data, 5V và Data Science | Bảng 5V trong Mục 7.3 báo cáo | **Đạt ở mức khái niệm**; nêu rõ giới hạn volume/velocity |
+| CLO2: Hadoop/HDFS/MapReduce | `infra/hadoop/` (Hadoop 3.4.3 một node trong Docker), `src/cmapss/hdfs/`: raw FD001 trên HDFS, job MapReduce (Hadoop Streaming) trên YARN, `fsck` HEALTHY; Mục 3.7 và 4.4 báo cáo; slide 7–8 | **Đạt ở mức sandbox** đúng phạm vi đề cương (không cần cluster thật); chưa có cụm nhiều máy |
 | CLO3: thu thập, làm sạch, chuẩn hóa, tích hợp, lưu trữ | `cmapss.data.acquire` tải từ NASA, kiểm tra MD5/SHA-256, ghi manifest; reader, contract, ETL Pandas/PySpark, Parquet/SQLite, HDFS | **Đạt**; nguồn là dataset công khai, thu thập bằng script chứ không qua API/streaming |
-| CLO4/CLO7: trực quan hóa, dashboard, storytelling | Báo cáo, slide, dashboard chín trang theo thứ tự pipeline | **Đạt** |
+| CLO4/CLO7: trực quan hóa, dashboard, storytelling | Báo cáo, slide, dashboard tám trang theo thứ tự pipeline | **Đạt** |
 | CLO5: thao tác HDFS và chạy job MapReduce/Spark | Thao tác HDFS (`put`, `ls`, `fsck`), job MapReduce trên YARN, Spark đọc/ghi HDFS; PySpark ETL và rolling, parity, benchmark 1×/10× | **Đạt** ở mức một node; chưa đo hiệu năng trên cụm nhiều máy |
 | CLO6: Pandas/PySpark cleaning và integration | concat/`unionByName`, kiểm tra schema và khóa, parity | **Đạt** trong phạm vi batch local |
 | CLO8: pipeline end-to-end | Raw → Silver observations → rolling features → RUL; nhánh riêng EWMA → HI → bất thường; lịch bảo trì kết hợp RUL/HI → dashboard; engine_summary tổng hợp riêng từ Silver | **Đạt** |
@@ -89,8 +86,8 @@ slide, dashboard và kịch bản dùng cùng một mô hình, một bảng cả
 
 ## Các điểm phải khóa trước khi nộp
 
-1. Kịch bản nói và kịch bản demo dùng đúng thứ tự 20 slide và chín trang dashboard.
-2. Chốt tên file zip và danh sách thư mục đưa vào gói (không gồm `outputs/experiments/`, `tmp/`, `.venv/`).
+1. Kịch bản nói và kịch bản demo dùng đúng thứ tự 20 slide và tám trang dashboard.
+2. Chốt tên file zip và danh sách thư mục đưa vào gói theo `scripts/package_submission.py` (không gồm `tmp/`, `.venv/`).
 3. Chạy lại toàn bộ test và build báo cáo, slide ngay trước khi đóng gói.
 
 ## Nguồn kiểm tra

@@ -37,7 +37,6 @@ INCLUDE = [
     "slides/slide_figures.py", "slides/figures",
     "handoff/COURSE_ALIGNMENT.md", "handoff/DATA_WALKTHROUGH.md",
     "assets/diagrams",
-    "experiments",
     "outputs",
 ]
 
@@ -45,11 +44,14 @@ INCLUDE = [
 EXCLUDE_NAMES = {"__pycache__", ".pytest_cache", ".ipynb_checkpoints", "fit_cache", "node_modules", "bin"}
 EXCLUDE_PATTERNS = ["*.pyc", "*.log", "*.aux", "*.xdv", "*.out", "*.toc", "*.blg", "*.bbl", "*.synctex.gz"]
 
-# Bỏ trong outputs/: lần chạy thử nghiệm không còn dùng và dữ liệu trung gian của FD002--FD004.
-OUTPUT_KEEP_EXPERIMENTS = ("outputs/experiments/rul_improvement/20260928_rebuild/",
-                           "outputs/experiments/followup/20260929/", "outputs/experiments/README.md")
-CROSS_DATASET_KEEP = ("outputs/cross_dataset/matrix.json", "outputs/cross_dataset/README.md",
-                      "outputs/cross_dataset/evaluations/")
+# Thử nghiệm phụ không thuộc báo cáo: notebook 04, 05 và kết quả của chúng.
+EXCLUDE_PREFIXES = ("notebooks/04_", "notebooks/05_", "outputs/notebook04/", "outputs/notebook05/",
+                    "outputs/experiments/", "outputs/timeseries/")
+# Đầu vào của scripts/build_course_alignment_evidence.py (nguồn kết quả ngưỡng 30/40).
+EVIDENCE_INPUTS = {f"outputs/experiments/multiscale_comparison/20261006_study02/{name}"
+                   for name in ("outer_predictions.parquet", "manifest.json", "aggregate_metrics.csv")}
+# FD002--FD004 chỉ đi qua ETL: giữ biên bản ETL làm nguồn của bảng bốn subset, bỏ dữ liệu trung gian.
+CROSS_DATASET_KEEP = ("outputs/cross_dataset/README.md",)
 
 
 def keep(rel: str) -> bool:
@@ -58,10 +60,13 @@ def keep(rel: str) -> bool:
         return False
     if any(fnmatch.fnmatch(parts[-1], pattern) for pattern in EXCLUDE_PATTERNS):
         return False
-    if rel.startswith("outputs/experiments/"):
-        return rel.startswith(OUTPUT_KEEP_EXPERIMENTS)
+    if rel in EVIDENCE_INPUTS:
+        return True
+    if rel.startswith(EXCLUDE_PREFIXES):
+        return False
     if rel.startswith("outputs/cross_dataset/"):
-        return rel.startswith(CROSS_DATASET_KEEP)
+        return (rel.startswith(CROSS_DATASET_KEEP)
+                or fnmatch.fnmatch(rel, "outputs/cross_dataset/FD00?/etl/run_info.json"))
     return True
 
 

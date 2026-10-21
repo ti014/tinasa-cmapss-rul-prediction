@@ -43,17 +43,6 @@ def build_evaluation_protocol() -> pd.DataFrame:
             "artifact": "predictions/final_evaluation.parquet; tables/final_metrics.json",
         },
         {
-            "protocol_id": "health_index_forecast",
-            "target": "Health Index (standardized PC1)",
-            "unit_of_analysis": "engine trajectory; cycles in holdout suffix",
-            "group_key": "engine_id",
-            "split_and_horizon": "10 selected train engines; 70% prefix fit and 30% suffix holdout",
-            "metrics": "MAE; RMSE; ARIMA coverage 95%; baseline point metrics",
-            "selection_or_reporting_role": "secondary temporal analysis, not RUL evaluation",
-            "uncertainty_or_repetition": "ARIMA prediction interval; baselines have no interval",
-            "artifact": "tables/forecast_metrics.csv; tables/baseline_metrics.csv",
-        },
-        {
             "protocol_id": "rul_warning_oof",
             "target": "low RUL event (RUL <= 30 cycles)",
             "unit_of_analysis": "engine trajectory; first warning event",

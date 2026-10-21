@@ -14,24 +14,17 @@ from cmapss.dashboard import (
     DashboardDataError,
     DegradationData,
     ExplorationData,
-    ImprovementData,
     MaintenanceData,
     engine_oof_trajectory,
     engine_signal_view,
     engine_rul_view,
-    engine_timeseries_view,
-    forecast_comparison,
     format_metric,
-    load_cross_dataset,
     load_dashboard_data,
     load_exploration_data,
     load_degradation_data,
-    load_improvement_data,
     load_maintenance_data,
     sensor_trajectory,
 )
-from cmapss.followup_results import load_followup_results
-from cmapss.project import FOLLOWUP_RUN
 from cmapss.presentation import COLORS, FONT
 
 
@@ -50,12 +43,6 @@ MODEL_LABELS = {
     "ridge_alpha_1": "Ridge (alpha = 1)",
     "median_baseline": "Mốc trung vị",
 }
-STAGE_LABELS = {
-    "baseline": "Mô hình gốc",
-    "windows": "Sau chọn window",
-    "parameters": "Sau chỉnh tham số",
-    "weights": "Sau chọn trọng số",
-}
 TIMING_LABELS = {
     "before_threshold": "Trước ngưỡng",
     "at_threshold": "Đúng ngưỡng",
@@ -63,14 +50,6 @@ TIMING_LABELS = {
     "at_failure": "Đúng lúc hỏng",
     "no_warning": "Không cảnh báo",
 }
-METRIC_LABELS = {
-    "mean_engine_mae": "MAE toàn bộ",
-    "low_rul_engine_mae": "MAE khi RUL ≤ 30",
-    "late_or_missed_rate": "Tỷ lệ cảnh báo trễ hoặc bỏ lỡ",
-    "late_or_missed_count": "Cảnh báo trễ hoặc bỏ lỡ",
-    "early_alarm_burden": "Tỷ lệ thời gian báo sớm",
-}
-FORECAST_METHOD_LABELS = {"arima": "ARIMA", "last_value": "Giữ giá trị cuối", "drift": "Kéo dài xu hướng"}
 PALETTE = {"true": COLORS["ink"], "pred": COLORS["blue"], "alt": COLORS["orange"],
            "muted": COLORS["gray"], "alert": COLORS["red"]}
 STATUS_ORDER = ["Cần bảo trì", "Theo dõi tăng cường", "Bình thường"]
@@ -113,7 +92,7 @@ CSS = """
 # ---------------------------------------------------------------------------
 
 
-@st.cache_data(show_spinner="Đang đọc kết quả mô hình và chuỗi thời gian...")
+@st.cache_data(show_spinner="Đang đọc kết quả mô hình...")
 def _dashboard_data(root: str) -> DashboardData:
     return load_dashboard_data(root)
 
@@ -121,16 +100,6 @@ def _dashboard_data(root: str) -> DashboardData:
 @st.cache_data(show_spinner="Đang đọc kết quả khám phá dữ liệu và đặc trưng...")
 def _exploration_data(root: str) -> ExplorationData:
     return load_exploration_data(root)
-
-
-@st.cache_data(show_spinner="Đang đọc thử nghiệm cải thiện...")
-def _improvement_data(root: str) -> ImprovementData:
-    return load_improvement_data(root)
-
-
-@st.cache_data(show_spinner=False)
-def _cross_dataset(root: str) -> pd.DataFrame:
-    return load_cross_dataset(root)
 
 
 @st.cache_data(show_spinner="Đang đọc kết quả khử nhiễu và bất thường...")
@@ -539,231 +508,6 @@ def page_warning(data: DashboardData) -> None:
         )
 
 
-def page_cross_dataset(matrix: pd.DataFrame) -> None:
-    st.header("Đem mô hình FD001 sang FD002–FD004")
-    window = matrix.attrs.get("window_cycles")
-    _card(
-        "Cách làm",
-        f"Nội bộ: huấn luyện và kiểm tra trong cùng một subset. Chuyển miền: giữ nguyên mô hình học trên FD001 để dự đoán "
-        f"test của FD002–FD004, không học lại. Dùng window {window} cycle vì động cơ test ngắn nhất của FD004 chỉ có "
-        "19 cycle; vì vậy không so trực tiếp với kết quả FD001 chính dùng window 30.",
-    )
-    labeled = matrix.assign(
-        Evaluation=lambda frame: frame["source"] + " → " + frame["target"],
-        Loại=lambda frame: frame["evaluation_type"].map({"within_subset": "Nội bộ", "transfer": "Mô hình FD001"}),
-    )
-    bars = (
-        alt.Chart(labeled)
-        .mark_bar()
-        .encode(
-            y=alt.Y("Evaluation:N", sort=list(labeled["Evaluation"]), title=None, axis=alt.Axis(labelLimit=200)),
-            x=alt.X("mean_engine_mae:Q", title="MAE trung bình theo động cơ (cycle)"),
-            color=alt.Color("Loại:N", scale=alt.Scale(range=[PALETTE["pred"], PALETTE["alt"]]), legend=alt.Legend(orient="top")),
-            tooltip=["Evaluation:N", "Loại:N", "n_engines:Q", alt.Tooltip("mean_engine_mae:Q", format=".4f"), alt.Tooltip("rmse:Q", format=".4f")],
-        )
-    )
-    errors = alt.Chart(labeled).mark_errorbar(color=PALETTE["true"]).encode(
-        y=alt.Y("Evaluation:N", sort=list(labeled["Evaluation"])),
-        x=alt.X("mae_ci_lower:Q", title="MAE trung bình theo động cơ (cycle)"),
-        x2="mae_ci_upper:Q",
-    )
-    st.altair_chart((bars + errors).properties(height=alt.Step(34)), width="stretch")
-    st.caption("Thanh lỗi: khoảng tin cậy bootstrap 95%, lấy mẫu lại động cơ 10.000 lần, seed 42.")
-    st.dataframe(
-        labeled[["Evaluation", "Loại", "n_engines", "mean_engine_mae", "mae_ci_lower", "mae_ci_upper", "rmse", "nasa_score"]].rename(
-            columns={
-                "n_engines": "Số động cơ test",
-                "mean_engine_mae": "MAE",
-                "mae_ci_lower": "CI 95% dưới",
-                "mae_ci_upper": "CI 95% trên",
-                "rmse": "RMSE",
-                "nasa_score": "NASA score",
-            }
-        ),
-        hide_index=True,
-        width="stretch",
-        column_config={name: st.column_config.NumberColumn(format="%.4f") for name in ("MAE", "CI 95% dưới", "CI 95% trên", "RMSE")}
-        | {"NASA score": st.column_config.NumberColumn(format="%.2f")},
-    )
-    _card(
-        "Diễn giải",
-        "Đem mô hình FD001 sang subset khác làm MAE tăng khoảng 2–3 lần so với huấn luyện nội bộ. Điều kiện vận hành khác đẩy "
-        "giá trị sensor ra ngoài miền mô hình đã học, nên cần huấn luyện lại trước khi dùng cho FD002–FD004.",
-        kind="limit",
-    )
-
-
-def page_improvement(experiment: ImprovementData) -> None:
-    if (ROOT / FOLLOWUP_RUN / "completion.json").is_file():
-        st.subheader("Thử nghiệm bổ sung: giới hạn nhãn RUL, đặc trưng lịch sử, điều kiện vận hành")
-        summary, paired_followup = load_followup_results(ROOT)
-        table = summary[["dataset", "selected_final", "baseline_outer_mae", "selected_outer_mae",
-                         "test_mae", "outer_gate_passed"]].copy()
-        table["selected_final"] = table.selected_final.replace({
-            "baseline": "Mô hình gốc", "cap_none_history_1": "Thêm đặc trưng lịch sử",
-            "condition_normalized": "Chuẩn hóa theo điều kiện", "raw_settings": "Thêm settings"})
-        st.dataframe(table.rename(columns={"dataset": "Subset", "selected_final": "Phương án cuối",
-            "baseline_outer_mae": "MAE mô hình gốc", "selected_outer_mae": "MAE phương án mới",
-            "test_mae": "Test MAE", "outer_gate_passed": "Đạt tiêu chí"}), hide_index=True, width="stretch")
-        st.caption(
-            "Vòng đánh giá ngoài: 5 fold theo động cơ; cấu hình được chọn trong 3 fold bên trong. "
-            "FD001 dùng window 30, FD002/FD004 dùng window 10 và huấn luyện trong từng subset. "
-            "Tập test đã được xem từ trước, nên đây là thử nghiệm khám phá. "
-            "Giảm MAE test chưa đủ để thay mô hình gốc nếu không đạt tiêu chí ở vòng ngoài."
-        )
-        st.caption("Tiêu chí của FD002/FD004 chỉ xét MAE tổng; cần đọc cùng cảnh báo và NASA score trong bảng chi tiết.")
-        with st.expander("Khoảng tin cậy 95% (bootstrap ghép cặp) của thử nghiệm bổ sung"):
-            st.dataframe(summary, hide_index=True, width="stretch")
-            st.dataframe(paired_followup, hide_index=True, width="stretch")
-        st.divider()
-    st.header("Nested CV: thử chọn lại window, tham số và trọng số")
-    st.write(
-        "Mỗi động cơ ở vòng đánh giá ngoài được giữ riêng khỏi cả huấn luyện và chọn cấu hình. "
-        "Các phương án dùng cùng cycle từ 30 trở đi."
-    )
-    if not experiment.decision.get("observed_improvement_meets_plan", False):
-        _card("Kết luận", "Chưa đạt đủ tiêu chí cải thiện đã chốt trước. Giữ nguyên mô hình gốc.", kind="limit")
-
-    st.subheader("Đánh giá trên mọi cycle của 100 động cơ train")
-    columns = ["stage", "mean_engine_mae", "low_rul_engine_mae", "late_or_missed_count", "early_alarm_burden"]
-    ablation = experiment.ablation[columns].assign(stage=lambda frame: frame["stage"].map(STAGE_LABELS))
-    st.dataframe(ablation.rename(columns={"stage": "Phương án", **METRIC_LABELS}), hide_index=True, width="stretch")
-    st.caption(
-        "Tỷ lệ thời gian báo sớm: tỷ lệ cycle có cảnh báo khi RUL thật còn trên 30, tính riêng từng động cơ rồi lấy trung bình. "
-        "Ngưỡng nghiên cứu là 30 cycle."
-    )
-
-    st.subheader("Chênh lệch so với mô hình gốc và khoảng tin cậy 95%")
-    paired = experiment.paired.loc[experiment.paired["stage"].eq("weights")].assign(
-        Metric=lambda frame: frame["metric"].map(METRIC_LABELS).fillna(frame["metric"])
-    )
-    st.dataframe(
-        paired[["Metric", "baseline", "candidate", "delta", "ci_lower", "ci_upper", "n_engines"]].rename(
-            columns={"baseline": "Mô hình gốc", "candidate": "Quy trình chọn", "delta": "Chênh lệch", "ci_lower": "CI 95% dưới", "ci_upper": "CI 95% trên", "n_engines": "Số động cơ"}
-        ),
-        hide_index=True,
-        width="stretch",
-    )
-    st.caption(
-        "Chênh lệch = quy trình chọn mới − mô hình gốc. Giá trị âm là giảm. Bootstrap lấy lại cùng động cơ cho hai phương án; "
-        "khoảng tin cậy chưa bao gồm biến thiên do huấn luyện lại."
-    )
-
-    st.subheader("RUL theo từng cycle ở vòng đánh giá ngoài")
-    predictions = experiment.predictions
-    engine_id = _engine_select("Chọn động cơ train", sorted(predictions["engine_id"].unique()), key="improvement_engine")
-    engine = predictions.loc[predictions["engine_id"].eq(engine_id)]
-    wide = (
-        engine.loc[engine["stage"].isin(["baseline", "weights"])]
-        .pivot_table(index="cycle", columns="stage", values="y_pred")
-        .join(engine.drop_duplicates("cycle").set_index("cycle")["y_true"])
-        .reset_index()
-    )
-    st.altair_chart(
-        _rul_trajectory_chart(wide, {"y_true": "RUL thật", "baseline": STAGE_LABELS["baseline"], "weights": STAGE_LABELS["weights"]}),
-        width="stretch",
-    )
-
-    st.subheader("Đánh giá tại điểm cuối của 100 động cơ test")
-    test_columns = {
-        "model": "Mô hình",
-        "mean_engine_mae": "MAE",
-        "rmse": "RMSE",
-        "nasa_score": "NASA score",
-        "low_rul_engine_mae": "MAE khi RUL ≤ 30",
-        "n_low_rul_engines": "Số động cơ có RUL ≤ 30",
-    }
-    st.dataframe(
-        experiment.test[[name for name in test_columns if name in experiment.test]].rename(columns=test_columns),
-        hide_index=True,
-        width="stretch",
-    )
-    st.caption(
-        "Test FD001 đã được xem trong phân tích trước đợt này. Không dùng kết quả test để chọn lại cấu hình. "
-        "MAE tại một điểm cuối khác MAE tính trên mọi cycle."
-    )
-
-    with st.expander("Các đánh đổi khi chọn cấu hình (vòng trong)"):
-        selection = experiment.selection
-        examples = selection.loc[
-            (selection["stage"].eq("parameters") & selection["candidate_id"].isin(["baseline", "hgb_08"]))
-            | (selection["stage"].eq("weights") & selection["candidate_id"].eq("strong_low_rul"))
-        ]
-        st.dataframe(
-            examples[["stage", "candidate_id", "low_rul_engine_mae", "mean_engine_mae", "late_or_missed_rate", "early_alarm_burden", "selected"]].rename(
-                columns={"stage": "Giai đoạn", "candidate_id": "Ứng viên", "selected": "Được chọn", **METRIC_LABELS}
-            ),
-            hide_index=True,
-            width="stretch",
-        )
-        st.caption(
-            "Ví dụ ở vòng trong trên toàn train. Một cấu hình có thể giảm sai số ở vùng RUL thấp nhưng làm tăng chỉ số khác. "
-            "Đây là kết quả dùng để chọn cấu hình, chưa phải đánh giá độc lập của các ứng viên này."
-        )
-    with st.expander("Cấu hình cuối"):
-        st.json(experiment.run_info.get("selected_final", {}))
-
-
-def page_timeseries(data: DashboardData) -> None:
-    st.header("Dự báo Health Index bằng ARIMA")
-    metrics = data.forecast_metrics
-    engine_id = _engine_select("Chọn động cơ kiểm tra", sorted(metrics["engine_id"].unique()), key="ts_engine")
-    history, forecast = engine_timeseries_view(data, engine_id)
-    metric = metrics.loc[metrics["engine_id"] == engine_id]
-    diagnostic = data.diagnostics.loc[data.diagnostics["engine_id"] == engine_id]
-    if not metric.empty:
-        row = metric.iloc[0]
-        _metric_row(
-            [
-                ("Bậc ARIMA", str(row.get("order", "n/a"))),
-                ("MAE đoạn kiểm tra", format_metric(row["mae"])),
-                ("Tỷ lệ bao phủ 95%", f"{format_metric(float(row['coverage_95']) * 100, 2)}%"),
-                ("ADF p-value", format_metric(diagnostic.iloc[0]["adf_pvalue"]) if not diagnostic.empty else "n/a"),
-            ]
-        )
-
-    base = alt.Chart(history).mark_line(color=PALETTE["muted"]).encode(
-        x=alt.X("cycle:Q", title="Cycle"), y=alt.Y("health_index:Q", title="Health Index", scale=alt.Scale(zero=False)),
-        tooltip=["cycle:Q", alt.Tooltip("health_index:Q", format=".4f")],
-    )
-    layers = [base]
-    if not forecast.empty:
-        band = alt.Chart(forecast).mark_area(opacity=0.18, color=PALETTE["alert"]).encode(x="cycle:Q", y="lower_95:Q", y2="upper_95:Q")
-        actual = alt.Chart(forecast).mark_line(color=PALETTE["alt"]).encode(x="cycle:Q", y="health_index_true:Q")
-        predicted = alt.Chart(forecast).mark_line(color=PALETTE["alert"], strokeDash=[5, 3]).encode(
-            x="cycle:Q", y="health_index_pred:Q", tooltip=["cycle:Q", alt.Tooltip("health_index_pred:Q", format=".4f")]
-        )
-        layers = [band, base, actual, predicted]
-    st.altair_chart(alt.layer(*layers).properties(height=360).interactive(bind_y=False), width="stretch")
-    st.caption("Xám: Health Index trên mọi cycle. Cam: giá trị thật ở 30% cuối dùng để kiểm tra. Đỏ nét đứt: dự báo ARIMA, vùng tô là khoảng dự đoán 95%.")
-
-    left, right = st.columns([1, 1.2])
-    with left:
-        comparison = forecast_comparison(data, engine_id).assign(method=lambda frame: frame["method"].map(FORECAST_METHOD_LABELS).fillna(frame["method"]))
-        chart = (
-            alt.Chart(comparison)
-            .mark_bar()
-            .encode(
-                y=alt.Y("method:N", title=None, sort=list(comparison["method"])),
-                x=alt.X("mae:Q", title="MAE trên đoạn kiểm tra"),
-                color=alt.condition(alt.datum.method == "ARIMA", alt.value(PALETTE["alert"]), alt.value(PALETTE["muted"])),
-                tooltip=["method:N", alt.Tooltip("mae:Q", format=".4f"), alt.Tooltip("rmse:Q", format=".4f")],
-            )
-            .properties(height=alt.Step(36))
-        )
-        st.markdown("**ARIMA so với hai cách dự báo đơn giản trên cùng đoạn kiểm tra**")
-        st.altair_chart(chart, width="stretch")
-    with right:
-        _card(
-            "Giới hạn diễn giải",
-            "Dự báo Health Index là thử nghiệm mở rộng, không phải dự đoán RUL và không dùng để lập lịch bảo trì. "
-            "Các kiểm định đọc trực tiếp từ kết quả đã lưu.",
-            kind="limit",
-        )
-    with st.expander("Kiểm định ADF và Ljung–Box của động cơ này"):
-        st.dataframe(diagnostic, width="stretch", hide_index=True)
-
-
 def page_denoise(degradation: DegradationData) -> None:
     st.header("Khử nhiễu tín hiệu cảm biến bằng EWMA")
     summary, noise = degradation.summary, degradation.noise
@@ -987,36 +731,21 @@ def page_maintenance(maintenance: MaintenanceData) -> None:
               "ví dụ động cơ 23. Ngưỡng 30 chưa được hiệu chuẩn theo chi phí bảo trì.", kind="limit")
 
 
-def page_extended(root: str, data: DashboardData) -> None:
-    st.caption("Các thử nghiệm ngoài luồng chính; không thay đổi mô hình hay chính sách cảnh báo ở các trang trước.")
-    transfer_tab, improvement_tab, arima_tab = st.tabs(["Chuyển miền FD002–FD004", "Thử nghiệm cải thiện", "Health Index / ARIMA"])
-    with transfer_tab:
-        _guarded(lambda: page_cross_dataset(_cross_dataset(root)))
-    with improvement_tab:
-        _guarded(lambda: page_improvement(_improvement_data(root)))
-    with arima_tab:
-        _guarded(lambda: page_timeseries(data))
-
-
 def page_provenance(data: DashboardData) -> None:
     st.header("Nguồn gốc dữ liệu và kiểm soát")
     _card(
         "Chỉ đọc",
-        "Dashboard chỉ đọc kết quả đã lưu của các bước: khám phá dữ liệu, mô hình, khử nhiễu, bất thường, lịch bảo trì và thử nghiệm "
-        "mở rộng. Dashboard không mở file đáp án test gốc và không huấn luyện lại mô hình.",
+        "Dashboard chỉ đọc kết quả đã lưu của các bước: khám phá dữ liệu, mô hình, khử nhiễu, bất thường và lịch bảo trì. "
+        "Dashboard không mở file đáp án test gốc và không huấn luyện lại mô hình.",
     )
     _metric_row(
         [
             ("Dòng đánh giá test", f"{len(data.model_evaluation):,}"),
-            ("Dòng dự báo ARIMA", f"{len(data.forecasts):,}"),
             ("Phiên bản schema mô hình", str(data.model_run_info.get("schema_version", "n/a"))),
-            ("Phiên bản schema chuỗi thời gian", str(data.timeseries_run_info.get("schema_version", "n/a"))),
         ]
     )
     with st.expander("Biên bản lần chạy mô hình (run_info.json)", expanded=True):
         st.json(data.model_run_info)
-    with st.expander("Biên bản lần chạy chuỗi thời gian (run_info.json)"):
-        st.json(data.timeseries_run_info)
 
 
 # ---------------------------------------------------------------------------
@@ -1057,7 +786,7 @@ def main(repo_root: str | Path | None = None) -> None:
         data = _dashboard_data(root)
     except DashboardDataError as exc:
         st.error(str(exc))
-        st.info("Hãy chạy ETL, rolling features, modeling, PCA--ARIMA, cmapss.degradation và cmapss.maintenance trước khi mở dashboard.")
+        st.info("Hãy chạy ETL, rolling features, modeling, cmapss.degradation và cmapss.maintenance trước khi mở dashboard.")
         return
 
     pages: dict[str, Callable[[], None]] = {
@@ -1068,7 +797,6 @@ def main(repo_root: str | Path | None = None) -> None:
         "Dự đoán RUL": lambda: page_rul(data),
         "Cảnh báo sớm": lambda: page_warning(data),
         "Lịch bảo trì": lambda: page_maintenance(_maintenance_data(root)),
-        "Thử nghiệm mở rộng": lambda: page_extended(root, data),
         "Provenance": lambda: page_provenance(data),
     }
     names = list(pages)

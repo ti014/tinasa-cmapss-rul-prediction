@@ -11,11 +11,8 @@ import pytest
 
 from cmapss.data.contracts import MEASUREMENTS, OBSERVATION_COLUMNS
 from cmapss.data.targets import make_train_targets
-from cmapss.features.enhanced import FeatureRecipe
 from cmapss.modeling.audit_study import AuditStudyConfig, run_audit_study
 from cmapss.modeling.audit_study.provenance import BASELINE_FILES, SOURCE_FILES
-from cmapss.modeling.followup.artifact_io import freeze_manifest
-from cmapss.modeling.followup.config import StudyConfig
 from cmapss.provenance import local_source_files
 
 
@@ -27,9 +24,6 @@ from cmapss.provenance import local_source_files
     ("audit_study", "AuditStudyConfig"),
     ("audit_study", "WarningPolicy"),
     ("audit_study", "FittedCandidate"),
-    ("followup", "StudyConfig"),
-    ("followup", "RecipeModel"),
-    ("improvement", "ImprovementConfig"),
 ])
 def test_legacy_pickle_class_paths_resolve(module, name, monkeypatch):
     """Old model/config references still resolve to the canonical class."""
@@ -59,26 +53,6 @@ def test_source_closure_follows_nested_relative_imports(tmp_path):
     assert set(local_source_files(tmp_path, (entry,))) == set(sources)
     with pytest.raises(FileNotFoundError, match="Thiếu mã nguồn"):
         local_source_files(tmp_path, ("src/cmapss/missing.py",))
-
-
-def test_followup_snapshots_nested_modules_and_rejects_changed_sources(tmp_path):
-    """A refactored estimator cannot silently reuse an older fit cache."""
-    module = tmp_path / "src/cmapss/modeling/followup/estimators.py"
-    module.parent.mkdir(parents=True)
-    module.write_text("# original estimator\n", encoding="utf-8")
-    inputs = [tmp_path / name for name in ("observations.parquet", "targets.parquet", "uv.lock")]
-    for path in inputs:
-        path.write_bytes(b"fixture")
-    output = tmp_path / "run"
-    args = (tmp_path, output, "FD001", *inputs[:2], (FeatureRecipe("baseline"),), StudyConfig(outer_splits=2))
-
-    identity = freeze_manifest(*args)
-    assert freeze_manifest(*args) == identity
-    snapshot = output / "source_snapshot" / module.relative_to(tmp_path)
-    assert snapshot.read_bytes() == module.read_bytes()
-    module.write_text("# changed estimator\n", encoding="utf-8")
-    with pytest.raises(ValueError, match="Resume không khớp"):
-        freeze_manifest(*args)
 
 
 def test_audit_package_runs_with_complete_source_snapshot(tmp_path):

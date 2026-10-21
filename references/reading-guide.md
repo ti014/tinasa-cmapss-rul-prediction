@@ -130,8 +130,8 @@ báo cáo có streaming hoặc Spark.
 
 Danh sách và mức kiểm chứng của M1–M13 nằm trong [README](README.md).
 Các mục áp dụng đề xuất ở R1–R8 là hướng dẫn đọc ban đầu; phạm vi hiện hành
-là baseline, Ridge, HistGradientBoosting, batch ETL Pandas/PySpark và ARIMA
-phụ. Chưa mở thêm CNN, LSTM hoặc streaming.
+là baseline, Ridge, HistGradientBoosting và batch ETL Pandas/PySpark. Chưa mở
+thêm CNN, LSTM hoặc streaming.
 
 ### Nguồn cho phần thống kê: M1–M6
 
@@ -172,24 +172,10 @@ engine. Đã kiểm tra công thức trên bản render local. R1 Section VII c�
 ghi hệ số không nhất quán với mô tả phạt muộn mạnh hơn; dùng rõ quy ước R4
 trong báo cáo, không tự chép hệ số từ R1 hoặc đổi dấu sai số âm thầm.
 
-### Đọc khi triển khai ARIMA và ETL: M11–M13
+### Đọc khi triển khai ETL: M11, M13
 
-Đọc M11 mục 9.1 về stationarity/differencing, 9.5 về ARIMA, 5.4 và 9.7 về
-residual diagnostics. M12 bổ sung cách hiểu ADF; không bác bỏ unit root chưa
-chứng minh chuỗi dừng. M13 bổ sung DataFrame/Spark SQL cho nền tảng R8.
+Đọc phần exponential smoothing của M11 làm cơ sở cho EWMA. M13 bổ sung
+DataFrame/Spark SQL cho nền tảng R8.
 
-Đầu ra: protocol forecast theo thời gian và thiết kế benchmark có parity,
-cấu hình máy, chế độ cache và thời gian đo rõ ràng. Chưa có bằng chứng để
-tuyên bố Spark nhanh hơn hoặc PCA–ARIMA dự đoán được RUL.
-
-## Đọc kết quả cải thiện ngày 27/09/2026
-
-Đọc mục Nested CV trong tài liệu scikit-learn (`sklearnNestedCV2026`) để phân
-biệt vòng chọn cấu hình và vòng đánh giá. Sau đó đọc API
-HistGradientBoostingRegressor (`sklearnHGBAPI2026`) để hiểu các tham số trong
-manifest. Hai URL chính thức nằm trong README cùng thư mục.
-
-Đối chiếu với `experiments/README.md`: giảm 9,75% low-RUL MAE của `hgb_08`
-thuộc inner CV, còn so sánh 3,6676 → 3,6730 cycles thuộc outer evaluation của
-cả quy trình lựa chọn. Không ghép hai kết quả này thành kết luận model đã tốt
-hơn. Các nguồn được truy cập ngày 27/09/2026; không tải thêm paper trong đợt này.
+Đầu ra: thiết kế benchmark có parity, cấu hình máy, chế độ cache và thời gian
+đo rõ ràng.

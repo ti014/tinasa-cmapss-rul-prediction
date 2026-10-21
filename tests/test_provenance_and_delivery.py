@@ -1,7 +1,6 @@
 """Regression checks for historical integrity and notebook delivery metadata."""
 
 import hashlib
-import json
 from pathlib import Path
 
 import nbformat
@@ -9,8 +8,7 @@ import pandas as pd
 import pytest
 
 from cmapss.etl.scalability import verify_parity
-from cmapss.followup_results import load_followup_results
-from cmapss.project import AUTHOR_NAME, STUDENT_ID, FOLLOWUP_RUN, IMPROVEMENT_RUN
+from cmapss.project import AUTHOR_NAME, STUDENT_ID
 from cmapss.provenance import verify_source_snapshot
 
 
@@ -36,31 +34,12 @@ def test_historical_snapshot_survives_current_edits_but_rejects_tampering(tmp_pa
 
 def test_all_delivered_notebooks_identify_author():
     notebooks = list((ROOT / "notebooks").glob("*.ipynb"))
-    assert len(notebooks) == 7
+    assert len(notebooks) == 5
     for path in notebooks:
         notebook = nbformat.read(path, as_version=4)
         nbformat.validate(notebook)
         assert AUTHOR_NAME in notebook.cells[0].source, path.name
         assert STUDENT_ID in notebook.cells[0].source, path.name
-
-
-def test_slide_data_matches_dashboard_experiment():
-    from cmapss.dashboard import load_improvement_data
-
-    data = json.loads((ROOT / "slides/slide_data.json").read_text(encoding="utf-8"))
-    dashboard = load_improvement_data(ROOT)
-    assert data["provenance"]["improvement_run"] == IMPROVEMENT_RUN.as_posix()
-    for stage in ("baseline", "weights"):
-        row = dashboard.ablation.set_index("stage").loc[stage]
-        assert data["improvement"]["outer"][stage]["low_mae"] == row.low_rul_engine_mae
-
-
-def test_partial_followup_cannot_be_presented_as_complete(tmp_path):
-    run = tmp_path / FOLLOWUP_RUN
-    run.mkdir(parents=True)
-    (run / "completion.json").write_text('{"status":"complete","datasets":{"FD001":{}}}')
-    with pytest.raises(ValueError, match="ba dataset"):
-        load_followup_results(tmp_path)
 
 
 def test_parity_rejects_changed_feature_even_when_row_count_matches(tmp_path):

@@ -26,11 +26,10 @@ và rolling features. Phần Hadoop chạy job thật trong thư mục HDFS riê
 sau khi hoàn tất. Các đường dẫn và số liệu của artifact lịch sử trong tài liệu
 này vẫn mô tả pipeline chính đã bàn giao; notebook tạo artifact mới cho lần thực hành.
 
-Notebook 01–06 cũng dùng ví dụ cụ thể trước khi tổng hợp toàn tập và ghi kết quả
-riêng trong `outputs/notebookNN/run-*/`. Notebook 03 chạy lại CV và đánh giá RUL;
-notebook 04 fit lại Health Index/ARIMA. Notebook 05 tính lại metric và bootstrap
-từ dự đoán thí nghiệm đã lưu; notebook 06 tính lại EWMA, bất thường và lịch từ
-raw cùng RUL dự đoán baseline. Các artifact gốc tiếp tục được giữ để đối chiếu.
+Notebook 01, 02, 03 và 06 cũng dùng ví dụ cụ thể trước khi tổng hợp toàn tập và
+ghi kết quả riêng trong `outputs/notebookNN/run-*/`. Notebook 03 chạy lại CV và
+đánh giá RUL; notebook 06 tính lại EWMA, bất thường và lịch từ raw cùng RUL dự
+đoán baseline. Các artifact gốc tiếp tục được giữ để đối chiếu.
 
 ## Đối chiếu yêu cầu môn học
 
@@ -64,7 +63,7 @@ outputs/etl/                     Kết quả chính FD001
     └── etl.sqlite               engine_summary và train_targets
 outputs/features/gold/
 └── rolling_features.parquet     27.927 dòng, 129 cột
-outputs/cross_dataset/FD00x/      ETL và features riêng cho mỗi subset
+outputs/cross_dataset/FD00x/etl/  ETL riêng cho mỗi subset; FD002–FD004 chỉ đi qua ETL
 ```
 
 Các file trong `data/raw/` được tải bằng `python -m cmapss.data.acquire`. Lệnh kiểm
@@ -89,7 +88,7 @@ giữa các subset. Schema hiện tại chưa có cột đó.
 Nguồn: [reader](../src/cmapss/data/readers.py),
 [ETL Pandas](../src/cmapss/etl/pandas_pipeline.py),
 [ETL PySpark](../src/cmapss/etl/spark_pipeline.py),
-[cross-dataset](../src/cmapss/cross_dataset.py).
+[ETL CLI với `--dataset-id`](../src/cmapss/etl/cli.py).
 
 ## 2. Lấy dữ liệu và truy vấn ở đâu?
 
@@ -148,8 +147,8 @@ contract.
 
 Chuẩn hóa schema/type ở ETL khác scaling giá trị: Ridge fit StandardScaler
 trên training fold; Health Index dùng cho bất thường và lịch bảo trì fit
-StandardScaler/PCA trên toàn bộ train đã khử nhiễu (không dùng nhãn), còn Health
-Index của phân tích ARIMA fit trên 90 động cơ train không thuộc 10 động cơ đánh giá. HGB được chọn dùng features theo thang gốc.
+StandardScaler/PCA trên toàn bộ train đã khử nhiễu (không dùng nhãn). HGB được
+chọn dùng features theo thang gốc.
 Không có scaler chung nằm trước bước rolling features trong pipeline RUL.
 
 ## 4. Columns, features và feature selection
@@ -160,9 +159,7 @@ ba khóa cùng **21 × 6 = 126** cột theo mẫu `<sensor>__<stat>`: `last`, `m
 mô hình chính. `split`, `engine_id`, `cycle` dùng quản lý và chia fold.
 
 Tạo 126 feature columns là feature engineering (xây dựng đặc trưng). Mô hình HGB
-chính nhận đủ 126 cột và không thực hiện feature selection để giảm số cột. Thử
-nghiệm mở rộng có thêm `cycle` và 42 history features (169 cột), nhưng không thay
-mô hình chính.
+chính nhận đủ 126 cột và không thực hiện feature selection để giảm số cột.
 Danh sách sensor có correlation cao hoặc có p-value nhỏ trong EDA/statistics
 không được dùng để chọn sensor cho model.
 
@@ -250,10 +247,10 @@ hoặc độ sẵn sàng của cụm nhiều máy trong production.
 Đợt kiểm tra phần mềm ngày 07/10/2026 được ghi tại
 [`CODE_RELIABILITY_20261007.json`](archive/CODE_RELIABILITY_20261007.json) và kế hoạch
 được mô tả tại [`CODE_RELIABILITY_PLAN_20261007.md`](archive/CODE_RELIABILITY_PLAN_20261007.md).
-Bằng chứng gồm 426 test passed và 1 test skip vì môi trường thiếu `torch` cho
-TCN; chạy CLI từ CWD khác vẫn giữ checksum raw; worker spawn thực hiện save/load
-và resume; dependency runtime và lockfile được đối chiếu. Đây là bằng chứng
-reliability của code và artifact, không phải kết quả model mới.
+Bằng chứng gồm: chạy CLI từ CWD khác vẫn giữ checksum raw; dependency runtime và
+lockfile được đối chiếu. Đây là bằng chứng reliability của code và artifact, không
+phải kết quả model mới.
+Bộ kiểm thử ngày 21/10/2026 có **272 kiểm thử đạt**.
 
 ETL và rolling ghi ra staging rồi publish manifest sau cùng; khi validation
 không đạt, output cũ được giữ và thao tác có rollback. Cơ chế này không cam kết
@@ -285,5 +282,7 @@ qua driver nên chưa suy rộng được hiệu năng sang cluster.”
 - Local benchmark: [run info](../outputs/benchmarks/20260929/run_info.json),
   [median summary](../outputs/benchmarks/20260929/summary.csv).
 - Model/cảnh báo: [modeling artifacts](../outputs/modeling/README.md).
-- Health Index: [timeseries artifacts](../outputs/timeseries/README.md).
+- Health Index: [code](../src/cmapss/timeseries/health_index.py),
+  [EWMA và bất thường](../outputs/degradation/summary.json),
+  [lịch bảo trì](../outputs/maintenance/summary.json).
 - Demo dashboard: phần demo trong [sổ tay thuyết trình](SPEECH_SCRIPT_VI.pdf).

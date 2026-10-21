@@ -70,7 +70,6 @@ Báo cáo có [cơ sở lý thuyết](../report/sections/theory.tex) và
 - Nguồn dữ liệu: [DATA_SOURCE.md](../data/raw/DATA_SOURCE.md), [README gốc](../data/raw/readme.txt) và [NASA Open Data](https://data.nasa.gov/dataset/cmapss-jet-engine-simulated-data).
 - Kết quả đối chiếu file local: train có **20.631 dòng / 100 động cơ**, test có **13.096 dòng / 100 động cơ** và có **100 nhãn RUL**. Mỗi dòng gồm 26 cột: engine ID, cycle, 3 operational settings và 21 sensor readings.
 - FD001 là dữ liệu mô phỏng theo **cycle**, không có timestamp lịch. Không chuyển RUL sang giờ/ngày nếu chưa có giả định quy đổi được giải thích.
-- Bộ dữ liệu AI4I đã nằm trong `data/archive/ai4i/`; danh sách này tập trung vào FD001 đang dùng.
 - Những ví dụ về window, mô hình và ngưỡng cảnh báo là **đề xuất thực nghiệm**, không phải yêu cầu bắt buộc của giảng viên hoặc kết quả đã quan sát.
 
 Ví dụ: nếu một động cơ train kết thúc ở cycle 200 thì RUL tại cycle 170 bằng
@@ -82,9 +81,7 @@ PDF để đọc offline được tập hợp trong [papers/](papers/README.md).
 
 ## Nguồn bổ sung ngày 27/09/2026
 
-- `sklearnNestedCV2026`: [Nested versus non-nested cross-validation](https://scikit-learn.org/stable/auto_examples/model_selection/plot_nested_cross_validation_iris.html). Cơ sở tách lựa chọn cấu hình khỏi đánh giá vòng ngoài.
 - `sklearnHGBAPI2026`: [HistGradientBoostingRegressor API](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.HistGradientBoostingRegressor.html). Đối chiếu tham số và `early_stopping=False` với môi trường cài scikit-learn 1.9.1.
 
-Hai nguồn giải thích phương pháp. Kết quả định lượng lấy từ artifact của
-repository, không lấy từ ví dụ của scikit-learn. Ví dụ low-RUL MAE 3,6730 cycles
-là kết quả thực nghiệm FD001 của đợt này.
+Nguồn này giải thích phương pháp. Kết quả định lượng lấy từ artifact của
+repository, không lấy từ ví dụ của scikit-learn.

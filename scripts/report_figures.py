@@ -1,4 +1,4 @@
-"""Render data-driven figures used in the report (Sections 4.2, 5.7 and 6).
+"""Render data-driven figures used in the report (Sections 4 and 7).
 
 Reads raw C-MAPSS files and existing artifacts only; trains nothing and never
 modifies source artifacts. Writes PNG files to outputs/diagnostics/figures/.
@@ -148,87 +148,9 @@ def warning_vs_lifetime() -> Path:
     return path
 
 
-def transfer_shift() -> Path:
-    """Figure: sensor_11 range shift and prediction spread across subsets."""
-    ref = read_raw("train_FD001.txt")
-    lo, hi = ref["sensor_11"].min(), ref["sensor_11"].max()
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10.5, 3.8), gridspec_kw={"width_ratios": [1.2, 1]})
-
-    bins = np.linspace(35.5, 49, 110)
-    ax1.axvspan(lo, hi, color=BLUE, alpha=0.12, lw=0)
-    ax1.hist(ref["sensor_11"], bins=bins, density=True, color=BLUE, alpha=0.85, label="FD001 train")
-    for name, color in (("FD002", ORANGE), ("FD003", AQUA)):
-        test = read_raw(f"test_{name}.txt")
-        ax1.hist(test["sensor_11"], bins=bins, density=True, histtype="step", lw=1.6, color=color, label=f"{name} test")
-    ax1.text((lo + hi) / 2, ax1.get_ylim()[1] * 0.92, "miền giá trị\ncủa FD001", ha="center", fontsize=7.5, color=INK)
-    ax1.set(xlabel="giá trị sensor_11", ylabel="mật độ",
-            title="(a) FD002 có nhiều cụm giá trị nằm ngoài miền FD001")
-    ax1.legend(loc="upper left", fontsize=8)
-
-    groups, colors = [], []
-    for target in ("FD002", "FD003", "FD004"):
-        internal = pd.read_parquet(ROOT / f"outputs/cross_dataset/evaluations/{target}_to_{target}/modeling/predictions/final_evaluation.parquet")
-        transfer = pd.read_parquet(ROOT / f"outputs/cross_dataset/evaluations/FD001_to_{target}/modeling/predictions/final_evaluation.parquet")
-        groups += [internal["y_true"], internal["y_pred"], transfer["y_pred"]]
-        colors += [LIGHT_GRAY, BLUE, ORANGE]
-    positions = [1, 2, 3, 5, 6, 7, 9, 10, 11]
-    parts = ax2.boxplot(groups, positions=positions, widths=0.7, patch_artist=True, showfliers=False,
-                        medianprops={"color": INK, "lw": 1.2}, whiskerprops={"color": INK_2}, capprops={"color": INK_2})
-    for box, color in zip(parts["boxes"], colors):
-        box.set(facecolor=color, edgecolor="white", lw=1.5)
-    ax2.set_xticks([2, 6, 10], ["test FD002", "test FD003", "test FD004"])
-    ax2.set(ylabel="RUL (cycle)", title="(b) Mô hình FD001 dự đoán gần như hằng số trên FD002, FD004")
-    handles = [plt.Rectangle((0, 0), 1, 1, color=c) for c in (LIGHT_GRAY, BLUE, ORANGE)]
-    ax2.legend(handles, ["RUL thật", "dự đoán, huấn luyện nội bộ", "dự đoán của mô hình FD001"], fontsize=7.5,
-               loc="upper center", ncol=3, bbox_to_anchor=(0.5, -0.22))
-    fig.tight_layout()
-    path = OUT / "transfer_shift.png"
-    style_figure(fig)
-    fig.savefig(path)
-    plt.close(fig)
-    return path
-
-
-def cross_dataset_mae() -> Path:
-    """Figure: internal versus transfer MAE with bootstrap confidence intervals."""
-    import json
-
-    matrix = json.loads((ROOT / "outputs/cross_dataset/matrix.json").read_text(encoding="utf-8"))
-    rows = {}
-    for item in matrix["evaluations"]:
-        ci = item["bootstrap"]["intervals"]["mean_engine_mae"]
-        rows[(item["source_dataset"], item["target_dataset"])] = (
-            item["metrics"]["mean_engine_mae"], ci["ci_lower"], ci["ci_upper"])
-    fig, ax = plt.subplots(figsize=(6.4, 3.2))
-    targets = ["FD001", "FD002", "FD003", "FD004"]
-    for i, target in enumerate(targets):
-        for key, offset, color, marker, label in (
-            ((target, target), -0.12, BLUE, "o", "huấn luyện nội bộ trên chính subset"),
-            (("FD001", target), 0.12, ORANGE, "s", "mô hình FD001 áp dụng trực tiếp"),
-        ):
-            if key not in rows or (key[0] == "FD001" and target == "FD001" and offset > 0):
-                continue
-            mae, lo, hi = rows[key]
-            ax.errorbar(mae, i + offset, xerr=[[mae - lo], [hi - mae]], fmt=marker, color=color, ms=6,
-                        mec="white", mew=1, elinewidth=1.6, capsize=0, label=label if i == 1 else None)
-            ax.text(hi + 1.2, i + offset, vn(mae), va="center", fontsize=7.5, color=INK)
-    ax.set_yticks(range(len(targets)), [f"test {t}" for t in targets])
-    ax.invert_yaxis()
-    ax.set(xlabel="MAE theo động cơ (cycle), khoảng tin cậy bootstrap 95%", xlim=(0, 75),
-           title="Ma trận đánh giá với window 10 cycles")
-    ax.grid(axis="x")
-    ax.grid(axis="y", visible=False)
-    ax.legend(loc="upper right", fontsize=8)
-    path = OUT / "cross_dataset_mae.png"
-    style_figure(fig)
-    fig.savefig(path)
-    plt.close(fig)
-    return path
-
-
 def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
-    for build in (window_example, oof_pred_vs_true, warning_vs_lifetime, transfer_shift, cross_dataset_mae):
+    for build in (window_example, oof_pred_vs_true, warning_vs_lifetime):
         print("wrote", build().relative_to(ROOT))
 
 

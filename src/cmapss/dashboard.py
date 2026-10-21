@@ -9,8 +9,6 @@ from typing import Any
 
 import pandas as pd
 
-from cmapss.project import IMPROVEMENT_RUN
-
 TRAJECTORY_SENSOR_STATS = ("last", "mean")
 
 
@@ -60,7 +58,7 @@ def _read_checked(path: Path, columns: set[str]) -> pd.DataFrame:
 
 @dataclass(frozen=True)
 class DashboardData:
-    """Artifact cuối của mô hình FD001, cảnh báo sớm và chuỗi thời gian."""
+    """Artifact cuối của mô hình FD001 và cảnh báo sớm."""
 
     model_metrics: dict[str, Any]
     model_comparison: pd.DataFrame
@@ -69,13 +67,7 @@ class DashboardData:
     model_predictions: pd.DataFrame
     model_evaluation: pd.DataFrame
     oof_predictions: pd.DataFrame
-    health_index: pd.DataFrame
-    forecast_metrics: pd.DataFrame
-    baseline_metrics: pd.DataFrame
-    diagnostics: pd.DataFrame
-    forecasts: pd.DataFrame
     model_run_info: dict[str, Any]
-    timeseries_run_info: dict[str, Any]
 
     @property
     def selected_model(self) -> str:
@@ -85,7 +77,6 @@ class DashboardData:
 def load_dashboard_data(repo_root: str | Path = ".") -> DashboardData:
     root = Path(repo_root).resolve()
     modeling = root / "outputs" / "modeling"
-    timeseries = root / "outputs" / "timeseries"
     key = {"split", "engine_id", "cycle"}
     return DashboardData(
         model_predictions=_read_checked(
@@ -115,61 +106,9 @@ def load_dashboard_data(repo_root: str | Path = ".") -> DashboardData:
                 "warning_timing",
             },
         ),
-        health_index=_read_checked(timeseries / "tables" / "health_index.csv", key | {"health_index"}),
-        forecast_metrics=_read_checked(
-            timeseries / "tables" / "forecast_metrics.csv", {"engine_id", "mae", "rmse", "coverage_95", "status"}
-        ),
-        baseline_metrics=_read_checked(
-            timeseries / "tables" / "baseline_metrics.csv", {"engine_id", "baseline_name", "mae", "rmse"}
-        ),
-        diagnostics=_read_checked(
-            timeseries / "tables" / "diagnostics.csv", {"engine_id", "adf_pvalue", "ljung_box_pvalue", "status"}
-        ),
-        forecasts=_read_checked(
-            timeseries / "predictions" / "arima_forecasts.parquet",
-            {"engine_id", "cycle", "health_index_true", "health_index_pred", "lower_95", "upper_95"},
-        ),
         model_metrics=_read_json(modeling / "tables" / "final_metrics.json"),
         warning_summary=_read_json(modeling / "tables" / "warning_summary.json"),
         model_run_info=_read_json(modeling / "run_info.json"),
-        timeseries_run_info=_read_json(timeseries / "run_info.json"),
-    )
-
-
-@dataclass(frozen=True)
-class ImprovementData:
-    """Artifact của thí nghiệm cải thiện RUL bằng nested cross-validation."""
-
-    root: Path
-    run_info: dict[str, Any]
-    decision: dict[str, Any]
-    ablation: pd.DataFrame
-    paired: pd.DataFrame
-    test: pd.DataFrame
-    selection: pd.DataFrame
-    predictions: pd.DataFrame
-
-
-def load_improvement_data(repo_root: str | Path = ".") -> ImprovementData:
-    """Đọc lần chạy cải thiện; dừng nếu chưa đánh giá trên test."""
-    root = Path(repo_root).resolve() / IMPROVEMENT_RUN
-    info = _read_json(root / "run_info.json")
-    if not info.get("test_label_joined"):
-        raise DashboardDataError("Thực nghiệm chưa hoàn tất đánh giá cuối.")
-    return ImprovementData(
-        root=root,
-        run_info=info,
-        decision=_read_json(root / "decision.json"),
-        ablation=_read_checked(
-            root / "ablation_metrics.csv",
-            {"stage", "mean_engine_mae", "low_rul_engine_mae", "late_or_missed_count", "early_alarm_burden"},
-        ),
-        paired=_read_checked(root / "paired_comparison.csv", {"stage", "metric", "delta", "ci_lower", "ci_upper"}),
-        test=_read_table(root / "test_comparison.csv"),
-        selection=_read_checked(root / "final_selection_metrics.csv", {"stage", "candidate_id", "selected"}),
-        predictions=_read_checked(
-            root / "outer_predictions.parquet", {"stage", "engine_id", "cycle", "y_true", "y_pred"}
-        ),
     )
 
 
@@ -213,48 +152,11 @@ def load_exploration_data(repo_root: str | Path = ".") -> ExplorationData:
     )
 
 
-def load_cross_dataset(repo_root: str | Path = ".") -> pd.DataFrame:
-    """Chuyển outputs/cross_dataset/matrix.json thành bảng một dòng mỗi phép đánh giá."""
-    matrix = _read_json(Path(repo_root).resolve() / "outputs" / "cross_dataset" / "matrix.json")
-    evaluations = matrix.get("evaluations")
-    if not isinstance(evaluations, list) or not evaluations:
-        raise DashboardDataError("matrix.json không có phép đánh giá")
-    rows = []
-    for item in evaluations:
-        metrics = item["metrics"]
-        interval = item.get("bootstrap", {}).get("intervals", {}).get("mean_engine_mae", {})
-        rows.append(
-            {
-                "source": item["source_dataset"],
-                "target": item["target_dataset"],
-                "evaluation_type": item["evaluation_type"],
-                "n_engines": int(metrics["n_engines"]),
-                "mean_engine_mae": float(metrics["mean_engine_mae"]),
-                "mae_ci_lower": interval.get("ci_lower"),
-                "mae_ci_upper": interval.get("ci_upper"),
-                "rmse": float(metrics["rmse"]),
-                "nasa_score": float(metrics["nasa_score"]),
-            }
-        )
-    frame = pd.DataFrame(rows)
-    frame.attrs["window_cycles"] = matrix.get("window_cycles")
-    return frame
-
-
 def format_metric(value: float | int, decimals: int = 4) -> str:
     """Định dạng số kiểu Việt: phẩy thập phân, chấm hàng nghìn."""
     from cmapss.presentation import format_number_vi
 
     return format_number_vi(value, decimals)
-
-
-def selected_engine_ids(data: DashboardData) -> list[int]:
-    """Các ID động cơ đã sắp xếp trong bảng đánh giá RUL hoặc Health Index."""
-    ids = pd.concat(
-        [data.model_evaluation["engine_id"], data.health_index["engine_id"]],
-        ignore_index=True,
-    ).dropna()
-    return sorted({int(engine_id) for engine_id in ids})
 
 
 def engine_rul_view(data: DashboardData, engine_id: int) -> pd.DataFrame:
@@ -268,25 +170,6 @@ def engine_oof_trajectory(data: DashboardData, engine_id: int, model_name: str |
     oof = data.oof_predictions
     view = oof.loc[(oof["engine_id"] == engine_id) & (oof["model_name"] == model)]
     return view.sort_values("cycle").reset_index(drop=True)
-
-
-def engine_timeseries_view(data: DashboardData, engine_id: int) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Lịch sử Health Index và dự báo holdout ARIMA của một động cơ."""
-    history = data.health_index.loc[data.health_index["engine_id"] == engine_id].copy()
-    forecast = data.forecasts.loc[data.forecasts["engine_id"] == engine_id].copy()
-    return (
-        history.sort_values("cycle").reset_index(drop=True),
-        forecast.sort_values("cycle").reset_index(drop=True),
-    )
-
-
-def forecast_comparison(data: DashboardData, engine_id: int) -> pd.DataFrame:
-    """Sai số holdout của ARIMA và baseline của một động cơ."""
-    arima = data.forecast_metrics.loc[data.forecast_metrics["engine_id"] == engine_id, ["mae", "rmse"]]
-    arima = arima.assign(method="arima")
-    baselines = data.baseline_metrics.loc[data.baseline_metrics["engine_id"] == engine_id]
-    baselines = baselines.rename(columns={"baseline_name": "method"})[["method", "mae", "rmse"]]
-    return pd.concat([arima[["method", "mae", "rmse"]], baselines], ignore_index=True)
 
 
 def sensor_trajectory(exploration: ExplorationData, engine_id: int, sensors: list[str], stat: str) -> pd.DataFrame:

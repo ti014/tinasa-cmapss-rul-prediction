@@ -15,8 +15,8 @@ không có nghĩa tín hiệu đã khử nhiễu được đưa vào mô hình R
 Repository này phục vụ báo cáo cuối kỳ môn Phân tích dữ liệu lớn, **Đề tài 8 —
 Phân tích dữ liệu IoT và bảo trì dự đoán**. Bài toán: phân tích dữ liệu cảm biến
 thiết bị để phát hiện dấu hiệu bất thường và dự đoán thời điểm cần bảo trì. Dữ liệu
-là bộ mô phỏng động cơ turbofan NASA C-MAPSS; phân tích chính dùng FD001,
-FD002–FD004 chỉ dùng trong thử nghiệm mở rộng.
+là bộ mô phỏng động cơ turbofan NASA C-MAPSS. FD002–FD004 chỉ đi qua bước ETL;
+mô hình chỉ được huấn luyện và đánh giá trên FD001.
 
 ## Trạng thái
 
@@ -38,16 +38,11 @@ Sản phẩm bàn giao:
 - [Báo cáo PDF](report/main.pdf) (40 trang, [nguồn LaTeX](report/README.md)).
 - [Slide trình bày](slides/cmapss_fd001_presentation.pptx) ([PDF](slides/cmapss_fd001_presentation.pdf)),
   20 slide trên template IUH, dựng bằng [`slides/build_presentation.py`](slides/build_presentation.py).
-- [Dashboard Streamlit](app.py) chín trang, chỉ đọc artifact.
-- Bảy notebook đã chạy trong [`notebooks/`](notebooks/), mỗi notebook ghi họ tên và MSHV.
+- [Dashboard Streamlit](app.py) tám trang, chỉ đọc artifact.
+- Năm notebook đã chạy (00, 01, 02, 03, 06) trong [`notebooks/`](notebooks/), mỗi notebook ghi họ tên và MSHV.
 - [Sổ tay thuyết trình](handoff/SPEECH_SCRIPT_VI.pdf) (mỗi slide kèm chỗ cần chỉ và lời đọc,
   có phần demo dashboard), [gói bàn giao](handoff/FINAL_HANDOFF.md) và
   [đối chiếu yêu cầu môn học](handoff/COURSE_ALIGNMENT.md).
-
-Thử nghiệm mở rộng (nested CV, thêm 42 đặc trưng lịch sử, similarity-based RUL,
-LightGBM, TCN, chuyển miền FD002–FD004, ARIMA) vẫn được giữ trong
-[`experiments/`](experiments/README.md) và `outputs/experiments/`. Không thử nghiệm
-nào thay đổi mô hình chính hay chính sách cảnh báo.
 
 Lệnh cài đặt và chạy từng bước có ở phần Bắt đầu. Dashboard dùng dependency tùy
 chọn `dashboard`.
@@ -68,7 +63,7 @@ Sản phẩm đặc thù theo đề tài là **báo cáo dự đoán thời đi�
 
 ## Dữ liệu
 
-Báo cáo dùng bốn subset mô phỏng NASA C-MAPSS. FD001 là subset chính cho phân tích chi tiết; FD002–FD004 phục vụ đánh giá bổ sung.
+Báo cáo dùng bốn subset mô phỏng NASA C-MAPSS. FD001 là subset được phân tích và mô hình hóa; FD002–FD004 chỉ đi qua bước ETL.
 
 | Subset | Dòng train | Dòng test | Động cơ train | Động cơ test và nhãn |
 | --- | ---: | ---: | ---: | ---: |
@@ -86,7 +81,7 @@ Mỗi quan sát gồm:
 - Ba thông số vận hành (operational settings).
 - Giá trị của 21 cảm biến (sensor measurements).
 
-FD001 đại diện cho một điều kiện vận hành và một dạng suy giảm High-Pressure Compressor. FD002–FD004 mở rộng số điều kiện vận hành và dạng lỗi. Tín hiệu chứa nhiễu cảm biến mô phỏng. Ma trận metric bổ sung cho FD002–FD004 nằm trong `outputs/cross_dataset`.
+FD001 đại diện cho một điều kiện vận hành và một dạng suy giảm High-Pressure Compressor. FD002–FD004 mở rộng số điều kiện vận hành và dạng lỗi. Tín hiệu chứa nhiễu cảm biến mô phỏng.
 
 ### Nguồn gốc và tính toàn vẹn
 
@@ -96,8 +91,8 @@ FD001 đại diện cho một điều kiện vận hành và một dạng suy gi
 - Ghi chú nguồn trong repository: [`data/raw/DATA_SOURCE.md`](data/raw/DATA_SOURCE.md)
 
 Đây là dữ liệu mô phỏng, không phải telemetry thu trực tiếp ngoài thực địa. Kết
-quả phục vụ so sánh học thuật tái lập, trong đó FD001 là subset chính và
-FD002–FD004 là các đánh giá bổ sung; kết quả chưa chứng minh hiệu quả khi triển khai thực tế.
+quả phục vụ phân tích học thuật tái lập trên FD001; kết quả chưa chứng minh hiệu
+quả khi triển khai thực tế.
 
 ## Kiến trúc dữ liệu
 
@@ -141,7 +136,7 @@ features (6 phép tóm tắt cho mỗi 21 sensor).
 | Phân tích tín hiệu | Pandas, scikit-learn | EWMA, Health Index fit trên train và trạng thái bất thường; tách khỏi features RUL |
 | Modeling | scikit-learn | GroupKFold và HistGradientBoostingRegressor |
 | Đánh giá | scikit-learn, SciPy | MAE, RMSE, NASA score, bootstrap CI |
-| Trực quan hóa | Matplotlib, Seaborn, Streamlit | Hình, dashboard và kết quả |
+| Trực quan hóa | Matplotlib, Altair, Streamlit | Hình, dashboard và kết quả |
 
 FD001 hiện chưa đủ lớn để tự gọi là Big Data. Báo cáo thể hiện khả năng mở
 rộng qua ETL Bronze/Silver/Gold, Parquet, PySpark parity và benchmark 1x/10x/100x.
@@ -252,40 +247,6 @@ số cycle còn lại.
 Ví dụ: động cơ test 90 ở cycle 146 có RUL dự đoán 31,2, nên cần bảo trì ở cycle 147
 và đang ở mức theo dõi tăng cường vì Health Index đã báo bất thường từ cycle 67.
 
-### Đánh giá FD002–FD004
-
-Kho raw đã có đủ FD001–FD004. Ma trận bổ sung dùng cùng pipeline với window 10
-cycle vì test FD004 có động cơ ngắn nhất 19 cycle; kết quả này không thay thế
-metric chính FD001 dùng window 30. Evaluation nội bộ đạt MAE 21,9258 trên FD001,
-22,3556 trên FD002, 28,3255 trên FD003 và 27,2218 trên FD004. Khi giữ nguyên
-model fit trên FD001 rồi transfer sang dataset khác, MAE là 60,3215 trên FD002,
-47,3949 trên FD003 và 58,5731 trên FD004. Kết quả cho thấy không nên dùng trực
-tiếp model FD001 cho subset khác nếu chưa huấn luyện lại hoặc điều chỉnh theo
-dữ liệu của subset đó.
-Xem [artifact ma trận transfer](outputs/cross_dataset/README.md).
-
-### Phân tích ARIMA
-
-ARIMA là phân tích chuỗi thời gian phụ, không phải mô hình RUL chính. Pipeline
-đã triển khai chọn 10 động cơ validation trước khi dự báo, huấn luyện StandardScaler và
-PCA trên 90 động cơ train còn lại rồi transform các động cơ được chọn, sau đó dùng 70% đầu chuỗi để fit và
-30% cuối để đánh giá. Phép biến đổi và cách chia dữ liệu này tách biệt với Health
-Index dùng cho bất thường/lịch bảo trì:
-
-- MAE và RMSE của dự báo.
-- Tỷ lệ bao phủ của khoảng dự đoán 95%.
-- Chẩn đoán tính dừng Augmented Dickey-Fuller.
-- Chẩn đoán tự tương quan phần dư Ljung-Box.
-
-Lần chạy hiện tại fit hội tụ cả 10 động cơ; MAE nằm trong khoảng 0,1515--1,0372
-và tỷ lệ bao phủ khoảng dự đoán 95% nằm trong khoảng 21,43%--97,03%. ADF không bác
-bỏ tính không dừng trên các đoạn huấn luyện. Sau khi điều chỉnh Ljung--Box theo
-`p+q`, động cơ 69 và 70 có p-value dưới 0,05. ARIMA không được áp dụng trực tiếp lên
-nhãn RUL train; dự báo Health Index không phải RUL.
-Trên cùng đoạn dữ liệu giữ lại để kiểm tra, MAE trung bình của ARIMA là 0,4110, của `drift` là 0,7469 và
-của `last_value` là 0,9478; đây là so sánh mô tả, chưa phải bằng chứng ưu thế
-thống kê. ARIMA thuộc thử nghiệm mở rộng và không dùng để cảnh báo.
-
 Ma trận đại lượng cần ước lượng, đơn vị phân tích, cách chia dữ liệu/khoảng dự báo, metric và vai trò báo cáo
 được lưu trong
 [`outputs/modeling/tables/evaluation_protocol.csv`](outputs/modeling/tables/evaluation_protocol.csv).
@@ -343,17 +304,18 @@ Cấu trúc repository hiện tại:
 ```text
 .
 ├── data/
-│   ├── raw/                 # FD001–FD004 nguyên bản và ghi chú nguồn
-│   └── archive/             # Dữ liệu lưu để đối chiếu, không dùng cho mô hình chính
+│   └── raw/                 # FD001–FD004 nguyên bản và ghi chú nguồn
 ├── references/              # Tài liệu tham khảo và bối cảnh assignment
-├── notebooks/               # 00 walkthrough dữ liệu, 01 EDA, 02 thống kê, 03–06 rà soát kết quả (đã chạy)
-├── src/cmapss/              # data/, statistics/, etl/, features/, modeling/, timeseries/,
+├── notebooks/               # Đã chạy: 00 walkthrough dữ liệu, 01 EDA, 02 thống kê, 03 mô hình RUL,
+│                            # 06 khử nhiễu, bất thường và lịch bảo trì
+├── src/cmapss/              # data/, statistics/, etl/, features/, modeling/, timeseries/ (Health Index),
 │                            # degradation/ (EWMA, bất thường), maintenance/ (lịch bảo trì), hdfs/ (HDFS, MapReduce,
 │                            # Spark trên HDFS), data/acquire.py (tải và kiểm tra checksum), eda.py, validate.py,
 │                            # dashboard.py (đọc artifact), dashboard_app.py (giao diện Streamlit)
 ├── infra/hadoop/            # Docker Compose cho cụm Hadoop một node và Spark client
-├── scripts/                 # Đóng gói, hình báo cáo và kiểm tra thử nghiệm cải thiện
-├── tests/                   # Kiểm thử data contract, CLI, EDA, thống kê, ETL, features, modeling, timeseries và tái lập
+├── scripts/                 # Đóng gói, hình báo cáo, chẩn đoán sai số, bằng chứng đối chiếu môn học, xuất slide
+├── tests/                   # Kiểm thử data contract, CLI, EDA, thống kê, ETL, HDFS, features, modeling, Health Index,
+│                            # khử nhiễu, lịch bảo trì, dashboard và tái lập
 ├── outputs/validation/      # Báo cáo kiểm tra dữ liệu hiện có
 ├── outputs/eda/             # Bảng, hình, phương pháp và kiểm tra EDA
 ├── outputs/statistics/      # Artifact suy luận sensor chỉ dùng train và validation
@@ -362,10 +324,9 @@ Cấu trúc repository hiện tại:
 ├── outputs/hdfs/            # Danh sách file HDFS, fsck, kết quả MapReduce và Spark, ảnh giao diện web
 ├── outputs/features/        # Parquet Gold rolling features và metadata
 ├── outputs/modeling/        # Grouped CV, prediction, model artifact và final metrics
-├── outputs/timeseries/      # Artifact Health Index và PCA--ARIMA train-only
 ├── outputs/degradation/     # Tín hiệu EWMA, Health Index, cycle phát hiện bất thường
 ├── outputs/maintenance/     # Lịch bảo trì 100 động cơ test, kế hoạch và bảng kiểm tra
-├── outputs/cross_dataset/   # ETL, features và kết quả transfer FD001–FD004
+├── outputs/cross_dataset/   # Biên bản ETL riêng từng subset FD001–FD004 (FD002–FD004 chỉ đi qua ETL)
 ├── assets/diagrams/         # Nguồn draw.io, bản xem trước SVG và file URL
 ├── pyproject.toml           # Thông tin package và dependency trực tiếp
 ├── requirements.txt         # Cài bằng pip: package và thư viện chạy chương trình
@@ -463,8 +424,7 @@ HGB. Dự đoán RUL và trạng thái bất thường chỉ được ghép ở 
 test được đọc sau khi ghi predictions hoặc lịch. Trên hình, bước 1--3 chuẩn bị
 dữ liệu; nhánh A dự đoán RUL, nhánh B theo dõi tín hiệu. Ô nét đứt (chạy lại trên
 Hadoop) chỉ kiểm tra lại bảng tổng hợp động cơ và không đi vào mô hình RUL. [Sơ đồ trong báo cáo](report/figures/pipeline.pdf)
-thể hiện cùng các ranh giới này; PCA–ARIMA và chuyển miền FD002–FD004 vẫn là thử
-nghiệm mở rộng.
+thể hiện cùng các ranh giới này.
 
 ![Pipeline dữ liệu tổng thể FD001](assets/diagrams/fd001-pipeline.png)
 
@@ -483,11 +443,7 @@ Chọn kernel Python của `.venv` và **Restart Kernel and Run All Cells**.
 Notebook chỉ phân tích train, tạo 12 bảng CSV và 14 hình PNG trong thư mục mới
 `outputs/notebook01/run-*/`. Các kiểm tra tái lập EDA trước đây áp dụng cho bộ
 artifact gốc ở `outputs/eda/`, được giữ nguyên để đối chiếu.
-Bộ kiểm thử ngày 21/10/2026 đạt **492 passed, 1 skipped**; kiểm thử
-TCN được bỏ qua vì môi trường chưa có `torch`. Lần chạy ngày 29/09/2026 đạt
-**198 tests** và được giữ như bằng chứng lịch sử cho các nhánh dữ liệu, thống kê,
-ETL, đặc trưng, modeling, PCA--ARIMA, đánh giá liên subset, dashboard và tái lập
-end-to-end.
+Bộ kiểm thử ngày 21/10/2026 có **272 kiểm thử đạt**.
 
 ![Quy trình EDA train FD001](assets/diagrams/fd001-eda.svg)
 
@@ -640,35 +596,19 @@ Lần chạy hiện tại chọn `hist_gradient_boosting`, đạt mean engine-le
 Xem [artifact và validation modeling](outputs/modeling/README.md) để biết fold
 metrics, final predictions, final evaluation, hình và giới hạn.
 
-### Chạy đánh giá FD001–FD004
+### Chạy ETL cho FD001–FD004
 
-Sau khi muốn tái tạo ma trận within-subset và transfer, chạy:
-
-```powershell
-.venv\Scripts\python -m cmapss.cross_dataset `
-  --raw-dir data/raw `
-  --output-root outputs/cross_dataset `
-  --window-cycles 10
-```
-
-Lệnh tạo bốn lần đánh giá nội bộ và ba lần đánh giá chuyển subset từ FD001. Xem [artifact
-ma trận](outputs/cross_dataset/README.md). Kết quả dùng window 10 vì FD004 có
-động cơ test ngắn nhất 19 cycle; không thay thế kết quả FD001 window 30.
-
-### Chạy phân tích PCA--ARIMA
-
-Sau khi ETL và modeling đã ghi artifact, chạy phân tích Health Index phụ:
+FD002–FD004 chỉ đi qua bước ETL; mô hình chỉ được huấn luyện và đánh giá trên
+FD001. Để tạo lại biên bản ETL theo subset (tổng 265.256 bản ghi của bốn subset),
+chạy ETL CLI cho từng subset, ví dụ FD002:
 
 ```powershell
-.venv\Scripts\python -m cmapss.timeseries `
-  --observations outputs/etl/silver/observations.parquet `
-  --fold-assignments outputs/modeling/tables/fold_assignments.csv `
-  --output-dir outputs/timeseries
+.venv\Scripts\python -m cmapss.etl `
+  --dataset-id FD002 `
+  --output-dir outputs/cross_dataset/FD002/etl
 ```
 
-Artifact hiện có 20.631 dòng Health Index train và 704 điểm dự báo trên đoạn giữ lại để kiểm tra của
-10 động cơ. Xem [artifact và validation PCA--ARIMA](outputs/timeseries/README.md)
-để biết quy tắc chọn động cơ, metric, hình và giới hạn.
+Xem [artifact ETL theo subset](outputs/cross_dataset/README.md).
 
 ### Chạy khử nhiễu và phát hiện bất thường
 
@@ -694,19 +634,15 @@ file, rồi mới đọc `RUL_FD001.txt` để tạo bảng kiểm tra `status_v
 
 ### Chạy notebook phân tích kết quả
 
-Notebook 01–06 giải thích từng bước qua một ví dụ, rồi mở rộng sang toàn bộ dữ liệu.
-Mỗi lần chạy ghi kết quả riêng trong `outputs/notebookNN/run-*/`. Notebook 03 chạy
-lại cross-validation và đánh giá RUL; notebook 04 fit lại Health Index và ARIMA.
-Notebook 05 tính lại metric/bootstrap từ dự đoán đã lưu, không chạy lại toàn bộ
-quá trình chọn cấu hình nested CV. Notebook 06 tính lại EWMA, Health Index, lưới
-độ nhạy và lịch, dùng RUL dự đoán từ baseline đã lưu. Các notebook dùng artifact
-đầu vào có sẵn trong repo và có thể chạy bằng kernel riêng.
+Notebook 01, 02, 03 và 06 giải thích từng bước qua một ví dụ, rồi mở rộng sang toàn
+bộ dữ liệu. Mỗi lần chạy ghi kết quả riêng trong `outputs/notebookNN/run-*/`.
+Notebook 03 chạy lại cross-validation và đánh giá RUL. Notebook 06 tính lại EWMA,
+Health Index, lưới độ nhạy và lịch, dùng RUL dự đoán từ baseline đã lưu. Các
+notebook dùng artifact đầu vào có sẵn trong repo và có thể chạy bằng kernel riêng.
 
 | Notebook | Nội dung | Dữ liệu đọc |
 |---|---|---|
 | `03_fd001_modeling_evaluation.ipynb` | Chạy 5-fold CV, chọn mô hình, đánh giá test và cảnh báo RUL ≤ 30 | `outputs/features/gold/rolling_features.parquet`, train targets; nhãn test đọc sau khi ghi dự đoán |
-| `04_fd001_health_index_arima.ipynb` | Học Health Index trên 90 động cơ, fit ARIMA cho 10 động cơ giữ riêng, so sánh baseline | Raw train và `outputs/modeling/tables/fold_assignments.csv` |
-| `05_cross_dataset_and_improvement.ipynb` | Tính lại metric, ablation và paired CI; kiểm tra quyết định giữ baseline | Dự đoán cross-dataset, run `20260928_rebuild` và follow-up `20260929` |
 | `06_fd001_degradation_maintenance.ipynb` | EWMA, bất thường, lưới độ nhạy, lịch bảo trì và đối chiếu nhãn test | Raw observations, `outputs/modeling/predictions/final_predictions.parquet`; nhãn test đọc sau khi lập lịch |
 
 Mở notebook trong JupyterLab rồi chạy tất cả các ô, hoặc chạy từ dòng lệnh:
@@ -718,14 +654,14 @@ Mở notebook trong JupyterLab rồi chạy tất cả các ô, hoặc chạy t�
 ### Chạy dashboard tái lập
 
 Cài dependency tùy chọn và khởi động Streamlit sau khi đã có artifact modeling,
-PCA--ARIMA, `cmapss.degradation` và `cmapss.maintenance`:
+`cmapss.degradation` và `cmapss.maintenance`:
 
 ```powershell
 uv sync --extra dashboard
 uv run --extra dashboard streamlit run app.py
 ```
 
-Dashboard có chín trang, sắp theo thứ tự pipeline. Có thể mở thẳng một trang bằng
+Dashboard có tám trang, sắp theo thứ tự pipeline. Có thể mở thẳng một trang bằng
 query string, ví dụ `http://localhost:8501/?page=Lịch bảo trì`.
 
 | Trang | Artifact đọc | Nội dung |
@@ -737,7 +673,6 @@ query string, ví dụ `http://localhost:8501/?page=Lịch bảo trì`.
 | Dự đoán RUL | `outputs/modeling` | So sánh model trong CV, một động cơ test, quỹ đạo OOF |
 | Cảnh báo sớm | `outputs/modeling/tables` | Ngưỡng 30 cycle, phân loại thời điểm, quỹ đạo cảnh báo |
 | Lịch bảo trì | `outputs/maintenance` | Bảng 100 động cơ, kế hoạch, chi tiết từng động cơ, kiểm tra bằng nhãn test |
-| Thử nghiệm mở rộng | `outputs/cross_dataset`, `outputs/experiments`, `outputs/timeseries` | Ba tab: chuyển miền, cải thiện, ARIMA |
 | Provenance | `run_info.json` | Schema và isolation contract của lần chạy |
 
 Lớp đọc artifact nằm trong `src/cmapss/dashboard.py`; giao diện nằm trong
@@ -760,8 +695,8 @@ uv run python -m cmapss.reproducibility `
   --evidence-path tmp/e2e-repro-final/validation.json
 ```
 
-Lệnh chạy ETL Pandas với benchmark 1x, rolling features, modeling RUL và
-PCA--ARIMA train-only. Lệnh yêu cầu output root mới, xác nhận raw hash không đổi
+Lệnh chạy ETL Pandas với benchmark 1x, rolling features và modeling RUL, rồi
+kiểm tra dashboard loader. Lệnh yêu cầu output root mới, xác nhận raw hash không đổi
 và so sánh bảng với `rtol=1e-9`, `atol=1e-9`. Parity PySpark và tái lập notebook
 là các kiểm tra riêng, đã được ghi trong evidence.
 
@@ -790,17 +725,9 @@ New-Item -ItemType Directory -Force tmp | Out-Null
 
 Pytest dọn thư mục `--basetemp` khi chạy lại; chỉ dành thư mục đó cho test.
 
-Đợt kiểm chứng mã nguồn ngày 07/10/2026 đạt **426 passed, 1 skipped** (TCN thiếu
-torch). Bao gồm bảo vệ Bronze tùy chỉnh, fault injection ETL/rolling, dependency
-exports và lifecycle dùng chung cho XGBoost/LightGBM. Xem
-[kế hoạch đã hoàn tất](handoff/archive/CODE_RELIABILITY_PLAN_20261007.md) và
-[bằng chứng runtime](handoff/archive/CODE_RELIABILITY_20261007.json) để biết lệnh kiểm
-tra, giới hạn Windows/Linux và kết quả worker spawn thực tế.
-
 </details>
 
-[Báo cáo PDF](report/main.pdf) trình bày các phân tích FD001 đã kiểm chứng và ma
-trận bổ sung FD001–FD004. Xem [hướng dẫn báo cáo](report/README.md) để biết
+[Báo cáo PDF](report/main.pdf) trình bày các phân tích FD001 đã kiểm chứng. Xem [hướng dẫn báo cáo](report/README.md) để biết
 cấu trúc nguồn và lệnh build PDF.
 
 ## Bối cảnh học thuật

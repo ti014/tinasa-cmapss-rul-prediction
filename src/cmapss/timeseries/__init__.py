@@ -1,8 +1,3 @@
-"""Phân tích PCA--ARIMA train-only cho Health Index FD001."""
+"""Health Index FD001: thành phần chính thứ nhất của sensor đã chuẩn hóa, fit trên train."""
 
 from __future__ import annotations
-
-
-from cmapss.timeseries.pipeline import TimeseriesConfig, run_timeseries_pipeline
-
-__all__ = ["TimeseriesConfig", "run_timeseries_pipeline"]

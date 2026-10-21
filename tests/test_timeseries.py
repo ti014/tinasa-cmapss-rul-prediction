@@ -1,16 +1,11 @@
-"""Kiểm thử contract và protocol PCA--ARIMA train-only."""
-
-from pathlib import Path
+"""Kiểm thử contract của Health Index fit trên train."""
 
 import numpy as np
 import pandas as pd
 import pytest
 
 from cmapss.data.contracts import MEASUREMENTS, OBSERVATION_COLUMNS
-from cmapss.timeseries.arima import evaluate_arima_forecast, split_forecast_series
-from cmapss.timeseries.baselines import evaluate_forecast_baselines
 from cmapss.timeseries.contracts import (
-    FORECAST_COLUMNS,
     HEALTH_INDEX_COLUMNS,
     SELECTED_ENGINE_COLUMNS,
 )
@@ -97,62 +92,3 @@ def test_validation_engine_selection_is_deterministic_and_forecast_independent()
     assert len(first) == 4
     assert first["engine_id"].is_unique
     assert first["fold"].value_counts().to_dict() == {1: 2, 2: 1, 3: 1}
-
-
-def test_split_forecast_series_keeps_time_order_without_overlap() -> None:
-    cycles = pd.Series(np.arange(1, 11), dtype="int64")
-    values = pd.Series(np.arange(10, 20, dtype="float64"))
-
-    train, holdout = split_forecast_series(
-        cycles,
-        values,
-        train_fraction=0.7,
-        minimum_train_size=5,
-    )
-
-    assert len(train) == 7
-    assert len(holdout) == 3
-    assert train.index.max() < holdout.index.min()
-    assert train.iloc[-1] == 16.0
-    assert holdout.iloc[0] == 17.0
-
-
-def test_forecast_metrics_calculate_mae_rmse_and_coverage() -> None:
-    actual = np.array([1.0, 2.0, 4.0])
-    forecast = np.array([2.0, 2.0, 2.0])
-    lower = np.array([0.0, 1.0, 3.0])
-    upper = np.array([3.0, 3.0, 5.0])
-
-    metrics = evaluate_arima_forecast(actual, forecast, lower, upper)
-
-    assert metrics["mae"] == pytest.approx(1.0)
-    assert metrics["rmse"] == pytest.approx(np.sqrt(5.0 / 3.0))
-    assert metrics["coverage_95"] == pytest.approx(1.0)
-
-
-def test_forecast_baselines_share_holdout_and_use_prefix_only() -> None:
-    fit = pd.Series([1.0, 2.0, 3.0])
-    holdout = pd.Series([4.0, 5.0])
-
-    rows = evaluate_forecast_baselines(fit, holdout)
-
-    assert rows["last_value"]["mae"] == pytest.approx(1.5)
-    assert rows["last_value"]["rmse"] == pytest.approx(np.sqrt(2.5))
-    assert rows["drift"]["mae"] == pytest.approx(0.0)
-    assert rows["drift"]["rmse"] == pytest.approx(0.0)
-    assert rows["drift"]["n_holdout"] == 2
-
-
-def test_forecast_baselines_reject_insufficient_prefix() -> None:
-    with pytest.raises(ValueError, match="BASELINE_PREFIX"):
-        evaluate_forecast_baselines(pd.Series([1.0]), pd.Series([2.0]))
-
-
-def test_short_series_is_rejected_before_forecast() -> None:
-    with pytest.raises(ValueError, match="FORECAST_SPLIT"):
-        split_forecast_series(
-            pd.Series([1, 2, 3]),
-            pd.Series([1.0, 2.0, 3.0]),
-            train_fraction=0.7,
-            minimum_train_size=10,
-        )

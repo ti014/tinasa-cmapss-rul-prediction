@@ -103,7 +103,8 @@ Mỗi trang ứng với một slide, theo đúng thứ tự trên máy chiếu.
 \item \textbf{Dòng ``Chuyển slide''} ở cuối trang là câu nối sang slide tiếp theo.
 \end{itemize}
 
-Demo dashboard nằm \textbf{sau slide 19}, trước slide cảm ơn, có ảnh chụp từng bước.
+Demo dashboard là \textbf{slide 13}, trước slide cảm ơn, có ảnh chụp từng bước. Slide 15--20 là
+slide dự phòng, chỉ mở khi được hỏi.
 Cuối sổ tay có bộ câu hỏi phản biện và một trang số liệu để tra nhanh.
 
 \subsection*{Kế hoạch thời gian}
@@ -112,22 +113,21 @@ Cuối sổ tay có bộ câu hỏi phản biện và một trang số liệu đ
 \toprule
 Phần & Slide & Hết phần lúc \\
 \midrule
-Mở đầu & 1--2 & 0:55 \\
-Bài toán và dữ liệu & 3--5 & 3:20 \\
-Pipeline dữ liệu & 6--8 & 5:35 \\
-Khử nhiễu và cửa sổ thời gian & 9--10 & 7:25 \\
-Xu hướng và bất thường & 11--12 & 9:25 \\
-Dự đoán RUL, cảnh báo, lịch bảo trì & 13--16 & 13:50 \\
-Mở rộng, kết luận, bài học & 17--19 & 16:20 \\
-Demo dashboard & -- & 18:50 \\
-Cảm ơn & 20 & 19:00 \\
+Câu hỏi và bản đồ & 1--3 & 1:55 \\
+Dữ liệu, lọc nhiễu, triệu chứng & 4--6 & 4:25 \\
+Đèn vàng, đèn đỏ, điểm yếu & 7--9 & 7:35 \\
+Câu trả lời buổi sáng & 10 & 8:45 \\
+Vì sao cần big data & 11 & 10:00 \\
+Năm câu hỏi và giới hạn & 12 & 11:00 \\
+Demo dashboard & 13 & 13:30 \\
+Cảm ơn & 14 & 13:40 \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-Mốc trên chưa tính các khung ``Nói thêm''. Nếu bị giới hạn 15 phút: đọc lướt slide 8, 11,
-14, 17 (mỗi slide khoảng 20 giây) và rút demo còn bước 1 (Lịch bảo trì). Không bỏ slide 6--7 (pipeline), 9 (khử nhiễu), 12 (bất
-thường), 15--16 (cảnh báo, lịch bảo trì) vì đó là các phần chấm điểm chính.
+Mốc trên chưa tính các khung ``Nói thêm'', nên còn dư khoảng 1 phút so với 15 phút. Nếu bị
+giới hạn 12 phút: đọc lướt slide 4 và 6 (mỗi slide khoảng 20 giây) và rút demo còn bước 1
+(Lịch bảo trì). Không bỏ slide 7--11 vì đó là hai đèn cảnh báo, lịch bảo trì và bằng chứng big data.
 
 \clearpage
 \section*{Trước buổi báo cáo}
@@ -159,7 +159,7 @@ thường), 15--16 (cảnh báo, lịch bảo trì) vì đó là các phần ch�
 \subsection*{Nếu có sự cố}
 \begin{itemize}
 \item \textbf{Dashboard không mở được:} bỏ qua demo, nói ``Em xin trình bày kết quả demo
-      qua slide'' rồi quay lại slide 12, 15, 16.
+      qua slide'' rồi quay lại slide 7, 9, 10.
 \item \textbf{Máy không có PowerPoint:} chiếu bản PDF; speaker notes không còn, nên đọc theo
       sổ tay này.
 \item \textbf{Quên số liệu:} lật trang ``Số liệu tra nhanh'' ở cuối sổ tay.
@@ -170,392 +170,231 @@ thường), 15--16 (cảnh báo, lịch bảo trì) vì đó là các phần ch�
 \addcontentsline{toc}{section}{Phần nói theo từng slide}
 
 % ---------------------------------------------------------------- 1
-\slidepage{01}{Bìa}{30 giây}{0:30}
-\lookbox{Đứng thẳng, nhìn về phía giảng viên và cả lớp. Khi nói bốn con số, đưa tay lần lượt qua bốn
-ô trắng từ trái sang phải.}
+\slidepage{01}{Bìa}{25 giây}{0:25}
+\lookbox{Đứng thẳng, nhìn về phía giảng viên và cả lớp. Dừng một nhịp sau câu hỏi.}
 \say
 Kính chào thầy/cô và các bạn. Em là Phan Nguyễn Mai Phương, mã số học viên 25002711.
 
-Mọi người thử hình dung: động cơ máy bay giống như một người làm việc rất chăm, nhưng không biết
-kêu mệt. Nếu chờ đến lúc nó hỏng mới sửa thì quá muộn; còn cứ vài tháng tháo ra kiểm tra một lần
-thì rất tốn kém. \num{Đề tài 8} của em đi tìm cách ở giữa: đọc dữ liệu cảm biến để biết khi nào
-động cơ \num{bắt đầu yếu đi}, và đoán xem \num{khi nào cần mang đi bảo trì}.
-
-Bốn con số ở dưới là kết quả chính: \num{100} động cơ để học; lọc nhiễu bỏ được khoảng \num{86\%}
-dao động lộn xộn; dấu hiệu bất thường được báo trước khi hỏng trung vị \num{121 cycle};
-và dự đoán thời gian còn lại lệch khoảng \num{15 cycle}.
-\extrabox{Mỗi cycle là một chu kỳ vận hành của động cơ, có thể hình dung như một chuyến bay.
-Dữ liệu không quy đổi ra giờ hay ngày.}
-\nextslide{``Em xin đi qua nội dung trình bày.''}
+Bài của em xoay quanh đúng một câu hỏi mà người làm bảo trì phải trả lời mỗi sáng:
+\num{``Hôm nay đưa động cơ nào vào xưởng?''}
+\nextslide{``Câu hỏi này khó hơn mình tưởng.''}
 
 % ---------------------------------------------------------------- 2
-\slidepage{02}{Nội dung trình bày}{25 giây}{0:55}
-\lookbox{Bên trái: lướt tay qua 7 vòng tròn từ trên xuống. Bên phải: chỉ vào khung ``Câu hỏi nghiên cứu''.}
+\slidepage{02}{Câu hỏi mỗi sáng}{50 giây}{1:15}
+\lookbox{Chỉ hai đầu của thanh ``quá sớm -- quá muộn'', rồi chỉ câu kết quả ở dưới.}
 \say
-Bài của em đi giống một dây chuyền trong nhà máy. Đầu dây chuyền là dữ liệu thô; qua các trạm
-kiểm tra, cất trữ, lọc nhiễu, tìm dấu hiệu bất thường; và cuối dây chuyền là sản phẩm:
-\num{lịch bảo trì cho từng động cơ}. Cuối bài em có khoảng hai phút rưỡi demo trực tiếp.
+Hãy hình dung em là trưởng bảo trì của một đội 100 động cơ. Đưa động cơ vào xưởng
+\num{quá sớm} thì tốn tiền và mất giờ bay. Đưa vào \num{quá muộn} thì động cơ có thể hỏng giữa
+chừng. Thứ duy nhất em có trong tay là các con số cảm biến gửi về sau mỗi chuyến vận hành.
 
-Năm câu hỏi bên phải là năm trạm của dây chuyền đó; ở slide 18 em sẽ trả lời lại từng câu.
-\nextslide{``Trước hết, bài toán là gì.''}
+Kết quả trước để thầy/cô biết bài đi đến đâu: tại thời điểm quan sát cuối của \num{100 động cơ
+test}, hệ thống báo \num{21} động cơ cần vào xưởng ngay, và đối chiếu đáp án thì \num{cả 21
+đều đúng}.
+\extrabox{Mỗi cycle là một chu kỳ vận hành của động cơ, có thể hình dung như một chuyến bay. Dữ
+liệu không quy đổi ra giờ hay ngày.}
+\nextslide{``Để đi đến câu trả lời đó, em đi qua tám bước.''}
 
 % ---------------------------------------------------------------- 3
-\slidepage{03}{Bài toán}{45 giây}{1:40}
-\lookbox{Bên trái: chỉ thanh ngang, đoạn vàng bắt đầu ở $t=170$, điểm đỏ cycle 200, rồi công thức xanh.
-Bên phải: chỉ cột ``Slide'' của bảng.}
+\slidepage{03}{Bản đồ câu chuyện}{40 giây}{1:55}
+\lookbox{Lướt tay theo dải tám cảnh từ trái sang phải; dừng ở chỗ tách thành hai nhánh vàng và đỏ.}
 \say
-Khái niệm trung tâm là \num{RUL}, tuổi thọ hữu ích còn lại. Nó giống đồng hồ xăng trên ô tô:
-đồng hồ không nói ``xe đã chạy bao xa'', mà nói ``còn chạy được bao xa nữa''. RUL cũng vậy: còn bao
-nhiêu cycle nữa thì động cơ hỏng.
+Đây là bản đồ của cả bài. Dữ liệu cảm biến đi vào, được làm sạch, rồi tách thành \num{hai nhánh}.
+Nhánh thứ nhất bật \num{đèn vàng}: động cơ bắt đầu yếu. Nhánh thứ hai bật \num{đèn đỏ}: động cơ
+còn khoảng 30 chuyến nữa sẽ hỏng. Hai đèn gộp lại thành một \num{lịch bảo trì}. Bước cuối cùng là
+lý do bài này cần công cụ big data.
 
-Ví dụ trên slide: động cơ hỏng ở cycle \num{200}. Tại cycle \num{170}, nó còn \num{30} cycle,
-tức RUL bằng 30. Công thức chỉ đơn giản là lấy cycle cuối trừ cycle hiện tại.
-
-Bảng bên phải là các yêu cầu của đề tài, cột cuối ghi slide nào chứng minh yêu cầu đó, để thầy/cô
-tiện đối chiếu: xử lý chuỗi thời gian ở slide 6, 9, 10; lọc nhiễu ở slide 9; cửa sổ thời gian ở
-slide 10; bất thường ở slide 12; và lịch bảo trì ở slide 16.
-\nextslide{``Vậy dữ liệu từ đâu ra?''}
+Em sẽ đi cùng hai động cơ xuyên suốt: \num{động cơ train 1} để xem hệ thống học và cảnh báo thế
+nào, và \num{động cơ test 90} để xem quyết định bảo trì.
+\nextslide{``Trước hết, trong tay em có gì.''}
 
 % ---------------------------------------------------------------- 4
-\slidepage{04}{Dữ liệu NASA C-MAPSS}{50 giây}{2:30}
-\lookbox{Chỉ dòng tóm tắt dưới tiêu đề (lý do chọn dữ liệu), rồi thẻ xanh đậm \textbf{FD001}, lướt ba
-thẻ nhạt bên cạnh, cuối cùng chỉ dải màu ``26 trường''.}
+\slidepage{04}{Dữ liệu trong tay}{50 giây}{2:45}
+\lookbox{Chỉ biểu đồ tuổi thọ: cột thấp nhất bên trái, cột cao nhất bên phải, rồi vạch trung vị.}
 \say
-Muốn biết động cơ hỏng ra sao thì phải có động cơ bị hỏng. Nhưng không ai đem 100 động cơ máy bay
-thật ra chạy đến khi hỏng chỉ để lấy dữ liệu, vì quá đắt và quá nguy hiểm. Nên NASA làm một bộ
-\num{dữ liệu mô phỏng} tên là C-MAPSS, em tải trực tiếp từ cổng dữ liệu mở của NASA. Mỗi động cơ
-có cả chuỗi số đo theo từng cycle cho tới khi hỏng, và phần test có đáp án để chấm.
+Dữ liệu là bộ NASA C-MAPSS, phần FD001. Mỗi động cơ gửi về \num{21 con số cảm biến} sau mỗi
+cycle. Có \num{100 động cơ train} đã chạy đến lúc hỏng, để hệ thống học; và \num{100 động cơ test}
+bị cắt giữa chừng, có đáp án riêng để chấm.
 
-Bộ này có bốn phần. Em chọn \num{FD001} vì nó giống một phòng thí nghiệm sạch: chỉ một điều kiện
-bay và một kiểu hỏng, nên khi số đo thay đổi, mình biết đó là do động cơ yếu đi chứ không phải do
-thời tiết hay độ cao. Có \num{100} động cơ để học và \num{100} động cơ để kiểm tra.
-
-Mỗi dòng dữ liệu là một cycle, gồm \num{21} cảm biến, giống như 21 chỉ số trong một tờ xét
-nghiệm máu. Dữ liệu không có ô nào bị thiếu.
-\extrabox{Tổng cộng 33.727 dòng. Ba phần FD002--FD004 có thêm điều kiện bay hoặc kiểu hỏng khác,
-em chỉ dùng ở phần mở rộng (slide 17).}
-\nextslide{``Có dữ liệu rồi, em cần đáp án để mô hình học.''}
+Biểu đồ này cho thấy vì sao không thể bảo trì theo một lịch cố định: động cơ sống ngắn nhất
+\num{128 cycle}, dài nhất \num{362 cycle}. Nếu cứ 128 cycle bảo trì một lần thì phí phạm, còn đợi
+đến 362 thì nhiều động cơ đã hỏng từ lâu.
+\extrabox{Dữ liệu đi qua ba lớp: Bronze là file gốc, Silver là bảng đã kiểm tra, Gold là bảng tổng
+hợp. Chi tiết ở slide dự phòng.}
+\nextslide{``Nhưng nhìn thẳng vào số đo thì gần như không thấy gì.''}
 
 % ---------------------------------------------------------------- 5
-\slidepage{05}{Nhãn RUL và ranh giới test}{50 giây}{3:20}
-\lookbox{Chỉ thanh ``Train'' (chấm đỏ là hỏng), rồi thanh ``Test'' (dừng ở chấm vàng, sau đó là nét
-đứt). Cuối cùng chỉ khung xanh đậm bên phải.}
+\slidepage{05}{Lọc nhiễu}{55 giây}{3:40}
+\lookbox{Chỉ đường \textbf{xám} lởm chởm, rồi đường \textbf{xanh} mượt ở hình sensor 11 của động cơ train 1.}
 \say
-Dữ liệu có hai loại. Phần \num{train} giống hồ sơ bệnh án đã khép lại: mình biết bệnh nhân theo dõi
-từ đầu đến cuối, nên tính được ở mỗi thời điểm còn bao lâu. Phần \num{test} giống bệnh nhân đang
-nằm viện: mình chỉ thấy đến hôm nay, chưa biết kết cục, và phải đoán.
+Đường xám là số đo thật của động cơ train 1: dao động mạnh từ cycle này sang cycle khác, giống
+nghe ai nói trong quán cà phê ồn ào. Em dùng \num{EWMA}, tức trung bình có trọng số giảm dần:
+cycle gần nhất tính nhiều, cycle xa hơn tính ít dần, và chỉ dùng quá khứ.
 
-NASA có giữ đáp án cho phần test. Em coi đáp án này như \num{đề thi đã niêm phong}: không mở ra khi
-học, khi chọn mô hình hay khi vẽ biểu đồ. Chỉ khi đã nộp bài, tức đã ghi dự đoán ra file, em mới mở
-đáp án ra chấm. Máy còn ghi lại dấu vân tay của file đáp án để chứng minh không ai đụng vào trước đó.
-\extrabox{Phần train có 20.631 nhãn. ``Dấu vân tay'' ở đây là mã hash SHA-256 của file nhãn.}
-\nextslide{``Tiếp theo là dây chuyền xử lý dữ liệu.''}
+Kết quả là đường xanh. Dao động ngắn hạn giảm khoảng \num{86\%}, còn xu hướng đi lên thì vẫn giữ
+nguyên.
+\extrabox{86\% là mức giảm trung vị của độ lệch chuẩn bước nhảy giữa hai cycle, trên 14 sensor có
+xu hướng. Đây không phải mức tăng độ chính xác dự đoán.}
+\nextslide{``Khi đã nhìn rõ, câu hỏi tiếp là: động cơ có báo hiệu trước khi hỏng không?''}
 
 % ---------------------------------------------------------------- 6
-\slidepage{06}{Pipeline Bronze -- Silver -- Gold}{55 giây}{4:15}
-\lookbox{Chỉ cột bên trái từ trên xuống: bước 1, 2, 3, rồi ô nét đứt Hadoop. Sau đó chỉ hàng A
-từ trái sang phải, rồi hàng B, rồi ô xanh đậm ``Lịch bảo trì'' ở góc phải. Cuối cùng lướt tay qua
-năm ô vàng ở hàng dưới cùng (Thu thập $\rightarrow$ Lưu trữ).}
+\slidepage{06}{Triệu chứng đo được}{45 giây}{4:25}
+\lookbox{Chỉ hình sensor 4 đi lên, sensor 7 đi xuống, rồi con số 12 trên 21.}
 \say
-Ba lớp Đồng, Bạc, Vàng giống quy trình làm trang sức. Cột bên trái là ba bước chuẩn bị chung.
-\num{Bước 1} tải dữ liệu thẳng từ trang của NASA và kiểm tra mã băm để chắc không sai một byte.
-\num{Bước 2} là lớp Đồng: file text gốc, giữ nguyên, không bao giờ ghi đè. \num{Bước 3} là cửa
-kiểm hàng: đủ 26 cột chưa, đúng kiểu số chưa, có dòng nào trùng không, chỉ số cycle của từng
-động cơ có liên tục không, rồi tính RUL cho train. Ô nét đứt bên dưới là bản chạy lại trên Hadoop: MapReduce
-tính lại bảng 200 động cơ và khớp hoàn toàn, nhưng không đi vào mô hình.
+Em so \num{30 cycle cuối đời} với \num{30 cycle đầu đời} của chính từng động cơ, giống so ảnh lúc
+mới mua với ảnh lúc sắp hỏng của cùng một chiếc máy.
 
-\num{Nhánh A} dự đoán RUL. A1 lưu lớp Bạc, là dữ liệu đã kiểm tra dạng Parquet, và lớp Vàng,
-là các bảng tổng hợp. A2 tạo 126 đặc trưng từ cửa sổ 30 cycle. A3 huấn luyện mô hình, chia 5 phần
-theo động cơ. A4 lưu 100 dự đoán test trước, rồi A5 mới mở đáp án để chấm điểm.
-
-\num{Nhánh B} nghe ngóng sức khỏe động cơ và chỉ học trên train: khám phá dữ liệu, làm mượt tín
-hiệu, gộp 21 sensor thành một chỉ số sức khỏe, rồi tìm bất thường. Ô cuối ghép hai nhánh: động
-cơ có RUL dự đoán từ 30 trở xuống thì cần bảo trì, động cơ có chỉ số bất thường thì theo dõi
-thêm.
-
-Năm ô vàng dưới cùng là năm bước của quy trình dữ liệu: \num{thu thập} ở bước 1, \num{làm sạch} ở
-bước 3 và B2, \num{chuẩn hóa} kiểu dữ liệu và thang đo ở slide 10, \num{tích hợp} là gộp train với
-test, và \num{lưu trữ} bằng Parquet, SQLite, HDFS. Pandas và PySpark cho cùng kết quả ở A1 và A2;
-slide tiếp theo nói rõ phần này.
-\nextslide{``Em làm dây chuyền này bằng hai công cụ khác nhau.''}
+Kết quả: \num{12 sensor} thay đổi cùng một chiều ở \num{cả 100 động cơ train}. Ví dụ sensor 4 luôn
+đi lên, sensor 7 luôn đi xuống. Nói cách khác, hỏng hóc không đến bất ngờ; nó để lại
+\num{triệu chứng đo được}.
+\extrabox{Kiểm định Wilcoxon với hiệu chỉnh Benjamini--Hochberg cho 21 sensor: 15 sensor thay đổi
+có ý nghĩa. Phép so sánh này chỉ để mô tả, không dùng để chọn đặc trưng cho mô hình.}
+\nextslide{``Có triệu chứng rồi, em biến nó thành đèn cảnh báo thứ nhất.''}
 
 % ---------------------------------------------------------------- 7
-\slidepage{07}{Pandas, PySpark và Hadoop}{55 giây}{5:10}
-\lookbox{Bên trái: chỉ cột ``Sai khác'' toàn số 0, nhấn vào hai dòng cuối có chữ HDFS, rồi ô xanh
-nhạt ``Cụm Hadoop''. Bên phải: chỉ cặp cột 10×, cột xanh 112 và cột vàng 33.}
+\slidepage{07}{Đèn vàng}{1 phút 5 giây}{5:30}
+\lookbox{Chỉ vùng xám (đoạn khỏe), đường đứt (ngưỡng), vạch cam (cycle 84), vạch đen (cycle 192).}
 \say
-Em đối chiếu Pandas/PySpark ở ETL và rolling features; MapReduce/Spark trên HDFS
-ở bảng tổng hợp động cơ. \num{Pandas} giống một đầu bếp giỏi làm một mình.
-\num{PySpark} giống một bếp có bốn đầu bếp chia nhau làm. Còn \num{Hadoop} là cả một nhà hàng có
-kho riêng: dữ liệu cất trong kho HDFS, và MapReduce chia việc thành hai công đoạn, sơ chế rồi
-gom lại. Em dựng nhà hàng đó trong Docker và cho nó tính lại bảng tổng hợp động cơ. Hai dòng cuối
-của bảng: cả MapReduce lẫn Spark đọc từ HDFS đều ra \num{200 trên 200} động cơ, sai khác \num{0}.
+Theo dõi 21 sensor cùng lúc thì rối mắt, nên em gộp chúng thành \num{một điểm sức khỏe}, gọi là
+Health Index. Giống nhiệt độ cơ thể: mỗi người có mức bình thường riêng, chỉ khi lệch quá xa mức
+đó mới gọi là sốt.
 
-Biểu đồ bên phải: khi khách đông gấp \num{10 lần}, một mình mất khoảng \num{112 giây}, bếp bốn
-người chỉ mất khoảng \num{33 giây}, nhanh hơn khoảng \num{3,4 lần}. Đó là lý do khi dữ liệu lớn
-lên thì cần Spark.
-\extrabox{Cụm Hadoop chỉ có một máy nên dùng để chứng minh tính đúng, không để đo tốc độ. Job
-MapReduce chạy trên YARN với 3 map và 1 reduce; lệnh kiểm tra \texttt{fsck} báo HDFS ở trạng thái
-HEALTHY. Rolling features cũng khớp toàn bộ 27.927 dòng giữa Pandas và Spark.}
-\nextslide{``Trước khi phân tích sâu, em xem qua dữ liệu trông thế nào.''}
+Vùng xám là 30 cycle đầu, lúc động cơ còn khỏe. Khi điểm sức khỏe tụt dưới ngưỡng và nằm dưới đó
+\num{5 cycle liền}, đèn vàng bật. Với động cơ train 1, đèn vàng bật ở cycle \num{84}, trong khi nó
+hỏng ở cycle \num{192}: báo trước \num{108 cycle}.
+
+Trên cả \num{100 động cơ train}, đèn vàng đều bật trước khi hỏng, trung vị \num{121 cycle}.
+\extrabox{Ngưỡng là 3 độ lệch chuẩn so với 30 cycle đầu. Chưa đo được tỷ lệ báo động giả vì mọi
+động cơ train đều chạy đến hỏng. Thử 9 cấu hình ngưỡng khác nhau, kết luận vẫn giữ.}
+\nextslide{``Đèn vàng nói động cơ bắt đầu yếu, nhưng chưa nói còn bao lâu.''}
 
 % ---------------------------------------------------------------- 8
-\slidepage{08}{Khám phá dữ liệu}{25 giây}{5:35}
-\lookbox{Chỉ histogram bên trái và bốn con số bên dưới. Bên phải: chỉ các ô xám tên sensor.}
+\slidepage{08}{Đèn đỏ}{1 phút 5 giây}{6:35}
+\lookbox{Chỉ đường RUL thật (thẳng) và đường dự đoán, rồi chỗ hai đường gặp ngưỡng 30 ở cycle 162.}
 \say
-Động cơ sống ngắn nhất \num{128} cycle, dài nhất \num{362} cycle; một nửa số động cơ sống quá
-\num{199} cycle. Có \num{bảy cột} không bao giờ đổi, là các ô xám bên phải. Chúng giống cái nhiệt kế
-bị kẹt kim: đọc mãi một số nên không cho biết gì. Vì vậy em chỉ lọc nhiễu cho \num{14} cảm biến
-còn lại.
-\nextslide{``Bây giờ đến phần lọc nhiễu.''}
+Câu hỏi ``còn bao lâu'' có tên là \num{RUL}, thời gian sử dụng còn lại, giống đồng hồ xăng: không
+nói xe đã chạy bao xa mà nói còn chạy được bao xa. Mô hình nhìn \num{30 cycle gần nhất} của mỗi
+động cơ, tóm thành 126 con số, rồi ước lượng RUL.
+
+Đèn đỏ bật khi mô hình đoán còn \num{30 cycle hoặc ít hơn}. Động cơ train 1 bật đèn đỏ ở cycle
+\num{162}, đúng lúc RUL thật còn 30.
+
+Trên \num{100 động cơ test}, mỗi động cơ một dự đoán ở cycle cuối, sai lệch trung bình là
+\num{15 cycle}. Quan trọng hơn: khi động cơ sắp hỏng, sai lệch chỉ còn khoảng \num{4 cycle}.
+\extrabox{MAE test 15,35 cycle (khoảng tin cậy 95\%: 12,73--18,09). Mô hình HistGradientBoosting
+(HGB), chọn bằng cross-validation chia theo động cơ. MAE cross-validation là 20,21 vì nó tính trên
+mọi window, gồm cả đầu đời có RUL rất lớn.}
+\nextslide{``Nhưng mô hình này có một thói quen cần nói thẳng.''}
 
 % ---------------------------------------------------------------- 9
-\slidepage{09}{Khử nhiễu bằng EWMA}{1 phút 5 giây}{6:40}
-\lookbox{Chỉ đường \textbf{xám} lởm chởm, rồi đường \textbf{xanh} mượt ở hình sensor\_11. Sau đó
-chỉ dòng sensor\_4 trong bảng, rồi dòng ``Công thức'' phía dưới.}
+\slidepage{09}{Điểm yếu và cách sửa}{1 phút}{7:35}
+\lookbox{Chỉ các điểm nằm trên đường 0 (đoán cao), chỉ động cơ 23, rồi hai cột 51\% và 94\%.}
 \say
-Đường xám là số đo thật của động cơ train 1: dao động mạnh từ cycle này sang cycle khác, giống nghe ai nói trong
-quán cà phê ồn ào. Mình không cần nghe rõ từng tiếng, chỉ cần nắm được ý chính.
+Mô hình hay \num{lạc quan}: trên test, \num{74 trên 100} động cơ được đoán còn sống lâu hơn thực tế.
+Ví dụ động cơ 23 thật ra còn 113 cycle nhưng mô hình đoán 170.
 
-Em dùng \num{EWMA}, trung bình trượt có trọng số mũ. Cách tính giống cách mình đánh giá phong độ
-một cầu thủ: trận gần nhất tính nhiều, các trận xa hơn tính ít dần. Cụ thể, mỗi cycle em lấy
-\num{18\%} số đo mới cộng \num{82\%} giá trị đã làm mượt trước đó. Kết quả là đường xanh: bỏ đi
-phần lởm chởm nhưng vẫn giữ đúng xu hướng đi lên ở cuối đời.
+Lạc quan thì đèn đỏ bật muộn. Khi theo dõi suốt đời 100 động cơ train, chỉ \num{51\%} được báo
+trước hoặc đúng lúc còn 30 cycle; số còn lại báo trễ.
 
-Điều quan trọng: EWMA \num{chỉ nhìn về quá khứ}, không lén nhìn tương lai. Bảng bên phải đo độ
-lởm chởm: ví dụ cảm biến 4 giảm từ \num{5,70} xuống \num{0,78}. Trên 14 cảm biến, độ dao động giảm
-khoảng \num{84 đến 86\%}.
-\extrabox{Span 10 được chọn trước, không chỉnh theo kết quả. Giới hạn thẳng thắn: dữ liệu không có
-tín hiệu sạch để so, nên em đo được mức giảm dao động, chưa chứng minh được đã loại đúng nhiễu đo.}
-\nextslide{``Lọc xong, em gom dữ liệu theo từng khoảng thời gian.''}
+Cách sửa đơn giản: bật đèn đỏ sớm hơn, ở ngưỡng \num{40} thay vì 30. Tỷ lệ báo kịp thời tăng từ
+\num{51\% lên 94\%}, đổi lại có thêm vài lần báo sớm.
+\extrabox{Ngưỡng 40 là phân tích độ nhạy, chưa được hiệu chuẩn theo chi phí bảo trì vì dữ liệu không
+có chi phí. Ở ngưỡng 30, tỷ lệ cycle bị báo khi còn trên 30 là 1,29\%; ở ngưỡng 40 là 5,33\%.}
+\nextslide{``Giờ quay lại câu hỏi buổi sáng.''}
 
 % ---------------------------------------------------------------- 10
-\slidepage{10}{Cửa sổ thời gian 30 cycle}{45 giây}{7:25}
-\lookbox{Chỉ dải ô vuông trên cùng: ô vàng là $t=170$, ô xanh đậm là cửa sổ, ô xám là tương lai không
-dùng. Lướt 6 ô thống kê. Bên phải: khung ``Chuẩn hóa''.}
+\slidepage{10}{Câu trả lời buổi sáng}{1 phút 10 giây}{8:45}
+\lookbox{Chỉ ba nhóm màu của lịch, rồi khung động cơ 90: 146, 31,2, 147, vạch cam ở 67.}
 \say
-Bác sĩ giỏi không nhìn một lần đo huyết áp rồi kết luận, mà xem sổ theo dõi 30 ngày gần nhất. Em
-làm đúng như vậy: tại cycle \num{170}, em nhìn lại \num{30 cycle} gần nhất, từ 141 đến 170, và
-không nhìn trước cycle 171.
+Đây là câu trả lời cho 100 động cơ test: \num{21} chiếc vào xưởng ngay, \num{59} chiếc theo dõi
+chặt hơn, \num{20} chiếc bình thường. Đối chiếu đáp án: \num{cả 21} chiếc được báo vào xưởng đều
+thật sự cần bảo trì.
 
-Từ 30 cycle đó, mỗi cảm biến cho sáu con số: giá trị mới nhất, trung bình, độ dao động, thấp nhất,
-cao nhất, và xu hướng đang lên hay xuống. \num{21} cảm biến nhân \num{6} được \num{126} đặc trưng,
-giống một bản tóm tắt sức khỏe 126 dòng cho mỗi cycle.
-\extrabox{Chuẩn hóa: ETL thống nhất kiểu dữ liệu và tên cột; StandardScaler đưa các cảm biến về cùng
-thang đo trước khi tính chỉ số sức khỏe. Mô hình cây không cần bước này vì cây chỉ so lớn hay nhỏ.}
-\nextslide{``Vậy cảm biến thay đổi thế nào khi động cơ già đi?''}
+Ví dụ động cơ 90: đang ở cycle \num{146}, mô hình đoán còn \num{31 cycle}, nên lịch xếp bảo trì ở
+cycle \num{147}. Đèn vàng của nó đã bật từ cycle \num{67}, tức đã được theo dõi từ rất sớm.
+
+Em cũng nói rõ phần chưa tốt: có 25 động cơ thật sự cần bảo trì; 4 chiếc còn lại được đoán còn
+31 đến 38 cycle, nên được xếp hạn sau 1 đến 8 cycle và vẫn nằm ở nhóm theo dõi.
+\extrabox{Mức theo dõi còn rộng: 41 trên 59 động cơ ở mức này còn hơn 60 cycle. Có 12 động cơ còn xa
+hỏng (RUL thật ít nhất 77) có lịch dự kiến muộn hơn lúc hỏng 4--27 cycle; lịch được tính lại mỗi khi
+có dữ liệu mới.}
+\nextslide{``Còn một câu hỏi: vì sao bài này cần công cụ big data?''}
 
 % ---------------------------------------------------------------- 11
-\slidepage{11}{Xu hướng suy giảm}{40 giây}{8:05}
-\lookbox{Chỉ hai hình bên trái, sensor\_4 đi lên và sensor\_7 đi xuống. Sau đó chỉ ô xanh \textbf{15/21}.}
+\slidepage{11}{Vì sao cần big data}{1 phút 15 giây}{10:00}
+\lookbox{Chỉ hai đường ở hình trái: xanh (Pandas) dốc lên, vàng (Spark) đi thấp; rồi dấu x ở 200×.}
 \say
-Hai hình bên trái là cảm biến 4 và cảm biến 7 của ba động cơ: một cái đi lên, một cái đi xuống khi
-gần hỏng. Để chắc đây không phải do may rủi, em so 30 cycle cuối đời với 30 cycle đầu đời của
-\num{chính động cơ đó}, giống so ảnh lúc mới mua với ảnh lúc sắp hỏng của cùng một chiếc máy, rồi
-làm kiểm định thống kê.
+Câu hỏi cuối: bài này có cần công cụ big data không? Dữ liệu FD001 chỉ khoảng 5,7 MB, nên em
+không trả lời bằng lời mà \num{đo thật}. Em nhân bản dữ liệu lên 10, 50, 100 và 200 lần, rồi cho
+Pandas và Spark cùng làm một việc: đọc, tổng hợp và tạo 126 đặc trưng.
 
-Kết quả: \num{15 trên 21} cảm biến thay đổi rõ ràng, và có \num{12} cảm biến đổi cùng một hướng ở
-\num{cả 100} động cơ. Tức là động cơ thật sự có dấu hiệu già đi mà mình đo được.
-\extrabox{Kiểm định Wilcoxon, khoảng tin cậy bootstrap 10.000 lần, hiệu chỉnh Benjamini--Hochberg
-cho 21 cảm biến. Sáu cảm biến hằng thì không kiểm định được.}
-\nextslide{``Từ đó, em xây cách phát hiện động cơ bắt đầu bất thường.''}
+Ở 100 lần, Pandas mất khoảng \num{18 phút}, Spark chỉ khoảng \num{3 phút}, nhanh hơn \num{5,5
+lần}. Ở 200 lần, Pandas \num{không xong trong 30 phút}, còn Spark xong trong khoảng \num{6,5
+phút}. Đó là lý do pipeline được dựng trên HDFS và Spark: khi đội động cơ lớn lên, một máy chạy
+Pandas sẽ không theo kịp.
+\extrabox{Đo trên một máy, Spark \texttt{local[4]}, chỉ tính phần tính toán, không gồm ghi file.
+Trên Windows, bước ghi của Spark phải gom về driver và hết bộ nhớ từ 100×, nên em đo riêng phần
+tính toán. RAM Pandas ở 100× là 12,9 GiB; 200× ước tính khoảng 26 GiB, vượt 23,4 GiB của máy, đây
+là suy luận. HDFS và MapReduce đã chạy trên Docker một node, cho kết quả khớp 200/200 động cơ với
+Pandas. Chưa đo trên cluster nhiều máy.}
+\nextslide{``Em xin tóm lại năm câu hỏi của đề tài.''}
 
 % ---------------------------------------------------------------- 12
-\slidepage{12}{Phát hiện dấu hiệu bất thường}{1 phút 20 giây}{9:25}
-\lookbox{Hình trái: \textbf{vùng xám} $\rightarrow$ \textbf{đường đứt} $\rightarrow$ \textbf{vạch
-cam} (cycle 84) $\rightarrow$ \textbf{vạch đen} (cycle 192). Hình phải: histogram. Sau đó: ba ô bên
-phải. Cuối cùng: \textbf{dải vàng} phía dưới (độ nhạy).}
+\slidepage{12}{Trả lời năm câu hỏi của đề tài}{1 phút}{11:00}
+\lookbox{Chỉ lần lượt năm dòng, mỗi dòng có số cảnh ở cuối; cuối cùng chỉ khung giới hạn.}
 \say
-Theo dõi 21 cảm biến cùng lúc thì rối mắt, nên em gộp chúng thành \num{một điểm sức khỏe}, gọi là
-Health Index, giống như gộp cả tờ xét nghiệm thành một câu ``khỏe'' hay ``yếu''. Điểm này giảm dần
-khi động cơ già đi.
+Năm câu hỏi của đề tài, mỗi câu đã được trả lời ở một cảnh. Một: dữ liệu được thu thập, kiểm tra và
+tổ chức thành ba lớp, Pandas và Spark cho kết quả \num{giống hệt nhau}. Hai: lọc nhiễu giảm khoảng
+\num{86\%} dao động. Ba: đèn vàng bật ở \num{cả 100} động cơ train, trung vị \num{121 cycle} trước
+khi hỏng. Bốn: dự đoán lệch khoảng \num{15 cycle}, và chỉ khoảng 4 cycle khi gần hỏng. Năm: lịch
+bảo trì báo vào xưởng \num{21 chiếc, đúng cả 21}.
 
-Vậy khi nào gọi là bất thường? Em dùng cách của nhiệt độ cơ thể. Mỗi người có mức bình thường riêng;
-chỉ khi lệch quá xa \num{mức của chính mình} mới gọi là sốt. Ở đây, vùng xám là 30 cycle đầu đời,
-lúc động cơ còn khỏe. Đường đứt là mức lệch quá \num{3 lần} độ dao động bình thường. Và để tránh báo
-động giả kiểu nhiệt kế đo nhầm một lần, em chỉ báo khi điểm sức khỏe nằm dưới ngưỡng \num{5 cycle
-liền}.
-
-Động cơ 1 bị phát hiện ở cycle \num{84}, vạch cam, trong khi nó hỏng ở cycle \num{192}: báo trước
-\num{108 cycle}. Trên cả 100 động cơ train, \num{không sót cái nào}, và một nửa số động cơ được báo trước
-hơn \num{121 cycle}. Đây là \num{đèn vàng}: động cơ bắt đầu yếu, nên để ý.
-
-Dải vàng phía dưới trả lời câu hỏi ``con số 3 và 5 có phải chọn cho đẹp không''. Em đã thử đủ
-\num{9 cách đặt}, từ khắt khe đến dễ dãi; cách nào cũng bắt đủ 100 động cơ, và động cơ báo muộn nhất
-vẫn còn ít nhất \num{50 cycle} mới hỏng.
-\extrabox{Nếu không lọc nhiễu, con số chỉ còn 72,5 cycle, vì nhiễu làm vùng bình thường rộng ra.
-Đặt ngưỡng dễ dãi (2 sigma, 3 cycle) thì báo sớm hơn nhưng 17 động cơ bị báo ngay sau 30 cycle
-đầu, nhiều khả năng là báo hơi vội. Giới hạn: mọi động cơ trong dữ liệu đều hỏng, nên chưa đo được
-trực tiếp tỷ lệ báo động giả.}
-\nextslide{``Đèn vàng cho biết động cơ yếu, nhưng chưa nói còn bao lâu. Đó là việc của mô hình.''}
-
-% ---------------------------------------------------------------- 13
-\slidepage{13}{Dự đoán RUL}{1 phút 10 giây}{10:35}
-\lookbox{Chỉ dòng tô vàng \textbf{HistGradientBoosting}, rồi ô xanh đậm \textbf{15,35}. Bên phải: chỉ
-đường chéo và cụm điểm ở góc dưới trái.}
-\say
-Trước khi khoe kết quả, em phải nói cách chấm. Hai cửa sổ liền nhau của cùng một động cơ giống nhau
-29 trên 30 cycle. Nếu một cái nằm trong bài học, cái kia nằm trong bài thi, thì khác gì cho học sinh
-xem đề trước. Nên em chia theo \num{từng động cơ}: động cơ nào đã ở phần thi thì không xuất hiện
-trong phần học.
-
-Em thử ba mô hình, và mô hình \num{HistGradientBoosting}, một tập hợp rất nhiều cây quyết định nhỏ,
-cho sai số thấp nhất. Trên 100 động cơ test, trung bình mô hình đoán lệch \num{15,35 cycle}. Sai số
-này không đều: khi động cơ còn dưới 30 cycle thì chỉ lệch khoảng 4 cycle, còn khi động cơ còn khỏe
-thì lệch khoảng 21 cycle.
-
-Ở hình phải, điểm càng sát đường chéo là đoán càng đúng. Mọi người để ý góc dưới bên trái: khi động
-cơ sắp hỏng, các điểm bám rất sát đường chéo.
-\extrabox{Khoảng tin cậy 95\% của MAE từ 12,73 đến 18,09 cycle; RMSE 20,54. Sai số cross-validation là
-20,21 vì nó tính cả giai đoạn đầu đời rất khó đoán.}
-\nextslide{``Vậy mô hình hay sai ở đâu?''}
-
-% ---------------------------------------------------------------- 14
-\slidepage{14}{Phân tích sai số}{40 giây}{11:15}
-\lookbox{Hình trái: cụm điểm sát số 0 bên trái, rồi các điểm tản ra bên phải. Bên phải: thanh vàng
-``74 dự đoán cao hơn thực tế'' và ô ``Sai số lớn nhất: động cơ 23''.}
-\say
-Giống dự báo thời tiết: dự báo ngày mai thì khá chính xác, dự báo tháng sau thì khó hơn nhiều. Khi
-động cơ sắp hỏng, mô hình chỉ lệch khoảng \num{4 cycle}; khi động cơ còn khỏe, nó lệch nhiều hơn vì
-lúc đó cảm biến gần như chưa đổi gì.
-
-Mô hình cũng hơi lạc quan: \num{74 trên 100} lần nó nghĩ động cơ còn khỏe hơn thực tế, kiểu người
-hay nói ``em vẫn ổn''. Ví dụ động cơ 23 còn \num{113} cycle mà mô hình đoán \num{170}.
-\nextslide{``Biết được điểm yếu đó, em thiết kế cảnh báo hai mức.''}
-
-% ---------------------------------------------------------------- 15
-\slidepage{15}{Hai mức cảnh báo sớm}{1 phút 20 giây}{12:35}
-\lookbox{Hình trái: đường xanh (thật), đường đỏ (dự đoán), đường cam ngang (ngưỡng 30), vạch đứng
-cycle 162. Bảng phải: dòng chữ ``Dự đoán OOF trên 100 động cơ train'', rồi dòng ``$\leq$ 30 cycle''.
-Cuối cùng: ba ô màu 84 / 162 / 192.}
-\say
-Cảnh báo của em giống \num{đèn giao thông}. Đèn vàng là phần phát hiện bất thường ở slide 12: động cơ
-bắt đầu yếu.
-Đèn đỏ là khi mô hình đoán chỉ còn \num{30 cycle} hoặc ít hơn: cần đưa đi bảo trì.
-
-Hình bên trái là động cơ 1: đường xanh là thời gian còn lại thật, đường đỏ là dự đoán, đường cam
-là ngưỡng 30. Đèn đỏ bật ở cycle \num{162}, đúng lúc thời gian thật chạm 30.
-
-Bảng bên phải dùng 100 động cơ train, với dự đoán trên những động cơ mô hình chưa thấy khi học
-(gọi là OOF). Ở đó \num{không có động cơ nào bị bỏ sót}. Nhưng em phải nói thật: \num{gần một nửa}
-bật đèn đỏ hơi muộn, chủ yếu là các động cơ xuống sức nhanh. Nếu nâng ngưỡng lên 40 thì giống đặt
-báo thức sớm hơn: đúng giờ \num{94\%} thay vì 51\%, nhưng phải dậy sớm, tức báo sớm nhiều hơn khoảng
-bốn lần. Chọn mức nào phải tùy chi phí bảo trì, mà dữ liệu không có.
-
-Ghép lại trên động cơ 1, ở ba ô màu: cycle 84 đèn vàng, cycle 162 đèn đỏ, cycle 192 hỏng.
-\nextslide{``Ghép đèn vàng và đèn đỏ lại, em có lịch bảo trì.''}
-
-% ---------------------------------------------------------------- 16
-\slidepage{16}{Báo cáo dự đoán thời điểm cần bảo trì}{1 phút 15 giây}{13:50}
-\lookbox{Hình trên: các cột cam bên trái và biểu đồ ``Trạng thái hiện tại''. Bảng dưới: dòng động cơ
-90. Bảng phải: dòng ``Cần bảo trì'' (21, 0, 0), rồi khung xanh \textbf{21/25}.}
-\say
-Đây là \num{sản phẩm đặc thù} mà đề tài yêu cầu. Hãy tưởng tượng mình là quản lý một hãng taxi có
-100 chiếc xe: sáng nay cần biết xe nào vào xưởng hôm nay, xe nào tuần sau, xe nào còn chạy thoải mái.
-Bảng này làm đúng việc đó cho 100 động cơ.
-
-Bảng dưới trích 5 dòng của lịch. Ví dụ động cơ 90: đang ở cycle \num{146}, mô hình đoán còn \num{31} cycle, nên lịch ghi
-\num{bảo trì ở cycle 147}. Kết quả cả đội: \num{21} động cơ đèn đỏ cần bảo trì ngay, \num{59} đèn
-vàng cần theo dõi, \num{20} đang khỏe; và \num{14} động cơ sẽ đến hạn trong 25 cycle tới.
-
-Phần em thích nhất là bảng bên phải: sau khi lịch đã ghi xong, em mới mở đáp án ra chấm. Cả
-\num{21 động cơ} bị báo đỏ \num{đều đúng là cần bảo trì}, không báo oan chiếc nào. Bốn chiếc còn lại
-thật sự cần bảo trì thì lịch xếp trễ chỉ \num{1 đến 8 cycle}, và vẫn đang ở đèn vàng.
-\extrabox{Giới hạn: đèn vàng còn hơi rộng, 41 trên 59 động cơ đèn vàng thực ra còn hơn 60 cycle. Nên
-đèn vàng dùng để kiểm tra thường xuyên hơn, chưa dùng để lên lịch sửa. Ngoài ra, 12 động cơ còn xa
-mới hỏng có lịch muộn hơn lúc hỏng 4--27 cycle, vì mô hình đoán cao hơn thực tế ở vùng RUL lớn;
-lịch cần được tính lại khi có dữ liệu mới.}
-\nextslide{``Ngoài luồng chính, em còn thử thêm vài hướng.''}
-
-% ---------------------------------------------------------------- 17
-\slidepage{17}{Thử nghiệm mở rộng}{50 giây}{14:40}
-\lookbox{Biểu đồ trái: so cột xanh với cột vàng ở từng subset. Bên phải: lướt ba khung xanh nhạt.}
-\say
-Biểu đồ trái trả lời câu hỏi: mô hình học trên FD001 có dùng được cho động cơ bay ở điều kiện khác
-không? Câu trả lời là không: sai số tăng \num{1,7 đến 2,7 lần}. Giống người học lái xe ở đồng bằng
-rồi lên đèo: vẫn là lái xe, nhưng kỹ năng không dùng y nguyên được.
-
-Bên phải là ba hướng em thử để cải thiện mô hình. Có hướng giảm được sai số nhưng lại làm đèn đỏ
-bật muộn hơn, nên em \num{không đổi mô hình chính}. Bài học: con số đẹp hơn chưa chắc là cảnh báo
-tốt hơn.
-\extrabox{Thêm cột cycle và 42 đặc trưng lịch sử: sai số giảm từ 20,21 xuống 17,00 nhưng tỷ lệ cảnh báo kịp thời
-giảm từ 51\% xuống 45\%. ARIMA dự báo điểm sức khỏe tốt hơn mốc so sánh nhưng chỉ ở 7 trên 10 động cơ.}
-\nextslide{``Em xin tổng kết lại.''}
-
-% ---------------------------------------------------------------- 18
-\slidepage{18}{Trả lời năm câu hỏi}{50 giây}{15:30}
-\lookbox{Chỉ lần lượt 5 thẻ Q1 $\rightarrow$ Q5, rồi khung xanh đậm ``Sản phẩm đặc thù''.}
-\say
-Năm câu hỏi, năm câu trả lời. Một: dữ liệu sạch, hai công cụ ra kết quả \num{giống hệt nhau}. Hai: lọc
-nhiễu bỏ được khoảng \num{86\%} dao động. Ba: phát hiện bất thường ở \num{cả 100} động cơ train,
-trung vị \num{121 cycle} trước khi hỏng. Bốn: dự đoán lệch khoảng \num{15 cycle}, và rất chính xác
-khi gần hỏng. Năm: trên test, lịch bảo trì báo đỏ \num{21 chiếc, đúng cả 21}, bắt được 21 trên 25
-chiếc cần bảo trì; trên train, cảnh báo không bỏ sót chiếc nào nhưng gần một nửa báo muộn.
-
-Gói lại trong một câu: từ dữ liệu cảm biến thô, em làm ra được \num{lịch bảo trì cho từng động cơ},
-kèm biểu đồ cảnh báo sớm.
-\nextslide{``Trên đường đi, em cũng vấp vài lần.''}
-
-% ---------------------------------------------------------------- 19
-\slidepage{19}{Khó khăn, bài học và giới hạn}{50 giây}{16:20}
-\lookbox{Đọc theo từng hàng của bảng: cột trái là khó khăn, cột phải là bài học. Cuối cùng chỉ dòng
-vàng ``Giới hạn''.}
-\say
-Bốn lần vấp. Một: dữ liệu không ghi lúc nào động cơ bắt đầu yếu, nên em so mỗi động cơ với chính nó
-lúc khỏe. Hai: dữ liệu theo thời gian rất dễ lộ đề, nên phải chia theo động cơ chứ không chia theo
-dòng. Ba: hạ tầng. Spark trên Windows không chịu ghi file, còn Hadoop trong Docker thì lần đầu báo
-chạy xong mà kho vẫn thiếu bản sao; em học được là chạy xong chưa đủ, phải kiểm tra lại kho. Bốn, và đây là bài học lớn nhất: em từng mất khá nhiều thời gian chỉ để giảm sai số vài
-cycle, rồi nhận ra người vận hành cần \num{một cảnh báo dễ hiểu} hơn là một con số đẹp hơn.
-
-Giới hạn: đây là dữ liệu mô phỏng, chưa có chi phí bảo trì, Hadoop và Spark mới chạy trên một máy, và
-kết quả cảnh báo trên train hơi lạc quan.
-\nextslide{``Bây giờ em xin demo nhanh khoảng hai phút rưỡi.'' Bấm \texttt{Alt+Tab} sang trình duyệt.}
+Ba giới hạn em nói thẳng: dữ liệu là mô phỏng, chưa có chi phí bảo trì; mô hình hay lạc quan nên cần
+ngưỡng sớm hơn; và Hadoop, Spark mới chạy trên một máy.
+\nextslide{``Em xin demo nhanh khoảng hai phút rưỡi.'' Bấm \texttt{Alt+Tab} sang trình duyệt.}
 
 % ================================================================ DEMO
 \clearpage
-\section*{Demo dashboard (2 phút 30 giây, sau slide 19)}
+\section*{Demo dashboard (2 phút 30 giây, slide 13)}
 \addcontentsline{toc}{section}{Demo dashboard}
 
 Thứ tự 5 bước: Lịch bảo trì $\rightarrow$ Khử nhiễu $\rightarrow$ Xu hướng \& bất thường
 $\rightarrow$ Cảnh báo sớm $\rightarrow$ Tổng quan. Các trang chọn ở thanh bên trái, mục
 ``Điều hướng''. Không mở terminal và không chạy lại huấn luyện trước lớp.
 
-\subsection*{Bước 1 -- Lịch bảo trì (50 giây, hết demo lúc 17:10)}
+\subsection*{Bước 1 -- Lịch bảo trì (50 giây, hết demo lúc 11:50)}
 \shot{maintenance_top.png}{0.45}
 \clickbox{Thanh trái: bấm \textbf{Lịch bảo trì}. Chỉ vào bốn ô số trên cùng, rồi bảng.}
 \say
-Đây là bảng của người quản lý đội động cơ mà em vừa kể. Trên cùng là bốn con số: \num{21} cần bảo trì
-ngay, \num{59} cần theo dõi, \num{20} đang khỏe, \num{14} sắp đến hạn. Bảng xếp theo mức ưu tiên:
-chiếc cần vào xưởng sớm nhất nằm trên cùng.
+Đây là màn hình của người trưởng bảo trì mà em vừa kể. Trên cùng là bốn con số: \num{21} vào xưởng
+ngay, \num{59} theo dõi, \num{20} bình thường, \num{14} đến hạn trong 25 cycle tới. Bảng xếp theo
+mức ưu tiên: chiếc cần vào xưởng sớm nhất nằm trên cùng.
 
 \clearpage
 \shot{maintenance_engine090.png}{0.5}
 \clickbox{Kéo xuống. Ô \textbf{``Xem chi tiết động cơ test''} bên phải: bấm vào, gõ \texttt{090},
 nhấn Enter. Chỉ ô 31,2 và 147, rồi vạch cam trên biểu đồ. Kéo xuống bảng ``Kiểm tra bằng nhãn test''.}
 \say
-Em chọn động cơ 90: mô hình đoán còn \num{31} cycle, nên lịch ghi bảo trì ở cycle \num{147}. Vạch cam
-cho thấy điểm sức khỏe của nó đã bật đèn vàng từ cycle \num{67}. Và bảng cuối trang là phần chấm bằng
-đáp án: báo đỏ \num{21 chiếc, đúng cả 21}.
+Động cơ 90 mà em vừa kể: còn \num{31} cycle, lịch ở cycle \num{147}, đèn vàng từ cycle \num{67}.
+Bảng cuối trang là phần chấm bằng đáp án: \num{21 chiếc, đúng cả 21}.
 
-\subsection*{Bước 2 -- Khử nhiễu (30 giây, hết lúc 17:40)}
+\subsection*{Bước 2 -- Khử nhiễu (30 giây, hết lúc 12:20)}
 \shot{denoise.png}{0.4}
 \clickbox{Thanh trái: bấm \textbf{Khử nhiễu}. Giữ Động cơ 001 và sensor\_11. Chỉ đường xám rồi đường
 xanh. Nếu được hỏi thêm, đổi ô Sensor sang \texttt{sensor\_4}.}
 \say
-Đây là quán cà phê ồn ào em nói lúc nãy: đường xám là tiếng ồn, đường xanh là ý chính sau khi lọc.
-Có thể đổi sang bất kỳ động cơ hay cảm biến nào, hình dạng đều tương tự.
+Đường xám là tiếng ồn, đường xanh là ý chính sau khi lọc. Có thể đổi sang bất kỳ động cơ hay cảm
+biến nào, hình dạng đều tương tự.
 
 \clearpage
-\subsection*{Bước 3 -- Xu hướng và bất thường (35 giây, hết lúc 18:15)}
+\subsection*{Bước 3 -- Xu hướng và bất thường (35 giây, hết lúc 12:55)}
 \shot{anomaly.png}{0.5}
 \clickbox{Thanh trái: bấm \textbf{Xu hướng \& bất thường}. Giữ Động cơ 001. Chỉ vùng xám $\rightarrow$
 đường đứt $\rightarrow$ vạch cam $\rightarrow$ vạch đen, rồi histogram bên dưới.}
 \say
-Vùng xám là lúc động cơ còn khỏe, đường đứt là ngưỡng sốt. Điểm sức khỏe rớt qua ngưỡng và nằm dưới đó
-5 cycle liền ở cycle \num{84}, đèn vàng bật, còn \num{108} cycle nữa mới hỏng. Biểu đồ dưới cho thấy
-cả 100 động cơ đều được báo trước như vậy.
+Đèn vàng của động cơ train 1 bật ở cycle \num{84}, còn \num{108} cycle nữa mới hỏng. Biểu đồ dưới cho
+thấy cả 100 động cơ đều được báo trước như vậy.
 
-\subsection*{Bước 4 -- Cảnh báo sớm (25 giây, hết lúc 18:40)}
+\subsection*{Bước 4 -- Cảnh báo sớm (25 giây, hết lúc 13:20)}
 \shot{warning.png}{0.42}
 \clickbox{Thanh trái: bấm \textbf{Cảnh báo sớm}. Ô ``Xem quỹ đạo của động cơ'': chọn
 \texttt{Động cơ 001}. Chỉ vạch đứng ở cycle 162.}
@@ -563,18 +402,19 @@ cả 100 động cơ đều được báo trước như vậy.
 Cùng động cơ 1, đèn đỏ bật ở cycle \num{162}. Vậy là: vàng ở 84, đỏ ở 162, hỏng ở 192.
 
 \clearpage
-\subsection*{Bước 5 -- Kết demo (10 giây, hết lúc 18:50)}
+\subsection*{Bước 5 -- Kết demo (10 giây, hết lúc 13:30)}
 \shot{overview.png}{0.4}
-\clickbox{Thanh trái: bấm \textbf{Tổng quan}. Sau đó \texttt{Alt+Tab} về PowerPoint, sang slide 20.}
+\clickbox{Thanh trái: bấm \textbf{Tổng quan}. Sau đó \texttt{Alt+Tab} về PowerPoint, sang slide 14.}
 \say
 Mọi con số trên dashboard đều đọc từ cùng kết quả với báo cáo và slide, không có số nào làm tay. Em
 xin quay lại slide cuối.
 
-% ---------------------------------------------------------------- 20
-\slidepage{20}{Cảm ơn}{10 giây}{19:00}
+% ---------------------------------------------------------------- 14
+\slidepage{14}{Cảm ơn}{10 giây}{13:40}
 \lookbox{Nhìn về phía giảng viên, mỉm cười, dừng lại chờ câu hỏi.}
 \say
-Em xin cảm ơn thầy/cô và các bạn đã lắng nghe. Em rất mong nhận được câu hỏi và góp ý.
+Từ 21 con số thô mỗi cycle, hệ thống trả lời được câu hỏi mỗi sáng: \num{hôm nay đưa động cơ nào vào
+xưởng}. Em xin cảm ơn thầy/cô và các bạn đã lắng nghe, và rất mong nhận được câu hỏi.
 
 % ================================================================ Q&A
 \clearpage
@@ -584,15 +424,15 @@ Em xin cảm ơn thầy/cô và các bạn đã lắng nghe. Em rất mong nhậ
 Trả lời ngắn trước, chỉ thêm chi tiết khi được hỏi tiếp. Nếu cần hình minh họa, quay lại slide ghi
 trong ngoặc.
 
-\qa{Vì sao chọn EWMA để khử nhiễu? (slide 9)}{EWMA chỉ dùng quá khứ nên không rò rỉ tương lai, chỉ có
+\qa{Vì sao chọn EWMA để khử nhiễu? (slide 5)}{EWMA chỉ dùng quá khứ nên không rò rỉ tương lai, chỉ có
 một tham số và phản ứng nhanh hơn trung bình trượt thường khi xu hướng đổi. Span 10 em cố định trước,
 không chỉnh theo kết quả.}
 
-\qa{Không có nhãn bất thường thì kiểm chứng thế nào? (slide 12)}{Em so mỗi động cơ với 30 cycle đầu của
+\qa{Không có nhãn bất thường thì kiểm chứng thế nào? (slide 7)}{Em so mỗi động cơ với 30 cycle đầu của
 chính nó và đo số cycle báo trước khi hỏng. Em chưa đo được tỷ lệ báo động giả vì mọi động cơ train
 đều đi đến hỏng. Trên test, mức theo dõi không bỏ sót động cơ nào cần bảo trì, nhưng còn rộng.}
 
-\qa{Vì sao chọn 3 sigma và 5 cycle liên tiếp? Đổi số khác thì sao? (slide 12)}{Hai con số này em cố
+\qa{Vì sao chọn 3 sigma và 5 cycle liên tiếp? Đổi số khác thì sao? (slide 7)}{Hai con số này em cố
 định trước khi chạy, theo lệ thường của biểu đồ kiểm soát chất lượng: 3 sigma là mức mà nếu chỉ do
 dao động ngẫu nhiên thì rất hiếm khi vượt, còn 5 cycle liên tiếp để một cái gai lẻ không làm hệ thống
 la làng. Sau đó em có chạy lại cả lưới 2, 3, 4 sigma nhân với 3, 5, 10 cycle, tổng cộng 9 cấu hình
@@ -603,33 +443,36 @@ tham chiếu, giống cái chuông báo cháy kêu khi mới bật bếp. Nâng 
 báo quá sớm, nhưng mất khoảng 22 cycle báo trước. 3 sigma, 5 cycle nằm giữa: chỉ 1 trường hợp báo
 quá sớm, trung vị 121 cycle. Nói gọn: kết luận không phụ thuộc vào con số em chọn.}
 
-\qa{Vì sao chia GroupKFold theo động cơ? (slide 13)}{Hai window liền kề của cùng động cơ trùng 29 trên 30
+\qa{Vì sao chia GroupKFold theo động cơ? (slide 8)}{Hai window liền kề của cùng động cơ trùng 29 trên 30
 cycle. Chia ngẫu nhiên theo dòng sẽ đưa các window gần như giống nhau vào cả hai phía, làm sai số đẹp
 giả tạo.}
 
-\qa{Có rò rỉ dữ liệu không? (slide 5)}{Window, EWMA và quy tắc bất thường chỉ dùng quá khứ; mọi window
+\qa{Có rò rỉ dữ liệu không? (slide dự phòng 15)}{Window, EWMA và quy tắc bất thường chỉ dùng quá khứ; mọi window
 của một động cơ nằm cùng một fold; Health Index chỉ học trên train; nhãn test chỉ đọc sau khi đã ghi dự
 đoán và lịch bảo trì.}
 
-\qa{Vì sao 49\% cảnh báo bị trễ? (slide 15)}{Động cơ suy giảm nhanh có RUL thật thấp hơn điều mô hình
+\qa{Vì sao 49\% cảnh báo bị trễ? (slide 9)}{Động cơ suy giảm nhanh có RUL thật thấp hơn điều mô hình
 kỳ vọng ở cùng mức sensor, nên dự đoán chạm 30 muộn hơn. Ngưỡng 40 giảm tỷ lệ trễ xuống 6\%, đổi lại
 báo sớm nhiều hơn.}
 
-\qa{Mức theo dõi tăng cường có quá rộng không? (slide 16)}{Có, 41 trên 59 động cơ ở mức này còn trên 60
+\qa{Mức theo dõi tăng cường có quá rộng không? (slide 10)}{Có, 41 trên 59 động cơ ở mức này còn trên 60
 cycle. Mức này dùng để tăng tần suất kiểm tra, không dùng để lên lịch can thiệp.}
 
-\qa{Có động cơ nào bị xếp lịch bảo trì sau khi đã hỏng không? (slide 16)}{Có, em nói thẳng luôn: 12
+\qa{Có động cơ nào bị xếp lịch bảo trì sau khi đã hỏng không? (slide 10)}{Có, em nói thẳng luôn: 12
 trên 100 động cơ có ngày bảo trì dự kiến muộn hơn lúc hỏng thật, từ 4 đến 27 cycle. Nhưng cả 12 chiếc đều
 còn ít nhất 77 cycle nữa mới hỏng, tức là toàn những động cơ còn xa. Ở vùng đó mô hình hay đoán dư tuổi
 thọ, giống dự báo thời tiết hai tuần tới thì kém hơn dự báo ngày mai. Trong vận hành, lịch được tính lại
 mỗi lần có dữ liệu mới, nên những động cơ này sẽ được xếp lại nhiều lần trước khi đến hạn. Bài học em rút
 ra là không nên chốt lịch xa chỉ từ một lần dự đoán. Còn với 21 động cơ báo cần bảo trì ngay thì đúng cả 21.}
 
-\qa{Big Data nằm ở đâu khi dữ liệu nhỏ? (slide 6--7)}{Ở cách tổ chức: thu thập có kiểm tra mã băm, ETL
-nhiều file, lưu trữ phân lớp Parquet, SQLite và HDFS, ba cách làm Pandas, PySpark và MapReduce khớp tuyệt
-đối, và Spark nhanh hơn khoảng 3,4 lần khi dữ liệu tăng 10 lần. Em chưa chạy trên cluster nhiều máy.}
+\qa{Dữ liệu chỉ 5,7 MB, sao gọi là big data? Bỏ Hadoop và Spark thì quyết định bảo trì có đổi
+không? (slide 11)}{Với đúng 100 động cơ FD001 thì không đổi, và em nói thẳng điều đó. Nhưng em đo:
+nhân dữ liệu lên 100 lần, Pandas mất khoảng 18 phút, Spark khoảng 3 phút; lên 200 lần, Pandas không
+xong trong 30 phút, Spark xong trong khoảng 6,5 phút. Phần big data của bài là kiến trúc để khi đội
+động cơ lớn lên vẫn chạy được: lưu trữ phân lớp Parquet, SQLite, HDFS, và ba cách làm Pandas, PySpark,
+MapReduce khớp tuyệt đối. Em chưa chạy trên cluster nhiều máy.}
 
-\qa{Hadoop nằm ở đâu trong bài? Sao chỉ có một node? (slide 7)}{Em dựng Hadoop 3.4.3 trong Docker, đúng
+\qa{Hadoop nằm ở đâu trong bài? Sao chỉ có một node? (slide 3, slide dự phòng)}{Em dựng Hadoop 3.4.3 trong Docker, đúng
 kiểu Hadoop Sandbox của Chương 2: NameNode, DataNode cho HDFS và ResourceManager, NodeManager cho YARN.
 File raw được đưa lên HDFS. Job MapReduce viết bằng Python qua Hadoop Streaming tính số cycle, cycle đầu,
 cycle cuối của từng động cơ; Spark đọc HDFS, ghi tầng Silver dạng Parquet lên HDFS rồi tính lại. Cả hai
@@ -639,7 +482,7 @@ khám cho từng người ghi ``động cơ số mấy, cycle thứ mấy'', red
 lấy cycle lớn nhất là tuổi thọ. Dữ liệu 5,7 MB nằm gọn trong một block 128 MB; nếu lớn hơn, HDFS sẽ chia
 thành nhiều block và YARN chạy nhiều map song song.}
 
-\qa{Sao không dùng LSTM hay Transformer? (slide 17)}{Trong báo cáo, em đã thử nested CV và thêm đặc
+\qa{Sao không dùng LSTM hay Transformer? (slide dự phòng 19)}{Trong báo cáo, em đã thử nested CV và thêm đặc
 trưng lịch sử; không hướng nào cải thiện đồng thời sai số và cảnh báo. Mô hình sâu hơn phải so trên
 cùng cách đánh giá theo động cơ; em chưa có kết quả đó trong báo cáo nên chưa kết luận.}
 
@@ -661,7 +504,8 @@ Không đoán số liệu.}
 Nội dung & Số liệu \\
 \midrule
 Dữ liệu FD001 & 100 động cơ train, 100 test; 20.631 dòng train, 13.096 dòng test; 21 sensor \\
-Pandas vs PySpark & Sai khác 0; ở 10×: Pandas 112 giây, Spark 33 giây (nhanh hơn 3,4 lần) \\
+Pandas vs PySpark & Sai khác 0. Tính toán (không ghi file): 100×: Pandas 1.075 giây, Spark 196 giây
+(nhanh hơn 5,5 lần); 200×: Pandas không xong trong 30 phút, Spark 392 giây \\
 Hadoop & 3.4.3 một node trong Docker; MapReduce trên YARN (3 map, 1 reduce) và Spark đọc HDFS đều khớp 200/200; fsck HEALTHY \\
 Thu thập & Tải từ data.nasa.gov, MD5 gói khớp, 12/12 file đúng SHA-256 \\
 Khử nhiễu EWMA & Span 10, $\alpha \approx 0{,}18$; giảm 83,6--86,4\% dao động, trung vị 86,3\% \\

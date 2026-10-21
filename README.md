@@ -17,7 +17,7 @@ This repository supports the final report for the Big Data Analytics course,
 **Topic 8 — IoT Data Analysis and Predictive Maintenance**: analyze equipment sensor
 data to detect early signs of abnormal behavior and predict when maintenance is
 needed. The data are the simulated NASA C-MAPSS turbofan engines; the main analysis
-uses FD001, and FD002--FD004 appear only in extended experiments.
+uses FD001, and FD002–FD004 appear only in extended experiments.
 
 ## Project Status
 
@@ -46,7 +46,7 @@ Deliverables:
   [course alignment](handoff/COURSE_ALIGNMENT.md).
 
 Extended experiments (nested CV, 42 history features, similarity-based RUL,
-LightGBM, TCN, FD002--FD004 transfer, ARIMA) remain in
+LightGBM, TCN, FD002–FD004 transfer, ARIMA) remain in
 [`experiments/`](experiments/README.md) and `outputs/experiments/`. None of them
 changes the main model or the warning policy.
 
@@ -69,7 +69,7 @@ regression as a tool, not as the end goal.
 
 ## Dataset
 
-The repository uses the four simulated run-to-failure NASA C-MAPSS subsets. FD001 is the primary subset for detailed analysis; FD002--FD004 support the supplemental evaluation.
+The repository uses the four simulated run-to-failure NASA C-MAPSS subsets. FD001 is the primary subset for detailed analysis; FD002–FD004 support the supplemental evaluation.
 
 | Subset | Train rows | Test rows | Train engines | Test engines and labels |
 | --- | ---: | ---: | ---: | ---: |
@@ -87,7 +87,7 @@ Each observation contains:
 - Three operational settings.
 - Twenty-one sensor measurements.
 
-FD001 represents one operating condition and one High-Pressure Compressor degradation mode. FD002--FD004 add operating conditions and fault modes. The signals contain simulated sensor noise. Supplemental FD002--FD004 metrics are recorded in `outputs/cross_dataset`.
+FD001 represents one operating condition and one High-Pressure Compressor degradation mode. FD002–FD004 add operating conditions and fault modes. The signals contain simulated sensor noise. Supplemental FD002–FD004 metrics are recorded in `outputs/cross_dataset`.
 
 ### Provenance and Integrity
 
@@ -97,7 +97,7 @@ FD001 represents one operating condition and one High-Pressure Compressor degrad
 - Local provenance notes: [`data/raw/DATA_SOURCE.md`](data/raw/DATA_SOURCE.md)
 
 The data is simulated, not field telemetry. Results support reproducible academic
-comparison with FD001 as the primary subset and FD002--FD004 as supplemental
+comparison with FD001 as the primary subset and FD002–FD004 as supplemental
 evaluations; they do not establish real-world deployment performance.
 
 ## Data Architecture
@@ -173,7 +173,7 @@ containers stay running in Compose project `cmapss-notebook00` for inspection
 (NameNode: `http://localhost:9871`, YARN: `http://localhost:8089`). The notebook
 does not train the RUL model.
 
-FD001--FD004 are processed in separate subset directories. The repository does
+FD001–FD004 are processed in separate subset directories. The repository does
 not union all four subsets into one table because the current key has no
 `dataset_id`. The implemented relationships are one-to-many from an engine to
 its observations and one-to-one joins for features/targets and final
@@ -260,9 +260,9 @@ Example: test engine 90 is at cycle 146 with predicted RUL 31.2, so maintenance 
 due at cycle 147; it is under enhanced monitoring because its Health Index has been
 abnormal since cycle 67.
 
-### FD002--FD004 Evaluation
+### FD002–FD004 Evaluation
 
-The raw archive now contains FD001--FD004. The additional matrix uses the same
+The raw archive now contains FD001–FD004. The additional matrix uses the same
 pipeline with a 10-cycle window because the shortest FD004 test engine has 19
 cycles; it does not replace the published FD001 result that uses a 30-cycle
 window. Within-subset MAE is 21.9258 on FD001, 22.3556 on FD002, 28.3255 on
@@ -359,7 +359,7 @@ Current repository structure:
 ```text
 .
 ├── data/
-│   ├── raw/                 # Original FD001--FD004 files and provenance notes
+│   ├── raw/                 # Original FD001–FD004 files and provenance notes
 │   └── archive/             # Data retained for comparison, not active modeling
 ├── references/              # Bibliography, reading guide, papers, assignment context
 ├── notebooks/               # Executed: 00 data walkthrough, 01 EDA, 02 statistics, 03–06 result review
@@ -381,7 +381,7 @@ Current repository structure:
 ├── outputs/timeseries/      # Train-only PCA--ARIMA Health Index artifacts
 ├── outputs/degradation/     # EWMA signals, Health Index, anomaly onset cycles
 ├── outputs/maintenance/     # Maintenance schedule for 100 test engines, planning and label check
-├── outputs/cross_dataset/   # FD001--FD004 ETL, features, and transfer results
+├── outputs/cross_dataset/   # FD001–FD004 ETL, features, and transfer results
 ├── assets/diagrams/         # Editable draw.io sources, SVG previews, URL handles
 ├── pyproject.toml           # Package and direct dependencies
 ├── requirements.txt         # Pip installation: local package and runtime libraries
@@ -483,7 +483,7 @@ figure, steps 1--3 prepare the data; branch A predicts RUL and branch B tracks t
 signal. The dashed Hadoop box only re-checks the engine summary and does not feed
 RUL modeling. The
 [report pipeline figure](report/figures/pipeline.pdf) shows the same boundaries;
-PCA–ARIMA and FD002--FD004 transfer remain extended experiments.
+PCA–ARIMA and FD002–FD004 transfer remain extended experiments.
 
 ![FD001 overall data pipeline](assets/diagrams/fd001-pipeline.png)
 
@@ -665,7 +665,7 @@ MAE 15.3490, RMSE 20.5413, and NASA score 1513.2577 on 100 test engines.
 See [modeling artifacts and validation](outputs/modeling/README.md) for fold
 metrics, final predictions, final evaluation, figures, and limitations.
 
-### Run FD001--FD004 evaluation
+### Run FD001–FD004 evaluation
 
 To reproduce the within-subset and transfer matrix, run:
 
@@ -835,7 +835,7 @@ Windows/Linux limits and real spawn worker checks.
 </details>
 
 The [report PDF](report/main.pdf) presents the verified FD001 analyses and the
-supplemental FD001--FD004 matrix. See [report instructions](report/README.md)
+supplemental FD001–FD004 matrix. See [report instructions](report/README.md)
 for source organization and PDF build commands.
 
 ## Academic Context

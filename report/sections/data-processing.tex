@@ -203,13 +203,13 @@ WHERE s.split = 'train' AND s.engine_id = 1 AND t.cycle IN (1, 100, 192);
 \paragraph{Lọc và chọn cột trên Parquet bằng Pandas.} Dữ liệu sensor chi tiết được
 đọc từ Parquet, rồi lọc dòng (selection) và chọn cột (projection). Ví dụ, lấy
 \texttt{sensor\_11} của động cơ train 1 trong cycle 71--100 trả về 30 dòng với giá
-trị trung bình 47,395.
+trị trung bình 47,40.
 
 \paragraph{Spark SQL trên Parquet.} Cùng file Parquet có thể được đăng ký thành
 bảng tạm và truy vấn bằng Spark SQL, gồm cả \texttt{GROUP BY}, \texttt{JOIN} và
 window function. Mã nguồn~\ref{lst:sparksql} dùng window function để tính trung
 bình 30 cycle gần nhất của \texttt{sensor\_11}, chính là phép tính của đặc trưng
-\texttt{sensor\_11\_\_mean}. Kết quả tại cycle 100 (47,395) trùng với kết quả
+\texttt{sensor\_11\_\_mean}. Kết quả tại cycle 100 (47,40) trùng với kết quả
 Pandas. Phép lọc cycle phải nằm ở truy vấn ngoài: nếu đặt cùng cấp với window
 function, window chỉ nhìn thấy các dòng đã lọc và cho kết quả sai. Spark chạy ở
 chế độ local trên một máy; đây là minh họa cách truy vấn, không phải phép đo hiệu
@@ -286,7 +286,7 @@ dataset = train_features.merge(train_targets, on=["split", "engine_id", "cycle"]
 
 Hình~\ref{fig:window-example} minh họa bước 5 và bước 3 trên động cơ train 1. Tại
 cycle 100, window gồm cycle 71--100; sáu thống kê của \texttt{sensor\_11} là giá
-trị cuối 47,64, trung bình 47,395, độ lệch chuẩn 0,105, min 47,22, max 47,64 và độ
+trị cuối 47,64, trung bình 47,40, độ lệch chuẩn 0,105, min 47,22, max 47,64 và độ
 dốc 0,0037 mỗi cycle. Nhãn của dòng này là $192-100=92$. Giá trị ở cycle 101 trở đi
 không tham gia tính toán. Vì 29 cycle đầu chưa đủ window, một động cơ dài $T$ cycle
 tạo ra $T-29$ dòng đặc trưng; với FD001 là $20.631-100\times29=17.731$ dòng train và

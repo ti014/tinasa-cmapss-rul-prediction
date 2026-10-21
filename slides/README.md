@@ -66,9 +66,9 @@ hình gốc của pipeline trong `outputs/`.
 Từ thư mục gốc repository:
 
 ```powershell
-uv run --frozen python slides/extract_slide_data.py
 uv run --frozen python -m cmapss.degradation
 uv run --frozen python -m cmapss.maintenance
+uv run --frozen python slides/extract_slide_data.py
 uv run --frozen python slides/slide_figures.py
 uv run --no-project --with python-pptx==1.0.2 --with pillow==12.3.0 python slides/build_presentation.py
 powershell -File scripts/export_slides.ps1

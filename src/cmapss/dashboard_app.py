@@ -36,7 +36,14 @@ from cmapss.dashboard import (
 )
 from cmapss.followup_results import load_followup_results
 from cmapss.project import FOLLOWUP_RUN
+from cmapss.presentation import COLORS, FONT
 
+
+
+@alt.theme.register("cmapss", enable=True)
+def _figure_theme() -> dict:
+    """Dùng chung font và bảng màu cho hình trên dashboard."""
+    return {"config": {"font": FONT, "range": {"category": list(COLORS.values())[:5]}}}
 
 ROOT = Path(__file__).resolve().parents[2]  # replaced by main(repo_root)
 RUL_THRESHOLD = 30
@@ -68,9 +75,10 @@ METRIC_LABELS = {
     "early_alarm_burden": "Tỷ lệ thời gian báo sớm",
 }
 FORECAST_METHOD_LABELS = {"arima": "ARIMA", "last_value": "Giữ giá trị cuối", "drift": "Kéo dài xu hướng"}
-PALETTE = {"true": "#16202a", "pred": "#1f7a8c", "alt": "#f28e2b", "muted": "#94a3b8", "alert": "#c0392b"}
+PALETTE = {"true": COLORS["ink"], "pred": COLORS["blue"], "alt": COLORS["orange"],
+           "muted": COLORS["gray"], "alert": COLORS["red"]}
 STATUS_ORDER = ["Cần bảo trì", "Theo dõi tăng cường", "Bình thường"]
-STATUS_COLORS = ["#eb6834", "#e0a21b", "#2a78d6"]
+STATUS_COLORS = [COLORS["orange"], COLORS["gold"], COLORS["blue"]]
 SCHEDULE_LABELS = {
     "priority": "Ưu tiên",
     "engine_id": "Động cơ",
@@ -784,7 +792,7 @@ def page_denoise(degradation: DegradationData) -> None:
         .encode(
             x=alt.X("cycle:Q", title="Cycle"),
             y=alt.Y("value:Q", title=sensor, scale=alt.Scale(zero=False)),
-            color=alt.Color("Tín hiệu:N", scale=alt.Scale(domain=["Tín hiệu gốc", "Sau EWMA"], range=[PALETTE["muted"], "#2a78d6"]),
+            color=alt.Color("Tín hiệu:N", scale=alt.Scale(domain=["Tín hiệu gốc", "Sau EWMA"], range=[PALETTE["muted"], COLORS["blue"]]),
                             legend=alt.Legend(orient="top")),
             strokeWidth=alt.condition(alt.datum["Tín hiệu"] == "Sau EWMA", alt.value(2.5), alt.value(1)),
             tooltip=["cycle:Q", "Tín hiệu:N", alt.Tooltip("value:Q", format=".4f")],
@@ -802,7 +810,7 @@ def page_denoise(degradation: DegradationData) -> None:
     with left:
         bars = (
             alt.Chart(noise)
-            .mark_bar(color="#2a78d6")
+            .mark_bar(color=COLORS["blue"])
             .encode(
                 y=alt.Y("sensor:N", sort="-x", title=None, axis=alt.Axis(labelOverlap=False)),
                 x=alt.X("reduction_pct:Q", title="Mức giảm dao động (%)", scale=alt.Scale(domain=[0, 100])),
@@ -841,14 +849,14 @@ def page_anomaly(degradation: DegradationData) -> None:
     lines = alt.Chart(long).mark_line().encode(
         x=alt.X("cycle:Q", title="Cycle"),
         y=alt.Y("Health Index:Q", scale=alt.Scale(zero=False)),
-        color=alt.Color("Đường:N", scale=alt.Scale(domain=["HI từ tín hiệu gốc", "HI sau khử nhiễu"], range=[PALETTE["muted"], "#2a78d6"]),
+        color=alt.Color("Đường:N", scale=alt.Scale(domain=["HI từ tín hiệu gốc", "HI sau khử nhiễu"], range=[PALETTE["muted"], COLORS["blue"]]),
                         legend=alt.Legend(orient="top")),
         tooltip=["cycle:Q", "Đường:N", alt.Tooltip("Health Index:Q", format=".3f")],
     )
     baseline = alt.Chart(pd.DataFrame({"x": [1], "x2": [config["baseline_cycles"]]})).mark_rect(opacity=0.12, color=PALETTE["muted"]).encode(x="x:Q", x2="x2:Q")
     layers = [baseline, lines, alt.Chart(pd.DataFrame({"y": [threshold]})).mark_rule(strokeDash=[4, 3], color=PALETTE["true"]).encode(y=alt.Y("y:Q", title="Health Index"))]
     if bool(event["detected"]):
-        layers.append(alt.Chart(pd.DataFrame({"x": [float(event["detection_cycle"])]})).mark_rule(color="#eb6834", strokeWidth=2).encode(x="x:Q"))
+        layers.append(alt.Chart(pd.DataFrame({"x": [float(event["detection_cycle"])]})).mark_rule(color=COLORS["orange"], strokeWidth=2).encode(x="x:Q"))
     layers.append(alt.Chart(pd.DataFrame({"x": [float(event["failure_cycle"])]})).mark_rule(color="black").encode(x="x:Q"))
     st.altair_chart(alt.layer(*layers).properties(height=340).interactive(bind_y=False), width="stretch")
     detection = "chưa phát hiện" if not bool(event["detected"]) else (
@@ -861,7 +869,7 @@ def page_anomaly(degradation: DegradationData) -> None:
     with left:
         histogram = (
             alt.Chart(events.dropna(subset=["lead_cycles"]))
-            .mark_bar(color="#2a78d6")
+            .mark_bar(color=COLORS["blue"])
             .encode(
                 x=alt.X("lead_cycles:Q", bin=alt.Bin(step=20), title="Số cycle từ lúc phát hiện đến khi hỏng"),
                 y=alt.Y("count():Q", title="Số động cơ"),
@@ -959,13 +967,13 @@ def page_maintenance(maintenance: MaintenanceData) -> None:
         )
         health = maintenance.test_health_index.loc[maintenance.test_health_index["engine_id"] == engine_id]
         status = maintenance.test_anomaly.loc[maintenance.test_anomaly["engine_id"] == engine_id].iloc[0]
-        layers = [alt.Chart(health).mark_line(color="#2a78d6").encode(
+        layers = [alt.Chart(health).mark_line(color=COLORS["blue"]).encode(
             x=alt.X("cycle:Q", title="Cycle"), y=alt.Y("health_index:Q", title="Health Index", scale=alt.Scale(zero=False)),
             tooltip=["cycle:Q", alt.Tooltip("health_index:Q", format=".3f")])]
         if bool(status["anomaly_evaluable"]):
             layers.append(alt.Chart(pd.DataFrame({"y": [float(status["threshold"])]})).mark_rule(strokeDash=[4, 3], color=PALETTE["true"]).encode(y=alt.Y("y:Q", title="Health Index")))
         if pd.notna(row["anomaly_cycle"]):
-            layers.append(alt.Chart(pd.DataFrame({"x": [float(row["anomaly_cycle"])]})).mark_rule(color="#eb6834", strokeWidth=2).encode(x="x:Q"))
+            layers.append(alt.Chart(pd.DataFrame({"x": [float(row["anomaly_cycle"])]})).mark_rule(color=COLORS["orange"], strokeWidth=2).encode(x="x:Q"))
         st.altair_chart(alt.layer(*layers).properties(height=200), width="stretch")
         note = "chưa đủ 35 cycles để đánh giá bất thường" if not bool(status["anomaly_evaluable"]) else (
             f"bất thường từ cycle {int(row['anomaly_cycle'])}" if pd.notna(row["anomaly_cycle"]) else "chưa có dấu hiệu bất thường")

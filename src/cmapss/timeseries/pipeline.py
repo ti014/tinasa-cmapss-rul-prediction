@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from cmapss.presentation import COLORS, apply_plot_style, style_figure
+
 import hashlib
 import json
 from dataclasses import dataclass
@@ -65,6 +67,8 @@ class TimeseriesResult:
     input_sha256: dict[str, str]
 
 
+apply_plot_style()
+
 def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
@@ -81,13 +85,14 @@ def _plot_health_index(health_index: pd.DataFrame, selected: pd.DataFrame, path:
     selected_ids = selected["engine_id"].tolist()
     for engine_id in selected_ids:
         series = health_index.loc[health_index["engine_id"].eq(engine_id)]
-        ax.plot(series["cycle"], series["health_index"], linewidth=1.0, label=f"engine {engine_id}")
+        ax.plot(series["cycle"], series["health_index"], linewidth=1.0, label=f"Động cơ {engine_id}")
     ax.set_xlabel("Cycle")
     ax.set_ylabel("Health Index (PC1 chuẩn hóa)")
-    ax.set_title("Health Index trên các validation engines được chọn")
+    ax.set_title("Health Index trên các động cơ đánh giá đã chọn")
     ax.grid(alpha=0.25)
     ax.legend(ncol=2, fontsize=8)
     fig.tight_layout()
+    style_figure(fig)
     fig.savefig(path, dpi=160)
     plt.close(fig)
 
@@ -104,19 +109,19 @@ def _plot_forecasts(
     for axis, row in zip(axes.ravel(), selected.itertuples(index=False)):
         series = health_index.loc[health_index["engine_id"].eq(row.engine_id)]
         forecast = forecasts.loc[forecasts["engine_id"].eq(row.engine_id)]
-        axis.plot(series["cycle"], series["health_index"], color="0.55", linewidth=1.0, label="actual")
+        axis.plot(series["cycle"], series["health_index"], color="0.55", linewidth=1.0, label="Thực tế")
         if not forecast.empty:
-            axis.plot(forecast["cycle"], forecast["health_index_pred"], color="#b2182b", label="forecast")
+            axis.plot(forecast["cycle"], forecast["health_index_pred"], color=COLORS["red"], label="ARIMA dự báo")
             axis.fill_between(
                 forecast["cycle"].to_numpy(),
                 forecast["lower_95"].to_numpy(),
                 forecast["upper_95"].to_numpy(),
-                color="#ef8a62",
+                color=COLORS["orange"],
                 alpha=0.25,
-                label="95% interval",
+                label="Khoảng dự đoán 95%",
             )
-            axis.axvline(int(forecast["cycle"].min()), color="#2166ac", linestyle="--", linewidth=0.8)
-        axis.set_title(f"Engine {row.engine_id}")
+            axis.axvline(int(forecast["cycle"].min()), color=COLORS["blue"], linestyle="--", linewidth=0.8)
+        axis.set_title(f"Động cơ {row.engine_id}")
         axis.grid(alpha=0.2)
     for axis in axes.ravel()[n:]:
         axis.axis("off")
@@ -126,8 +131,9 @@ def _plot_forecasts(
         axis.set_xlabel("Cycle")
     handles, labels = axes.ravel()[0].get_legend_handles_labels()
     fig.legend(handles, labels, loc="upper center", ncol=3, bbox_to_anchor=(0.5, 1.02))
-    fig.suptitle("ARIMA forecast 30% cuối chuỗi Health Index", y=1.07)
+    fig.suptitle("ARIMA dự báo 30% cuối chuỗi Health Index", y=1.07)
     fig.tight_layout()
+    style_figure(fig)
     fig.savefig(path, dpi=160, bbox_inches="tight")
     plt.close(fig)
 

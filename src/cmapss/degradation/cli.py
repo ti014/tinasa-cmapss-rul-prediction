@@ -9,6 +9,8 @@ Lệnh chỉ đọc ``data/raw/train_FD001.txt``; không đọc test hoặc nhã
 
 from __future__ import annotations
 
+from cmapss.presentation import COLORS, apply_plot_style, style_figure
+
 import argparse
 import hashlib
 import json
@@ -28,8 +30,10 @@ from cmapss.timeseries.health_index import fit_health_index
 EWMA_SPAN = 10
 EXAMPLE_ENGINE = 1
 EXAMPLE_SENSORS = ("sensor_11", "sensor_4")
-BLUE, ORANGE, GRAY, INK_2 = "#2a78d6", "#eb6834", "#8a8985", "#52514e"
+BLUE, ORANGE, GRAY, INK_2 = COLORS["blue"], COLORS["orange"], COLORS["gray"], COLORS["muted"]
 
+
+apply_plot_style()
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Khử nhiễu và phát hiện bất thường trên train FD001")
@@ -42,7 +46,7 @@ def build_parser() -> argparse.ArgumentParser:
 def _style(ax: plt.Axes) -> None:
     ax.spines[["top", "right"]].set_visible(False)
     ax.tick_params(colors=INK_2, labelsize=8)
-    ax.grid(axis="y", color="#e8e7e3", linewidth=0.6)
+    ax.grid(axis="y", color=COLORS["grid"], linewidth=0.6)
 
 
 def _plot_denoise(raw: pd.DataFrame, smoothed: pd.DataFrame, span: int, path: Path) -> None:
@@ -56,6 +60,7 @@ def _plot_denoise(raw: pd.DataFrame, smoothed: pd.DataFrame, span: int, path: Pa
         ax.set_xlabel("Cycle", fontsize=8)
         _style(ax)
     axes[0].legend(frameon=False, fontsize=8)
+    style_figure(fig)
     fig.savefig(path, dpi=200)
     plt.close(fig)
 
@@ -72,7 +77,7 @@ def _plot_anomaly(
     left.plot(raw_engine["cycle"], raw_engine["health_index"], color=GRAY, linewidth=0.8, label="HI từ tín hiệu gốc")
     left.plot(smooth_engine["cycle"], smooth_engine["health_index"], color=BLUE, linewidth=1.6,
               label="HI sau khử nhiễu")
-    left.axvspan(1, config.baseline_cycles, color="#e8e7e3", alpha=0.7, label="Đoạn tham chiếu")
+    left.axvspan(1, config.baseline_cycles, color=COLORS["grid"], alpha=0.7, label="Đoạn tham chiếu")
     left.axhline(threshold, color=INK_2, linestyle="--", linewidth=0.9, label=f"Ngưỡng {config.z_threshold:g}σ")
     if bool(event["detected"]):
         left.axvline(int(event["detection_cycle"]), color=ORANGE, linewidth=1.4, label="Phát hiện bất thường")
@@ -90,6 +95,7 @@ def _plot_anomaly(
     right.set_ylabel("Số động cơ", fontsize=8)
     right.legend(frameon=False, fontsize=8)
     _style(right)
+    style_figure(fig)
     fig.savefig(path, dpi=200)
     plt.close(fig)
 

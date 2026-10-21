@@ -33,7 +33,7 @@ from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 from pptx.oxml.ns import qn
 from pptx.util import Inches, Pt
 
-from cmapss.presentation import format_number_vi as vn
+from cmapss.presentation import COLORS, FONT, format_number_vi as vn
 
 ROOT = Path(__file__).resolve().parents[1]
 TEMPLATE = ROOT / "slides/template/Template Powerpoint v2 (ty le 16-9).pptx"
@@ -46,11 +46,10 @@ with (ROOT / "outputs/degradation/tables/noise_summary.csv").open(encoding="utf-
     NOISE = {row["sensor"]: row for row in csv.DictReader(file)}
 
 # Màu lấy từ template IUH: xanh thương hiệu và vàng của đường viền footer.
-BLUE, GOLD = "21409A", "FCB525"
+BLUE, GOLD = COLORS["blue"].lstrip("#"), COLORS["gold"].lstrip("#")
 INK, SLATE, LINE = "1B2733", "5A6B7B", "C9D2E3"
 TINT, GOLD_TINT, WHITE, ICE = "EAF0FA", "FFF4DA", "FFFFFF", "C9D6F0"
-RED, TEAL = "B23A3A", "157A7F"
-FONT = "Arial"
+RED, TEAL = COLORS["red"].lstrip("#"), COLORS["teal"].lstrip("#")
 PARTS = [
     "Bài toán và dữ liệu",
     "Pipeline dữ liệu",

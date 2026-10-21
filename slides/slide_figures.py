@@ -14,6 +14,8 @@ Chạy từ thư mục gốc repository, trước ``slides/build_presentation.py
 
 from __future__ import annotations
 
+from cmapss.presentation import COLORS, apply_plot_style, style_figure
+
 import csv
 import json
 from pathlib import Path
@@ -35,26 +37,13 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "slides/figures"
 
 # Bảng màu của deck (build_presentation.py).
-BLUE, GOLD, RED, TEAL = "#21409A", "#FCB525", "#B23A3A", "#157A7F"
-INK, SLATE, LINE, GRAY = "#1B2733", "#5A6B7B", "#C9D2E3", "#9AA5B1"
+BLUE, GOLD, RED, TEAL = COLORS["blue"], COLORS["gold"], COLORS["red"], COLORS["teal"]
+INK, SLATE, LINE, GRAY = COLORS["ink"], COLORS["muted"], COLORS["grid"], COLORS["gray"]
 DPI = 220
 
-plt.rcParams.update({
-    "font.family": "Arial",
-    "font.size": 10,
-    "axes.titlesize": 11,
-    "axes.labelsize": 10.5,
-    "xtick.labelsize": 10,
-    "ytick.labelsize": 10,
-    "legend.fontsize": 9.5,
-    "axes.edgecolor": SLATE,
-    "axes.labelcolor": INK,
-    "xtick.color": SLATE,
-    "ytick.color": SLATE,
-    "axes.titlecolor": INK,
-    "axes.unicode_minus": True,
-})
 
+
+apply_plot_style()
 
 def _style(ax) -> None:
     ax.spines[["top", "right"]].set_visible(False)
@@ -66,6 +55,7 @@ def _style(ax) -> None:
 
 def _save(fig, name: str) -> None:
     OUT.mkdir(parents=True, exist_ok=True)
+    style_figure(fig)
     fig.savefig(OUT / name, dpi=DPI, facecolor="white")
     plt.close(fig)
 
@@ -85,7 +75,7 @@ def engine_lifetimes(train: pd.DataFrame) -> None:
     hist.set_title("Phân bố tuổi thọ 100 động cơ train")
     _style(hist)
     box.boxplot(life, vert=False, widths=0.5, patch_artist=True,
-                boxprops={"facecolor": "#C9D6F0", "edgecolor": BLUE}, medianprops={"color": RED, "linewidth": 1.6},
+                boxprops={"facecolor": COLORS["light"], "edgecolor": BLUE}, medianprops={"color": RED, "linewidth": 1.6},
                 whiskerprops={"color": BLUE}, capprops={"color": BLUE}, flierprops={"markeredgecolor": SLATE})
     box.set_yticks([])
     box.set_xlabel("Tuổi thọ (cycle)")
@@ -143,7 +133,7 @@ def anomaly(signals: pd.DataFrame) -> None:
 
     fig, (left, right) = plt.subplots(1, 2, figsize=(8.15, 3.1), constrained_layout=True,
                                       gridspec_kw={"width_ratios": [1.45, 1]})
-    left.axvspan(1, config["baseline_cycles"], color="#E3E7EE", label=f"Tham chiếu: {config['baseline_cycles']} cycle đầu")
+    left.axvspan(1, config["baseline_cycles"], color=COLORS["light"], label=f"Tham chiếu: {config['baseline_cycles']} cycle đầu")
     left.plot(engine["cycle"], engine["health_index_raw"], color=GRAY, linewidth=0.8, label="HI gốc")
     left.plot(engine["cycle"], engine["health_index_ewma"], color=BLUE, linewidth=1.8, label="HI đã làm mượt")
     left.axhline(threshold, color=INK, linestyle="--", linewidth=1.0, label=f"Ngưỡng {config['z_threshold']:g}σ")
@@ -186,11 +176,11 @@ def rul_figures() -> None:
 
     residual = final["y_pred"] - final["y_true"]
     fig, ax = plt.subplots(figsize=(5.9, 4.1), constrained_layout=True)
-    ax.axvspan(0, 30, color="#FFF4DA")
+    ax.axvspan(0, 30, color=COLORS["light"])
     ax.axhline(0, color=INK, linewidth=1.0)
     ax.scatter(final["y_true"], residual, s=22, color=BLUE, alpha=0.85)
     ax.set_xlim(0, float(final["y_true"].max()) + 8)
-    ax.text(15, residual.max(), "Vùng cần\ncảnh báo\n(RUL ≤ 30)", ha="center", va="top", fontsize=9.5, color="#8A6100")
+    ax.text(15, residual.max(), "Vùng cần\ncảnh báo\n(RUL ≤ 30)", ha="center", va="top", fontsize=9.5, color=COLORS["muted"])
     ax.set_xlabel("RUL thực tế (cycle)")
     ax.set_ylabel("Sai số = dự đoán − thực tế (cycle)")
     ax.set_title("Mỗi điểm là một động cơ test; trên 0 là dự đoán cao hơn thực tế")

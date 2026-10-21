@@ -1,5 +1,7 @@
 """Paired per-engine comparisons between the baseline and the improved RUL model."""
 
+from cmapss.presentation import COLORS, apply_plot_style, style_figure
+
 from pathlib import Path
 
 import numpy as np
@@ -88,11 +90,12 @@ def _write_figures(predictions: pd.DataFrame, engine_tables: dict, output: Path)
     import matplotlib
     matplotlib.use("Agg")
     from matplotlib import pyplot as plt
+    apply_plot_style()
     figures = output / "figures"
     figures.mkdir(exist_ok=True)
     delta = (engine_tables["weights"].low_rul_engine_mae - engine_tables["baseline"].low_rul_engine_mae).sort_values()
     fig, ax = plt.subplots(figsize=(10, 4))
-    ax.bar(np.arange(len(delta)), delta, color=np.where(delta < 0, "#247b8b", "#bd503f"))
+    ax.bar(np.arange(len(delta)), delta, color=np.where(delta < 0, COLORS["teal"], COLORS["red"]))
     ax.axhline(0, color="black", lw=.7)
     ax.set(xlabel="Engine rank by error change", ylabel="Low-RUL MAE change (cycles)", title="Selected procedure minus baseline: nested outer predictions")
     fig.tight_layout(); fig.savefig(figures / "engine_error_delta.png", dpi=160); plt.close(fig)

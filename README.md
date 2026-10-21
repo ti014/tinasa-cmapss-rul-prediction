@@ -36,7 +36,7 @@ Main FD001 results:
 
 Deliverables:
 
-- [Report PDF](report/main.pdf) (50 pages, [LaTeX source](report/README.md)).
+- [Report PDF](report/main.pdf) (40 pages, [LaTeX source](report/README.md)).
 - [Slides](slides/cmapss_fd001_presentation.pptx) ([PDF](slides/cmapss_fd001_presentation.pdf)),
   20 slides on the IUH template, built by [`slides/build_presentation.py`](slides/build_presentation.py).
 - A nine-page [Streamlit dashboard](app.py) that only reads artifacts.

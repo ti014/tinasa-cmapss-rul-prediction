@@ -1,4 +1,4 @@
-\documentclass[12pt,a4paper]{article}
+\documentclass[11pt,a4paper]{article}
 \usepackage{fontspec}
 \setmainfont{Times New Roman}
 \setsansfont{Arial}
@@ -20,8 +20,8 @@
 \newcommand{\reportdate}{14/10/2026}
 \newcommand{\filepath}[1]{\nolinkurl{#1}}
 \newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
-% Giữ bố cục học thuật nhưng đáp ứng giới hạn dưới 50 trang của báo cáo.
-\setstretch{1.18}
+% Giữ bố cục học thuật nhưng đáp ứng giới hạn 40 trang của báo cáo.
+\setstretch{1.0}
 \setlength{\parindent}{0.7cm}
 \setlength{\emergencystretch}{2em}
 \setlength{\headheight}{16pt}
@@ -110,6 +110,7 @@ bảo trì nên báo cáo không đề xuất lịch bảo trì tối ưu.
 phát hiện bất thường; time window; RUL; cảnh báo sớm; lịch bảo trì; PySpark.
 \clearpage
 \begin{spacing}{1.1}
+\setcounter{tocdepth}{2}
 \tableofcontents
 \end{spacing}
 \clearpage
@@ -133,7 +134,7 @@ phát hiện bất thường; time window; RUL; cảnh báo sớm; lịch bảo 
 \input{sections/conclusion}
 \clearpage
 % Phụ lục cấu hình và mapping artifact được giữ ở report/sections/appendix.tex
-% và handoff/FINAL_HANDOFF.md; không đưa vào PDF chính để bảo đảm giới hạn dưới 50 trang.
+% và handoff/FINAL_HANDOFF.md; không đưa vào PDF chính để bảo đảm giới hạn 40 trang.
 \clearpage
 \phantomsection
 \addcontentsline{toc}{section}{Tài liệu tham khảo}

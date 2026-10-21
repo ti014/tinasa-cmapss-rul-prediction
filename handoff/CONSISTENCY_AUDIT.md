@@ -28,7 +28,7 @@ này sau mỗi commit.
 | Docstring, comment, thông báo lỗi tiếng Việt; return type | C1, C2, C3 | Codex | Chờ | |
 | Report: 12 sensor, dung lượng 44,9 MB, ghi chú run dựng lại | A2, A6, A8 | Claude | Xong | xem commit kế tiếp |
 | Số test trong report và handoff | A4 | Claude | Chờ Codex xong để chạy test lần cuối | |
-| Số trang: PDF thực tế 51 trang, giới hạn ghi là 50 | A5 | Người dùng quyết | Chờ quyết định | |
+| Rút report từ 51 xuống 40 trang (11pt, giãn dòng 1.0, mục lục đến subsection, bỏ 3 listing Python; thêm HI và RUL cap vào glossary) | A5, B4, B6 | Claude | Xong | xem commit kế tiếp |
 | 47,40; thứ tự build deck; FD001–FD004 trong README | E3, E5, E7 | Claude | Xong | xem commit kế tiếp |
 | Ngày cập nhật tài liệu | E4 | Claude | Làm cuối cùng | |
 | Macro `\num` trong speech | E6 | — | Bỏ qua: chỉ ảnh hưởng cách in đậm, sửa 100+ chỗ không đổi nội dung | |

@@ -11,7 +11,7 @@ liệu tra nhanh.
 
 ## Bài làm gồm những gì
 
-- **Báo cáo:** [`report/main.pdf`](../report/main.pdf), 51 trang.
+- **Báo cáo:** [`report/main.pdf`](../report/main.pdf), 40 trang.
 - **Slide:** [`slides/cmapss_fd001_presentation.pptx`](../slides/cmapss_fd001_presentation.pptx),
   20 slide trên template IUH; bản PDF dự phòng nằm cùng thư mục.
 - **Dashboard:** mở bằng lệnh bên dưới, chín trang, dùng để demo.

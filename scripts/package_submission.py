@@ -36,6 +36,7 @@ INCLUDE = [
     "slides/build_presentation.py", "slides/extract_slide_data.py", "slides/slide_data.json", "slides/README.md",
     "slides/slide_figures.py", "slides/figures",
     "handoff/COURSE_ALIGNMENT.md", "handoff/DATA_WALKTHROUGH.md",
+    "handoff/SPEECH_SCRIPT_VI.pdf", "handoff/FINAL_HANDOFF.md",
     "assets/diagrams",
     "outputs",
 ]

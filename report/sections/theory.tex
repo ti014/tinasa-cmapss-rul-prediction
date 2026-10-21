@@ -152,7 +152,8 @@ Spark có thể dùng chính HDFS làm nơi lưu trữ, nhưng giữ dữ liệu
 nhớ thay vì ghi xuống đĩa sau mỗi pha như MapReduce~\cite{zaharia2012rdd}.
 
 \subsection{Spark, Bronze--Silver--Gold và Parquet}
-Pipeline dùng PySpark ở chế độ \texttt{local[4]} để thực hiện các phép biến đổi
+Pipeline dùng PySpark ở chế độ local (\texttt{local[1]} khi đối chiếu ETL,
+\texttt{local[4]} khi benchmark) để thực hiện các phép biến đổi
 trên dữ liệu có schema. DataFrame API hỗ trợ \texttt{unionByName} để gom các file
 quan sát, \texttt{groupBy} và \texttt{agg} để tạo bảng tóm tắt theo động cơ,
 \texttt{join} để tạo nhãn RUL, cùng các phép sắp xếp theo

@@ -119,15 +119,16 @@ Ba mô hình được so sánh:
 \begin{itemize}
 \item \textbf{Median baseline}: dự đoán một hằng số bằng trung vị có trọng số
       của RUL trong fold huấn luyện.
-\item \textbf{Ridge}: hồi quy tuyến tính với phạt L2, $\alpha=1$; đặc trưng
+\item \textbf{Ridge}~\cite{sklearnRidge}: hồi quy tuyến tính với phạt L2, $\alpha=1$; đặc trưng
       được chuẩn hóa bằng \texttt{StandardScaler} fit trong từng fold huấn luyện.
-\item \textbf{HistGradientBoosting (HGB)}: tổ hợp cây hồi quy với 200 vòng
+\item \textbf{HistGradientBoosting (HGB)}~\cite{sklearnHistBoost,sklearnHGBAPI2026}:
+      tổ hợp cây hồi quy với 200 vòng
       boosting, learning rate 0,05, tối đa 31 lá mỗi cây, tối thiểu 20 mẫu mỗi
       lá, tắt early stopping, \texttt{random\_state=42}; dùng đặc trưng ở thang
       đo gốc vì cây quyết định không phụ thuộc thang đo.
 \end{itemize}
 
-Mô hình được chọn bằng GroupKFold 5 fold theo \texttt{engine\_id}: mỗi fold có
+Mô hình được chọn bằng GroupKFold~\cite{sklearnGroupedCV} 5 fold theo \texttt{engine\_id}: mỗi fold có
 20 động cơ, và mọi window của một động cơ nằm cùng một fold. Chia ngẫu nhiên
 theo dòng sẽ đưa các window gần như trùng nhau của cùng động cơ vào cả train và
 validation, làm sai số validation thấp hơn thực tế. Vì động cơ sống lâu có

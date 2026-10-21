@@ -54,7 +54,9 @@ phân bậc một từ 83,6\% đến 86,4\% trên 14 sensor có thông tin, trun
 giữa hai cycle giảm từ 5,70 xuống 0,78. Mức giảm gần như bằng nhau ở mọi sensor;
 điều này phù hợp với giả định dao động ngắn hạn gần độc lập giữa các cycle, nhưng
 không chứng minh đó là nhiễu đo thuần túy vì dữ liệu không có tín hiệu sạch để
-đối chiếu.
+đối chiếu. Với dao động độc lập, span 10 cho mức giảm lý thuyết
+$1-\alpha/\sqrt{2-\alpha}\approx 86{,}5\%$, nên con số 86\% chủ yếu kiểm chứng tham số
+làm mượt, không phải phát hiện riêng về dữ liệu.
 
 \begin{table}[H]
 \centering\small
@@ -328,7 +330,7 @@ kế hoạch bảo trì.
 \centering
 \includegraphics[width=0.6\linewidth]{../outputs/modeling/figures/warning_trajectory.png}
 \caption[Quỹ đạo cảnh báo]{RUL thật, dự đoán OOF của HGB và ngưỡng 30 cycle của động cơ train 1. Đường
-đứng màu tím là cảnh báo đầu tiên; đường đứng màu đen là cycle hỏng.}
+chấm màu xanh lục là cảnh báo đầu tiên; đường nét đứt màu đen là cycle hỏng.}
 \label{fig:warning-trajectory}
 \end{figure}
 
@@ -456,11 +458,10 @@ bản FD001 (trục hoành logarit); thời gian tính bằng giây, RAM bằng 
 \label{fig:scaling}
 \end{figure}
 
-Phép đo không gồm bước ghi file vì trên Windows thiếu \texttt{winutils}, Spark phải
-gom bảng đặc trưng về driver để ghi bằng PyArrow; bước ghi đầy đủ thất bại từ 50× (vượt
-trần kết quả của driver) và hết heap ở 100×--200×. Lỗi nằm ở bước ghi qua driver; bài
-chưa thử ghi kết quả ở quy mô này. Ba điểm cần đọc đúng: Pandas chạy một luồng còn Spark
-bốn luồng, nên một phần chênh lệch đến từ song song hóa; giới hạn 30 phút do bài tự đặt;
-và với 100 động cơ FD001, bỏ Spark thì lịch bảo trì không đổi. Spark chỉ cho lợi thế rõ
-khi dữ liệu lớn gấp hàng chục lần, và mọi phép đo đều chạy trên một máy; nguồn:
-\filepath{outputs/benchmarks/20261021/}.
+Phép đo không gồm bước ghi file: trên Windows thiếu \texttt{winutils}, Spark phải gom
+bảng đặc trưng về driver để ghi bằng PyArrow, và bước này thất bại từ 50× (vượt trần
+kết quả của driver, hết heap ở 100×--200×). Hệ số 5,5 lớn hơn số luồng vì có hai nguồn
+chênh lệch: Spark chạy bốn luồng còn Pandas một; Pandas tính slope bằng một hàm Python
+cho từng window (\texttt{rolling.apply}), chiếm phần lớn thời gian, còn Spark dùng hàm
+dựng sẵn \texttt{regr\_slope}. Với 100 động cơ FD001, bỏ Spark thì lịch bảo trì không
+đổi; mọi phép đo đều chạy trên một máy (\filepath{outputs/benchmarks/20261021/}).

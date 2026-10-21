@@ -392,7 +392,7 @@ def slide_problem():
     failure = int(M["example_warning"]["failure_cycle"])
     s = content(1, 2, "Bài toán: xác định thời điểm cần bảo trì cho từng động cơ", "",
                 "references/context/assignment-brief.png; report/sections/problem-data.tex",
-                "Thời lượng: 45 giây.\nĐộng cơ turbofan gửi số đo cảm biến sau mỗi chu kỳ vận hành, gọi là cycle. Bảo trì "
+                "Thời lượng: 35 giây.\nĐộng cơ turbofan gửi số đo cảm biến sau mỗi chu kỳ vận hành, gọi là cycle. Bảo trì "
                 "quá sớm thì lãng phí, quá muộn thì động cơ có thể hỏng khi đang vận hành. Đại lượng cần ước lượng là RUL "
                 f"(Remaining Useful Life), số cycle còn lại trước khi hỏng. Ví dụ động cơ train 1 hỏng ở cycle {failure}, "
                 f"nên tại cycle {failure - 30} RUL bằng 30.\nKết quả chính trên tập test: hệ thống xếp "
@@ -420,7 +420,7 @@ def slide_problem():
 def slide_pipeline():
     s = content(1, 3, "Quy trình thực hiện gồm năm bước", "",
                 "report/figures/pipeline.pdf; handoff/DATA_WALKTHROUGH.md",
-                "Thời lượng: 40 giây.\nBước 1 tải dữ liệu từ NASA và kiểm tra checksum. Bước 2 lưu dữ liệu theo ba lớp "
+                "Thời lượng: 30 giây.\nBước 1 tải dữ liệu từ NASA và kiểm tra checksum. Bước 2 lưu dữ liệu theo ba lớp "
                 "Bronze, Silver, Gold dưới dạng Parquet và SQLite, đồng thời đưa lên HDFS. Bước 3 xử lý bằng Pandas, "
                 "PySpark và MapReduce. Bước 4 phân tích: làm mượt EWMA, Health Index, mô hình HistGradientBoosting. Bước 5 "
                 "tạo hai mức cảnh báo và lịch bảo trì.\nPhần 2 của bài (slide 4–12) trình bày bước 1–3; phần 3 (slide "
@@ -460,7 +460,7 @@ def slide_source():
     retrieved = DP["retrieved_at_utc"][:10]
     s = content(2, 4, "Nguồn dữ liệu: bộ NASA C-MAPSS gồm bốn tập con", "",
                 "outputs/acquisition/manifest.json; outputs/cross_dataset/FD00x/etl/run_info.json",
-                "Thời lượng: 45 giây.\nC-MAPSS là dữ liệu mô phỏng động cơ turbofan của NASA, có chuỗi cảm biến của từng "
+                "Thời lượng: 40 giây.\nC-MAPSS là dữ liệu mô phỏng động cơ turbofan của NASA, có chuỗi cảm biến của từng "
                 "động cơ từ lúc mới vận hành đến khi hỏng. Bốn tập con khác nhau về số điều kiện vận hành và số dạng lỗi. "
                 f"Tổng cộng {vn(total, 0)} bản ghi.\nDữ liệu được tải bằng script từ {DP['source_url']} "
                 f"(ngày {retrieved}, giờ UTC): gói {vn(DP['archive_bytes'] / 1e6, 1)} MB, {DP['n_files']} file; kiểm tra "
@@ -485,7 +485,7 @@ def slide_structure():
     n_train, n_obs = DP["shapes"]["train_targets"][0], DP["shapes"]["observations"][0]
     s = content(2, 5, f"Mỗi bản ghi là một cycle của một động cơ, gồm {sample['n_columns']} trường", "",
                 "data/raw/train_FD001.txt; data/raw/readme.txt",
-                "Thời lượng: 45 giây.\nBảng là bốn dòng đầu của file train_FD001.txt, đọc trực tiếp từ dữ liệu gốc. File "
+                "Thời lượng: 40 giây.\nBảng là bốn dòng đầu của file train_FD001.txt, đọc trực tiếp từ dữ liệu gốc. File "
                 "text không có header, các trường cách nhau bằng khoảng trắng. Mỗi dòng gồm mã động cơ, số thứ tự cycle, "
                 "3 thiết lập vận hành và 21 sensor; bảng chỉ hiện một phần các cột.\nMỗi tập con có ba file: train chạy "
                 f"đến khi hỏng ({vn(n_train, 0)} dòng với FD001), test bị cắt trước khi hỏng ({vn(n_obs - n_train, 0)} dòng) "
@@ -510,11 +510,12 @@ def slide_quality():
     life = E["lifetime"]
     s = content(2, 6, "Dữ liệu đầy đủ; tuổi thọ động cơ từ 128 đến 362 cycle", "",
                 f"outputs/etl/silver/observations.parquet; {NB01}/engine_lifetimes.png",
-                f"Thời lượng: 45 giây.\nKiểm tra trên {vn(q['rows'], 0)} bản ghi FD001: không có giá trị thiếu, không có "
+                f"Thời lượng: 40 giây.\nKiểm tra trên {vn(q['rows'], 0)} bản ghi FD001: không có giá trị thiếu, không có "
                 "khóa trùng, cycle của mỗi động cơ bắt đầu từ 1 và liên tục. Khóa của mọi bảng là (split, engine_id, "
                 "cycle): cặp (engine_id, cycle) trùng giữa train và test nên phải thêm cột split.\nBảy cột không đổi ở cả "
                 "100 động cơ: sensor 1, 5, 10, 16, 18, 19 và setting_3; sensor 6 không đổi ở 38/100 động cơ. Các cột này "
-                "không mang thông tin suy giảm nên không dùng khi làm mượt và tạo Health Index.\nHình do notebook 01 sinh "
+                "không mang thông tin suy giảm nên không làm mượt; bảng đặc trưng vẫn giữ đủ 21 sensor.\n"
+                "Hình do notebook 01 sinh "
                 f"ra: tuổi thọ trung vị {vn(life['50%'], 0)} cycle, lệch phải. Nếu bảo trì cả đội ở cycle "
                 f"{vn(life['50%'], 0)}, {E['n_fail_before_median']} động cơ đã hỏng trước đó, nên cần dự đoán riêng cho "
                 "từng động cơ.")
@@ -522,7 +523,7 @@ def slide_quality():
     numbers_below(s, [
         (str(q["missing_values"]), "giá trị thiếu", BLUE),
         (str(q["duplicate_keys"] + q["cycle_gaps"]), "khóa trùng hoặc cycle bị ngắt quãng", BLUE),
-        (str(len(E["always_constant"])), "cột không đổi ở cả 100 động cơ, được loại", GOLD_DARK),
+        (str(len(E["always_constant"])), "cột không đổi ở cả 100 động cơ, không mang thông tin suy giảm", GOLD_DARK),
     ])
 
 
@@ -531,7 +532,7 @@ def slide_layers():
     sh = DP["shapes"]
     s = content(2, 7, "Dữ liệu được tổ chức theo ba lớp Bronze, Silver, Gold", "",
                 "report/figures/data-flow.pdf; outputs/etl/; outputs/features/gold/rolling_features.parquet",
-                "Thời lượng: 50 giây.\nSơ đồ là hình luồng dữ liệu trong báo cáo. Bronze giữ nguyên file text gốc, không "
+                "Thời lượng: 45 giây.\nSơ đồ là hình luồng dữ liệu trong báo cáo. Bronze giữ nguyên file text gốc, không "
                 "ghi đè. Silver là bảng đã kiểm tra kiểu và khóa: train và test được gộp theo dòng (UNION) thành "
                 f"{vn(sh['observations'][0], 0)} dòng, lưu Parquet. Gold là các bảng tổng hợp: engine_summary "
                 f"{sh['engine_summary'][0]} dòng, mỗi động cơ một dòng, lưu cả Parquet và SQLite; bảng đặc trưng "
@@ -556,7 +557,7 @@ def slide_hadoop():
     s = content(2, 8, "Lưu trữ và xử lý trên cụm Hadoop: HDFS, MapReduce, YARN", "",
                 "outputs/hdfs/summary.json; outputs/hdfs/mapreduce_job.txt; outputs/hdfs/hdfs_fsck.txt; "
                 "outputs/hdfs/figures/yarn_applications.png",
-                f"Thời lượng: 1 phút.\nCụm {hd['hadoop_version']} một node chạy bằng Docker: NameNode, DataNode cho HDFS; "
+                f"Thời lượng: 50 giây.\nCụm {hd['hadoop_version']} một node chạy bằng Docker: NameNode, DataNode cho HDFS; "
                 "ResourceManager, NodeManager cho YARN. Hai file raw FD001 được đưa lên HDFS ở thư mục "
                 f"{paths['bronze']}.\nJob MapReduce viết bằng Hadoop Streaming chạy trên YARN: {mr['map_tasks']} map task "
                 f"và {mr['reduce_tasks']} reduce task, đọc {vn(mr['input_records'], 0)} bản ghi, ghi {mr['output_records']} "
@@ -595,7 +596,7 @@ def slide_spark():
     rows.append(["rolling_features (Gold)", vn(next(iter(ROLLING_ROWS)), 0), "< 10⁻⁷", "Khớp"])
     s = content(2, 9, "PySpark cho kết quả trùng khớp với Pandas", "",
                 "outputs/etl/parity.json; outputs/benchmarks/20260929/run_info.json; src/cmapss/etl/rolling_spark.py",
-                "Thời lượng: 50 giây.\nPipeline được viết hai lần với cùng logic: Pandas cho một máy và PySpark cho xử lý "
+                "Thời lượng: 45 giây.\nPipeline được viết hai lần với cùng logic: Pandas cho một máy và PySpark cho xử lý "
                 "phân tán. Bộ đối chiếu so schema, khóa, số dòng và từng giá trị. Ba bảng ETL khớp tuyệt đối; bảng đặc "
                 f"trưng {vn(next(iter(ROLLING_ROWS)), 0)} dòng khớp mọi ô với sai số cho phép 10⁻⁷.\nĐoạn code bên phải "
                 "lấy từ rolling_spark.py: Window của Spark chia theo động cơ, sắp theo cycle và lấy 30 dòng gần nhất, "
@@ -625,7 +626,7 @@ def slide_query():
     mean = DP["rolling_mean_sensor_11"]
     s = content(2, 10, "Truy vấn dữ liệu bằng SQL trên SQLite và Spark SQL", "",
                 "outputs/etl/gold/etl.sqlite; outputs/etl/silver/observations.parquet; report/sections/data-processing.tex",
-                "Thời lượng: 50 giây.\nTruy vấn bên trái chạy trên file etl.sqlite của lớp Gold: JOIN bảng tổng hợp động "
+                "Thời lượng: 45 giây.\nTruy vấn bên trái chạy trên file etl.sqlite của lớp Gold: JOIN bảng tổng hợp động "
                 "cơ với bảng nhãn theo khóa split và engine_id, lấy RUL của động cơ train 1 tại cycle 1, 100 và 192. Kết "
                 "quả dưới truy vấn là kết quả chạy thật.\nBên phải là Spark SQL trên file Parquet, dùng window function để "
                 "tính trung bình 30 cycle gần nhất của sensor 11, chính là đặc trưng sensor_11__mean. Điều kiện lọc cycle "
@@ -671,7 +672,7 @@ def slide_transform():
              f"{vn(fr['rolling_features_train'], 0)} × {P['feature_columns']}"]]
     s = content(2, 11, f"Sáu bước biến đổi từ file text thành {vn(fr['rolling_features_train'], 0)} mẫu huấn luyện", "",
                 "report/sections/data-processing.tex; outputs/etl/run_info.json; outputs/features/run_info.json",
-                "Thời lượng: 50 giây.\nĐây là bước T trong ETL. Bước 1–5 được viết bằng cả Pandas và PySpark. Ở bước 5, "
+                "Thời lượng: 45 giây.\nĐây là bước T trong ETL. Bước 1–5 được viết bằng cả Pandas và PySpark. Ở bước 5, "
                 f"mỗi dòng đặc trưng là 6 thống kê (giá trị cuối, trung bình, độ lệch chuẩn, min, max, độ dốc) của "
                 f"{P['n_sensors']} sensor trên {P['window']} cycle gần nhất, chỉ dùng quá khứ. 29 cycle đầu mỗi động cơ "
                 f"chưa đủ window nên không tạo dòng: {vn(n_train, 0)} − 100 × 29 = {vn(fr['rolling_features_train'], 0)} "
@@ -688,11 +689,13 @@ def slide_scale():
     spark_stop = summary["spark_seconds_at_stop"]
     s = content(2, 12, f"Khi dữ liệu tăng {common} lần, Spark tính nhanh hơn Pandas {vn(ratio, 1)} lần", "",
                 "slides/figures/benchmark_scaling.png; outputs/benchmarks/20261021/compute_only.csv",
-                "Thời lượng: 1 phút.\nDữ liệu FD001 được nhân bản 1, 10, 50, 100 và 200 lần, rồi cho Pandas và Spark cùng "
+                "Thời lượng: 50 giây.\nDữ liệu FD001 được nhân bản 1, 10, 50, 100 và 200 lần, rồi cho Pandas và Spark cùng "
                 "đọc, tổng hợp và tạo đặc trưng. Thời gian chỉ gồm phần tính toán, không gồm ghi file. Dấu x là lượt quá "
                 f"giới hạn 30 phút.\nỞ {common}×, Pandas chậm hơn Spark {vn(ratio, 1)} lần. Ở {stop}×, Pandas không xong "
                 f"trong 30 phút; Spark xong sau {vn(spark_stop, 0)} giây.\nGiới hạn: Pandas chạy 1 luồng, Spark local[4] "
-                "chạy 4 luồng trên cùng một máy, nên một phần chênh lệch đến từ song song hóa. Với 100 động cơ hiện tại, "
+                "chạy 4 luồng trên cùng một máy, nên một phần chênh lệch đến từ song song hóa. Pandas tính slope bằng một "
+                "hàm Python cho từng window, bước này chiếm phần lớn thời gian; Spark dùng hàm dựng sẵn regr_slope. Vì "
+                "vậy hệ số lớn hơn số luồng. Mỗi mức chỉ đo một lượt. Với 100 động cơ hiện tại, "
                 "Pandas vẫn đủ nhanh và lịch bảo trì không đổi; Spark cần khi số động cơ tăng hàng chục lần.")
     wide_figure(s, "slides/figures/benchmark_scaling.png")
     numbers_below(s, [
@@ -708,12 +711,13 @@ def slide_denoise():
     s4 = NOISE["sensor_4"]
     s = content(3, 13, f"Làm mượt EWMA giảm khoảng {vn(DEG['noise_reduction_pct_median'], 0)}% dao động ngắn hạn", "",
                 "outputs/degradation/figures/denoise_before_after.png; outputs/degradation/tables/noise_summary.csv",
-                "Thời lượng: 50 giây.\nHình do module degradation sinh ra: sensor 11 và sensor 4 của động cơ train 1. "
+                "Thời lượng: 35 giây.\nHình do module degradation sinh ra: sensor 11 và sensor 4 của động cơ train 1. "
                 "Đường xám là tín hiệu gốc, đường xanh sau EWMA span 10. Công thức s_t = α·x_t + (1 − α)·s_{t−1}, "
                 "α = 2/(span + 1) ≈ 0,18; chỉ dùng giá trị hiện tại và quá khứ.\nĐo bằng độ lệch chuẩn của chênh lệch "
                 f"giữa hai cycle liền kề. Ví dụ sensor 4: {vn(float(s4['diff_std_raw']))} xuống "
                 f"{vn(float(s4['diff_std_smoothed']))}. Trên 14 sensor, mức giảm từ {vn(min(reductions), 1)}% đến "
-                f"{vn(max(reductions), 1)}%.\nKhông làm mượt thì cảnh báo mức một đến muộn hơn: trung vị "
+                f"{vn(max(reductions), 1)}%. Với dao động độc lập, span 10 cho mức giảm lý thuyết khoảng 86,5%, nên con "
+                "số này kiểm chứng tham số làm mượt, không phải phát hiện riêng về dữ liệu.\nKhông làm mượt thì cảnh báo mức một đến muộn hơn: trung vị "
                 f"{vn(AN_RAW['lead_median'], 1)} cycle trước khi hỏng thay vì {vn(AN['lead_median'], 0)} cycle.")
     wide_figure(s, "outputs/degradation/figures/denoise_before_after.png")
     numbers_below(s, [
@@ -728,7 +732,7 @@ def slide_trend():
     st = D["statistics"]
     s = content(3, 14, f"{len(SAME_DIRECTION)} sensor thay đổi cùng chiều ở cả 100 động cơ khi gần hỏng", "",
                 f"{NB01}/selected_sensor_trajectories.png; outputs/statistics/tables/sensor_inference.csv",
-                "Thời lượng: 45 giây.\nHình do notebook 01 sinh ra: tín hiệu gốc của ba động cơ train dài 178, 199 và 229 "
+                "Thời lượng: 30 giây.\nHình do notebook 01 sinh ra: tín hiệu gốc của ba động cơ train dài 178, 199 và 229 "
                 "cycle. Sensor 11 tăng dần và sensor 12 giảm dần khi động cơ gần hỏng.\nKiểm định: với mỗi động cơ, lấy "
                 "trung bình 30 cycle cuối trừ 30 cycle đầu; bootstrap 10.000 lần cho khoảng tin cậy; kiểm định Wilcoxon; "
                 f"hiệu chỉnh Benjamini–Hochberg với q = 0,05 trên 21 sensor. Kết quả: {st['n_reject']} sensor thay đổi có "
@@ -748,13 +752,13 @@ def slide_anomaly():
     failure = int(M["example_warning"]["failure_cycle"])
     s = content(3, 15, f"Health Index phát hiện bất thường ở cả {AN['n_engines']} động cơ train", "",
                 "outputs/degradation/figures/anomaly_health_index.png; outputs/degradation/tables/anomaly_events.csv",
-                "Thời lượng: 1 phút.\nHình do module degradation sinh ra. Health Index gộp 21 sensor bằng StandardScaler "
+                "Thời lượng: 45 giây.\nHình do module degradation sinh ra. Health Index gộp 21 sensor bằng StandardScaler "
                 "rồi PCA một thành phần; chỉ số giảm khi động cơ suy giảm. Không dùng nhãn RUL.\nQuy tắc cố định trước: "
                 f"mức tham chiếu là {ACFG['baseline_cycles']} cycle đầu của chính động cơ đó. Khi chỉ số giảm quá "
                 f"{vn(ACFG['z_threshold'], 0)} độ lệch chuẩn và giữ {ACFG['persistence']} cycle liên tiếp thì phát cảnh "
                 f"báo mức một.\nHình trái, động cơ train 1: phát hiện ở cycle {anomaly_cycle}, hỏng ở cycle {failure}. "
                 f"Hình phải: trung vị {vn(AN['lead_median'], 0)}, nhỏ nhất {vn(AN['lead_min'], 0)}, lớn nhất "
-                f"{vn(AN['lead_max'], 0)} cycle.\nChín cấu hình ngưỡng khác đều phát hiện đủ 100 động cơ. Giới hạn: chưa "
+                f"{vn(AN['lead_max'], 0)} cycle.\nCả chín cấu hình trong lưới (2/3/4σ × 3/5/10 cycle) đều phát hiện đủ 100 động cơ. Giới hạn: chưa "
                 "đo được báo động giả vì dữ liệu không ghi thời điểm bắt đầu suy giảm.")
     wide_figure(s, "outputs/degradation/figures/anomaly_health_index.png")
     numbers_below(s, [
@@ -770,7 +774,7 @@ def slide_rul():
     cv = {r["model_name"]: r for r in M["cv"]}
     s = content(3, 16, f"Mô hình HistGradientBoosting dự đoán RUL với MAE {vn(f['mean_engine_mae'])} cycle", "",
                 "outputs/modeling/figures/final_true_vs_predicted.png; outputs/modeling/tables/final_metrics.json",
-                "Thời lượng: 1 phút.\nHình do module modeling sinh ra: mỗi điểm là một động cơ test, dự đoán tại cycle "
+                "Thời lượng: 45 giây.\nHình do module modeling sinh ra: mỗi điểm là một động cơ test, dự đoán tại cycle "
                 "cuối; điểm càng gần đường chéo càng đúng.\nMô hình được chọn bằng cross-validation 5 fold chia theo "
                 f"động cơ (GroupKFold): HGB có MAE {vn(cv['hist_gradient_boosting']['mean_engine_mae'])} cycle, thấp hơn "
                 f"Ridge {vn(M['ridge_minus_hgb_mae'])} cycle; baseline trung vị {vn(cv['median_baseline']['mean_engine_mae'])}.\n"
@@ -793,11 +797,12 @@ def slide_warning():
     example = M["example_warning"]
     s = content(3, 17, f"Cảnh báo sớm: ngưỡng 40 cycle nâng tỷ lệ báo kịp thời lên {vn(w40['on_time_rate'] * 100, 0)}%", "",
                 "outputs/modeling/figures/warning_trajectory.png; outputs/course_alignment/20261007/warning_fixed_policies.csv",
-                "Thời lượng: 1 phút.\nHình do module modeling sinh ra: biểu đồ xu hướng cảnh báo sớm của động cơ train 1, "
+                "Thời lượng: 45 giây.\nHình do module modeling sinh ra: biểu đồ xu hướng cảnh báo sớm của động cơ train 1, "
                 f"dự đoán OOF. Cảnh báo mức hai phát khi RUL dự đoán ≤ 30; động cơ train 1 được cảnh báo ở cycle "
                 f"{example['first_warning_cycle']}, hỏng ở {example['failure_cycle']}.\nTrên 100 động cơ train ở ngưỡng 30: "
                 f"{tm['before_threshold']} báo trước, {tm['at_threshold']} đúng lúc, {tm['after_threshold']} muộn nhưng vẫn "
-                f"trước khi hỏng. Nguyên nhân: mô hình thường dự đoán RUL cao hơn thực tế ({M['n_over']}/100 động cơ test).\n"
+                f"trước khi hỏng. Cảnh báo muộn rơi nhiều vào các động cơ hỏng sớm; báo cáo nêu đây là giả thuyết, "
+                "chưa chứng minh nguyên nhân.\n"
                 f"Ngưỡng 40 nâng tỷ lệ kịp thời từ {vn(w30['on_time_rate'] * 100)}% lên {vn(w40['on_time_rate'] * 100)}%, "
                 f"đổi lại tỷ lệ cycle báo quá sớm từ {vn(w30['early_alarm_burden'] * 100)}% lên "
                 f"{vn(w40['early_alarm_burden'] * 100)}%. Chọn ngưỡng thực tế cần chi phí bảo trì.")
@@ -813,10 +818,10 @@ def slide_warning():
 def slide_maintenance():
     ev, counts, plan = MNT["evaluation"], MNT["status_counts"], MNT["planning"]
     missed, late = MNT["missed"], MNT["late"]
-    s = content(3, 18, f"Lịch bảo trì xác định đúng {ev['n_correct_needs_maintenance']}/{ev['n_flagged_needs_maintenance']} "
-                "động cơ cần bảo trì ngay", "",
+    s = content(3, 18, f"{ev['n_correct_needs_maintenance']} chỉ định bảo trì ngay đều đúng, còn sót "
+                f"{missed['n_engines']}/{ev['n_actual_needs_maintenance']} động cơ", "",
                 "outputs/maintenance/figures/fleet_status.png; outputs/maintenance/tables/maintenance_schedule.csv",
-                "Thời lượng: 1 phút; sau slide này chuyển sang demo dashboard khoảng 2 phút.\nHình do module maintenance "
+                "Thời lượng: 50 giây; sau slide này chuyển sang demo dashboard khoảng 2 phút.\nHình do module maintenance "
                 "sinh ra: 100 động cơ test xếp theo RUL dự đoán. Cần bảo trì nếu RUL dự đoán ≤ 30; theo dõi tăng cường nếu "
                 f"Health Index đã báo bất thường; còn lại bình thường. Kết quả: {counts['Cần bảo trì']} cần bảo trì, "
                 f"{counts['Theo dõi tăng cường']} theo dõi, {counts['Bình thường']} bình thường; thêm {plan['1–25']} động "
@@ -840,18 +845,18 @@ def slide_conclusion():
     f, ev = M["final"], MNT["evaluation"]
     s = content(4, 19, "Kết luận, hạn chế và hướng phát triển", "",
                 "report/sections/conclusion.tex; report/sections/discussion.tex",
-                "Thời lượng: 1 phút.\nKết luận: pipeline dữ liệu chạy được trên Pandas, PySpark và Hadoop với kết quả "
+                "Thời lượng: 35 giây.\nKết luận: pipeline dữ liệu chạy được trên Pandas, PySpark và Hadoop với kết quả "
                 "khớp; Health Index phát hiện bất thường sớm; mô hình RUL và lịch bảo trì cho kết quả tốt ở vùng gần hỏng.\n"
                 "Hạn chế: dữ liệu mô phỏng và không có chi phí bảo trì; mô hình thường dự đoán cao hơn thực tế; cụm Hadoop "
                 "chỉ có một node.\nHướng phát triển: chọn ngưỡng theo chi phí, chạy trên cụm nhiều node, nhận dữ liệu "
                 "streaming.")
     columns = [
         ("Kết luận", [
-            "Pipeline chạy trên Pandas, PySpark, Hadoop; kết quả khớp tuyệt đối.",
+            "Pipeline chạy trên Pandas, PySpark, Hadoop; bảng ETL khớp tuyệt đối, bảng đặc trưng sai số < 10⁻⁷.",
             f"Health Index phát hiện bất thường ở {AN['n_detected']}/{AN['n_engines']} động cơ, trung vị "
             f"{vn(AN['lead_median'], 0)} cycle trước khi hỏng.",
-            f"RUL: MAE {vn(f['mean_engine_mae'])} cycle; lịch bảo trì đúng {ev['n_correct_needs_maintenance']}/"
-            f"{ev['n_flagged_needs_maintenance']} động cơ.",
+            f"RUL: MAE {vn(f['mean_engine_mae'])} cycle; {ev['n_correct_needs_maintenance']} chỉ định bảo trì ngay "
+            f"đều đúng, sót {MNT['missed']['n_engines']}/{ev['n_actual_needs_maintenance']} động cơ.",
         ]),
         ("Hạn chế", [
             "Dữ liệu mô phỏng, chưa có chi phí bảo trì.",

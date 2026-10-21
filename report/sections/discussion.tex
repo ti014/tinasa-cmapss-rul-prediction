@@ -76,10 +76,11 @@ cycle 230.}
 \label{fig:warning-lifetime}
 \end{figure}
 
-Mô hình học một quan hệ trung bình giữa mức sensor và RUL. Động cơ ngắn đời suy
-giảm nhanh hơn trung bình, nên tại cùng một mức sensor, RUL thật của chúng thấp hơn
-điều mô hình kỳ vọng và RUL dự đoán chạm ngưỡng 30 muộn hơn thực tế. Vì vậy, cảnh báo
-trễ rơi nhiều vào các động cơ hỏng sớm. Ngưỡng 40 giảm tỷ lệ trễ từ 49\% xuống 6\%,
+Cảnh báo trễ rơi nhiều vào các động cơ hỏng sớm. Một giả thuyết là mô hình học
+quan hệ trung bình giữa mức sensor và RUL; nếu động cơ ngắn đời suy giảm nhanh hơn
+trung bình thì tại cùng một mức sensor, RUL thật của chúng thấp hơn điều mô hình kỳ
+vọng, và RUL dự đoán chạm ngưỡng 30 muộn hơn thực tế. Tương quan trong
+Hình~\ref{fig:warning-lifetime} phù hợp với giả thuyết này nhưng chưa chứng minh nó. Ngưỡng 40 giảm tỷ lệ trễ từ 49\% xuống 6\%,
 đổi lại tỷ lệ cycle bị báo sớm tăng khoảng bốn lần
 (Bảng~\ref{tab:warning-alignment}); chọn ngưỡng cụ thể cần chi phí bảo trì và
 downtime, mà dữ liệu không có.
@@ -140,7 +141,8 @@ quan sát và không có nhãn thời điểm bắt đầu suy giảm; phân tí
 (Bảng~\ref{tab:anomaly-sensitivity}) chỉ cho thấy kết luận ổn định theo tham số,
 không thay thế được phép đo này. EWMA được đánh giá bằng mức giảm dao động, không bằng tín hiệu sạch.
 
-\paragraph{Về hạ tầng.} Phần ETL chính dùng Spark \texttt{local[4]} trên Windows và
+\paragraph{Về hạ tầng.} Pandas là implementation chính của ETL; PySpark chạy
+\texttt{local[1]} để đối chiếu và \texttt{local[4]} để benchmark, đều trên Windows và
 ghi qua driver. HDFS, YARN và MapReduce chạy trên cụm Hadoop một node trong Docker,
 đủ để kiểm chứng tính đúng của phép tính nhưng chưa đo được hiệu năng phân tán trên
 nhiều máy. Dữ liệu nhân bản không làm tăng số mẫu khoa học độc lập.

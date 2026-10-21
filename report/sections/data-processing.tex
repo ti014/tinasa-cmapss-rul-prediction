@@ -256,9 +256,9 @@ hướng bằng EWMA, rồi tạo Health Index cho mọi cycle
 (Mục~\ref{sec:denoise-method}); nhánh này không cung cấp cột nào cho mô hình RUL.
 
 Để kiểm tra tính đúng của ETL, PySpark thực hiện lại bước 1--5 và bộ đối chiếu so
-sánh schema, khóa, số dòng và từng giá trị với kết quả Pandas. Benchmark đọc/ghi,
-rolling features và đối chiếu Pandas--PySpark được trình bày ở
-Mục~\ref{sec:res-etl}; dữ liệu nhân bản dùng cho benchmark không được dùng để huấn
+sánh schema, khóa, số dòng và từng giá trị với kết quả Pandas. Kết quả đối chiếu
+Pandas--PySpark được trình bày ở Mục~\ref{sec:res-etl}, benchmark tính toán ở
+Mục~\ref{sec:res-scaling}; dữ liệu nhân bản dùng cho benchmark không được dùng để huấn
 luyện.
 
 \subsection{Cột được dùng cho mô hình}

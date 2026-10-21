@@ -502,7 +502,7 @@ Select the `.venv` Python kernel and **Restart Kernel and Run All Cells**.
 This analyzes only train and creates 12 CSV tables and 14 PNG figures in a new
 `outputs/notebook01/run-*/` directory. Historical fresh-kernel checks covered the
 original EDA artifacts, preserved in `outputs/eda/`.
-The 2026-10-09 test run achieved **453 passed, 1 skipped**;
+The 2026-10-21 test run achieved **492 passed, 1 skipped**;
 the TCN test is skipped because `torch` is unavailable. The 2026-09-29 run
 achieved **198 tests** and remains the historical evidence for data, statistics,
 ETL, feature, modeling, PCA--ARIMA, cross-dataset, dashboard, and end-to-end

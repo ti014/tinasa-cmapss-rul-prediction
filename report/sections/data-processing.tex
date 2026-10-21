@@ -89,8 +89,8 @@ thay bộ cũ; nếu bước thay thế lỗi, bộ cũ được khôi phục. F
 (\texttt{run\_info.json}) được ghi sau cùng và lưu hash của dữ liệu đầu vào, nên mỗi
 bộ kết quả luôn đi kèm đúng phiên bản dữ liệu đã tạo ra nó.
 
-\paragraph{Kiểm thử.} Bộ kiểm thử tự động gồm 453 kiểm thử đạt (một kiểm thử bỏ
-qua vì môi trường thiếu \texttt{torch}), lần chạy ngày 09/10/2026. Các kiểm thử bao
+\paragraph{Kiểm thử.} Bộ kiểm thử tự động gồm 492 kiểm thử đạt (một kiểm thử bỏ
+qua vì môi trường thiếu \texttt{torch}), lần chạy ngày 21/10/2026. Các kiểm thử bao
 gồm kiểm tra checksum khi thu thập, schema, khóa, ranh giới window, mapper và
 reducer của job MapReduce, công thức EWMA, quy tắc bất thường, lịch bảo trì và việc
 nhãn test chỉ được đọc sau khi đã ghi dự đoán.
@@ -113,7 +113,7 @@ Spark 4.0.1 client. Lệnh \texttt{python -m cmapss.hdfs} thực hiện bốn b�
 \end{enumerate}
 
 
-Bảng~\ref{tab:hdfs} tóm tắt lần chạy ngày 09/10/2026. Hadoop chia input thành ba phần
+Bảng~\ref{tab:hdfs} tóm tắt lần chạy ngày 21/10/2026. Hadoop chia input thành ba phần
 (input split) và chạy ba map task cùng một reduce task. Cả MapReduce và Spark đều cho
 bảng 200 động cơ khớp tuyệt đối với Pandas. Hình~\ref{fig:hdfs} là giao diện web của
 NameNode và YARN trong lần chạy này.

@@ -25,9 +25,9 @@ này sau mỗi commit.
 | Một bảng màu, một font, trục dấu phẩy, nhãn hình tiếng Việt | E1, E2, D2, D3 | Codex sửa, Claude test và commit | Xong (485 test đạt) | `cf68703` |
 | Slide đọc số từ `slide_data.json`, sửa câu 145 cycle, đổi "kiểm định chéo" | A3, A9, B3 | Codex sửa; Claude sửa lỗi NaN, test và commit | Xong | `3c45afe` |
 | Notebook: phẩy thập phân, mục "Lưu kết quả", gọi `cmapss.*` | D1, D4, D5, B2 | Codex sửa; Claude sửa lỗi `engine_lifetimes`, chạy lại notebook 01/03/04 và commit | Xong | `7a70cdf` |
-| Docstring, comment, thông báo lỗi tiếng Việt; return type | C1, C2, C3 | Codex | Đang làm | |
+| Docstring, comment, thông báo lỗi tiếng Việt; return type | C1, C2, C3 | Codex sửa; Claude khôi phục dạng docstring bị gộp một dòng, sửa 3 test, chạy toàn bộ test và commit | Xong (492 đạt, 1 bỏ qua) | `a4e783e` |
 | Report: 12 sensor, dung lượng 44,9 MB, ghi chú run dựng lại | A2, A6, A8 | Claude | Xong | `f7b84d3` |
-| Số test trong report và handoff | A4 | Claude | Chờ Codex xong để chạy test lần cuối | |
+| Số test trong report, handoff và README: 492 đạt, 1 bỏ qua (21/10) | A4 | Claude | Xong | xem commit cùng dòng này |
 | Rút report từ 51 xuống 40 trang (11pt, giãn dòng 1.0, mục lục đến subsection, bỏ 3 listing Python; thêm HI và RUL cap vào glossary) | A5, B4, B6 | Claude | Xong | `4754428` |
 | 47,40; thứ tự build deck; FD001–FD004 trong README | E3, E5, E7 | Claude | Xong | `f7b84d3` |
 | Ngày cập nhật tài liệu | E4 | Claude | Làm cuối cùng | |

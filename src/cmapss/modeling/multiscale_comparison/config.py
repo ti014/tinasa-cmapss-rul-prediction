@@ -3,6 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from cmapss.modeling.audit_study.config import AuditStudyConfig
 
 @dataclass(frozen=True)
 class StudyConfig:
@@ -43,26 +47,26 @@ class StudyConfig:
             "hgb_min_samples_leaf": self.hgb_min_samples_leaf,
         }
         if any(isinstance(value, bool) or value < 1 for value in positive.values()):
-            raise ValueError("split, resource and HGB values must be positive")
+            raise ValueError("Giá trị chia tập, tài nguyên và HGB phải dương")
         if self.seed < 0 or isinstance(self.seed, bool):
-            raise ValueError("seed must be a nonnegative integer")
+            raise ValueError("seed phải là số nguyên không âm")
         if self.hgb_learning_rate <= 0:
-            raise ValueError("hgb_learning_rate must be positive")
+            raise ValueError("hgb_learning_rate phải dương")
         if not self.endpoint_fractions or tuple(sorted(set(self.endpoint_fractions))) != self.endpoint_fractions:
-            raise ValueError("endpoint fractions must be unique and increasing")
+            raise ValueError("Các tỷ lệ endpoint phải duy nhất và tăng dần")
         if any(not 0 < value < 1 for value in self.endpoint_fractions):
-            raise ValueError("endpoint fractions must be strictly inside (0, 1)")
+            raise ValueError("Các tỷ lệ endpoint phải nằm hẳn trong (0, 1)")
         for name, values in (("thresholds", self.thresholds), ("persistences", self.persistences)):
             if not values or tuple(sorted(set(values))) != values:
-                raise ValueError(f"{name} must be nonempty, unique and increasing")
+                raise ValueError(f"{name} phải không rỗng, duy nhất và tăng dần")
         if any(value < 0 for value in self.thresholds) or any(value < 1 for value in self.persistences):
-            raise ValueError("warning thresholds/persistences are invalid")
+            raise ValueError("Ngưỡng/số cycle liên tiếp của cảnh báo không hợp lệ")
         if self.lead_requirement < 1 or not 0 < self.target_on_time_rate <= 1:
-            raise ValueError("lead requirement and target on-time rate are invalid")
+            raise ValueError("Lead yêu cầu và tỷ lệ kịp thời mục tiêu không hợp lệ")
         margins = (self.endpoint_mae_margin, self.nasa_score_margin,
                    self.warning_rate_margin, self.early_alarm_burden_margin)
         if any(value < 0 for value in margins):
-            raise ValueError("evaluation margins cannot be negative")
+            raise ValueError("Biên đánh giá không được âm")
 
     @property
     def scientific(self) -> bool:
@@ -80,7 +84,7 @@ class StudyConfig:
             and self.warning_rate_margin == 0.0 and self.early_alarm_burden_margin == 0.0
         )
 
-    def audit_config(self):
+    def audit_config(self) -> AuditStudyConfig:
         """Tạo ``AuditStudyConfig`` tương ứng cho phần đánh giá dùng chung."""
         from cmapss.modeling.audit_study import AuditStudyConfig
 

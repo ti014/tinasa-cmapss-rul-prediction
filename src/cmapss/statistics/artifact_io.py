@@ -1,5 +1,8 @@
 """I/O helpers cho artifact thống kê sensor FD001."""
 
+from __future__ import annotations
+
+
 from hashlib import sha256
 import json
 from pathlib import Path
@@ -70,7 +73,7 @@ def sha256_file(path: Path) -> str:
 
 
 def write_json(path: Path, payload: dict[str, Any]) -> None:
-    """Ghi JSON UTF-8, indent 2."""
+    """Ghi JSON UTF-8 với thụt dòng hai khoảng trắng."""
     path.write_text(
         json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=False) + "\n",
         encoding="utf-8",

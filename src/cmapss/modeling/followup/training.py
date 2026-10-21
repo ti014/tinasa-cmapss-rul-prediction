@@ -28,16 +28,16 @@ def fit_pair(
     store: FeatureStore, recipe: FeatureRecipe, train_ids: set[int], validation_ids: set[int],
     config: StudyConfig, cache: Path, identity: str,
 ) -> pd.DataFrame:
-    """Fit one fold and return validation predictions, cached by a hash of the fold setup."""
+    """Fit một fold và trả dự đoán validation; cache theo hash thiết lập fold."""
     if train_ids & validation_ids:
-        raise ValueError("Training and validation engines overlap")
+        raise ValueError("Động cơ train và validation giao nhau")
     record = {"identity": identity, "recipe": asdict(recipe), "train_engines": sorted(train_ids), "validation_engines": sorted(validation_ids)}
     key = hashlib.sha256(json.dumps(record, sort_keys=True).encode()).hexdigest()
     path, metadata = cache / f"{key}.parquet", cache / f"{key}.json"
     if path.is_file() and metadata.is_file():
         saved = json.loads(metadata.read_text(encoding="utf-8"))
         if saved["identity_record"] != record or saved["prediction_sha256"] != _digest(path):
-            raise ValueError("Fit cache metadata or predictions were modified")
+            raise ValueError("Metadata hoặc dự đoán fit-cache đã bị sửa")
         return pd.read_parquet(path)
     started = time.perf_counter()
     with threadpool_limits(limits=config.fit_threads):
@@ -62,7 +62,7 @@ def fit_pair(
 
 
 def select_record(records: list[dict[str, Any]], dataset_id: str) -> int:
-    """Index of the selected candidate, using inner-CV metrics only."""
+    """Chỉ số ứng viên được chọn chỉ bằng metric inner cross-validation."""
     if dataset_id == "FD001":
         baseline = next(record for record in records if record["candidate_id"] == "baseline")
         return _select_candidate(records, baseline)
@@ -73,7 +73,7 @@ def inner_selection(
     store: FeatureStore, frame: pd.DataFrame, candidates: tuple[FeatureRecipe, ...], dataset_id: str,
     config: StudyConfig, output: Path, identity: str, outer_fold: int,
 ) -> tuple[FeatureRecipe, pd.DataFrame]:
-    """Score every candidate with inner GroupKFold and pick one."""
+    """Đánh giá ứng viên bằng inner GroupKFold rồi chọn một ứng viên."""
     splits = list(GroupKFold(config.inner_splits).split(frame, frame.rul, frame.engine_id))
     records: list[dict[str, Any]] = []
     for recipe in candidates:

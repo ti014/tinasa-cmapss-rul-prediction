@@ -3,6 +3,9 @@
 Giữ đường dẫn import của class để nạp artifact đã lưu trước khi tách package.
 """
 
+from __future__ import annotations
+
+
 from cmapss.modeling.audit_study.artifact_io import (
     _sha256,
     _json_value,

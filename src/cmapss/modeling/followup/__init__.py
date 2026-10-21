@@ -3,6 +3,9 @@
 Giữ đường dẫn import của class để nạp artifact đã lưu trước khi tách package.
 """
 
+from __future__ import annotations
+
+
 from cmapss.modeling.followup.artifact_io import _digest, freeze_manifest
 from cmapss.modeling.followup.cli import main
 from cmapss.modeling.followup.config import StudyConfig, study_candidates

@@ -51,8 +51,8 @@ def bootstrap_metric_intervals(
 ) -> dict[str, dict[str, float]]:
     """Khoảng tin cậy 95% bằng bootstrap theo engine.
 
-    Mỗi resample chọn engine có hoàn lại; engine được chọn nhiều lần thì các
-    dòng của nó cũng được tính nhiều lần.
+    Mỗi resample chọn engine có hoàn lại; engine được chọn nhiều lần thì các dòng của nó
+    cũng được tính nhiều lần.
     """
     rng = np.random.default_rng(seed)
     rows = add_prediction_errors(evaluation.reset_index(drop=True))

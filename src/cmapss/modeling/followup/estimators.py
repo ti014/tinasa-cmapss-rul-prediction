@@ -22,7 +22,7 @@ from cmapss.modeling.improvement.config import BASELINE_PARAMS
 
 @dataclass
 class RecipeModel:
-    """Feature recipe, fitted normalizer and regressor saved as one object."""
+    """Lưu chung công thức features, bộ chuẩn hóa đã fit và mô hình hồi quy."""
 
     recipe: FeatureRecipe
     estimator: HistGradientBoostingRegressor
@@ -30,20 +30,20 @@ class RecipeModel:
     feature_columns: tuple[str, ...]
 
     def predict(self, observations: pd.DataFrame) -> pd.DataFrame:
-        """One prediction per window, keyed by split/engine_id/cycle."""
+        """Một dự đoán mỗi window, định danh bởi split/engine_id/cycle."""
         features = build_recipe_features(observations, self.recipe, normalizer=self.normalizer)
         result = features.loc[:, list(KEY)].copy()
         result["model_name"] = self.recipe.name
         result["rul_pred"] = self.estimator.predict(features.loc[:, list(self.feature_columns)])
         if not np.isfinite(result.rul_pred).all():
-            raise ValueError("Non-finite prediction")
+            raise ValueError("Dự đoán không hữu hạn")
         return result
 
 
 def fit_recipe(
     train: pd.DataFrame, recipe: FeatureRecipe, normalizer: OperatingConditionNormalizer | None, config: StudyConfig,
 ) -> RecipeModel:
-    """Fit the regressor; the RUL cap applies to a copy of the labels."""
+    """Fit hồi quy; RUL cap chỉ áp dụng trên bản sao nhãn."""
     columns = tuple(column for column in train if "__" in column)
     target = train.rul.to_numpy(dtype="float64", copy=True)
     if recipe.target_cap is not None:

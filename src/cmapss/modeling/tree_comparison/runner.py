@@ -1,7 +1,6 @@
-"""Run the nested HGB/XGBoost comparison on the shared 169-feature matrix.
-
-Inner folds tune XGBoost and the warning policy; outer folds evaluate the
-held-out engines. Test labels are read only after final predictions are saved.
+"""
+So sánh nested HGB/XGBoost trên 169 features; inner chọn XGBoost/chính sách, outer đánh
+giá; đọc nhãn test sau khi ghi dự đoán cuối.
 """
 
 from __future__ import annotations
@@ -33,7 +32,7 @@ ARMS = ("hgb_uncapped", "hgb_cap125", "xgb_uncapped", "xgb_cap125")
 
 
 def _backend() -> common.ComparisonBackend:
-    """Bundle this study's grid, selectors and workers for the shared runner."""
+    """Tập hợp lưới, bộ chọn và worker của nghiên cứu cho runner chung."""
     return common.ComparisonBackend(
         study_name="tree_comparison", arms=ARMS, features=FEATURES,
         specs=specs, active_specs=_active_specs, source_files=_source_files,
@@ -46,12 +45,12 @@ def _backend() -> common.ComparisonBackend:
 
 
 def _source_files(root: Path) -> tuple[str, ...]:
-    """Source files hashed into the run manifest."""
+    """File mã nguồn được hash vào manifest lần chạy."""
     return common.source_files(root, "tree_comparison", "scripts/run_tree_comparison.py")
 
 
 def _versions() -> dict[str, str]:
-    """Package versions to record, including xgboost."""
+    """Phiên bản package cần ghi, gồm xgboost."""
     return common.installed_versions("xgboost")
 
 
@@ -64,7 +63,7 @@ def _freeze_inputs(
 
 
 def _active_specs(config: StudyConfig) -> tuple[TreeSpec, ...]:
-    """Full grid, or a 6-candidate subset for smoke runs."""
+    """Lưới đầy đủ hoặc tập sáu ứng viên cho smoke."""
     declared = specs(config)
     if config.scientific:
         return declared
@@ -73,7 +72,7 @@ def _active_specs(config: StudyConfig) -> tuple[TreeSpec, ...]:
             "xgb_cap125_d3_lr0.1_l21", "xgb_cap125_d5_lr0.1_l21"}
     selected = tuple(item for item in declared if item.candidate_id in keep)
     if len(selected) != len(keep):
-        raise ValueError("smoke grid does not match declared candidate IDs")
+        raise ValueError("Lưới smoke không khớp ID ứng viên đã khai báo")
     return selected
 
 
@@ -98,7 +97,7 @@ def _inner_stage(
 def _final_model_task(
     feature_path: Path, spec: TreeSpec, config: StudyConfig, folder: Path, identity: str,
 ) -> str:
-    """Defined at module level so spawned worker processes can pickle it."""
+    """Định nghĩa ở cấp module để worker spawn pickle được hàm."""
     return common.final_model_task(feature_path, spec, config, folder,
                                    identity, _backend())
 
@@ -118,10 +117,9 @@ def run_tree_comparison(
     output_dir: str | Path = "outputs/experiments/tree_comparison/20261005",
     config: StudyConfig | None = None, evaluate_test: bool = True,
 ) -> dict[str, Any]:
-    """Run the full study and return the run summary.
-
-    Relative paths are resolved against ``repo_root``. An existing compatible
-    ``output_dir`` is resumed. ``evaluate_test=False`` skips test scoring.
+    """
+    Chạy nghiên cứu, trả tóm tắt; đường dẫn theo repo_root, resume output_dir tương
+    thích, evaluate_test=False bỏ chấm test.
     """
     root = Path(repo_root).resolve() if repo_root is not None else Path(__file__).resolve().parents[4]
     config = config or StudyConfig()
@@ -133,7 +131,7 @@ def run_tree_comparison(
 
 
 def main(argv: list[str] | None = None) -> None:
-    """Command-line entry point; ``--dry-run`` uses a small smoke config."""
+    """Điểm vào dòng lệnh; --dry-run dùng cấu hình smoke nhỏ."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", type=Path)
     parser.add_argument("--observations", default="outputs/etl/silver/observations.parquet")

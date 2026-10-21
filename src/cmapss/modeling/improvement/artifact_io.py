@@ -28,7 +28,7 @@ def _json_safe(value: Any) -> Any:
         return value.item()
     if isinstance(value, Path):
         return str(value)
-    raise TypeError(f"cannot serialize {type(value)!r}")
+    raise TypeError(f"Không thể serialize {type(value)!r}")
 
 
 def _sha256(path: Path) -> str:
@@ -43,7 +43,7 @@ def _write_json(path: Path, payload: Any) -> None:
 
 
 def _prepare_run(output: Path, observations: Path, targets: Path, config: ImprovementConfig) -> None:
-    """Write the run manifest and baseline snapshot; refuse to resume if inputs changed."""
+    """Ghi manifest và snapshot baseline; từ chối resume nếu đầu vào thay đổi."""
     import sklearn
     identity = {
         "config": asdict(config),
@@ -56,13 +56,13 @@ def _prepare_run(output: Path, observations: Path, targets: Path, config: Improv
     if manifest_path.exists():
         saved = json.loads(manifest_path.read_text(encoding="utf-8"))
         if saved["identity"] != identity:
-            raise ValueError("resume mismatch: config, inputs, source or dependencies changed; use a new output directory")
+            raise ValueError("Resume không khớp: cấu hình, đầu vào, mã nguồn hoặc dependency đã đổi; dùng thư mục output mới")
         for name, digest in saved["baseline_sha256"].items():
             if _sha256(output / "baseline_snapshot" / name) != digest:
-                raise ValueError("baseline snapshot checksum mismatch")
+                raise ValueError("Checksum snapshot baseline không khớp")
         return
     if any(output.iterdir()):
-        raise ValueError("output directory is not empty and has no search manifest")
+        raise ValueError("Thư mục output không rỗng nhưng thiếu search manifest")
     shutil.copytree("outputs/modeling", output / "baseline_snapshot")
     baseline_hashes = {str(path.relative_to(output / "baseline_snapshot")): _sha256(path)
                        for path in (output / "baseline_snapshot").rglob("*") if path.is_file()}

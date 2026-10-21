@@ -1,5 +1,8 @@
 """ETL Pandas/PySpark cho các lớp Silver và Gold của FD001."""
 
+from __future__ import annotations
+
+
 from cmapss.etl.contracts import (
     GOLD_ENGINE_COLUMNS,
     SILVER_OBSERVATION_COLUMNS,

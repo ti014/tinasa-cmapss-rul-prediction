@@ -1,4 +1,7 @@
-"""Entry point cho ``python -m cmapss.maintenance``."""
+"""Điểm vào của python -m cmapss.maintenance."""
+
+from __future__ import annotations
+
 
 from cmapss.maintenance.cli import main
 

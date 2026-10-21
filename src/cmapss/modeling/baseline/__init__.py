@@ -1,5 +1,8 @@
 """API của baseline RUL: cấu hình, huấn luyện, đánh giá và ghi artifact."""
 
+from __future__ import annotations
+
+
 from cmapss.modeling.baseline.artifact_io import (
     write_final_evaluation_artifacts,
     write_modeling_artifacts,

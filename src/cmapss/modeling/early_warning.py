@@ -1,4 +1,4 @@
-"""Train-only early-warning summaries from out-of-fold RUL predictions."""
+"""Tóm tắt cảnh báo sớm chỉ trên dự đoán RUL OOF của train."""
 
 from __future__ import annotations
 
@@ -35,11 +35,9 @@ def build_warning_events(
     model_name: str,
     rul_threshold: int,
 ) -> tuple[pd.DataFrame, dict[str, Any]]:
-    """Apply a low-RUL warning rule per train engine and summarize it.
-
-    The warning fires at the first cycle with ``y_pred <= rul_threshold``.
-    Lead time is the true RUL at that cycle. ``false_alarm`` needs an engine
-    with no true low-RUL rows, so its denominator is zero on full train runs.
+    """
+    Cảnh báo tại cycle đầu có y_pred <= rul_threshold; lead time là RUL thật;
+    false_alarm không xác định trên toàn bộ quỹ đạo train vì mẫu số bằng 0.
     """
     required = {"split", "engine_id", "cycle", "model_name", "y_true", "y_pred"}
     if not required.issubset(oof_predictions.columns):

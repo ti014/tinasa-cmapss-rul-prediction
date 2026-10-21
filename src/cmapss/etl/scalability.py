@@ -1,4 +1,4 @@
-"""Isolated-process local Pandas/Spark benchmark with materialized stages and RSS."""
+"""Benchmark Pandas/Spark local bằng process riêng, thực thi từng stage và đo RSS."""
 
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ from cmapss.features.rolling import build_rolling_features
 
 
 class MemorySampler:
-    """Sample resident memory of Python and all descendants, including the JVM."""
+    """Đo bộ nhớ thường trú của Python và mọi process con, kể cả JVM."""
 
     def __init__(self) -> None:
         self.process = psutil.Process()
@@ -55,7 +55,7 @@ class MemorySampler:
 
 
 def _stop_spark(spark) -> None:
-    """Do not mask an original JVM failure with a second cleanup exception."""
+    """Giữ nguyên lỗi JVM gốc nếu bước dọn dẹp cũng phát sinh lỗi."""
     try:
         spark.stop()
     except Exception as error:
@@ -63,7 +63,7 @@ def _stop_spark(spark) -> None:
 
 
 def worker(engine: str, source: Path, destination: Path) -> dict:
-    """Execute one fresh-process repetition; every timed stage is materialized."""
+    """Chạy một lượt trong process mới; mỗi stage đo thời gian đều được thực thi đầy đủ."""
     destination.mkdir(parents=True, exist_ok=True)
     times = {}
     spark = None
@@ -86,7 +86,7 @@ def worker(engine: str, source: Path, destination: Path) -> dict:
             resources.callback(_stop_spark, spark)
             driver_heap = int(spark._jvm.java.lang.Runtime.getRuntime().maxMemory())
             if driver_heap < 3 * 1024 ** 3:
-                raise RuntimeError("Spark did not apply the declared 4 GiB driver heap")
+                raise RuntimeError("Spark chưa áp dụng heap driver 4 GiB đã khai báo")
         times["startup_seconds"] = time.perf_counter() - started
         pipeline_start = time.perf_counter()
         stage = pipeline_start
@@ -122,8 +122,8 @@ def worker(engine: str, source: Path, destination: Path) -> dict:
         else:
             import pyarrow.parquet as pq
 
-            # Windows lacks Hadoop native write support. Export through Arrow;
-            # this timed stage explicitly includes collection to the driver.
+            # Windows thiếu hỗ trợ ghi Hadoop native, nên xuất qua Arrow;
+            # thời gian stage này tính cả bước gom về driver.
             pq.write_table(features.toArrow(), destination / "features.parquet")
             pq.write_table(summary.toArrow(), destination / "summary.parquet")
         times["write_seconds"] = time.perf_counter() - stage
@@ -135,7 +135,7 @@ def worker(engine: str, source: Path, destination: Path) -> dict:
 
 
 def verify_parity(left_dir: Path, right_dir: Path) -> dict:
-    """Compare every feature and summary cell, sorted by stable keys."""
+    """So sánh từng ô feature và summary sau khi sắp theo khóa ổn định."""
     result = {}
     for table in ("features", "summary"):
         keys = list(KEY) if table == "features" else ["split", "engine_id"]
@@ -150,7 +150,7 @@ def verify_parity(left_dir: Path, right_dir: Path) -> dict:
 
 
 def main() -> None:
-    """Run one worker, or run every scale and repetition in fresh subprocesses."""
+    """Chạy một worker hoặc mọi scale/lượt lặp trong các subprocess mới."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--worker", choices=("pandas", "spark"))
     parser.add_argument("--source", type=Path, default=Path("outputs/etl/silver/observations.parquet"))
@@ -164,7 +164,7 @@ def main() -> None:
         (args.output / "measurement.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
         return
     if args.repetitions < 1 or any(scale < 1 for scale in args.scales):
-        raise ValueError("scales and repetitions must be positive")
+        raise ValueError("scale và số lượt lặp phải dương")
     args.work_dir.mkdir(parents=True, exist_ok=True)
     args.output.mkdir(parents=True, exist_ok=True)
     observations = pd.read_parquet(args.source)
@@ -174,7 +174,7 @@ def main() -> None:
         replicate_observations(observations, scale).to_parquet(source, index=False)
         digest = hashlib.sha256(source.read_bytes()).hexdigest()
         for repetition in range(1, args.repetitions + 1):
-            # Alternate execution order to reduce systematic order bias.
+            # Đảo thứ tự thực thi để giảm sai lệch hệ thống theo thứ tự chạy.
             engines = ["pandas", "spark"] if repetition % 2 else ["spark", "pandas"]
             destinations = {}
             for engine in engines:

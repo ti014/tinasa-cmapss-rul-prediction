@@ -1,20 +1,22 @@
 """Job Hadoop Streaming: số cycle, cycle đầu và cycle cuối của từng động cơ.
 
 Chạy trên YARN dưới dạng ``python3 lifetime_job.py map`` và ``python3 lifetime_job.py
-reduce``. Chỉ dùng thư viện chuẩn để chạy được trong container Hadoop. Kết quả có
-cùng nội dung với bảng Gold ``engine_summary`` của ETL Pandas.
-
-Ví dụ: dòng ``1 192 ...`` của ``train_FD001.txt`` được map thành ``train:0001<TAB>192``;
-reducer gom mọi cycle của khóa ``train:0001`` và in ``train 1 192 1 192``.
+reduce``. Chỉ dùng thư viện chuẩn để chạy được trong container Hadoop. Kết quả có cùng
+nội dung với bảng Gold ``engine_summary`` của ETL Pandas. Ví dụ: dòng ``1 192 ...`` của
+``train_FD001.txt`` được map thành ``train:0001<TAB>192``; reducer gom mọi cycle của
+khóa ``train:0001`` và in ``train 1 192 1 192``.
 """
 
+from __future__ import annotations
+
+from collections.abc import Iterable, Iterator, Sequence
 import os
 import sys
 
 N_FIELDS = 26
 
 
-def split_from_path(path):
+def split_from_path(path: str) -> str | None:
     name = os.path.basename(path)
     for split in ("train", "test"):
         if name.startswith(split + "_"):
@@ -22,7 +24,7 @@ def split_from_path(path):
     return None
 
 
-def map_lines(lines, source):
+def map_lines(lines: Iterable[str], source: str) -> Iterator[str]:
     """Sinh cặp ``split:engine<TAB>cycle``; engine ID đệm 0 để Hadoop sắp đúng thứ tự."""
     split = split_from_path(source)
     for line in lines:
@@ -34,7 +36,7 @@ def map_lines(lines, source):
         yield "%s:%04d\t%d" % (split, int(fields[0]), int(fields[1]))
 
 
-def reduce_lines(lines):
+def reduce_lines(lines: Iterable[str]) -> Iterator[str]:
     """Gom các cycle liên tiếp cùng khóa; input đã được Hadoop sắp theo khóa."""
     current, cycles = None, []
     for line in lines:
@@ -48,12 +50,12 @@ def reduce_lines(lines):
         yield _summary(current, cycles)
 
 
-def _summary(key, cycles):
+def _summary(key: str, cycles: Sequence[int]) -> str:
     split, engine = key.split(":")
     return "%s\t%d\t%d\t%d\t%d" % (split, int(engine), len(cycles), min(cycles), max(cycles))
 
 
-def main(argv):
+def main(argv: Sequence[str]) -> int:
     mode = argv[1] if len(argv) > 1 else ""
     if mode == "map":
         source = os.environ.get("mapreduce_map_input_file") or os.environ.get("map_input_file", "")

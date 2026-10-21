@@ -1,7 +1,7 @@
 """Ghi artifact suy luận thống kê sensor từ raw train FD001.
 
-Đọc train, tạo cặp engine--sensor, tính suy luận rồi ghi bảng và metadata
-đã kiểm tra round-trip.
+Đọc train, tạo cặp engine--sensor, tính suy luận rồi ghi bảng và metadata đã kiểm tra
+round-trip.
 """
 
 from __future__ import annotations
@@ -48,8 +48,8 @@ def write_sensor_statistics_artifacts(
 ) -> SensorStatisticsArtifacts:
     """Tạo bảng cặp, bảng suy luận, `run_info.json` và `validation.json`.
 
-    `raw_dir` chứa `train_FD001.txt`. Kết quả ghi vào `output_dir/tables/`
-    và hai file JSON ở `output_dir`.
+    `raw_dir` chứa `train_FD001.txt`. Kết quả ghi vào `output_dir/tables/` và hai file
+    JSON ở `output_dir`.
     """
     resolved_config = config or SensorInferenceConfig()
     resolved_config.validate()

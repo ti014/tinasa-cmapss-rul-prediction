@@ -1,4 +1,7 @@
-"""Entry point cho ``python -m cmapss.degradation``."""
+"""Điểm vào của python -m cmapss.degradation."""
+
+from __future__ import annotations
+
 
 from cmapss.degradation.cli import main
 

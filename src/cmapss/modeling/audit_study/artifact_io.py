@@ -25,7 +25,7 @@ def _sha256(path: Path) -> str:
 
 
 def _json_value(value: Any) -> Any:
-    """Convert to plain JSON types; NaN and inf become None."""
+    """Chuyển sang kiểu JSON thuần; NaN và inf thành None."""
     if isinstance(value, dict):
         return {str(key): _json_value(item) for key, item in value.items()}
     if isinstance(value, (tuple, list)):
@@ -58,12 +58,12 @@ def _relative(path: Path, repo_root: Path) -> str:
     try:
         return path.resolve().relative_to(repo_root.resolve()).as_posix()
     except ValueError as error:
-        raise ValueError("study inputs and output must be inside the repository") from error
+        raise ValueError("Đầu vào và output nghiên cứu phải nằm trong repository") from error
 
 
 def _write_comparisons(predictions: pd.DataFrame, events: pd.DataFrame,
                         config: AuditStudyConfig, output: Path) -> dict[str, Any]:
-    """Write aggregate, per-engine, per-region and paired metrics, plus decision.json."""
+    """Ghi metric tổng hợp, theo động cơ, vùng RUL, so sánh cặp và decision.json."""
     summaries, engine_tables, region_rows = [], {}, []
     for procedure, frame in predictions.groupby("procedure", sort=True):
         policy_events = events[events.procedure.eq(procedure)]
@@ -120,10 +120,10 @@ def _write_comparisons(predictions: pd.DataFrame, events: pd.DataFrame,
 
 
 def _freeze_selection(path: Path, selection: dict[str, Any]) -> None:
-    """Save the final selection; on resume it must be unchanged."""
+    """Lưu lựa chọn cuối; khi resume, lựa chọn phải giữ nguyên."""
     if path.exists():
         saved = json.loads(path.read_text(encoding="utf-8"))
         if saved != _json_value(selection):
-            raise ValueError("final selection changed on resume")
+            raise ValueError("Lựa chọn cuối đã thay đổi khi resume")
     else:
         _write_json(path, selection)

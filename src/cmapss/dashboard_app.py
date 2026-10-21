@@ -1,8 +1,4 @@
-"""Streamlit UI for the C-MAPSS FD001 study.
-
-Pages render artifacts loaded through ``cmapss.dashboard``. Started from
-``app.py`` at the repository root, which calls ``main(repo_root)``.
-"""
+"""Giao diện Streamlit đọc artifact qua cmapss.dashboard; app.py gọi main(repo_root)."""
 
 from __future__ import annotations
 
@@ -45,7 +41,7 @@ def _figure_theme() -> dict:
     """Dùng chung font và bảng màu cho hình trên dashboard."""
     return {"config": {"font": FONT, "range": {"category": list(COLORS.values())[:5]}}}
 
-ROOT = Path(__file__).resolve().parents[2]  # replaced by main(repo_root)
+ROOT = Path(__file__).resolve().parents[2]  # main(repo_root) thay đường dẫn này khi khởi động.
 RUL_THRESHOLD = 30
 DEFAULT_SENSORS = ["sensor_4", "sensor_11", "sensor_12"]
 
@@ -113,7 +109,7 @@ CSS = """
 
 
 # ---------------------------------------------------------------------------
-# Cached loaders: artifacts are immutable during a session, so read them once.
+# Artifact bất biến trong một phiên, nên loader chỉ đọc một lần.
 # ---------------------------------------------------------------------------
 
 
@@ -148,7 +144,7 @@ def _maintenance_data(root: str) -> MaintenanceData:
 
 
 # ---------------------------------------------------------------------------
-# Small rendering helpers
+# Hàm hỗ trợ hiển thị
 # ---------------------------------------------------------------------------
 
 
@@ -180,7 +176,7 @@ def _model_label(name: str) -> str:
 
 
 def _rul_trajectory_chart(frame: pd.DataFrame, series: dict[str, str], *, marker_cycle: float | None = None) -> alt.Chart:
-    """Line chart of RUL columns against cycle with the 30-cycle warning threshold."""
+    """Biểu đồ RUL theo cycle với ngưỡng cảnh báo 30 cycle."""
     long = frame[["cycle", *series]].rename(columns=series).melt("cycle", var_name="Đường", value_name="RUL")
     names = list(series.values())
     colors = [PALETTE["true"], PALETTE["pred"], PALETTE["alt"], PALETTE["muted"]][: len(names)]
@@ -204,7 +200,7 @@ def _rul_trajectory_chart(frame: pd.DataFrame, series: dict[str, str], *, marker
 
 
 # ---------------------------------------------------------------------------
-# Pages
+# Các trang
 # ---------------------------------------------------------------------------
 
 
@@ -1024,7 +1020,7 @@ def page_provenance(data: DashboardData) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Layout
+# Bố cục
 # ---------------------------------------------------------------------------
 
 

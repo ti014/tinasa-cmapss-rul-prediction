@@ -1,7 +1,6 @@
-"""Arm selection and paired outer readouts for the multi-scale HGB study.
-
-Works on raw-RUL predictions and warning events from the nested runner.
-Test labels are never read here.
+"""
+Chọn nhánh và đối chiếu outer cặp cho HGB đa thang; chỉ dùng dự đoán RUL gốc và cảnh
+báo, không đọc nhãn test tại đây.
 """
 
 from __future__ import annotations
@@ -50,13 +49,13 @@ INTERVAL_SCOPE = (
 
 
 class _ConfigAdapter:
-    """Expose the legacy ``audit_config`` hook for the shared readout code."""
+    """Cung cấp hook audit_config tương thích cho phần đọc metric chung."""
 
     def __init__(self, config: StudyConfig) -> None:
         self._config = config
 
     def audit_config(self) -> audit.AuditStudyConfig:
-        """Build the shared audit metric configuration."""
+        """Dựng cấu hình metric audit dùng chung."""
         return audit.AuditStudyConfig(
             outer_splits=self._config.outer_splits,
             inner_splits=self._config.inner_splits,
@@ -76,43 +75,42 @@ class _ConfigAdapter:
 
 
 def _tree_config(config: StudyConfig) -> StudyConfig | _ConfigAdapter:
-    """Return config in the interface expected by audited tree readouts."""
+    """Trả cấu hình theo giao diện mà bộ đọc metric cây đã kiểm chứng yêu cầu."""
     return config if callable(getattr(config, "audit_config", None)) else _ConfigAdapter(config)
 
 
 def _require_finite(frame: pd.DataFrame | pd.Series,
                     columns: tuple[str, ...]) -> None:
-    """Require named readout fields to be present and finite."""
+    """Yêu cầu các trường metric được chỉ định có mặt và hữu hạn."""
     available = set(frame.index if isinstance(frame, pd.Series) else frame.columns)
     missing = set(columns) - available
     if missing:
-        raise ValueError(f"missing required metrics: {sorted(missing)}")
+        raise ValueError(f"Thiếu metric bắt buộc: {sorted(missing)}")
     values = frame.loc[list(columns)] if isinstance(frame, pd.Series) else frame.loc[:, list(columns)]
     try:
         finite = np.isfinite(values.to_numpy(dtype="float64")).all()
     except (TypeError, ValueError) as error:
-        raise ValueError("readout metrics must be numeric") from error
+        raise ValueError("Metric báo cáo phải có kiểu số") from error
     if not finite:
-        raise ValueError("readout metrics must be finite")
+        raise ValueError("Metric báo cáo phải hữu hạn")
 
 
 def _validate_arm_records(records: pd.DataFrame) -> pd.DataFrame:
-    """Validate one inner arm table and return it indexed by procedure."""
+    """Kiểm tra bảng metric inner của một nhánh rồi đặt chỉ mục theo procedure."""
     if "procedure" not in records:
-        raise ValueError("procedure column is required")
+        raise ValueError("Cần cột procedure")
     if records.procedure.isna().any() or records.procedure.duplicated().any():
-        raise ValueError("procedure identities must be unique and non-null")
+        raise ValueError("Định danh procedure phải duy nhất và khác null")
     if set(records.procedure) != set(ARMS):
-        raise ValueError("procedure table must contain exactly the three declared arms")
+        raise ValueError("Bảng procedure phải có đúng ba nhánh đã khai báo")
     _require_finite(records, NUMERIC_METRICS + WARNING_METRICS)
     return records.set_index("procedure", drop=False)
 
 
 def candidate_readout(predictions: pd.DataFrame, cfg: StudyConfig) -> dict[str, Any]:
-    """Compute audited trajectory and retrospective endpoint metrics.
-
-    The prediction vector must contain raw ``y_true`` and use train engines;
-    endpoint positions are evaluated from lifetime inferred from those labels.
+    """
+    Tính metric quỹ đạo/endpoint hồi cứu từ dự đoán train với y_true gốc; vị trí
+    endpoint suy từ tuổi thọ theo nhãn.
     """
     return tree_analysis.candidate_readout(predictions, _tree_config(cfg))
 
@@ -120,16 +118,14 @@ def candidate_readout(predictions: pd.DataFrame, cfg: StudyConfig) -> dict[str, 
 def calibrate_policy(
     predictions: pd.DataFrame, cfg: StudyConfig,
 ) -> tuple[audit.WarningPolicy, pd.DataFrame]:
-    """Calibrate the fixed warning grid using inner OOF predictions only."""
+    """Hiệu chuẩn lưới cảnh báo cố định chỉ trên dự đoán inner OOF."""
     return tree_analysis.calibrate_policy(predictions, _tree_config(cfg))
 
 
 def choose_procedure(arm_records: pd.DataFrame, cfg: StudyConfig) -> dict[str, Any]:
-    """Pick an arm from inner OOF metrics, falling back to the baseline.
-
-    A candidate must strictly improve trajectory RMSE and be no worse than the
-    baseline (within the configured margins) on endpoint MAE, endpoint NASA,
-    on-time rate and early-alarm burden. Outer metrics are not used.
+    """
+    Chọn theo metric inner OOF: RMSE phải tốt hơn, endpoint MAE/NASA và cảnh báo không
+    kém trong biên cho phép; nếu không đạt dùng baseline, không dùng outer.
     """
     records = _validate_arm_records(arm_records)
     baseline = records.loc[BASELINE_ARM]
@@ -187,10 +183,10 @@ def choose_procedure(arm_records: pd.DataFrame, cfg: StudyConfig) -> dict[str, A
 def paired_comparisons(
     predictions: pd.DataFrame, events: pd.DataFrame, cfg: StudyConfig,
 ) -> pd.DataFrame:
-    """Return paired engine bootstrap comparisons against the fixed baseline."""
+    """Trả bootstrap cặp động cơ đối chiếu baseline cố định."""
     tables = _engine_tables(predictions, events, cfg)
     if BASELINE_ARM not in tables:
-        raise ValueError("baseline predictions are required for paired comparison")
+        raise ValueError("So sánh ghép cặp cần dự đoán baseline")
     pairs = [
         (BASELINE_ARM, procedure)
         for procedure in READOUT_ARMS
@@ -209,15 +205,15 @@ def paired_comparisons(
 def _engine_tables(
     predictions: pd.DataFrame, events: pd.DataFrame, cfg: StudyConfig,
 ) -> dict[str, pd.DataFrame]:
-    """Per-engine statistics for each procedure, checked for identical keys and truth."""
+    """Thống kê theo động cơ từng quy trình, kiểm tra khóa và nhãn thật giống nhau."""
     if "procedure" not in predictions or "procedure" not in events:
-        raise ValueError("predictions and events require procedure identities")
+        raise ValueError("Dự đoán và sự kiện cần định danh procedure")
     if predictions.procedure.isna().any() or events.procedure.isna().any():
-        raise ValueError("procedure identities cannot be missing")
+        raise ValueError("Định danh procedure không được thiếu")
     if set(predictions.procedure) != set(events.procedure):
-        raise ValueError("prediction and warning procedure identities differ")
+        raise ValueError("Định danh procedure của dự đoán và cảnh báo khác nhau")
     if BASELINE_ARM not in set(predictions.procedure):
-        raise ValueError(f"{BASELINE_ARM} reference predictions are required")
+        raise ValueError(f"{BASELINE_ARM} cần dự đoán tham chiếu")
     tables: dict[str, pd.DataFrame] = {}
     reference: pd.DataFrame | None = None
     audited_cfg = _tree_config(cfg).audit_config()
@@ -230,20 +226,20 @@ def _engine_tables(
             try:
                 pd.testing.assert_frame_equal(keys_truth, reference, check_exact=True)
             except AssertionError as error:
-                raise ValueError("paired procedures require identical keys and raw truth") from error
+                raise ValueError("Quy trình ghép cặp cần cùng khóa và nhãn gốc") from error
         policy_events = events.loc[events.procedure.eq(procedure)].copy()
         if (policy_events.empty or "engine_id" not in policy_events
                 or policy_events.engine_id.isna().any()
                 or policy_events.engine_id.duplicated().any()
                 or set(policy_events.engine_id) != set(scored.engine_id)):
-            raise ValueError("warning events must match each prediction engine exactly once")
+            raise ValueError("Sự kiện cảnh báo phải khớp đúng một lần mỗi động cơ dự đoán")
         _require_finite(policy_events, ("on_time", "early_alarm_burden",
                                         "n_transitions", "n_retractions"))
         if (not policy_events.on_time.isin((False, True)).all()
                 or not policy_events.early_alarm_burden.between(0.0, 1.0).all()
                 or policy_events.n_transitions.lt(0).any()
                 or policy_events.n_retractions.lt(0).any()):
-            raise ValueError("invalid warning rate, burden or transition counts")
+            raise ValueError("Tỷ lệ cảnh báo, mức báo sớm hoặc số chuyển trạng thái không hợp lệ")
         table = audit._engine_readout(scored, policy_events, audited_cfg).sort_index()
         sufficient = scored.groupby("engine_id", sort=True).agg(
             trajectory_sse=("squared_error", "sum"),
@@ -253,21 +249,21 @@ def _engine_tables(
         table = table.join(sufficient)
         _require_finite(table, PAIRED_ENGINE_METRICS + ("trajectory_sse", "trajectory_n_rows"))
         if table.trajectory_n_rows.le(0).any():
-            raise ValueError("each engine must contribute trajectory rows")
+            raise ValueError("Mỗi động cơ phải có dòng quỹ đạo")
         tables[str(procedure)] = table
     return tables
 
 
 def _gate_controls(comparison: pd.DataFrame) -> dict[str, bool]:
-    """Check the CI bounds of the five promotion conditions."""
+    """Kiểm tra cận CI của năm điều kiện chấp nhận."""
     if comparison.empty:
-        raise ValueError("selected paired comparison is empty")
+        raise ValueError("So sánh cặp được chọn rỗng")
     rows = comparison.set_index("metric")
     required = ("trajectory_rmse", "endpoint_mean_engine_mae",
                 "endpoint_mean_engine_nasa", "on_time_rate",
                 "early_alarm_burden")
     if not set(required).issubset(rows.index):
-        raise ValueError("selected comparison misses promotion metrics")
+        raise ValueError("So sánh được chọn thiếu metric chấp nhận")
     return {
         "trajectory_rmse_improved": bool(rows.loc["trajectory_rmse", "ci_upper"] < 0.0),
         "endpoint_mae_not_worse": bool(rows.loc["endpoint_mean_engine_mae", "ci_upper"] <= 0.0),
@@ -278,7 +274,7 @@ def _gate_controls(comparison: pd.DataFrame) -> dict[str, bool]:
 
 
 def _region_rows(predictions: pd.DataFrame) -> list[dict[str, Any]]:
-    """Error metrics per raw-RUL region."""
+    """Metric sai số theo vùng RUL gốc."""
     rows: list[dict[str, Any]] = []
     for procedure, frame in predictions.groupby("procedure", sort=True):
         scored = tree_analysis._validate_predictions(frame)
@@ -308,11 +304,11 @@ def write_readouts(
     cfg: StudyConfig,
     output: str | Path,
 ) -> dict[str, Any]:
-    """Write outer readout tables and the paired promotion decision."""
+    """Ghi bảng metric outer và quyết định ghép cặp."""
     if "procedure" not in predictions or set(predictions.procedure) != set(READOUT_ARMS):
-        raise ValueError("readouts require the three arms and selected_pipeline")
+        raise ValueError("Metric báo cáo cần ba nhánh và selected_pipeline")
     if "procedure" not in events or set(events.procedure) != set(READOUT_ARMS):
-        raise ValueError("warning events require the three arms and selected_pipeline")
+        raise ValueError("Sự kiện cảnh báo cần ba nhánh và selected_pipeline")
     tables = _engine_tables(predictions, events, cfg)
     summaries: list[dict[str, Any]] = []
     warning_rows: list[dict[str, Any]] = []
@@ -333,7 +329,7 @@ def write_readouts(
     controls = _gate_controls(selected)
     trajectory_row = selected.loc[selected.metric.eq("trajectory_rmse")]
     if len(trajectory_row) != 1:
-        raise ValueError("selected comparison must contain one trajectory RMSE row")
+        raise ValueError("So sánh được chọn phải có đúng một dòng RMSE quỹ đạo")
     trajectory_row = trajectory_row.iloc[0]
     decision = {
         "full_protocol_configuration": bool(cfg.scientific),

@@ -1,11 +1,9 @@
 """Danh sách feature của ba arm trong study HGB multi-scale.
 
-
-* ``hgb_baseline169``: rolling 30 cycles, ``cycle`` và history 30 cycles;
-* ``hgb_multiscale10_30``: baseline và thêm rolling 10 cycles;
-* ``hgb_initial_profile42``: baseline và thêm mean/std của 30 cycles đầu.
-
-Tất cả feature đều causal. ``rul`` và các cột nhãn không thuộc bất kỳ arm nào.
+* ``hgb_baseline169``: rolling 30 cycles, ``cycle`` và history 30 cycles; *
+``hgb_multiscale10_30``: baseline và thêm rolling 10 cycles; *
+``hgb_initial_profile42``: baseline và thêm mean/std của 30 cycles đầu. Tất cả feature
+đều causal. ``rul`` và các cột nhãn không thuộc bất kỳ arm nào.
 """
 
 from __future__ import annotations
@@ -69,15 +67,15 @@ class FeatureSpec:
     def __post_init__(self) -> None:
         expected = FEATURE_COLUMNS_BY_ARM.get(self.arm_id)
         if expected is None or self.feature_columns != expected:
-            raise ValueError(f"feature columns do not match arm {self.arm_id}")
+            raise ValueError(f"Các cột features không khớp nhánh {self.arm_id}")
         if self.feature_count != len(self.feature_columns):
-            raise ValueError("feature_count does not match feature_columns")
+            raise ValueError("feature_count không khớp feature_columns")
         if len(set(self.feature_columns)) != len(self.feature_columns):
-            raise ValueError("feature columns must be unique")
+            raise ValueError("Các cột features phải duy nhất")
         if any(column in {"rul", "y_true", "target", "lifetime"} for column in self.feature_columns):
-            raise ValueError("target or lifetime columns cannot be features")
+            raise ValueError("Cột nhãn hoặc tuổi thọ không được làm feature")
         if not self.causal_windows or any(window < 1 for window in self.causal_windows):
-            raise ValueError("causal windows must be positive")
+            raise ValueError("Window chỉ dùng quá khứ phải dương")
 
 
 def feature_specs() -> tuple[FeatureSpec, ...]:
@@ -96,7 +94,7 @@ def feature_spec(arm_id: str) -> FeatureSpec:
     for spec in feature_specs():
         if spec.arm_id == arm_id:
             return spec
-    raise ValueError(f"unknown feature arm: {arm_id}")
+    raise ValueError(f"Nhánh features chưa biết: {arm_id}")
 
 
 __all__ = [

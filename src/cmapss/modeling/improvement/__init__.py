@@ -3,6 +3,9 @@
 Giữ đường dẫn import của class để nạp artifact đã lưu trước khi tách package.
 """
 
+from __future__ import annotations
+
+
 from cmapss.modeling.improvement.artifact_io import _json_safe, _sha256, _write_json, _prepare_run
 from cmapss.modeling.improvement.config import (
     WINDOWS,

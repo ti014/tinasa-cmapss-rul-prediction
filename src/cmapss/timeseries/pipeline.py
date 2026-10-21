@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from cmapss.presentation import COLORS, apply_plot_style, style_figure
-
 import hashlib
 import json
 from dataclasses import dataclass
@@ -16,6 +14,7 @@ import matplotlib
 import numpy as np
 import pandas as pd
 
+from cmapss.presentation import COLORS, apply_plot_style, style_figure
 from cmapss.data.validation import validate_observations
 from cmapss.timeseries.arima import fit_engine_arima
 from cmapss.timeseries.baselines import evaluate_forecast_baselines
@@ -67,8 +66,6 @@ class TimeseriesResult:
     input_sha256: dict[str, str]
 
 
-apply_plot_style()
-
 def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
@@ -81,6 +78,7 @@ def _json_safe(value: Any) -> Any:
 
 def _plot_health_index(health_index: pd.DataFrame, selected: pd.DataFrame, path: Path) -> None:
     """Vẽ Health Index của các engine đã chọn."""
+    apply_plot_style()
     fig, ax = plt.subplots(figsize=(11, 6))
     selected_ids = selected["engine_id"].tolist()
     for engine_id in selected_ids:
@@ -103,7 +101,8 @@ def _plot_forecasts(
     forecasts: pd.DataFrame,
     path: Path,
 ) -> None:
-    """Vẽ actual và forecast cho từng engine đã chọn."""
+    """Vẽ Health Index thực tế và dự báo cho từng động cơ đã chọn."""
+    apply_plot_style()
     n = len(selected)
     fig, axes = plt.subplots(2, int(np.ceil(n / 2)), figsize=(15, 7), squeeze=False)
     for axis, row in zip(axes.ravel(), selected.itertuples(index=False)):

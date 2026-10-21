@@ -76,10 +76,10 @@ def test_choose_procedure_requires_strict_rmse_and_all_controls() -> None:
 
 def test_choose_procedure_validates_exact_arm_panel() -> None:
     """Missing or duplicated procedure rows are rejected before selection."""
-    with pytest.raises(ValueError, match="exactly the three"):
+    with pytest.raises(ValueError, match="đúng ba"):
         analysis.choose_procedure(_records().iloc[:2], _config())
     duplicate = pd.concat([_records(), _records().iloc[[0]]], ignore_index=True)
-    with pytest.raises(ValueError, match="unique"):
+    with pytest.raises(ValueError, match="duy nhất"):
         analysis.choose_procedure(duplicate, _config())
 
 
@@ -136,7 +136,7 @@ def test_paired_comparison_rejects_truth_misalignment() -> None:
         predictions.procedure.eq("hgb_multiscale10_30") & (predictions.index == 122),
         "y_true",
     ] += 1.0
-    with pytest.raises(ValueError, match="truth"):
+    with pytest.raises(ValueError, match="nhãn"):
         analysis.paired_comparisons(predictions, events, _config())
 
 

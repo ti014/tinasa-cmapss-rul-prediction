@@ -1,4 +1,7 @@
-"""Shared identity and canonical artifact locations for project deliverables."""
+"""Danh tính học viên và đường dẫn artifact chuẩn dùng chung khi bàn giao."""
+
+from __future__ import annotations
+
 
 from pathlib import Path
 
@@ -10,10 +13,10 @@ FOLLOWUP_RUN = Path("outputs/experiments/followup/20260929")
 
 
 def add_notebook_identity(notebook: dict) -> None:
-    """Add identity below the first heading without changing executable cells."""
+    """Thêm danh tính dưới heading đầu mà không đổi cell thực thi."""
     first = notebook["cells"][0]
     if first["cell_type"] != "markdown":
-        raise ValueError("The first notebook cell must be Markdown")
+        raise ValueError("Cell notebook đầu tiên phải là Markdown")
     source = first["source"]
     text = source if isinstance(source, str) else "".join(source)
     if AUTHOR_NAME not in text or STUDENT_ID not in text:

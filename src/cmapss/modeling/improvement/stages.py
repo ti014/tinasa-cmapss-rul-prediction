@@ -49,7 +49,7 @@ def _run_outer_stages(
             predictions["outer_fold"] = outer_fold
             predictions["window"] = window
             selected_window_predictions.append(predictions)
-        # Window 30 is the reference for the control checks.
+        # Window 30 là tham chiếu cho các kiểm tra kiểm soát.
         window_baseline = next(record for record in selected_window_records if record["window"] == 30)
         selected_window_index = _select_candidate(selected_window_records, window_baseline)
         selected_window = int(selected_window_records[selected_window_index]["window"])
@@ -134,7 +134,7 @@ def _select_final_configuration(
     config: ImprovementConfig,
     cache_dir: Path | None = None,
 ) -> tuple[int, dict[str, Any], str, pd.DataFrame]:
-    """Select window, HGB parameters and weights with CV on all train engines."""
+    """Chọn window, tham số HGB và trọng số bằng cross-validation trên mọi động cơ train."""
     window_records: list[dict[str, Any]] = []
     for window in WINDOWS:
         metrics, _ = _evaluate_candidate(datasets[window], BASELINE_PARAMS, "uniform", config, cache_dir)

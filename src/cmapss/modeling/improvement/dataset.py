@@ -23,7 +23,7 @@ def load_window_datasets(
     *,
     min_cycle: int = 30,
 ) -> dict[int, pd.DataFrame]:
-    """Train feature tables per window, all starting at ``min_cycle`` so rows match."""
+    """Bảng features train theo window, cùng bắt đầu ở min_cycle để khớp dòng."""
     observations = read_silver_observations(observations_path)
     targets = pd.read_parquet(targets_path)
     datasets: dict[int, pd.DataFrame] = {}
@@ -39,9 +39,9 @@ def load_window_datasets(
             validate="one_to_one",
         )
         if train["rul"].isna().any():
-            raise ValueError(f"window {window} has missing train targets")
+            raise ValueError(f"window {window} thiếu nhãn train")
         datasets[int(window)] = train.reset_index(drop=True)
     keys = [set(frame.loc[:, list(KEY)].itertuples(index=False, name=None)) for frame in datasets.values()]
     if any(key != keys[0] for key in keys[1:]):
-        raise ValueError("window datasets do not share the same evaluation keys")
+        raise ValueError("Dataset theo window không có cùng khóa đánh giá")
     return datasets

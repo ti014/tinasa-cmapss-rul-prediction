@@ -1,7 +1,7 @@
 """Pipeline Pandas tham chiếu cho ETL Silver/Gold C-MAPSS.
 
-Chuẩn hóa observations, tạo train targets và tổng hợp bảng engine summary.
-Rolling features được tạo riêng trong `cmapss.features`.
+Chuẩn hóa observations, tạo train targets và tổng hợp bảng engine summary. Rolling
+features được tạo riêng trong `cmapss.features`.
 """
 
 from __future__ import annotations
@@ -196,8 +196,8 @@ def write_pandas_artifacts(
 ) -> dict[str, Any]:
     """Ghi Silver Parquet, Gold Parquet/SQLite và `run_info.json`; trả về metadata.
 
-    `output_dir` không được nằm trong thư mục raw. `raw_dir` dùng cho result tạo
-    thủ công; nó được bảo vệ thêm chứ không thay `result.raw_dir`.
+    `output_dir` không được nằm trong thư mục raw. `raw_dir` dùng cho result tạo thủ
+    công; nó được bảo vệ thêm chứ không thay `result.raw_dir`.
     """
     output_path = Path(output_dir).resolve()
     raw_path = Path(result.raw_dir or raw_dir or default_raw_dir()).resolve()

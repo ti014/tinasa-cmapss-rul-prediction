@@ -1,4 +1,7 @@
-"""Command-line entrypoint for the TCN comparison."""
+"""Điểm vào dòng lệnh so sánh TCN."""
+
+from __future__ import annotations
+
 
 from .runner import main
 

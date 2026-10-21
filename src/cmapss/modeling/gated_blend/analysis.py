@@ -1,7 +1,6 @@
-"""Gate selection on inner OOF rows and paired outer readouts for the gated HGB study.
-
-Gates and warning policies are chosen on inner OOF rows only; outer results
-never change that choice.
+"""
+Chọn gate/chính sách chỉ trên inner OOF, đọc metric outer để báo cáo; kết quả outer
+không đổi lựa chọn.
 """
 
 from __future__ import annotations
@@ -33,14 +32,14 @@ INTERVAL_SCOPE = (
 def _require_finite(frame: pd.DataFrame | pd.Series, columns: tuple[str, ...]) -> None:
     missing = set(columns) - set(frame.index if isinstance(frame, pd.Series) else frame.columns)
     if missing:
-        raise ValueError(f"missing required metrics: {sorted(missing)}")
+        raise ValueError(f"Thiếu metric bắt buộc: {sorted(missing)}")
     values = frame.loc[list(columns)] if isinstance(frame, pd.Series) else frame.loc[:, list(columns)]
     try:
         finite = np.isfinite(values.to_numpy(dtype="float64")).all()
     except (TypeError, ValueError) as error:
-        raise ValueError("selection metrics must be numeric") from error
+        raise ValueError("Metric lựa chọn phải có kiểu số") from error
     if not finite:
-        raise ValueError("selection metrics must be finite")
+        raise ValueError("Metric lựa chọn phải hữu hạn")
 
 
 def _validate_predictions(predictions: pd.DataFrame) -> pd.DataFrame:
@@ -48,14 +47,14 @@ def _validate_predictions(predictions: pd.DataFrame) -> pd.DataFrame:
 
 
 def candidate_readout(predictions: pd.DataFrame, cfg: StudyConfig) -> dict[str, Any]:
-    """Endpoint-panel and full-trajectory metrics."""
+    """Metric trên bảng endpoint và toàn bộ quỹ đạo."""
     return tree_analysis.candidate_readout(predictions, cfg)
 
 
 def calibrate_policy(
     predictions: pd.DataFrame, cfg: StudyConfig,
 ) -> tuple[audit.WarningPolicy, pd.DataFrame]:
-    """Calibrate the 15-policy warning grid on inner OOF rows."""
+    """Hiệu chuẩn lưới 15 chính sách cảnh báo trên inner OOF."""
     return tree_analysis.calibrate_policy(predictions, cfg)
 
 
@@ -79,21 +78,19 @@ def _control_mask(records: pd.DataFrame, reference: pd.Series, cfg: StudyConfig)
 def select_gate_candidate(
     records: pd.DataFrame, reference: pd.Series, cfg: StudyConfig,
 ) -> dict[str, Any]:
-    """Pick the lowest-RMSE gate that passes the controls and beats the reference RMSE.
-
-    ``diagnostic_candidate_id`` is the lowest-RMSE gate that passes the controls,
-    even without an RMSE gain. If no gate passes, it is the unconstrained RMSE
-    winner, ``diagnostic_unconstrained`` is true and it cannot be selected.
+    """
+    Chọn gate RMSE thấp nhất đạt kiểm soát và tốt hơn tham chiếu; ứng viên chẩn đoán
+    không ràng buộc không được chọn nếu không đạt kiểm soát.
     """
     required = ("candidate_id",) + NUMERIC_METRICS + WARNING_METRICS
     if any(column not in records for column in required):
-        raise ValueError("gate records miss candidate or required readout columns")
+        raise ValueError("Bản ghi gate thiếu ứng viên hoặc cột metric cần thiết")
     if "family" in records:
         gates = records.loc[records.family.eq("gated_blend")].copy()
     else:
         gates = records.loc[records.candidate_id.astype(str).str.startswith("gate_")].copy()
     if gates.empty or gates.candidate_id.isna().any() or gates.candidate_id.duplicated().any():
-        raise ValueError("gate candidates must be nonempty and uniquely identified")
+        raise ValueError("Ứng viên gate phải không rỗng và có định danh duy nhất")
     _require_finite(gates, NUMERIC_METRICS + WARNING_METRICS)
     _require_finite(reference, NUMERIC_METRICS + WARNING_METRICS)
     controls = _control_mask(gates, reference, cfg)
@@ -129,22 +126,21 @@ def select_gate_candidate(
 
 
 def choose_procedure(arm_records: pd.DataFrame, cfg: StudyConfig) -> dict[str, Any]:
-    """Choose gated_blend if it passes every inner control, else hgb_uncapped.
-
-    ``hgb_cap125`` is reported but never selected. The gated_blend row must
-    already be the diagnostic gate chosen on inner OOF rows.
+    """
+    Chọn gated_blend nếu đạt mọi kiểm soát inner, ngược lại hgb_uncapped; hgb_cap125 chỉ
+    được báo cáo.
     """
     if "procedure" not in arm_records:
-        raise ValueError("procedure column is required")
+        raise ValueError("Cần cột procedure")
     allowed = set(GATE_ARMS)
     if set(arm_records.procedure) != allowed or arm_records.procedure.duplicated().any():
-        raise ValueError("procedure selection requires hgb_uncapped, hgb_cap125 and gated_blend")
+        raise ValueError("Lựa chọn procedure cần hgb_uncapped, hgb_cap125 và gated_blend")
     required = NUMERIC_METRICS + WARNING_METRICS
     _require_finite(arm_records, required)
     if "numeric_controls_met" not in arm_records:
-        raise ValueError("numeric_controls_met is required for gated blend")
+        raise ValueError("Gated blend cần numeric_controls_met")
     if not arm_records.numeric_controls_met.map(lambda value: isinstance(value, (bool, np.bool_))).all():
-        raise ValueError("numeric_controls_met must be boolean")
+        raise ValueError("numeric_controls_met phải là boolean")
     records = arm_records.set_index("procedure", drop=False)
     reference = records.loc["hgb_uncapped"]
     checks: dict[str, dict[str, bool]] = {}
@@ -168,8 +164,8 @@ def choose_procedure(arm_records: pd.DataFrame, cfg: StudyConfig) -> dict[str, A
             "eligible": bool(procedure == "gated_blend" and endpoint and warning and numeric and improves),
         }
     selected = "gated_blend" if checks["gated_blend"]["eligible"] else "hgb_uncapped"
-    # The runner passes the reference policy in the row (e.g. 40/3). The 40/1
-    # default is only for synthetic callers without policy columns.
+    # Runner truyền chính sách tham chiếu trong dòng, ví dụ 40/3; mặc định 40/1
+    # chỉ dành cho caller tổng hợp không có cột chính sách.
     fallback_policy = {
         "threshold": int(records.loc["hgb_uncapped"].get("policy_threshold", 40)),
         "persistence": int(records.loc["hgb_uncapped"].get("policy_persistence", 1)),
@@ -192,7 +188,7 @@ def choose_procedure(arm_records: pd.DataFrame, cfg: StudyConfig) -> dict[str, A
 def paired_comparisons(
     predictions: pd.DataFrame, events: pd.DataFrame, cfg: StudyConfig,
 ) -> pd.DataFrame:
-    """Paired engine-bootstrap comparisons; resampled engines keep multiplicity."""
+    """Bootstrap ghép cặp theo động cơ, giữ số lần mỗi động cơ được lấy mẫu."""
     tables = tree_analysis._engine_tables(predictions, events, cfg)
     pairs = [("hgb_uncapped", "gated_blend"), ("hgb_uncapped", "selected_pipeline")]
     if "hgb_cap125" in tables:
@@ -222,10 +218,10 @@ def _gate_controls(comparison: pd.DataFrame) -> dict[str, bool]:
 def write_readouts(
     predictions: pd.DataFrame, events: pd.DataFrame, cfg: StudyConfig, output: str | Path,
 ) -> dict[str, Any]:
-    """Write aggregate, engine, warning, region and paired CSVs plus decision.json."""
+    """Ghi CSV tổng hợp, theo động cơ, cảnh báo, vùng RUL, so sánh cặp và decision.json."""
     expected = set(READOUT_ARMS)
     if "procedure" not in predictions or set(predictions.procedure) != expected:
-        raise ValueError("outer readouts require hgb references, gated_blend and selected_pipeline")
+        raise ValueError("Metric outer cần HGB tham chiếu, gated_blend và selected_pipeline")
     tables = tree_analysis._engine_tables(predictions, events, cfg)
     summaries: list[dict[str, Any]] = []
     regions: list[dict[str, Any]] = []

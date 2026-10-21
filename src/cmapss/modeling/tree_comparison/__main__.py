@@ -1,4 +1,7 @@
-"""Entry point for ``python -m cmapss.modeling.tree_comparison``."""
+"""Điểm vào của python -m cmapss.modeling.tree_comparison."""
+
+from __future__ import annotations
+
 
 from cmapss.modeling.tree_comparison.runner import main
 

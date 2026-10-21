@@ -1,5 +1,8 @@
 """Đọc C-MAPSS observations; giữ observations và test labels riêng biệt."""
 
+from __future__ import annotations
+
+
 from pathlib import Path
 
 import pandas as pd
@@ -51,7 +54,8 @@ def read_observations(path: str | Path, *, split: Split) -> pd.DataFrame:
 def read_test_labels(path: str | Path) -> pd.DataFrame:
     """Đọc file nhãn test (một cột RUL); dòng thứ i thuộc test engine i.
 
-    Trả về cột split, engine_id, rul. Chỉ dùng cho đánh giá cuối, không dùng khi huấn luyện.
+    Trả về cột split, engine_id, rul. Chỉ dùng cho đánh giá cuối, không dùng khi huấn
+    luyện.
     """
     path = Path(path)
     labels = _read_table(path, {"rul": "int64"})

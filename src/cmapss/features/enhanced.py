@@ -1,4 +1,4 @@
-"""Causal history features and train-fitted operating-condition normalization."""
+"""Đặc trưng lịch sử chỉ dùng quá khứ và chuẩn hóa điều kiện vận hành fit trên train."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ SETTINGS = ("setting_1", "setting_2", "setting_3")
 
 @dataclass(frozen=True)
 class FeatureRecipe:
-    """Fixed feature representation, with target cap applied only during fit."""
+    """Biểu diễn features cố định; chỉ áp dụng RUL cap lúc fit."""
 
     name: str
     window: int = 30
@@ -29,28 +29,28 @@ class FeatureRecipe:
 
     def __post_init__(self) -> None:
         if self.window < 2 or (self.history and self.window < 30):
-            raise ValueError("History features require a window of at least 30 cycles")
+            raise ValueError("Features lịch sử cần window ít nhất 30 cycle")
         if self.target_cap is not None and self.target_cap <= 0:
-            raise ValueError("target_cap must be positive")
+            raise ValueError("target_cap phải dương")
 
 
 class OperatingConditionNormalizer:
-    """Fit six operating regimes and sensor statistics on training engines only."""
+    """Fit sáu nhóm điều kiện vận hành và thống kê sensor chỉ trên động cơ train."""
 
     def __init__(self, n_conditions: int = 6, seed: int = 42) -> None:
         self.n_conditions = n_conditions
         self.seed = seed
 
     def fit(self, observations: pd.DataFrame) -> "OperatingConditionNormalizer":
-        """Learn settings clusters and population sensor mean/std from train."""
+        """Học cụm settings và mean/std sensor tổng thể từ train."""
         validate_observations(observations, source="condition normalizer fit")
         if not observations["split"].eq("train").all():
-            raise ValueError("Condition normalization fit accepts train observations only")
+            raise ValueError("Chỉ fit chuẩn hóa điều kiện bằng observations train")
         self.fit_engine_ids_ = tuple(sorted(map(int, observations.engine_id.unique())))
         self.scaler_ = StandardScaler().fit(observations.loc[:, list(SETTINGS)])
         settings = self.scaler_.transform(observations.loc[:, list(SETTINGS)])
         if len(np.unique(settings, axis=0)) < self.n_conditions:
-            raise ValueError("Insufficient distinct operating settings for the declared regimes")
+            raise ValueError("Không đủ settings vận hành phân biệt cho số nhóm đã khai báo")
         self.clusterer_ = KMeans(n_clusters=self.n_conditions, n_init=10, random_state=self.seed)
         labels = self.clusterer_.fit_predict(settings)
         values = observations.loc[:, list(SENSORS)].reset_index(drop=True)
@@ -58,11 +58,11 @@ class OperatingConditionNormalizer:
         scales = values.groupby(labels, sort=True).std(ddof=0).reindex(range(self.n_conditions))
         self.scales_ = scales.mask(scales.abs().lt(1e-12), 1.0)
         if not np.isfinite(self.means_.to_numpy()).all() or not np.isfinite(self.scales_.to_numpy()).all():
-            raise ValueError("Every operating regime must have finite sensor statistics")
+            raise ValueError("Thống kê sensor của mọi điều kiện vận hành phải hữu hạn")
         return self
 
     def transform(self, observations: pd.DataFrame) -> pd.DataFrame:
-        """Apply frozen training statistics without updating clusters or scales."""
+        """Áp dụng thống kê train đã cố định, không cập nhật cụm hoặc thang đo."""
         validate_observations(observations, source="condition normalizer transform")
         settings = self.scaler_.transform(observations.loc[:, list(SETTINGS)])
         labels = self.clusterer_.predict(settings)
@@ -74,20 +74,19 @@ class OperatingConditionNormalizer:
 
 
 def build_history_features(observations: pd.DataFrame, *, minimum_cycle: int = 30) -> pd.DataFrame:
-    """Per-sensor history features computed from the observed prefix only.
-
-    Adds the deviation from the first-30-cycle mean and the least-squares slope
-    from cycle 1 to the current cycle.
+    """
+    Tạo độ lệch so với trung bình 30 cycle đầu và slope từ cycle 1 đến hiện tại cho từng
+    sensor.
     """
     validate_observations(observations, source="history features")
     if minimum_cycle < 30:
-        raise ValueError("First-30-cycle reference is only available from cycle 30")
+        raise ValueError("Mốc 30 cycle đầu chỉ khả dụng từ cycle 30")
     frames: list[pd.DataFrame] = []
     for _, group in observations.sort_values(list(KEY)).groupby(["split", "engine_id"], sort=True):
         if int(group.cycle.iloc[0]) != 1:
-            raise ValueError("History features require a complete observed prefix from cycle 1")
+            raise ValueError("Features lịch sử cần prefix quan sát đầy đủ từ cycle 1")
         if len(group) < minimum_cycle:
-            raise ValueError("Engine has too few cycles for history features")
+            raise ValueError("Động cơ không đủ cycle để tạo features lịch sử")
         x = group.cycle.to_numpy(dtype="float64")
         n = np.arange(1, len(group) + 1, dtype="float64")
         sum_x, sum_x2 = np.cumsum(x), np.cumsum(x * x)
@@ -110,9 +109,9 @@ def build_recipe_features(
     *,
     normalizer: OperatingConditionNormalizer | None = None,
 ) -> pd.DataFrame:
-    """Construct one causal feature representation using an already-fitted normalizer."""
+    """Tạo features chỉ dùng quá khứ bằng bộ chuẩn hóa đã fit."""
     if recipe.normalize_conditions and normalizer is None:
-        raise ValueError("Condition-normalized features require a training-fitted normalizer")
+        raise ValueError("Features chuẩn hóa điều kiện cần bộ chuẩn hóa đã fit trên train")
     transformed = normalizer.transform(observations) if recipe.normalize_conditions else observations
     features = build_rolling_features(transformed, window_cycles=recipe.window)
     if recipe.history:
@@ -128,5 +127,5 @@ def build_recipe_features(
         features = features.merge(pd.concat(frames, ignore_index=True), on=list(KEY), validate="one_to_one")
     values = features.drop(columns=list(KEY)).to_numpy(dtype="float64")
     if features.empty or not np.isfinite(values).all():
-        raise ValueError("Recipe features must be nonempty and finite")
+        raise ValueError("Features theo công thức phải không rỗng và hữu hạn")
     return features.sort_values(list(KEY)).reset_index(drop=True)

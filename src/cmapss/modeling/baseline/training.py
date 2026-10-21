@@ -73,7 +73,7 @@ def _make_estimator(name: str, config: ModelingConfig) -> Any:
             early_stopping=False,
             random_state=config.seed,
         )
-    raise ValueError(f"Unknown candidate model: {name}")
+    raise ValueError(f"Mô hình ứng viên chưa biết: {name}")
 
 
 def _fit_estimator(estimator: Any, X: pd.DataFrame, y: pd.Series, sample_weight: np.ndarray) -> Any:
@@ -177,5 +177,5 @@ def _select_final_test_windows(features: pd.DataFrame, model_name: str, estimato
     final["model_name"] = model_name
     final["rul_pred"] = np.asarray(predictions, dtype="float64")
     if not np.isfinite(final["rul_pred"].to_numpy(dtype="float64")).all():
-        raise ContractError("MODELING_PREDICTION", "final predictions", "mọi prediction phải hữu hạn")
+        raise ContractError("MODELING_PREDICTION", "dự đoán cuối", "mọi prediction phải hữu hạn")
     return final.loc[:, list(FINAL_PREDICTION_COLUMNS)].reset_index(drop=True)

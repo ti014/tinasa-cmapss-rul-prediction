@@ -1,5 +1,8 @@
 """Metadata và validation payload cho artifact thống kê FD001."""
 
+from __future__ import annotations
+
+
 from dataclasses import asdict
 from importlib import metadata
 from pathlib import Path

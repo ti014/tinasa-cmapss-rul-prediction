@@ -1,4 +1,4 @@
-"""Causal sensor sequence construction for TCN experiments."""
+"""Tạo chuỗi sensor chỉ dùng quá khứ cho thí nghiệm TCN."""
 
 from __future__ import annotations
 
@@ -12,10 +12,10 @@ from cmapss.data.contracts import KEY, SENSORS
 
 @dataclass(frozen=True)
 class SequenceSet:
-    """Window tensor and its observation metadata."""
+    """Tensor window và metadata quan sát tương ứng."""
 
-    values: np.ndarray  # (n_windows, n_sensors, sequence_length)
-    metadata: pd.DataFrame  # split, engine_id, cycle, and optional rul
+    values: np.ndarray  # Dạng tensor: (n_windows, n_sensors, sequence_length).
+    metadata: pd.DataFrame  # Các khóa split, engine_id, cycle và nhãn rul tùy chọn.
 
 
 def build_sequences(
@@ -25,22 +25,21 @@ def build_sequences(
     split: str,
     sequence_length: int = 30,
 ) -> SequenceSet:
-    """Build trailing windows ending at each cycle >= ``sequence_length``.
-
-    Windows never cross engines or splits.  For example, the row for cycle 30
-    contains cycles 1..30 and the row for cycle 31 contains cycles 2..31.
+    """
+    Tạo window kết thúc tại cycle >=sequence_length, không vượt động cơ/split; cycle 30
+    gồm 1–30, cycle 31 gồm 2–31.
     """
     if sequence_length < 1:
-        raise ValueError("sequence_length must be positive")
+        raise ValueError("sequence_length phải dương")
     required = set(KEY) | set(SENSORS)
     missing = sorted(required.difference(observations.columns))
     if missing:
-        raise ValueError(f"observations miss columns: {missing[:3]}")
+        raise ValueError(f"Observations thiếu cột: {missing[:3]}")
     rows: list[np.ndarray] = []
     metadata: list[dict[str, int | str | float]] = []
     source = observations[observations["split"].eq(split)].copy()
     if source.empty:
-        raise ValueError(f"no observations for split {split!r}")
+        raise ValueError(f"Không có observations cho split {split!r}")
     source = source.sort_values(["engine_id", "cycle"], kind="mergesort")
     labels = None
     if targets is not None:
@@ -51,7 +50,7 @@ def build_sequences(
         cycles = group["cycle"].to_numpy(dtype="int64")
         values = group.loc[:, list(SENSORS)].to_numpy(dtype="float32")
         if not np.array_equal(cycles, np.arange(1, len(cycles) + 1, dtype="int64")):
-            raise ValueError(f"engine {engine_id} does not have contiguous cycles from 1")
+            raise ValueError(f"engine {engine_id} không có cycle liên tục từ 1")
         if len(values) < sequence_length:
             continue
         for end in range(sequence_length, len(values) + 1):
@@ -63,22 +62,22 @@ def build_sequences(
             if labels is not None:
                 key = (split, int(engine_id), cycle)
                 if key not in labels.index:
-                    raise ValueError(f"missing target for {key}")
+                    raise ValueError(f"Thiếu nhãn cho {key}")
                 item["rul"] = float(labels.loc[key])
             metadata.append(item)
     if not rows:
-        raise ValueError("sequence construction produced no windows")
+        raise ValueError("Không tạo được window từ chuỗi")
     frame = pd.DataFrame(metadata)
     frame = frame.loc[:, ["split", "engine_id", "cycle"] + (["rul"] if labels is not None else [])]
     array = np.stack(rows).astype("float32", copy=False)
     if not np.isfinite(array).all():
-        raise ValueError("sequence inputs contain nonfinite values")
+        raise ValueError("Đầu vào chuỗi chứa giá trị không hữu hạn")
     return SequenceSet(array, frame.reset_index(drop=True))
 
 
 @dataclass(frozen=True)
 class SensorScaler:
-    """Per-sensor standardization learned from fitting engines only."""
+    """Chuẩn hóa từng sensor bằng thống kê chỉ học từ động cơ fit."""
 
     mean: np.ndarray
     scale: np.ndarray
@@ -89,15 +88,15 @@ class SensorScaler:
             raise ValueError("expected (n_windows, 21, sequence_length) input")
         result = (array - self.mean[None, :, None]) / self.scale[None, :, None]
         if not np.isfinite(result).all():
-            raise ValueError("standardized sequence contains nonfinite values")
+            raise ValueError("Chuỗi đã chuẩn hóa chứa giá trị không hữu hạn")
         return result.astype("float32", copy=False)
 
 
 def fit_scaler(values: np.ndarray, metadata: pd.DataFrame, engine_ids: set[int]) -> SensorScaler:
-    """Fit sensor statistics using only the requested engines."""
+    """Fit thống kê sensor chỉ trên các động cơ được chỉ định."""
     mask = metadata["engine_id"].isin(engine_ids).to_numpy()
     if not mask.any():
-        raise ValueError("scaler fitting engines are absent")
+        raise ValueError("Thiếu động cơ fit scaler")
     selected = np.asarray(values[mask], dtype="float64")
     mean = selected.transpose(1, 0, 2).reshape(len(SENSORS), -1).mean(axis=1)
     scale = selected.transpose(1, 0, 2).reshape(len(SENSORS), -1).std(axis=1)

@@ -16,11 +16,11 @@ from cmapss.modeling.contracts import FOLD_ASSIGNMENT_COLUMNS, MODELING_FEATURE_
 def _validate_train_targets_frame(targets: pd.DataFrame) -> None:
     validate_columns(targets, TRAIN_TARGET_COLUMNS, "modeling train targets")
     if not targets["split"].eq("train").fillna(False).all():
-        raise ContractError("TRAIN_ONLY", "modeling train targets", "targets phải thuộc split train")
+        raise ContractError("TRAIN_ONLY", "nhãn train cho mô hình", "targets phải thuộc split train")
     for column in ("engine_id", "cycle", "rul"):
         validate_integer(targets, column, 0 if column == "rul" else 1, "modeling train targets")
     if targets.duplicated(list(KEY)).any():
-        raise ContractError("MODELING_TARGET_KEYS", "modeling train targets", "trùng khóa target")
+        raise ContractError("MODELING_TARGET_KEYS", "nhãn train cho mô hình", "trùng khóa target")
 
 
 def prepare_modeling_dataset(features: pd.DataFrame, train_targets: pd.DataFrame) -> pd.DataFrame:
@@ -40,8 +40,8 @@ def prepare_modeling_dataset(features: pd.DataFrame, train_targets: pd.DataFrame
         key = joined.loc[missing, list(KEY)].iloc[0].to_dict()
         raise ContractError(
             "MODELING_TARGET_KEYS",
-            "modeling dataset",
-            f"thiếu train RUL cho rolling feature {key}",
+            "dữ liệu mô hình",
+            f"thiếu RUL train cho rolling feature {key}",
         )
     joined = joined.drop(columns=["_merge"])
     return joined.loc[:, list(ROLLING_FEATURE_COLUMNS) + ["rul"]].reset_index(drop=True)

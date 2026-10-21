@@ -1,7 +1,6 @@
-"""Run a grouped nested TCN comparison on raw FD001 sensor sequences.
-
-Trains two arms (uncapped and cap125). Test labels are read only after
-final predictions are written.
+"""
+So sánh TCN nested theo động cơ với hai nhánh không cap/cap125; đọc nhãn test sau khi
+ghi dự đoán cuối.
 """
 
 from __future__ import annotations
@@ -62,7 +61,7 @@ def _metric_frame(frame: pd.DataFrame) -> dict[str, float | int]:
 
 
 def _engine_folds(metadata: pd.DataFrame, *, root: Path, n_splits: int) -> dict[int, int]:
-    """Use the published five-fold assignments when available, else GroupKFold."""
+    """Dùng phân công năm fold công bố nếu có, ngược lại GroupKFold."""
     path = root / "outputs/modeling/tables/fold_assignments.csv"
     engines = sorted(map(int, metadata.engine_id.unique()))
     if n_splits == 5 and path.is_file():
@@ -78,7 +77,7 @@ def _engine_folds(metadata: pd.DataFrame, *, root: Path, n_splits: int) -> dict[
     for fold, (_, validation) in enumerate(splitter.split(rows, groups=groups), start=1):
         mapping.update({int(engine): fold for engine in metadata.iloc[validation].engine_id.unique()})
     if set(mapping) != set(engines):
-        raise ValueError("fold assignment does not cover all engines")
+        raise ValueError("Phân công fold không phủ mọi động cơ")
     return mapping
 
 
@@ -88,10 +87,10 @@ def _inner_select(
     config: TCNConfig,
     candidate_specs: tuple[TCNSpec, ...],
 ) -> tuple[str, list[dict[str, object]]]:
-    """Select the arm using grouped inner trajectory RMSE."""
+    """Chọn nhánh bằng RMSE quỹ đạo inner theo động cơ."""
     fitting = train.metadata[train.metadata.engine_id.isin(fit_ids)].reset_index(drop=True)
     if fitting.engine_id.nunique() < config.inner_splits:
-        raise ValueError("not enough fitting engines for inner GroupKFold")
+        raise ValueError("Không đủ động cơ fit cho inner GroupKFold")
     inner = GroupKFold(n_splits=config.inner_splits)
     values = train.values[train.metadata.engine_id.isin(fit_ids).to_numpy()]
     rows: list[dict[str, object]] = []
@@ -145,16 +144,16 @@ def run_tcn_comparison(
     config: TCNConfig | None = None,
     evaluate_test: bool = True,
 ) -> dict[str, object]:
-    """Run grouped nested CV, fit final models and report test metrics for both arms."""
+    """Chạy nested cross-validation, fit mô hình cuối và báo cáo metric test cho hai nhánh."""
     root = Path(repo_root).resolve() if repo_root is not None else Path(__file__).resolve().parents[4]
     config = config or TCNConfig()
     output = Path(output_dir)
     output = (root / output).resolve() if not output.is_absolute() else output.resolve()
     allowed = root / "outputs/experiments/tcn_comparison"
     if not output.is_relative_to(allowed):
-        raise ValueError("output must be a descendant of outputs/experiments/tcn_comparison")
+        raise ValueError("Output phải nằm dưới outputs/experiments/tcn_comparison")
     if output.exists() and any(output.iterdir()):
-        raise ValueError(f"refusing to overwrite nonempty output: {output}")
+        raise ValueError(f"Từ chối ghi đè output không rỗng: {output}")
     output.mkdir(parents=True, exist_ok=True)
     observations_path = (root / observations_path).resolve() if not Path(observations_path).is_absolute() else Path(observations_path).resolve()
     targets_path = (root / targets_path).resolve() if not Path(targets_path).is_absolute() else Path(targets_path).resolve()
@@ -212,7 +211,7 @@ def run_tcn_comparison(
     test_endpoints = test.metadata.sort_values(["engine_id", "cycle"], kind="mergesort").groupby(
         "engine_id", sort=True, as_index=False).tail(1).reset_index(drop=True)
     test_mask = test.metadata.index.isin(test_endpoints.index)
-    # ``groupby.tail`` preserves source indices, so use an explicit key merge mask.
+    # groupby.tail giữ chỉ mục nguồn, nên ghép khóa tường minh để tạo mask.
     endpoint_keys = set(zip(test_endpoints.engine_id.astype(int), test_endpoints.cycle.astype(int)))
     test_mask = np.array([(int(engine), int(cycle)) in endpoint_keys
                           for engine, cycle in zip(test.metadata.engine_id, test.metadata.cycle)])

@@ -96,12 +96,12 @@ def evaluate_final_predictions(
     )
     if not joined["_merge"].eq("both").all():
         key = joined.loc[joined["_merge"].ne("both"), ["split", "engine_id"]].iloc[0].to_dict()
-        raise ContractError("FINAL_LABEL_JOIN", "final evaluation", f"thiếu test label cho {key}")
+        raise ContractError("FINAL_LABEL_JOIN", "đánh giá cuối", f"thiếu test label cho {key}")
     expected_engines = int(test_labels["engine_id"].nunique())
     if len(joined) != expected_engines:
         raise ContractError(
             "FINAL_PREDICTION_COUNT",
-            "final predictions",
+            "dự đoán cuối",
             f"cần đúng {expected_engines} test engines theo nhãn đầu vào",
         )
     evaluation = joined.rename(columns={"rul": "y_true", "rul_pred": "y_pred"}).drop(columns=["_merge"])

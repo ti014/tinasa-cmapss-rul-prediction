@@ -3,6 +3,9 @@
 Code mới dùng cmapss.modeling.baseline hoặc module chuyên trách bên trong.
 """
 
+from __future__ import annotations
+
+
 from cmapss.modeling.baseline import (
     ModelingConfig,
     ModelingResult,

@@ -22,12 +22,9 @@ from cmapss.modeling.metrics import add_prediction_errors
 
 
 def low_rul_weights(dataset: pd.DataFrame, scheme: str) -> np.ndarray:
-    """Row weights that sum to one per engine.
-
-    The scheme gives factors for RUL > 30, 16..30 and <= 15, in that order.
-    """
+    """Trọng số tổng bằng một mỗi động cơ; hệ số theo thứ tự RUL >30, 16–30 và <=15."""
     if scheme not in WEIGHT_SCHEMES:
-        raise ValueError(f"unknown weight scheme: {scheme}")
+        raise ValueError(f"Cách gán trọng số chưa biết: {scheme}")
     high, medium, low = WEIGHT_SCHEMES[scheme]
     rul = dataset["rul"].to_numpy(dtype="float64")
     factors = np.where(rul <= 15, low, np.where(rul <= 30, medium, high))
@@ -46,7 +43,7 @@ def _fit_predict(
     fit_threads: int = 4,
 ) -> pd.DataFrame:
     if set(train.engine_id) & set(validation.engine_id):
-        raise ValueError("training and validation engines overlap")
+        raise ValueError("Động cơ train và validation giao nhau")
     identity = hashlib.sha256()
     for frame in (train, validation):
         identity.update(pd.util.hash_pandas_object(frame, index=False).values.tobytes())
@@ -62,7 +59,7 @@ def _fit_predict(
         early_stopping=False,
         random_state=seed,
     )
-    # Total weight per engine is one, so long trajectories do not dominate.
+    # Tổng trọng số mỗi động cơ bằng một để quỹ đạo dài không chi phối.
     weights = low_rul_weights(train, weight_scheme)
     started = time.perf_counter()
     try:

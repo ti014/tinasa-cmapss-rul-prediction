@@ -19,11 +19,11 @@ def engine_total_one_weights(frame: pd.DataFrame) -> np.ndarray:
     Ví dụ engine có 100 dòng thì mỗi dòng nhận ``1/100``.
     """
     if frame.empty or "engine_id" not in frame or frame["engine_id"].isna().any():
-        raise ValueError("engine weights require nonempty rows with engine_id")
+        raise ValueError("Trọng số động cơ cần các dòng không rỗng có engine_id")
     counts = frame.groupby("engine_id", sort=False)["engine_id"].transform("size")
     weights = 1.0 / counts.to_numpy(dtype="float64")
     if not np.isfinite(weights).all() or (weights <= 0).any():
-        raise ValueError("engine weights are not finite and positive")
+        raise ValueError("Trọng số động cơ phải hữu hạn và dương")
     return weights
 
 
@@ -41,14 +41,14 @@ class FittedTree:
         """Dự đoán trên đúng các cột feature đã dùng khi fit."""
         missing = [column for column in self.feature_columns if column not in frame]
         if missing:
-            raise ValueError(f"missing inference features: {missing[:3]}")
+            raise ValueError(f"Thiếu features suy luận: {missing[:3]}")
         values = frame.loc[:, list(self.feature_columns)].to_numpy(dtype="float64")
         if not np.isfinite(values).all():
-            raise ValueError("nonfinite inference features")
+            raise ValueError("Features suy luận không hữu hạn")
         with threadpool_limits(limits=int(self.weight_metadata.get("fit_threads", 1))):
             prediction = np.asarray(self.model.predict(values), dtype="float64")
         if prediction.ndim != 1 or len(prediction) != len(frame) or not np.isfinite(prediction).all():
-            raise ValueError("nonfinite or malformed model predictions")
+            raise ValueError("Dự đoán mô hình không hữu hạn hoặc sai cấu trúc")
         return prediction
 
 
@@ -56,9 +56,9 @@ def _build_xgb(spec: TreeSpec, config: StudyConfig, effective: dict[str, float |
     """Import xgboost khi cần, để chạy HGB không bắt buộc cài xgboost."""
     try:
         from xgboost import XGBRegressor
-    except ImportError as error:  # pragma: no cover - environment-dependent
+    except ImportError as error:  # pragma: no cover - phụ thuộc môi trường
         raise RuntimeError(
-            "XGBoost is required for xgboost candidates; install the pinned dependency"
+            "Ứng viên xgboost cần XGBoost; cài dependency đã chốt phiên bản"
         ) from error
     return XGBRegressor(
         n_estimators=config.xgb_n_estimators,
@@ -83,22 +83,21 @@ def _build_xgb(spec: TreeSpec, config: StudyConfig, effective: dict[str, float |
 def fit_predictor(train: pd.DataFrame, spec: TreeSpec, config: StudyConfig) -> FittedTree:
     """Fit một candidate trên các dòng train.
 
-    Cap chỉ áp vào nhãn khi fit; validation vẫn giữ ``rul`` gốc nên mọi
-    candidate được đo trên cùng thang. Với XGBoost, ``min_child_weight`` và
-    ``reg_lambda`` được nhân với ``n_engines / n_rows`` vì tổng trọng số bằng
-    số engine chứ không bằng số dòng.
+    Cap chỉ áp vào nhãn khi fit; validation vẫn giữ ``rul`` gốc nên mọi candidate được
+    đo trên cùng thang. Với XGBoost, ``min_child_weight`` và ``reg_lambda`` được nhân
+    với ``n_engines / n_rows`` vì tổng trọng số bằng số engine chứ không bằng số dòng.
     """
     required = {"engine_id", "rul", *FEATURES}
     missing = sorted(required.difference(train.columns))
     if missing:
-        raise ValueError(f"fitting frame misses required columns: {missing[:5]}")
+        raise ValueError(f"Bảng fit thiếu cột bắt buộc: {missing[:5]}")
     if train.empty or ("split" in train and not train["split"].eq("train").all()):
-        raise ValueError("tree fitting requires nonempty train-only rows")
+        raise ValueError("Fit mô hình cây cần bảng train không rỗng")
     values = train.loc[:, list(FEATURES)]
     matrix = values.to_numpy(dtype="float64")
     raw_y = train["rul"].to_numpy(dtype="float64")
     if not np.isfinite(matrix).all() or not np.isfinite(raw_y).all() or (raw_y < 0).any():
-        raise ValueError("fitting features and raw RUL must be finite, with RUL >= 0")
+        raise ValueError("Features fit và RUL gốc phải hữu hạn, RUL >= 0")
     target = np.minimum(raw_y, spec.target_cap) if spec.target_cap is not None else raw_y
     weights = engine_total_one_weights(train)
     n_rows = len(train)

@@ -1,8 +1,7 @@
-"""Nested CV study on FD001: model ablations plus a tuned warning policy.
-
-Models are selected by MAE at 50/70/90% of each engine's lifetime. Lifetime is
-only used to place these evaluation points, never as a feature. Warning
-policies are tuned on inner predictions and scored on outer engines."""
+"""
+Nghiên cứu FD001 bằng nested cross-validation: chọn mô hình tại 50/70/90% tuổi thọ và
+hiệu chuẩn cảnh báo trên inner OOF; tuổi thọ không là feature.
+"""
 
 from __future__ import annotations
 
@@ -15,7 +14,7 @@ from cmapss.modeling.audit_study.runner import run_audit_study
 
 
 def main(argv: list[str] | None = None) -> None:
-    """Command-line entry point."""
+    """Điểm vào từ dòng lệnh."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--observations", default="outputs/etl/silver/observations.parquet")
     parser.add_argument("--targets", default="outputs/etl/silver/train_targets.parquet")

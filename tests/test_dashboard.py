@@ -31,7 +31,7 @@ def test_format_metric_is_stable() -> None:
 
 
 def test_dashboard_loader_reports_missing_artifact(tmp_path: Path) -> None:
-    with pytest.raises(DashboardDataError, match="Missing dashboard artifact"):
+    with pytest.raises(DashboardDataError, match="Thiếu artifact dashboard"):
         load_dashboard_data(tmp_path)
 
 
@@ -48,7 +48,7 @@ def test_dashboard_loader_reads_persisted_artifacts() -> None:
 
 
 def test_dashboard_loader_rejects_missing_columns() -> None:
-    with pytest.raises(DashboardDataError, match="final_predictions.parquet is missing columns"):
+    with pytest.raises(DashboardDataError, match="final_predictions.parquet thiếu các cột"):
         _require_columns(pd.DataFrame({"engine_id": [1]}), {"engine_id", "cycle"}, "final_predictions.parquet")
 
 

@@ -1,11 +1,8 @@
 """Bước lưu trữ phân tán: đưa raw FD001 lên HDFS, chạy MapReduce và Spark trên HDFS.
 
-Ví dụ chạy từ thư mục gốc repository (cần Docker đang chạy)::
-
-    uv run --frozen python -m cmapss.hdfs
-
-Kết quả của hai job được so với bảng Gold ``engine_summary`` mà ETL Pandas đã ghi;
-ba cách tính phải khớp tuyệt đối.
+Ví dụ chạy từ thư mục gốc repository (cần Docker đang chạy):: uv run --frozen python -m
+cmapss.hdfs Kết quả của hai job được so với bảng Gold ``engine_summary`` mà ETL Pandas
+đã ghi; ba cách tính phải khớp tuyệt đối.
 """
 
 from __future__ import annotations

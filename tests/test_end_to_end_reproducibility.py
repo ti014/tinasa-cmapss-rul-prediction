@@ -28,7 +28,7 @@ def test_compare_table_rejects_prediction_drift(tmp_path: Path) -> None:
     pd.DataFrame({"engine_id": [1], "rul_pred": [12.5]}).to_csv(actual, index=False)
     pd.DataFrame({"engine_id": [1], "rul_pred": [12.0]}).to_csv(reference, index=False)
 
-    with pytest.raises(ReproducibilityError, match="Artifact content differs"):
+    with pytest.raises(ReproducibilityError, match="Nội dung artifact khác nhau"):
         compare_table(actual, reference, "csv")
 
 
@@ -36,5 +36,5 @@ def test_end_to_end_requires_fresh_output_root(tmp_path: Path) -> None:
     existing = tmp_path / "already-present"
     existing.mkdir()
 
-    with pytest.raises(ReproducibilityError, match="must not exist"):
+    with pytest.raises(ReproducibilityError, match="không được tồn tại"):
         run_end_to_end(existing, repo_root=Path(__file__).resolve().parents[1])

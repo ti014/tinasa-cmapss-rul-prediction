@@ -28,8 +28,8 @@ class MaintenanceConfig:
 def transform_health_index(fitted: HealthIndexResult, observations: pd.DataFrame) -> pd.DataFrame:
     """Áp dụng scaler, PCA, hướng và chuẩn hóa đã fit trên train cho dữ liệu mới.
 
-    Không fit lại bất kỳ tham số nào trên ``observations``, nên dùng được cho
-    động cơ test mà không rò rỉ thông tin.
+    Không fit lại bất kỳ tham số nào trên ``observations``, nên dùng được cho động cơ
+    test mà không rò rỉ thông tin.
     """
     missing = [c for c in ("engine_id", "cycle", *SENSORS) if c not in observations.columns]
     if missing:
@@ -45,10 +45,10 @@ def transform_health_index(fitted: HealthIndexResult, observations: pd.DataFrame
 def anomaly_status(health_index: pd.DataFrame, config: AnomalyConfig) -> pd.DataFrame:
     """Xác định động cơ đã có dấu hiệu bất thường tính đến cycle cuối quan sát.
 
-    Động cơ ngắn hơn ``baseline_cycles + persistence`` không thể đạt điều kiện
-    báo, nên được ghi ``anomaly_evaluable = False`` thay vì coi là bình thường.
-    Cột ``threshold`` là mức Health Index ứng với ``z = -z_threshold`` của động
-    cơ đó, dùng để vẽ ngưỡng trên biểu đồ.
+    Động cơ ngắn hơn ``baseline_cycles + persistence`` không thể đạt điều kiện báo, nên
+    được ghi ``anomaly_evaluable = False`` thay vì coi là bình thường. Cột ``threshold``
+    là mức Health Index ứng với ``z = -z_threshold`` của động cơ đó, dùng để vẽ ngưỡng
+    trên biểu đồ.
     """
     minimum = config.baseline_cycles + config.persistence
     records = []
@@ -72,13 +72,12 @@ def anomaly_status(health_index: pd.DataFrame, config: AnomalyConfig) -> pd.Data
 def build_schedule(predictions: pd.DataFrame, anomalies: pd.DataFrame, config: MaintenanceConfig) -> pd.DataFrame:
     """Ghép dự đoán RUL và trạng thái bất thường thành lịch bảo trì.
 
-    ``cycles_to_maintenance`` là số cycle còn lại đến khi RUL dự đoán chạm
-    ngưỡng, làm tròn xuống để lịch nghiêng về phía an toàn; bằng 0 khi RUL dự
-    đoán đã không vượt ngưỡng. Trạng thái xét theo thứ tự ưu tiên: cần bảo trì
-    (RUL dự đoán <= ngưỡng), theo dõi tăng cường (đã có bất thường), bình thường.
-
-    ``predictions`` có một dòng mỗi động cơ, ``cycle`` là cycle cuối quan sát.
-    Kết quả sắp theo mức ưu tiên, động cơ cần bảo trì sớm nhất lên đầu.
+    ``cycles_to_maintenance`` là số cycle còn lại đến khi RUL dự đoán chạm ngưỡng, làm
+    tròn xuống để lịch nghiêng về phía an toàn; bằng 0 khi RUL dự đoán đã không vượt
+    ngưỡng. Trạng thái xét theo thứ tự ưu tiên: cần bảo trì (RUL dự đoán <= ngưỡng),
+    theo dõi tăng cường (đã có bất thường), bình thường. ``predictions`` có một dòng mỗi
+    động cơ, ``cycle`` là cycle cuối quan sát. Kết quả sắp theo mức ưu tiên, động cơ cần
+    bảo trì sớm nhất lên đầu.
     """
     required = {"engine_id", "cycle", "rul_pred"}
     if not required.issubset(predictions.columns):
@@ -121,8 +120,8 @@ def build_schedule(predictions: pd.DataFrame, anomalies: pd.DataFrame, config: M
 def evaluate_schedule(schedule: pd.DataFrame, labels: pd.DataFrame, config: MaintenanceConfig) -> tuple[pd.DataFrame, dict]:
     """Đối chiếu lịch bảo trì với RUL thật.
 
-    Trả về bảng chéo trạng thái theo nhóm RUL thật và dict chỉ số tóm tắt
-    (số báo đúng, báo nhầm, MAE của số cycle đến lúc cần bảo trì).
+    Trả về bảng chéo trạng thái theo nhóm RUL thật và dict chỉ số tóm tắt (số báo đúng,
+    báo nhầm, MAE của số cycle đến lúc cần bảo trì).
     """
     threshold = config.rul_threshold
     joined = schedule.merge(labels.loc[:, ["engine_id", "rul"]], on="engine_id", how="left", validate="one_to_one")

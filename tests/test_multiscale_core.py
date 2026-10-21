@@ -28,9 +28,9 @@ def test_exact_three_arms_and_feature_sets():
 
 
 def test_unknown_arm_and_feature_mutation_rejected():
-    with pytest.raises(ValueError, match="unknown"):
+    with pytest.raises(ValueError, match="chưa biết"):
         feature_spec("hgb_unplanned")
-    with pytest.raises(ValueError, match="do not match"):
+    with pytest.raises(ValueError, match="không khớp"):
         replace(feature_specs()[0], feature_columns=BASELINE_FEATURES + ("rul",))
     with pytest.raises(ValueError, match="feature_count"):
         replace(feature_specs()[0], feature_count=170)

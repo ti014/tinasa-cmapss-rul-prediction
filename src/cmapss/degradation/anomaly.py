@@ -14,8 +14,8 @@ from cmapss.data.contracts import ContractError
 class AnomalyConfig:
     """Tham số của quy tắc phát hiện bất thường.
 
-    `persistence` là số cycle liên tiếp phải vượt ngưỡng trước khi báo, để một
-    dao động đơn lẻ không gây báo động.
+    `persistence` là số cycle liên tiếp phải vượt ngưỡng trước khi báo, để một dao động
+    đơn lẻ không gây báo động.
     """
 
     baseline_cycles: int = 30
@@ -26,13 +26,12 @@ class AnomalyConfig:
 def detect_anomalies(health_index: pd.DataFrame, config: AnomalyConfig, *, column: str) -> pd.DataFrame:
     """Tìm cycle đầu tiên Health Index giảm bất thường so với đầu đời.
 
-    Với mỗi động cơ, mean và std của ``column`` trên ``baseline_cycles`` cycle
-    đầu là mức khỏe tham chiếu. ``z_t = (h_t - mean) / std``. Health Index giảm
-    khi động cơ suy giảm, nên cycle t vượt ngưỡng khi ``z_t <= -z_threshold``.
-    Báo bất thường khi điều kiện giữ đủ ``persistence`` cycle liên tiếp.
-
-    Trả về mỗi động cơ một dòng, gồm ``detection_cycle`` (NA nếu không phát hiện)
-    và ``lead_cycles = failure_cycle - detection_cycle``.
+    Với mỗi động cơ, mean và std của ``column`` trên ``baseline_cycles`` cycle đầu là
+    mức khỏe tham chiếu. ``z_t = (h_t - mean) / std``. Health Index giảm khi động cơ suy
+    giảm, nên cycle t vượt ngưỡng khi ``z_t <= -z_threshold``. Báo bất thường khi điều
+    kiện giữ đủ ``persistence`` cycle liên tiếp. Trả về mỗi động cơ một dòng, gồm
+    ``detection_cycle`` (NA nếu không phát hiện) và ``lead_cycles = failure_cycle -
+    detection_cycle``.
     """
     required = {"engine_id", "cycle", column}
     if not required.issubset(health_index.columns):
@@ -89,8 +88,8 @@ def sensitivity_grid(
 
     Không có nhãn bất thường nên không đo trực tiếp được tỷ lệ dương tính giả.
     ``n_early`` đếm động cơ bị báo trong ``early_window`` cycle ngay sau đoạn tham
-    chiếu; báo sớm như vậy thường do dao động, nên dùng làm chỉ báo gián tiếp cho
-    độ nhạy quá mức. ``life_fraction_median`` là trung vị cycle phát hiện / cycle hỏng.
+    chiếu; báo sớm như vậy thường do dao động, nên dùng làm chỉ báo gián tiếp cho độ
+    nhạy quá mức. ``life_fraction_median`` là trung vị cycle phát hiện / cycle hỏng.
     """
     rows = []
     for z_threshold in z_thresholds:

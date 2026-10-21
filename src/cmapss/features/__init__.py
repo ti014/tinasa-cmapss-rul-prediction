@@ -1,4 +1,7 @@
-"""Rolling feature engineering cho FD001."""
+"""Xây dựng rolling features cho FD001."""
+
+from __future__ import annotations
+
 
 from cmapss.features.contracts import (
     FEATURE_SCHEMA_VERSION,

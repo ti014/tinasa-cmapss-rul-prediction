@@ -19,11 +19,10 @@ INFORMATIVE_SENSORS = tuple(
 def ewma_smooth(frame: pd.DataFrame, columns: Sequence[str], *, span: int) -> pd.DataFrame:
     """Làm mượt các cột bằng EWMA, tính riêng từng động cơ theo thứ tự cycle.
 
-    EWMA với ``adjust=False`` chỉ dùng giá trị hiện tại và quá khứ:
-    ``s_t = alpha * x_t + (1 - alpha) * s_{t-1}``, ``alpha = 2 / (span + 1)``.
-    Vì vậy giá trị tại cycle t không nhìn thấy cycle t+1. ``span`` tính bằng cycle.
-
-    Trả về bản sao đã sắp theo engine/cycle, với ``columns`` được thay bằng giá trị làm mượt.
+    EWMA với ``adjust=False`` chỉ dùng giá trị hiện tại và quá khứ: ``s_t = alpha * x_t
+    + (1 - alpha) * s_{t-1}``, ``alpha = 2 / (span + 1)``. Vì vậy giá trị tại cycle t
+    không nhìn thấy cycle t+1. ``span`` tính bằng cycle. Trả về bản sao đã sắp theo
+    engine/cycle, với ``columns`` được thay bằng giá trị làm mượt.
     """
     if span < 1:
         raise ValueError("span phải lớn hơn hoặc bằng 1")
@@ -40,10 +39,10 @@ def ewma_smooth(frame: pd.DataFrame, columns: Sequence[str], *, span: int) -> pd
 def noise_summary(raw: pd.DataFrame, smoothed: pd.DataFrame, columns: Sequence[str]) -> pd.DataFrame:
     """Đo mức dao động ngắn hạn trước và sau làm mượt cho từng sensor.
 
-    Chỉ số dao động là độ lệch chuẩn của sai phân bậc một trong từng động cơ
-    (``x_t - x_{t-1}``). Xu hướng suy giảm thay đổi chậm nên đóng góp rất ít
-    vào sai phân; phần lớn sai phân đến từ dao động giữa các cycle liền kề.
-    ``reduction_pct`` là phần trăm dao động giảm được.
+    Chỉ số dao động là độ lệch chuẩn của sai phân bậc một trong từng động cơ (``x_t -
+    x_{t-1}``). Xu hướng suy giảm thay đổi chậm nên đóng góp rất ít vào sai phân; phần
+    lớn sai phân đến từ dao động giữa các cycle liền kề. ``reduction_pct`` là phần trăm
+    dao động giảm được.
     """
     raw = raw.sort_values(["engine_id", "cycle"], kind="mergesort").reset_index(drop=True)
     smoothed = smoothed.sort_values(["engine_id", "cycle"], kind="mergesort").reset_index(drop=True)

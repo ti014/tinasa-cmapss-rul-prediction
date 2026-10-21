@@ -54,7 +54,7 @@ from cmapss.modeling.metrics import (
 
 def _baseline_replay(predictions: pd.DataFrame, config: AuditStudyConfig,
                      repo_root: Path, output: Path) -> dict[str, Any]:
-    """Check that baseline_fixed reproduces the main pipeline's HGB OOF predictions."""
+    """Kiểm tra baseline_fixed tái tạo đúng dự đoán HGB OOF của pipeline chính."""
     if config.outer_splits != 5 or config.hgb_max_iter != 200 or config.seed != 42:
         result = {"applicable": False, "reason": "reduced/custom dry-run configuration"}
     else:
@@ -76,22 +76,22 @@ def _baseline_replay(predictions: pd.DataFrame, config: AuditStudyConfig,
                   "historical_model": "hist_gradient_boosting", "n_rows": len(joined)}
     _write_json(output / "baseline_replay.json", result)
     if result.get("applicable") and not result.get("passed"):
-        raise ValueError("published baseline OOF replay failed; preserve outputs and inspect before test evaluation")
+        raise ValueError("Tái tạo OOF baseline công bố thất bại; giữ output và kiểm tra trước khi đánh giá test")
     return result
 
 
 def _evaluate_test(predictions: pd.DataFrame, labels_path: Path,
                    config: AuditStudyConfig, output: Path,
                    repo_root: Path) -> dict[str, Any]:
-    """Score final test predictions; requires selection.json and final predictions on disk."""
+    """Đánh giá test sau khi selection.json và dự đoán cuối đã được ghi ra đĩa."""
     if not (output / "selection.json").is_file() or not (output / "final_predictions.parquet").is_file():
-        raise ValueError("test labels require saved selection and final predictions")
+        raise ValueError("Chỉ đọc nhãn test sau khi lưu lựa chọn và dự đoán cuối")
     labels = read_test_labels(labels_path)
     joined = predictions.merge(labels.rename(columns={"rul": "y_true"}),
                                on=["split", "engine_id"], how="outer",
                                validate="one_to_one", indicator=True)
     if not joined._merge.eq("both").all():
-        raise ValueError("final-test prediction and label engines differ")
+        raise ValueError("Động cơ trong dự đoán test cuối và nhãn không khớp")
     evaluation = add_prediction_errors(joined.drop(columns="_merge")
                                        .rename(columns={"rul_pred": "y_pred"}))
     _write_parquet(evaluation, output / "final_evaluation.parquet")
@@ -110,7 +110,7 @@ def _evaluate_test(predictions: pd.DataFrame, labels_path: Path,
         suffixes=("_old", "_new"),
     )
     if not pair._merge.eq("both").all() or not np.array_equal(pair.y_true_old, pair.y_true_new):
-        raise ValueError("test comparison baseline keys or raw truth differ")
+        raise ValueError("Khóa hoặc nhãn gốc baseline đối chiếu test không khớp")
     pair = pair.sort_values("engine_id").set_index("engine_id")
     baseline = pd.DataFrame({"test_endpoint_mae": pair.absolute_error_old,
                              "test_endpoint_nasa": pair.nasa_score_component_old})
@@ -132,11 +132,9 @@ def run_audit_study(
     config: AuditStudyConfig | None = None,
     evaluate_test: bool = True,
 ) -> dict[str, Any]:
-    """Run the full study and return the run summary.
-
-    Relative paths are resolved against ``repo_root``. ``output_dir`` must be
-    under ``outputs/experiments/audit_remediation``. Test labels are read only
-    after the final selection and test predictions are saved.
+    """
+    Chạy nghiên cứu dưới outputs/experiments/audit_remediation; đường dẫn theo
+    repo_root, nhãn test đọc sau khi lưu lựa chọn và dự đoán cuối.
     """
     started = time.perf_counter()
     root = Path(repo_root).resolve() if repo_root is not None else Path(__file__).resolve().parents[4]
@@ -148,7 +146,7 @@ def run_audit_study(
     targets_path = resolve(targets_path)
     labels_path = resolve(test_labels_path)
     output = resolve(output_dir)
-    _relative(labels_path, root)  # Labels must be inside the repo.
+    _relative(labels_path, root)  # Nhãn phải nằm trong repository.
     manifest, identity = _initialize_run(output, root, (observations_path, targets_path), config)
     observations = pd.read_parquet(observations_path)
     targets = pd.read_parquet(targets_path)
@@ -156,21 +154,21 @@ def run_audit_study(
     test_observations = observations[observations.split.eq("test")].copy()
     validate_train_targets(train_observations, targets)
     if set(observations.split) != {"train", "test"}:
-        raise ValueError("study observations must have exactly train and test splits")
+        raise ValueError("Observations nghiên cứu phải có đúng split train và test")
     features = build_study_features(observations)
     train = features[features.split.eq("train")].merge(
         targets, on=list(KEY), how="left", validate="one_to_one",
     ).sort_values(["engine_id", "cycle"], kind="mergesort").reset_index(drop=True)
     if train.rul.isna().any():
-        raise ValueError("window features lack raw train labels")
+        raise ValueError("Features window thiếu nhãn train gốc")
     test_features = features[features.split.eq("test")]
     final_test = test_features.sort_values(["engine_id", "cycle"]).groupby(
         "engine_id", sort=True, as_index=False).tail(1).reset_index(drop=True)
     if final_test.engine_id.nunique() != test_observations.engine_id.nunique():
-        raise ValueError("test engine lacks the required30-cycle prefix")
+        raise ValueError("Động cơ test thiếu prefix 30 cycle cần thiết")
     expected_train = len(train_observations) - 29 * train_observations.engine_id.nunique()
     if len(train) != expected_train:
-        raise ValueError("train window count differs from complete window30 boundary")
+        raise ValueError("Số window train khác mốc window 30 đầy đủ")
     boundaries = {
         "raw_observations": len(observations), "raw_train_rows": len(train_observations),
         "raw_test_rows": len(test_observations), "invalid_raw_rows_removed": 0,
@@ -220,7 +218,7 @@ def run_audit_study(
             events = warning_events(predictions, policy, lead_requirement=config.lead_requirement)
             all_events.append(events.assign(procedure=procedure, outer_fold=fold,
                                              candidate_id=predictions.candidate_id.iloc[0]))
-        # Checkpoint after each outer fold; a resume rebuilds them from the fit cache.
+        # Lưu checkpoint sau mỗi outer fold; resume dựng lại từ fit-cache.
         _write_parquet(pd.concat(all_predictions, ignore_index=True), output / "outer_predictions.parquet")
         _write_parquet(pd.concat(all_events, ignore_index=True), output / "warning_events.parquet")
         pd.concat(inner_tables, ignore_index=True).to_csv(output / "inner_candidate_metrics.csv", index=False)
@@ -271,7 +269,7 @@ def run_audit_study(
     metrics = _evaluate_test(final_predictions, labels_path, config, output, root) if evaluate_test else None
     current_baseline = {name: _sha256(root / name) for name in BASELINE_FILES}
     if current_baseline != manifest["identity"]["baseline_sha256"]:
-        raise ValueError("historical baseline changed during study")
+        raise ValueError("Baseline lịch sử đã đổi trong lúc nghiên cứu")
     current_sources = {name: _sha256(root / name) for name in manifest["identity"]["source_sha256"]}
     fit_metadata = [json.loads(path.read_text(encoding="utf-8")) for path in (output / "fit_cache").glob("*.json")]
     summary = {

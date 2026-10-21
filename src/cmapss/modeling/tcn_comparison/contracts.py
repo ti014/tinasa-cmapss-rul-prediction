@@ -1,4 +1,4 @@
-"""Config and candidate specs for the TCN comparison."""
+"""Cấu hình và đặc tả ứng viên so sánh TCN."""
 
 from __future__ import annotations
 
@@ -12,10 +12,7 @@ Family = Literal["tcn_uncapped", "tcn_cap125"]
 
 @dataclass(frozen=True)
 class TCNConfig:
-    """Configuration for the causal residual TCN study.
-
-    Defaults (4 blocks, 32 channels) are small enough to train on CPU.
-    """
+    """Cấu hình TCN residual chỉ dùng quá khứ; mặc định bốn block, 32 kênh đủ nhỏ để chạy CPU."""
 
     sequence_length: int = 30
     channels: int = 32
@@ -38,31 +35,30 @@ class TCNConfig:
                     self.epochs, self.batch_size, self.outer_splits,
                     self.inner_splits, self.fit_threads, self.bootstrap_resamples)
         if any(isinstance(value, bool) or value < 1 for value in positive):
-            raise ValueError("TCN sizes, splits and budgets must be positive")
+            raise ValueError("Kích thước, số fold và ngân sách TCN phải dương")
         if not self.dilations or any(value < 1 for value in self.dilations):
-            raise ValueError("dilations must be positive")
+            raise ValueError("dilations phải dương")
         if self.dropout < 0 or self.dropout >= 1:
-            raise ValueError("dropout must be in [0, 1)")
+            raise ValueError("dropout phải thuộc [0, 1)")
         if self.learning_rate <= 0 or self.weight_decay < 0:
-            raise ValueError("optimizer parameters are invalid")
+            raise ValueError("Tham số optimizer không hợp lệ")
         if (not self.endpoint_fractions
                 or tuple(sorted(set(self.endpoint_fractions))) != self.endpoint_fractions
                 or any(not 0 < value < 1 for value in self.endpoint_fractions)):
-            raise ValueError("endpoint fractions must be unique and inside (0, 1)")
+            raise ValueError("Tỷ lệ endpoint phải duy nhất và thuộc (0, 1)")
 
     @property
     def scientific(self) -> bool:
-        """Always False: the TCN runner is exploratory.
-
-        It has no matched endpoint panel, warning-policy checks or model
-        receipts, so its results are never eligible for promotion.
+        """
+        Luôn False: TCN chỉ để thăm dò, thiếu endpoint ghép cặp, kiểm tra chính sách và
+        biên nhận mô hình để được chấp nhận.
         """
         return False
 
 
 @dataclass(frozen=True)
 class TCNSpec:
-    """One target-label treatment (uncapped or capped at 125)."""
+    """Một cách xử lý nhãn: không RUL cap hoặc RUL cap 125."""
 
     candidate_id: str
     family: Family
@@ -70,14 +66,14 @@ class TCNSpec:
 
     def __post_init__(self) -> None:
         if self.family not in {"tcn_uncapped", "tcn_cap125"}:
-            raise ValueError(f"unknown TCN family: {self.family}")
+            raise ValueError(f"Họ TCN chưa biết: {self.family}")
         expected = 125 if self.family.endswith("cap125") else None
         if self.target_cap != expected:
-            raise ValueError("family and target cap do not match")
+            raise ValueError("family và target cap không khớp")
 
 
 def specs() -> tuple[TCNSpec, ...]:
-    """Return the two TCN arms."""
+    """Trả hai nhánh TCN."""
     return (TCNSpec("tcn_uncapped", "tcn_uncapped", None),
             TCNSpec("tcn_cap125", "tcn_cap125", 125))
 

@@ -66,7 +66,7 @@ def test_pairs_are_canonical_and_independent_of_input_row_order() -> None:
     [
         (_train_observations(((7, 59, 0.0),)), "PAIR_WINDOW", "engine_id=7"),
         (_train_observations(((8, 60, 0.0),)).assign(cycle=lambda frame: frame["cycle"] + 1), "CYCLE_START", "engine_id=8"),
-        (_train_observations(((9, 60, 0.0),)).assign(split="test"), "TRAIN_ONLY", "paired sensor analysis"),
+        (_train_observations(((9, 60, 0.0),)).assign(split="test"), "TRAIN_ONLY", "phân tích sensor ghép cặp"),
         (
             pd.concat(
                 [
@@ -76,7 +76,7 @@ def test_pairs_are_canonical_and_independent_of_input_row_order() -> None:
                 ignore_index=True,
             ),
             "TRAIN_ONLY",
-            "paired sensor analysis",
+            "phân tích sensor ghép cặp",
         ),
     ],
 )

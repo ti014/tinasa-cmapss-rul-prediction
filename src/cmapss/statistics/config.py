@@ -1,5 +1,8 @@
 """Cấu hình và trạng thái dùng chung cho suy luận sensor FD001."""
 
+from __future__ import annotations
+
+
 from dataclasses import dataclass
 
 from cmapss.data.contracts import ContractError, SENSORS

@@ -1,4 +1,4 @@
-"""Rebuild the FD001 artifact chain and compare it with the checked-in run."""
+"""Tái tạo chuỗi artifact FD001 rồi so với kết quả đã lưu trong repository."""
 
 from __future__ import annotations
 
@@ -46,7 +46,7 @@ FIGURES = (
 
 
 class ReproducibilityError(RuntimeError):
-    """A stage failed or regenerated data did not match the reference run."""
+    """Báo lỗi khi stage thất bại hoặc dữ liệu tái tạo khác kết quả tham chiếu."""
 
 
 def _hash(path: Path) -> str:
@@ -59,12 +59,12 @@ def _hash(path: Path) -> str:
 
 def _read_table(path: Path, kind: str) -> pd.DataFrame:
     if not path.is_file():
-        raise ReproducibilityError(f"Missing artifact: {path}")
+        raise ReproducibilityError(f"Thiếu artifact: {path}")
     return pd.read_parquet(path) if kind == "parquet" else pd.read_csv(path)
 
 
 def compare_table(actual: Path, reference: Path, kind: str) -> dict[str, Any]:
-    """Compare table content, including keys and numeric values, in row order."""
+    """So sánh nội dung bảng theo thứ tự dòng, gồm khóa và giá trị số."""
 
     left = _read_table(actual, kind)
     right = _read_table(reference, kind)
@@ -78,7 +78,7 @@ def compare_table(actual: Path, reference: Path, kind: str) -> dict[str, Any]:
             atol=1e-9,
         )
     except AssertionError as exc:
-        raise ReproducibilityError(f"Artifact content differs: {actual}: {exc}") from exc
+        raise ReproducibilityError(f"Nội dung artifact khác nhau: {actual}: {exc}") from exc
     return {
         "rows": len(left),
         "columns": len(left.columns),
@@ -91,21 +91,21 @@ def compare_table(actual: Path, reference: Path, kind: str) -> dict[str, Any]:
 def _compare_nested_numbers(actual: Any, reference: Any, name: str) -> None:
     if isinstance(reference, dict):
         if not isinstance(actual, dict) or actual.keys() != reference.keys():
-            raise ReproducibilityError(f"Metric structure differs: {name}")
+            raise ReproducibilityError(f"Cấu trúc metric khác nhau: {name}")
         for key, value in reference.items():
             _compare_nested_numbers(actual[key], value, f"{name}.{key}")
     elif isinstance(reference, (int, float)) and not isinstance(reference, bool):
         if not isinstance(actual, (int, float)) or not np.isclose(
             actual, reference, rtol=1e-9, atol=1e-9, equal_nan=True
         ):
-            raise ReproducibilityError(f"Metric differs: {name}: {actual} != {reference}")
+            raise ReproducibilityError(f"Metric khác nhau: {name}: {actual} != {reference}")
     elif actual != reference:
-        raise ReproducibilityError(f"Metric differs: {name}: {actual} != {reference}")
+        raise ReproducibilityError(f"Metric khác nhau: {name}: {actual} != {reference}")
 
 
 def _read_json(path: Path) -> dict[str, Any]:
     if not path.is_file():
-        raise ReproducibilityError(f"Missing artifact: {path}")
+        raise ReproducibilityError(f"Thiếu artifact: {path}")
     return json.loads(path.read_text(encoding="utf-8"))
 
 
@@ -114,11 +114,11 @@ def _run_stage(name: str, arguments: list[str], cwd: Path) -> None:
     print(f"RUN {name}", flush=True)
     completed = subprocess.run(command, cwd=cwd, check=False)
     if completed.returncode != 0:
-        raise ReproducibilityError(f"Stage {name} exited with code {completed.returncode}")
+        raise ReproducibilityError(f"Stage {name} kết thúc với mã {completed.returncode}")
 
 
 def validate_rebuilt_outputs(output_root: Path, reference_root: Path, raw_dir: Path) -> dict[str, Any]:
-    """Validate data, evaluation metrics, figures and dashboard loading."""
+    """Kiểm tra dữ liệu, metric đánh giá, hình và khả năng đọc của dashboard."""
 
     output_dir = output_root / "outputs"
     reference_dir = reference_root / "outputs"
@@ -137,25 +137,25 @@ def validate_rebuilt_outputs(output_root: Path, reference_root: Path, raw_dir: P
     model_run = _read_json(output_dir / "modeling/run_info.json")
     reference_model_run = _read_json(reference_dir / "modeling/run_info.json")
     if model_run["selected_model"] != reference_model_run["selected_model"]:
-        raise ReproducibilityError("Selected RUL model differs from reference")
+        raise ReproducibilityError("Mô hình RUL được chọn khác tham chiếu")
     if model_run["test_label_join"]["status"] != "completed_after_final_predictions":
-        raise ReproducibilityError("Final label join was not recorded after predictions")
+        raise ReproducibilityError("Chưa ghi nhận ghép nhãn cuối sau khi ghi dự đoán")
     warning_summary = _read_json(output_dir / "modeling/tables/warning_summary.json")
     reference_warning_summary = _read_json(reference_dir / "modeling/tables/warning_summary.json")
     _compare_nested_numbers(warning_summary, reference_warning_summary, "warning.summary")
     if warning_summary["split"] != "train_oof" or warning_summary["n_engines"] != 100:
-        raise ReproducibilityError("Early-warning artifact is not a 100-engine train OOF summary")
+        raise ReproducibilityError("Artifact cảnh báo sớm không phải tóm tắt OOF train của 100 động cơ")
     time_run = _read_json(output_dir / "timeseries/run_info.json")
     if time_run["isolation"]["uses_test_labels"] or time_run["isolation"]["uses_test_observations"]:
-        raise ReproducibilityError("PCA--ARIMA isolation contract failed")
+        raise ReproducibilityError("Vi phạm contract cô lập PCA–ARIMA")
     figure_results = {}
     for name in FIGURES:
         path = output_dir / name
         if not path.is_file() or path.stat().st_size == 0:
-            raise ReproducibilityError(f"Missing or empty figure: {path}")
+            raise ReproducibilityError(f"Hình bị thiếu hoặc rỗng: {path}")
         reference_path = reference_dir / name
         if not reference_path.is_file() or _hash(path) != _hash(reference_path):
-            raise ReproducibilityError(f"Figure bytes differ: {path}")
+            raise ReproducibilityError(f"Nội dung byte của hình khác nhau: {path}")
         figure_results[name] = {
             "bytes": path.stat().st_size,
             "sha256": _hash(path),
@@ -167,15 +167,15 @@ def validate_rebuilt_outputs(output_root: Path, reference_root: Path, raw_dir: P
 
     dashboard = load_dashboard_data(output_root)
     if len(dashboard.model_evaluation) != 100 or len(dashboard.forecasts) != 704:
-        raise ReproducibilityError("Dashboard did not load the expected engine/forecast counts")
+        raise ReproducibilityError("Dashboard không đọc được đúng số động cơ/dòng dự báo dự kiến")
 
     raw_hashes = {name: _hash(raw_dir / name) for name in ("train_FD001.txt", "test_FD001.txt", "RUL_FD001.txt")}
     reference_etl = _read_json(reference_dir / "etl/run_info.json")
     for name in ("train_FD001.txt", "test_FD001.txt"):
         if raw_hashes[name] != reference_etl["input_sha256"][name]:
-            raise ReproducibilityError(f"Raw file hash differs from reference: {name}")
+            raise ReproducibilityError(f"Hash file raw khác tham chiếu: {name}")
     if raw_hashes["RUL_FD001.txt"] != reference_metrics["test_label_sha256"]:
-        raise ReproducibilityError("Raw test label hash differs from reference")
+        raise ReproducibilityError("Hash nhãn raw test khác tham chiếu")
 
     return {
         "status": "passed",
@@ -203,18 +203,18 @@ def run_end_to_end(
     repo_root: str | Path,
     evidence_path: str | Path | None = None,
 ) -> dict[str, Any]:
-    """Run the FD001 scientific path in a fresh, isolated output directory."""
+    """Chạy pipeline khoa học FD001 trong thư mục output mới, tách biệt."""
 
     repository = Path(repo_root).resolve()
     target = Path(output_root).resolve()
     raw = repository / "data/raw"
     if target.exists():
-        raise ReproducibilityError(f"Output root must not exist for a fresh run: {target}")
+        raise ReproducibilityError(f"Thư mục output của lần chạy mới không được tồn tại trước: {target}")
     if target == repository or target == raw or raw in target.parents:
-        raise ReproducibilityError("Output root must be outside the repository raw data directory")
+        raise ReproducibilityError("Thư mục output phải nằm ngoài thư mục dữ liệu raw của repository")
     for name in ("train_FD001.txt", "test_FD001.txt", "RUL_FD001.txt"):
         if not (raw / name).is_file():
-            raise ReproducibilityError(f"Missing raw input: {raw / name}")
+            raise ReproducibilityError(f"Thiếu đầu vào raw: {raw / name}")
     before_hashes = {name: _hash(raw / name) for name in ("train_FD001.txt", "test_FD001.txt", "RUL_FD001.txt")}
     target.mkdir(parents=True)
     outputs = target / "outputs"
@@ -250,7 +250,7 @@ def run_end_to_end(
     result = validate_rebuilt_outputs(target, repository, raw)
     after_hashes = {name: _hash(raw / name) for name in before_hashes}
     if before_hashes != after_hashes:
-        raise ReproducibilityError("Raw FD001 inputs changed during end-to-end run")
+        raise ReproducibilityError("Đầu vào raw FD001 đã đổi trong lần chạy end-to-end")
     result["raw_immutable"] = True
     validation_path = target / "validation.json"
     validation_path.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

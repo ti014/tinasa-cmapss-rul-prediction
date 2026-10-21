@@ -9,7 +9,7 @@ from cmapss.features.enhanced import FeatureRecipe
 
 @dataclass(frozen=True)
 class StudyConfig:
-    """Nested CV settings, recorded in the study manifest."""
+    """Cấu hình nested cross-validation được ghi trong manifest nghiên cứu."""
 
     outer_splits: int = 5
     inner_splits: int = 3
@@ -20,13 +20,13 @@ class StudyConfig:
 
     def __post_init__(self) -> None:
         if min(self.outer_splits, self.inner_splits) < 2:
-            raise ValueError("At least two inner and outer folds are required")
+            raise ValueError("Cần ít nhất hai inner fold và hai outer fold")
         if min(self.bootstrap_resamples, self.fit_threads, self.max_iter) < 1:
-            raise ValueError("Resamples, threads and iterations must be positive")
+            raise ValueError("Số lượt lấy mẫu, luồng và vòng lặp phải dương")
 
 
 def study_candidates(dataset_id: str) -> tuple[FeatureRecipe, ...]:
-    """Fixed candidate list for a dataset."""
+    """Danh sách ứng viên cố định của một dataset."""
     if dataset_id == "FD001":
         return tuple(
             FeatureRecipe(
@@ -38,7 +38,7 @@ def study_candidates(dataset_id: str) -> tuple[FeatureRecipe, ...]:
             for cap in (None, 110, 125, 140)
         )
     if dataset_id not in {"FD002", "FD004"}:
-        raise ValueError("The predeclared study covers FD001, FD002 and FD004")
+        raise ValueError("Nghiên cứu đã chốt chỉ gồm FD001, FD002 và FD004")
     return (
         FeatureRecipe("baseline", window=10),
         FeatureRecipe("raw_settings", window=10, settings=True),

@@ -17,7 +17,7 @@ from cmapss.modeling.metrics import add_prediction_errors
 
 
 def _metrics(predictions: pd.DataFrame, threshold: int) -> dict[str, Any]:
-    """Error and warning metrics used for candidate selection."""
+    """Metric sai số và cảnh báo dùng để chọn ứng viên."""
     scored = add_prediction_errors(predictions)
     engine_mae = scored.groupby("engine_id", sort=True)["absolute_error"].mean()
     low = scored.loc[scored["y_true"].le(threshold)]
@@ -52,7 +52,7 @@ def _metrics(predictions: pd.DataFrame, threshold: int) -> dict[str, Any]:
 
 def _aggregate_prediction_metrics(predictions: list[pd.DataFrame], threshold: int) -> dict[str, Any]:
     if not predictions:
-        raise ValueError("no predictions to aggregate")
+        raise ValueError("Không có dự đoán để tổng hợp")
     return _metrics(pd.concat(predictions, ignore_index=True), threshold)
 
 
@@ -92,7 +92,7 @@ def _evaluate_candidate(
 
 
 def _select_candidate(records: list[dict[str, Any]], baseline: dict[str, Any]) -> int:
-    """Pick the lowest low-RUL MAE among candidates no worse than baseline on the controls."""
+    """Chọn MAE vùng RUL thấp nhỏ nhất trong các ứng viên không kém baseline ở chỉ số kiểm soát."""
     eligible = []
     for index, record in enumerate(records):
         controls = (

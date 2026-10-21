@@ -1,4 +1,7 @@
-"""HGB multi-scale feature ablation study."""
+"""Nghiên cứu ablation features HGB đa thang thời gian."""
+
+from __future__ import annotations
+
 
 from .config import StudyConfig
 from .contracts import (

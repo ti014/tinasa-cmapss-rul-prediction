@@ -1,5 +1,8 @@
 """Tạo nhãn train RUL từ lịch sử run-to-failure, không đọc file nhãn test."""
 
+from __future__ import annotations
+
+
 import pandas as pd
 
 from cmapss.data.contracts import KEY, TRAIN_TARGET_COLUMNS, ContractError
@@ -13,7 +16,7 @@ from cmapss.data.validation import (
 def _validate_train(observations: pd.DataFrame) -> None:
     validate_observations(observations)
     if not observations["split"].eq("train").all():
-        raise ContractError("TRAIN_ONLY", "train RUL", "không áp dụng max_cycle - cycle cho test")
+        raise ContractError("TRAIN_ONLY", "RUL train", "không áp dụng max_cycle - cycle cho test")
 
 
 def make_train_targets(observations: pd.DataFrame) -> pd.DataFrame:
@@ -33,12 +36,12 @@ def validate_train_targets(observations: pd.DataFrame, targets: pd.DataFrame) ->
     _validate_train(observations)
     validate_columns(targets, TRAIN_TARGET_COLUMNS, "train targets")
     if not targets["split"].eq("train").fillna(False).all():
-        raise ContractError("TRAIN_ONLY", "train targets", "targets phải thuộc split train")
+        raise ContractError("TRAIN_ONLY", "nhãn train", "targets phải thuộc split train")
     validate_integer(targets, "engine_id", 1, "train targets")
     validate_integer(targets, "cycle", 1, "train targets")
     validate_integer(targets, "rul", 0, "train targets")
     if targets.duplicated(list(KEY)).any():
-        raise ContractError("UNIQUE_KEY", "train targets", "trùng khóa observation")
+        raise ContractError("UNIQUE_KEY", "nhãn train", "trùng khóa observation")
     joined = observations.loc[:, list(KEY)].merge(
         targets,
         on=list(KEY),
@@ -47,10 +50,10 @@ def validate_train_targets(observations: pd.DataFrame, targets: pd.DataFrame) ->
         validate="one_to_one",
     )
     if not joined["_merge"].eq("both").all():
-        raise ContractError("TARGET_KEYS", "train targets", "khóa targets phải khớp toàn bộ observations")
+        raise ContractError("TARGET_KEYS", "nhãn train", "khóa targets phải khớp toàn bộ observations")
     last_cycle = joined.groupby("engine_id")["cycle"].transform("max")
     expected_rul = last_cycle - joined["cycle"]
     incorrect = joined["rul"].ne(expected_rul)
     if incorrect.any():
         key = joined.loc[incorrect, list(KEY)].iloc[0].to_dict()
-        raise ContractError("TRAIN_RUL", "train targets", f"RUL không bằng max_cycle - cycle tại {key}")
+        raise ContractError("TRAIN_RUL", "nhãn train", f"RUL không bằng max_cycle - cycle tại {key}")

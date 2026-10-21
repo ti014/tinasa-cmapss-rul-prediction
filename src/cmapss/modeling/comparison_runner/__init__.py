@@ -3,6 +3,9 @@
 Giữ đường dẫn import của class để nạp artifact đã lưu trước khi tách package.
 """
 
+from __future__ import annotations
+
+
 from cmapss.modeling.comparison_runner.artifact_io import (
     _sha,
     _read_json,

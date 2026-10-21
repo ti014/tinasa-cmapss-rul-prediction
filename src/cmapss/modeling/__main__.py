@@ -1,4 +1,7 @@
-"""Entry point `python -m cmapss.modeling`."""
+"""Điểm vào của python -m cmapss.modeling."""
+
+from __future__ import annotations
+
 
 from cmapss.modeling.baseline.cli import main
 

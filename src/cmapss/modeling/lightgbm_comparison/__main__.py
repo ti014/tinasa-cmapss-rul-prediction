@@ -1,4 +1,7 @@
-"""Entry point for ``python -m cmapss.modeling.lightgbm_comparison``."""
+"""Điểm vào của python -m cmapss.modeling.lightgbm_comparison."""
+
+from __future__ import annotations
+
 
 from cmapss.modeling.lightgbm_comparison.runner import main
 

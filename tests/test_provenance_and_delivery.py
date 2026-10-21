@@ -30,7 +30,7 @@ def test_historical_snapshot_survives_current_edits_but_rejects_tampering(tmp_pa
     proof = verify_source_snapshot(run, manifest, tmp_path)
     assert proof["recorded_source_verified"] and not proof["working_tree_matches_recorded_source"]
     (archive / "module.py").write_bytes(b"tampered")
-    with pytest.raises(ValueError, match="checksum mismatch"):
+    with pytest.raises(ValueError, match="(?i)checksum.*không khớp"):
         verify_source_snapshot(run, manifest, tmp_path)
 
 

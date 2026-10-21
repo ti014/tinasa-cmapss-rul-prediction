@@ -2,10 +2,8 @@
 
 Học viên: Phan Nguyễn Mai Phương · MSHV 25002711.
 
-Deck gồm 20 slide theo thứ tự rubric: bài toán và dữ liệu → pipeline dữ liệu →
-khử nhiễu và cửa sổ thời gian → xu hướng và bất thường → dự đoán RUL và cảnh
-báo → mở rộng và kết luận. Mọi số liệu đọc từ artifact đã nghiệm thu; script
-không huấn luyện lại mô hình.
+Deck gồm 14 slide chính theo câu chuyện bảo trì, sau đó là các slide dự phòng.
+Mọi số liệu đọc từ artifact đã nghiệm thu; script không huấn luyện lại mô hình.
 
 Chạy từ thư mục gốc repository:
 
@@ -41,6 +39,7 @@ TOTAL = 20
 
 D = json.loads((ROOT / "slides/slide_data.json").read_text(encoding="utf-8"))
 DEG = D["degradation"]
+BENCH = D["benchmark_scaling"]["summary"]
 NOISE = {row["sensor"]: row for row in D["noise_summary"]}
 
 # Màu lấy từ template IUH: xanh thương hiệu và vàng của đường viền footer.
@@ -49,12 +48,12 @@ INK, SLATE, LINE = "1B2733", "5A6B7B", "C9D2E3"
 TINT, GOLD_TINT, WHITE, ICE = "EAF0FA", "FFF4DA", "FFFFFF", "C9D6F0"
 RED, TEAL = COLORS["red"].lstrip("#"), COLORS["teal"].lstrip("#")
 PARTS = [
-    "Bài toán và dữ liệu",
-    "Pipeline dữ liệu",
-    "Khử nhiễu và cửa sổ thời gian",
-    "Xu hướng và bất thường",
-    "Dự đoán RUL và cảnh báo",
-    "Mở rộng và kết luận",
+    "Câu hỏi bảo trì",
+    "Dữ liệu và pipeline",
+    "Tín hiệu và đặc trưng",
+    "Suy giảm và bất thường",
+    "RUL, cảnh báo và lịch",
+    "Quy mô, kết luận và giới hạn",
 ]
 
 M, P, A, DG, I = D["modeling"], D["pipeline"], D["alignment"], D["diagnostics"], D["improvement"]
@@ -291,7 +290,7 @@ def content(part: int, n: int, title: str, takeaway: str, source: str, notes: st
     heading.left, heading.top, heading.width, heading.height = Inches(0.92), Inches(1.3), Inches(11.5), Inches(0.62)
     heading.text_frame.word_wrap = True
     heading.text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE
-    heading.text = title
+    heading.text = f"Dự phòng: {title}" if n >= 15 else title
     run = heading.text_frame.paragraphs[0].runs[0]
     run.font.size, run.font.bold, run.font.name = Pt(26), True, FONT
     run.font.color.rgb = rgb(BLUE)
@@ -320,7 +319,7 @@ def slide_cover():
     p.runs[0].font.color.rgb = rgb(BLUE)
     subtitle.left, subtitle.top, subtitle.width, subtitle.height = Inches(1.4), Inches(3.25), Inches(10.5), Inches(1.0)
     # "\v" là ngắt dòng trong cùng đoạn, tránh để PowerPoint ngắt giữa chữ "C-MAPSS".
-    subtitle.text = "Phát hiện bất thường, dự đoán tuổi thọ còn lại (RUL) và cảnh báo sớm\vtrên dữ liệu cảm biến NASA C-MAPSS"
+    subtitle.text = "Từ dữ liệu cảm biến đến quyết định: hôm nay đưa động cơ nào vào xưởng?"
     p = subtitle.text_frame.paragraphs[0]
     p.alignment = PP_ALIGN.CENTER
     for run in p.runs:
@@ -329,10 +328,11 @@ def slide_cover():
     text(slide, 0.92, 1.3, 11.5, 0.4, "BÁO CÁO CUỐI KỲ · PHÂN TÍCH DỮ LIỆU LỚN · ĐỀ TÀI 8", size=14, bold=True,
          color=GOLD_DARK, align=PP_ALIGN.CENTER)
     items = [
-        (str(FD["FD001"]["train_engines"]), "động cơ train FD001"),
-        (f"{vn(DEG['noise_reduction_pct_median'], 0)}%", "dao động giảm nhờ EWMA"),
-        (vn(AN["lead_median"], 0), "cycle báo trước khi hỏng (trung vị)"),
-        (vn(M["final"]["mean_engine_mae"]), "sai số MAE trên tập test (cycle)"),
+        (f"{MNT['evaluation']['n_correct_needs_maintenance']}/{MNT['evaluation']['n_actual_needs_maintenance']}",
+         "test: báo đúng cần bảo trì"),
+        (f"{vn(M['final']['mean_engine_mae'])}", "test: MAE RUL (cycle)"),
+        (f"{vn(DEG['noise_reduction_pct_median'], 0)}%", "giảm dao động sau EWMA"),
+        (f"{vn(P['n_sensors'], 0)}", "sensor mỗi cycle"),
     ]
     for i, (value, label) in enumerate(items):
         x = 1.2 + i * 2.8
@@ -347,9 +347,8 @@ def slide_cover():
         "Thời lượng: 30 giây.\n"
         "Kính chào quý thầy cô. Em là Phan Nguyễn Mai Phương, MSHV 25002711. Đề tài 8: phân tích dữ liệu cảm biến để "
         "phát hiện dấu hiệu bất thường và dự đoán thời điểm cần bảo trì, kèm biểu đồ cảnh báo sớm.\n"
-        f"Bốn con số là khung của bài: 100 động cơ train; làm mượt EWMA giảm khoảng {vn(DEG['noise_reduction_pct_median'], 0)}% "
-        f"dao động ngắn hạn; bất thường được báo trước khi hỏng trung vị {vn(AN['lead_median'], 0)} cycle; sai số tuyệt "
-        f"đối trung bình (MAE) của RUL trên 100 động cơ test là {vn(M['final']['mean_engine_mae'])} cycle."
+        f"Kết quả chính là {MNT['evaluation']['n_correct_needs_maintenance']}/{MNT['evaluation']['n_actual_needs_maintenance']} động cơ test cần bảo trì được báo đúng; "
+        f"MAE test là {vn(M['final']['mean_engine_mae'])} cycle. Các slide sau giải thích cách đi từ {P['n_sensors']} sensor đến lịch này."
     )
 
 
@@ -358,7 +357,7 @@ GOLD_DARK = "B37800"
 
 # ============================================================================ 2. Lộ trình
 def slide_agenda():
-    s = content(1, 2, "Cấu trúc bài trình bày",
+    s = content(1, 15, "Cấu trúc bài trình bày",
                 "Đi theo thứ tự pipeline: chuẩn bị dữ liệu → phân tích tín hiệu → dự đoán → cảnh báo",
                 "report/main.pdf; handoff/SPEECH_SCRIPT_VI.pdf",
                 "Thời lượng: 25 giây.\nĐọc nhanh sáu phần nội dung và phần demo. Thứ tự bám quy trình của môn học: thu "
@@ -393,10 +392,13 @@ def slide_agenda():
 
 # ============================================================================ 3. Bài toán
 def slide_problem():
-    s = content(1, 3, "Phát biểu bài toán",
-                "Phát hiện dấu hiệu suy giảm và dự đoán thời điểm bảo trì từ dữ liệu cảm biến; đối chiếu yêu cầu Đề tài 8",
+    ev = MNT["evaluation"]
+    s = content(1, 2, "Mỗi sáng cần biết động cơ nào vào xưởng",
+                f"Tại cycle cuối của 100 động cơ test, hệ thống báo {ev['n_correct_needs_maintenance']} động cơ cần bảo trì ngay và cả {ev['n_correct_needs_maintenance']} đều đúng",
                 "references/context/assignment-brief.png; report/sections/problem-data.tex",
-                "Thời lượng: 45 giây.\nRemaining Useful Life (RUL, tuổi thọ còn lại) là số cycle vận hành còn lại "
+                "Thời lượng: 35 giây.\nNgười dùng là trưởng bộ phận bảo trì, cần biết động cơ nào nên vào xưởng ngay. "
+                f"Tại cycle cuối của {M['n_test_engines']} động cơ test, hệ thống xếp {ev['n_correct_needs_maintenance']} động cơ cần bảo trì ngay và cả {ev['n_correct_needs_maintenance']} đều đúng. "
+                "Đây là kết quả test tại một điểm cuối mỗi chuỗi.\nRemaining Useful Life (RUL, tuổi thọ còn lại) là số cycle vận hành còn lại "
                 "trước khi hỏng. Ví dụ động cơ hỏng ở cycle 200 thì tại cycle 170 có RUL bằng 30. Đơn vị là cycle; dữ liệu "
                 "không quy đổi ra giờ.\nBảng bên phải đối chiếu từng yêu cầu của đề tài với slide trình bày: chuỗi thời gian "
                 "ở slide 6, 9, 10; làm mượt ở slide 9; cửa sổ thời gian ở slide 10; xu hướng ở slide 11; bất thường ở slide "
@@ -417,18 +419,18 @@ def slide_problem():
          "hiệu bất thường, RUL dự đoán và mức cảnh báo.", size=14)
     table(s, [
         ["Yêu cầu của đề tài", "Cách thực hiện", "Slide"],
-        ["Xử lý chuỗi thời gian cảm biến", "Kiểm tra khóa, cycle liên tục; sắp theo động cơ và cycle", "6, 9, 10"],
-        ["Xử lý nhiễu tín hiệu", "Làm mượt EWMA span 10 theo từng động cơ, chỉ dùng quá khứ", "9"],
-        ["Chuẩn hóa, tổng hợp theo cửa sổ", "StandardScaler; cửa sổ 30 cycle → 126 đặc trưng", "10"],
-        ["Phát hiện dấu hiệu bất thường", "Health Index (chỉ số sức khỏe) giảm quá 3σ so với 30 cycle đầu", "12"],
-        ["Trực quan hóa xu hướng suy giảm", "Quỹ đạo sensor, kiểm định đầu/cuối, Health Index", "11, 12"],
-        ["Dự đoán thời điểm bảo trì, cảnh báo sớm", "Lịch bảo trì cho 100 động cơ test; hai mức cảnh báo", "15, 16"],
+        ["Xử lý chuỗi thời gian cảm biến", "Kiểm tra khóa, cycle liên tục; sắp theo động cơ và cycle", "4, 5"],
+        ["Xử lý nhiễu tín hiệu", "Làm mượt EWMA span 10 theo từng động cơ, chỉ dùng quá khứ", "5"],
+        ["Chuẩn hóa, tổng hợp theo cửa sổ", "StandardScaler; window 30 cycle → 126 đặc trưng", "8, 17"],
+        ["Phát hiện dấu hiệu bất thường", "Health Index (chỉ số sức khỏe) giảm quá 3σ so với 30 cycle đầu", "7"],
+        ["Trực quan hóa xu hướng suy giảm", "Quỹ đạo sensor, kiểm định đầu/cuối, Health Index", "6, 7"],
+        ["Dự đoán thời điểm bảo trì, cảnh báo sớm", "Lịch bảo trì cho 100 động cơ test; hai mức cảnh báo", "9, 10"],
     ], 6.55, 2.5, [2.15, 2.95, 0.77], row_h=0.58, size=11.5)
 
 
 # ============================================================================ 4. Dữ liệu
 def slide_data():
-    s = content(1, 4, "Bộ dữ liệu NASA C-MAPSS",
+    s = content(2, 16, "Bộ dữ liệu NASA C-MAPSS",
                 "Chọn NASA Turbofan (C-MAPSS) trong gợi ý của đề vì có chuỗi cảm biến chạy đến khi hỏng của từng động cơ",
                 "data/raw/readme.txt; outputs/cross_dataset/FD00x/etl/run_info.json",
                 "Thời lượng: 50 giây.\nDữ liệu là bộ NASA C-MAPSS, tải trực tiếp từ cổng dữ liệu mở của NASA. Mỗi động cơ "
@@ -463,7 +465,7 @@ def slide_data():
 
 # ============================================================================ 5. Nhãn
 def slide_labels():
-    s = content(1, 5, "Xây dựng nhãn RUL và ranh giới tập test",
+    s = content(1, 15, "Xây dựng nhãn RUL và ranh giới tập test",
                 "Nhãn tập test chỉ được dùng sau khi đã lưu kết quả dự đoán, để tránh rò rỉ dữ liệu (data leakage)",
                 "data/CONTRACTS.md; outputs/modeling/run_info.json; outputs/modeling/tables/final_metrics.json",
                 "Thời lượng: 50 giây.\nTrain: mỗi động cơ chạy đến khi hỏng nên RUL = cycle cuối − cycle hiện tại; FD001 có "
@@ -508,7 +510,7 @@ def slide_labels():
 
 # ============================================================================ 6. Pipeline
 def slide_pipeline():
-    s = content(2, 6, "Kiến trúc pipeline dữ liệu Bronze–Silver–Gold",
+    s = content(1, 3, "Từ sensor đến quyết định bảo trì",
                 "Ba bước chuẩn bị chung, rồi tách hai nhánh: dự đoán RUL và theo dõi tín hiệu",
                 "report/figures/pipeline.pdf; handoff/DATA_WALKTHROUGH.md; outputs/*/run_info.json",
                 "Thời lượng: 55 giây.\nBước 1–3 là phần chuẩn bị chung. Bước 1 tải dữ liệu từ cổng NASA và kiểm tra "
@@ -600,7 +602,7 @@ def slide_pipeline():
 def slide_parity():
     bench = {(r["engine"], int(r["scale"])): r for r in D["stage_benchmark"]}
     pandas10, spark10 = bench[("pandas", 10)]["pipeline_seconds"], bench[("spark", 10)]["pipeline_seconds"]
-    s = content(2, 7, "Đối chiếu Pandas, PySpark và Hadoop",
+    s = content(2, 18, "Đối chiếu Pandas, PySpark và Hadoop",
                 f"Pandas, PySpark và Hadoop cho cùng kết quả; với dữ liệu gấp 10 lần, PySpark nhanh hơn Pandas khoảng {vn(pandas10 / spark10, 1)} lần",
                 "outputs/etl/parity.json; outputs/hdfs/summary.json; outputs/benchmarks/20260929/measurements.csv",
                 "Thời lượng: 55 giây.\nBảng trái: cùng đầu vào, Pandas và PySpark cho cùng schema, khóa, số dòng và giá trị ở "
@@ -635,12 +637,54 @@ def slide_parity():
          size=11, color=SLATE)
 
 
+# ============================================================================ 11. Big data
+def slide_big_data():
+    scaling = D["benchmark_scaling"]
+    summary = scaling["summary"]
+    common = summary["largest_common_scale"]
+    ratio = summary["pandas_over_spark_ratio"]
+    stop = summary["first_pandas_stop_scale"]
+    if common is None:
+        headline = "Benchmark đang chờ đủ lượt chạy; chưa kết luận tốc độ ở quy mô lớn"
+        notes_result = "Chưa có scale mà cả hai engine cùng hoàn tất."
+    else:
+        headline = f"Ở {common}×, Spark tính nhanh hơn Pandas khoảng {vn(ratio, 1)} lần"
+        notes_result = f"Scale lớn nhất mà cả hai cùng hoàn tất là {common}×; tỷ số thời gian Pandas/Spark là {vn(ratio, 1)}."
+    if stop is not None:
+        headline += f"; ở {stop}×, Pandas không xong trong 30 phút"
+    s = content(6, 11, "Dữ liệu lớn cần đo bằng giới hạn thật của máy",
+                headline,
+                "outputs/benchmarks/20261021/compute_only.csv; outputs/benchmarks/20261021/run_info.json",
+                "Thời lượng: 1 phút.\n"
+                f"{notes_result} Mỗi điểm là phần tính toán của một lượt: đọc, tổng hợp và tạo đặc trưng, không gồm ghi file; trên Windows, bước ghi của Spark phải gom về driver và hết heap từ 100×. "
+                "Dấu x là lượt failed hoặc timeout, không phải số đo thành công. RAM của Pandas tăng gần tuyến tính (12,9 GiB ở 100×), nên 200× ước tính cần khoảng 26 GiB, vượt 23,4 GiB của máy; đây là suy luận, chưa đo trực tiếp. Spark là local[4] trên một máy; HDFS và "
+                "MapReduce đã chạy trên Docker một node. Vì vậy hình này chứng minh hành vi khi nhân bản dữ liệu trong "
+                "môi trường hiện tại, chưa phải benchmark cluster nhiều node. Khi trình bày, nhấn mạnh điểm chuyển từ "
+                "một máy sang xử lý phân tán cần được xác định bằng dữ liệu phát sinh và thời hạn phản hồi thực tế.")
+    figure = ROOT / "slides/figures/benchmark_scaling.png"
+    if figure.exists():
+        picture(s, "slides/figures/benchmark_scaling.png", 0.92, 2.45, 8.2, 3.65, align="left")
+    else:
+        rect(s, 0.92, 2.45, 8.2, 3.65, TINT)
+        text(s, 1.2, 3.9, 7.6, 0.8, "Chưa có hình benchmark; chạy slides/slide_figures.py sau khi benchmark hoàn tất.",
+             size=16, color=SLATE, align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
+    rect(s, 9.35, 2.45, 3.07, 3.65, BLUE)
+    text(s, 9.58, 2.68, 2.62, 0.35, "Cách đọc hình", size=15, bold=True, color=GOLD)
+    text(s, 9.58, 3.2, 2.62, 2.4, [
+        [("Đường liền: ", {"bold": True, "color": GOLD}), ("lượt hoàn tất.", {"color": WHITE})],
+        [("Dấu x: ", {"bold": True, "color": GOLD}), ("failed hoặc timeout; không thay bằng số 0.", {"color": WHITE})],
+        [("Phạm vi: ", {"bold": True, "color": GOLD}), ("một máy, local[4], không gồm ghi file.", {"color": WHITE})],
+    ], size=12.5, color=WHITE, space_after=10)
+    text(s, 9.58, 5.35, 2.62, 0.5, "HDFS/MapReduce: Docker một node", size=12, color=ICE)
+
+
 # ============================================================================ 8. EDA
 def slide_eda():
     E = D["eda"]
     life = E["lifetime"]
-    s = content(2, 8, "Phân tích khám phá dữ liệu",
-                "Tuổi thọ động cơ từ 128 đến 362 cycle; bảy cột không đổi trên toàn bộ tập train",
+    s = content(2, 4, "Mỗi động cơ hỏng ở một thời điểm khác nhau",
+                f"Tuổi thọ 100 động cơ train từ {vn(life['min'], 0)} "
+                f"đến {vn(life['max'], 0)} cycle: không thể bảo trì theo một lịch cố định",
                 "data/raw/train_FD001.txt; outputs/eda/tables/constant_engine_counts.csv; slides/slide_figures.py",
                 "Thời lượng: 25 giây.\nTuổi thọ train từ 128 đến 362 cycle, trung vị 199, lệch phải vì có vài động cơ chạy "
                 "rất lâu.\nBảy cột không đổi trong cả 100 động cơ: sensor 1, 5, 10, 16, 18, 19 và setting_3. Sensor_6 không "
@@ -667,7 +711,7 @@ def slide_eda():
 def slide_denoise():
     reductions = [float(r["reduction_pct"]) for r in NOISE.values()]
     s4 = NOISE["sensor_4"]
-    s = content(3, 9, "Khử nhiễu tín hiệu bằng EWMA",
+    s = content(3, 5, "Khử nhiễu tín hiệu bằng EWMA",
                 f"Độ dao động ngắn hạn giảm khoảng {vn(DEG['noise_reduction_pct_median'], 0)}% (trung vị trên 14 sensor); xu hướng suy giảm được bảo toàn",
                 "outputs/degradation/tables/signals.parquet; outputs/degradation/tables/noise_summary.csv",
                 "Thời lượng: 1 phút 5 giây.\nĐây là bước xử lý nhiễu tín hiệu mà đề tài yêu cầu. Đường xám là tín hiệu gốc "
@@ -700,7 +744,7 @@ def slide_denoise():
 # ============================================================================ 10. Window
 def slide_window():
     fr = P["feature_rows"]
-    s = content(3, 10, "Tổng hợp đặc trưng theo cửa sổ thời gian",
+    s = content(3, 17, "Tổng hợp đặc trưng theo cửa sổ thời gian",
                 f"Cửa sổ trượt {P['window']} cycle, chỉ dùng quá khứ; 21 sensor × 6 thống kê = {P['feature_columns']} đặc trưng",
                 "outputs/features/run_info.json; src/cmapss/features/rolling.py",
                 "Thời lượng: 45 giây.\nVí dụ tại cycle 170: cửa sổ gồm cycle 141–170; cycle 171 trở đi là tương lai nên "
@@ -743,7 +787,7 @@ def slide_window():
 # ============================================================================ 11. Xu hướng
 def slide_trend():
     st = D["statistics"]
-    s = content(4, 11, "Xu hướng suy giảm của tín hiệu cảm biến",
+    s = content(4, 6, "Động cơ để lại triệu chứng đo được",
                 f"{st['n_reject']}/{st['n_sensors']} sensor thay đổi có ý nghĩa thống kê giữa 30 cycle đầu và 30 cycle cuối của mỗi động cơ",
                 "data/raw/train_FD001.txt; outputs/statistics/tables/sensor_inference.csv",
                 "Thời lượng: 40 giây.\nHai hình là quỹ đạo gốc của ba động cơ train dài 178, 199 và 229 cycle: sensor_4 tăng "
@@ -771,7 +815,7 @@ def slide_trend():
 
 # ============================================================================ 12. Bất thường
 def slide_anomaly():
-    s = content(4, 12, "Phát hiện dấu hiệu bất thường dựa trên Health Index",
+    s = content(4, 7, "Đèn vàng phát hiện suy giảm trước khi hỏng",
                 f"Ngưỡng {vn(ACFG['z_threshold'], 0)}σ so với {ACFG['baseline_cycles']} cycle đầu, duy trì {ACFG['persistence']} cycle: "
                 f"phát hiện {AN['n_detected']}/{AN['n_engines']} động cơ train, trung vị {vn(AN['lead_median'], 0)} cycle trước khi hỏng",
                 "outputs/degradation/tables/anomaly_events.csv; outputs/degradation/summary.json",
@@ -812,7 +856,7 @@ def slide_anomaly():
 def slide_rul():
     f = M["final"]
     cv = {r["model_name"]: r for r in M["cv"]}
-    s = content(5, 13, "Mô hình dự đoán RUL",
+    s = content(5, 8, "Đèn đỏ ước lượng RUL tại điểm cuối test",
                 f"HistGradientBoosting (HGB), chọn bằng cross-validation 5 fold chia theo động cơ (GroupKFold); MAE tập test {vn(f['mean_engine_mae'])} cycle",
                 "outputs/modeling/tables/model_metrics.csv; outputs/modeling/tables/final_metrics.json; "
                 "outputs/modeling/predictions/final_evaluation.parquet",
@@ -852,7 +896,7 @@ def slide_rul():
 def slide_errors():
     w = M["worst"]
     total = M["n_over"] + M["n_under"]
-    s = content(5, 14, "Phân tích sai số dự đoán",
+    s = content(5, 18, "Phân tích sai số dự đoán",
                 "Sai số nhỏ hơn khi RUL thực tế nhỏ; mô hình hay dự đoán cao hơn thực tế, nên dễ cảnh báo muộn",
                 "outputs/modeling/predictions/final_evaluation.parquet; outputs/diagnostics/error_diagnostics.json",
                 f"Thời lượng: 40 giây.\nHình: sai số bằng RUL dự đoán trừ RUL thực tế, xếp theo RUL thực tế. MAE {vn(M['low_rul']['mae'])} cycle "
@@ -889,8 +933,9 @@ def slide_warning():
     w30, w40 = WARN["hgb126_30"], WARN["hgb126_40"]
     example = M["example_warning"]
     anomaly_cycle = int(next(row for row in D["example_anomaly"] if row["engine_id"] == 1)["detection_cycle"])
-    s = content(5, 15, "Cơ chế cảnh báo sớm hai mức",
-                f"Ngưỡng RUL dự đoán ≤ 30: báo trước trung vị {vn(ld['median'], 0)} cycle, {vn(w30['late_or_missed_rate'] * 100, 0)}% báo muộn",
+    s = content(5, 9, "Mô hình có điểm yếu: thường lạc quan",
+                f"Test: {M['n_over']}/100 động cơ được đoán sống lâu hơn thực tế. Train (OOF): ngưỡng 40 nâng báo "
+                f"kịp thời từ {vn(w30['on_time_rate'] * 100, 0)}% lên {vn(w40['on_time_rate'] * 100, 0)}%",
                 "outputs/modeling/tables/warning_events.csv; outputs/course_alignment/20261007/warning_fixed_policies.csv",
                 "Thời lượng: 1 phút 20 giây.\nĐây là biểu đồ xu hướng cảnh báo sớm, sản phẩm đặc thù của đề tài, minh họa "
                 "trên động cơ train 1. Đường xanh là RUL thực tế, đường đỏ là RUL dự đoán OOF, đường cam là ngưỡng 30 cycle; "
@@ -936,7 +981,7 @@ def slide_maintenance():
     ev, counts, plan = MNT["evaluation"], MNT["status_counts"], MNT["planning"]
     missed, late = MNT["missed"], MNT["late"]
     example = next(row for row in MNT["schedule"] if row["engine_id"] == 90)
-    s = content(5, 16, "Báo cáo dự đoán thời điểm bảo trì",
+    s = content(5, 10, "Câu trả lời buổi sáng là một lịch bảo trì",
                 f"{ev['n_correct_needs_maintenance']}/{ev['n_flagged_needs_maintenance']} động cơ được xếp cần bảo trì đều có "
                 f"RUL thực tế ≤ 30, không báo nhầm; bắt được {ev['n_correct_needs_maintenance']}/"
                 f"{ev['n_actual_needs_maintenance']} động cơ cần bảo trì",
@@ -965,7 +1010,7 @@ def slide_maintenance():
     rows = [["Động cơ", "Trạng thái", "Cycle hiện tại", "RUL dự đoán", "Cycle cần bảo trì"]]
     for engine in ("34", "41", "90", "91", "11"):
         r = schedule[engine]
-        rows.append([engine, r["status"], str(r["current_cycle"]), vn(r["rul_pred"], 4), str(r["maintenance_cycle"])])
+        rows.append([engine, r["status"], str(r["current_cycle"]), vn(r["rul_pred"], 1), str(r["maintenance_cycle"])])
     table(s, rows, 0.92, 4.72, [0.95, 2.15, 1.35, 1.3, 1.7], row_h=0.3, size=10.5, align_right_from=2)
 
     text(s, 8.65, 2.5, 3.77, 0.34, "Đối chiếu với RUL thực tế", size=14, bold=True, color=BLUE)
@@ -990,7 +1035,7 @@ def slide_extended():
     o = I["outer"]
     t126, t169 = A["trajectory"]["hgb126"]["mean_engine_mae"], A["trajectory"]["hgb169"]["mean_engine_mae"]
     ts = D["timeseries"]
-    s = content(6, 17, "Các thử nghiệm mở rộng",
+    s = content(6, 19, "Các thử nghiệm mở rộng",
                 f"Mô hình FD001 không dùng tốt được cho FD002–FD004 (cửa sổ {D['transfer']['window']} cycle); ba hướng cải tiến không thay mô hình chính",
                 "outputs/cross_dataset/matrix.json; outputs/experiments/; outputs/course_alignment/20261007/summary.json",
                 "Thời lượng: 50 giây.\nBiểu đồ: cùng pipeline với cửa sổ 10 cycle vì FD004 có động cơ test ngắn nhất 19 cycle. "
@@ -1024,12 +1069,32 @@ def slide_extended():
         text(s, 7.95, y + 0.5, 4.3, 0.68, body, size=12.5)
 
 
+# ============================================================================ 13. Demo
+def slide_demo():
+    example = MNT["example"]
+    s = content(6, 13, "Demo dashboard: một dòng trả lời cho động cơ 90",
+                f"Động cơ 90 đang ở cycle {example['current_cycle']}, RUL dự đoán {vn(example['rul_pred'], 1)}; lịch bảo trì ở cycle {example['maintenance_cycle']}",
+                "outputs/maintenance/tables/maintenance_schedule.csv; app.py",
+                "Thời lượng: 20 giây trước khi chuyển sang dashboard.\n"
+                f"Trên dashboard, mở trang lịch bảo trì và chọn động cơ 90. Tại cycle {example['current_cycle']}, "
+                f"RUL dự đoán là {vn(example['rul_pred'], 1)} cycle nên lịch ở cycle {example['maintenance_cycle']}. "
+                "Đây là ví dụ minh họa cách người dùng đọc đầu ra; không thay thế đối chiếu test của slide 10.")
+    picture(s, "slides/figures/fleet_status.png", 0.92, 2.55, 7.45, 2.15, align="left")
+    rect(s, 8.65, 2.55, 3.77, 3.7, BLUE)
+    text(s, 8.92, 2.82, 3.2, 0.38, "Động cơ 90", size=20, bold=True, color=GOLD)
+    text(s, 8.92, 3.45, 3.2, 2.25, [
+        [("Cycle hiện tại: ", {"bold": True, "color": GOLD}), (str(example["current_cycle"]), {"color": WHITE})],
+        [("RUL dự đoán: ", {"bold": True, "color": GOLD}), (f"{vn(example['rul_pred'], 1)} cycle", {"color": WHITE})],
+        [("Lịch bảo trì: ", {"bold": True, "color": GOLD}), (f"cycle {example['maintenance_cycle']}", {"color": WHITE})],
+    ], size=16, color=WHITE, space_after=14)
+
+
 # ============================================================================ 18. Kết luận
 def slide_conclusion():
     f = M["final"]
-    s = content(6, 18, "Kết luận",
+    s = content(6, 12, "Năm câu hỏi đều có câu trả lời, nhưng phạm vi kết luận là FD001",
                 "Trả lời năm câu hỏi nghiên cứu; kết luận chỉ áp dụng cho dữ liệu mô phỏng C-MAPSS FD001",
-                "report/sections/conclusion.tex; các artifact đã dẫn ở slide 6–16",
+                "report/sections/conclusion.tex; các artifact đã dẫn ở slide 4–11",
                 "Thời lượng: 50 giây.\nQ1: dữ liệu đạt mọi kiểm tra schema, khóa, cycle; Pandas và PySpark khớp tuyệt đối.\n"
                 f"Q2: EWMA giảm khoảng {vn(DEG['noise_reduction_pct_median'])}% dao động; window {P['window']} cycle "
                 f"tạo {P['feature_columns']} đặc trưng.\nQ3: {D['statistics']['n_reject']}/{D['statistics']['n_sensors']} sensor thay đổi; Health "
@@ -1044,7 +1109,8 @@ def slide_conclusion():
     ev = MNT["evaluation"]
     cards = [
         ("Q1", "Pipeline dữ liệu", "0 sai khác",
-         "đạt mọi kiểm tra; Pandas và PySpark khớp; PySpark nhanh hơn khoảng 3,4 lần khi dữ liệu gấp 10"),
+         f"đạt mọi kiểm tra; Pandas và PySpark khớp; ở {BENCH['largest_common_scale']}×, Spark tính "
+         f"nhanh hơn {vn(BENCH['pandas_over_spark_ratio'], 1)} lần"),
         ("Q2", "Làm mượt, cửa sổ", f"−{vn(DEG['noise_reduction_pct_median'], 0)}%",
          "dao động sau EWMA; 126 đặc trưng từ cửa sổ 30 cycle"),
         ("Q3", "Xu hướng, bất thường", f"{AN['n_detected']}/{AN['n_engines']}",
@@ -1052,7 +1118,7 @@ def slide_conclusion():
         ("Q4", "Dự đoán RUL", f"{vn(f['mean_engine_mae'])}", f"MAE tập test (cycle); {vn(M['low_rul']['mae'])} khi RUL ≤ 30"),
         ("Q5", "Cảnh báo, lịch bảo trì", f"{ev['n_correct_needs_maintenance']}/{ev['n_flagged_needs_maintenance']}",
          f"báo cần bảo trì trên test đều đúng, bắt {ev['n_correct_needs_maintenance']}/{ev['n_actual_needs_maintenance']}; "
-         f"OOF train: {vn(WARN['hgb126_30']['late_or_missed_rate'] * 100)}% muộn"),
+         f"OOF train: {vn(WARN['hgb126_30']['late_or_missed_rate'] * 100, 0)}% muộn"),
     ]
     for i, (q, head, value, desc) in enumerate(cards):
         x, y = 0.92 + (i % 3) * 3.9, 2.5 + (i // 3) * 2.1
@@ -1063,13 +1129,13 @@ def slide_conclusion():
         text(s, x + 0.2, y + 1.3, 3.35, 0.6, desc, size=11)
     rect(s, 8.72, 4.6, 3.7, 1.95, BLUE)
     text(s, 8.92, 4.75, 3.3, 0.36, "Sản phẩm đặc thù", size=14, bold=True, color=GOLD)
-    text(s, 8.92, 5.15, 3.3, 1.3, "Lịch dự đoán thời điểm cần bảo trì cho 100 động cơ test (slide 16), kèm biểu đồ "
-         "xu hướng cảnh báo sớm (slide 15).", size=13, color=WHITE)
+    text(s, 8.92, 5.15, 3.3, 1.3, "Lịch dự đoán thời điểm cần bảo trì cho 100 động cơ test (slide 10), kèm biểu đồ "
+         "xu hướng cảnh báo sớm (slide 9).", size=13, color=WHITE)
 
 
 # ============================================================================ 19. Khó khăn
 def slide_lessons():
-    s = content(6, 19, "Khó khăn, bài học và giới hạn",
+    s = content(6, 20, "Khó khăn, bài học và giới hạn",
                 "Các vấn đề phát sinh trong quá trình thực hiện, cách xử lý và bài học rút ra",
                 "report/sections/discussion.tex (Mục Khó khăn và bài học rút ra)",
                 "Thời lượng: 50 giây.\nMột: dữ liệu không ghi lúc bắt đầu hỏng, nên so mỗi động cơ với chính nó lúc khỏe và "
@@ -1120,9 +1186,10 @@ def slide_end():
 
 
 def main() -> None:
-    for build in (slide_cover, slide_agenda, slide_problem, slide_data, slide_labels, slide_pipeline, slide_parity,
-                  slide_eda, slide_denoise, slide_window, slide_trend, slide_anomaly, slide_rul,
-                  slide_errors, slide_warning, slide_maintenance, slide_extended, slide_conclusion, slide_lessons, slide_end):
+    for build in (slide_cover, slide_problem, slide_pipeline, slide_eda, slide_denoise, slide_trend,
+                  slide_anomaly, slide_rul, slide_warning, slide_maintenance, slide_big_data,
+                  slide_conclusion, slide_demo, slide_end, slide_labels, slide_data, slide_window,
+                  slide_errors, slide_extended, slide_lessons):
         build()
     assert len(PRS.slides) == TOTAL, len(PRS.slides)
     PRS.core_properties.author = "Phan Nguyễn Mai Phương"

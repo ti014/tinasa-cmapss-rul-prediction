@@ -280,6 +280,272 @@
       "repetition": 2.0
     }
   ],
+  "benchmark_scaling": {
+    "records": [
+      {
+        "engine": "pandas",
+        "input_rows": 33727.0,
+        "summary_rows": 200.0,
+        "spark_driver_heap_bytes": null,
+        "feature_rows": 27927.0,
+        "peak_process_tree_rss_bytes": 272093184.0,
+        "startup_seconds": 7.00005330145359e-07,
+        "read_seconds": 0.0324838000233285,
+        "summary_seconds": 0.0213387999974656,
+        "rolling_seconds": 11.461883999989368,
+        "write_seconds": 0.2127698000113014,
+        "pipeline_seconds": 11.515713100001449,
+        "total_seconds": 11.72848360001808,
+        "status": "ok",
+        "scale": 1,
+        "repetition": 1,
+        "input_sha256": "b4a6faeac568806dab85821fcdd127e346427b63d744356f8c4319ae4478419b",
+        "elapsed_before_stop_seconds": null
+      },
+      {
+        "engine": "pandas",
+        "input_rows": 337270.0,
+        "summary_rows": 2000.0,
+        "spark_driver_heap_bytes": null,
+        "feature_rows": 279270.0,
+        "peak_process_tree_rss_bytes": 1828167680.0,
+        "startup_seconds": 1.200009137392044e-06,
+        "read_seconds": 0.0681191999756265,
+        "summary_seconds": 0.1702617999981157,
+        "rolling_seconds": 88.3476942999987,
+        "write_seconds": 0.7842947999888565,
+        "pipeline_seconds": 88.58608350000577,
+        "total_seconds": 89.37037950000376,
+        "status": "ok",
+        "scale": 10,
+        "repetition": 1,
+        "input_sha256": "c5f291679ebecfde8c8d69b6b66c550e80ba3bf5e1a8a23461a3f856d557dc90",
+        "elapsed_before_stop_seconds": null
+      },
+      {
+        "engine": "pandas",
+        "input_rows": 1686350.0,
+        "summary_rows": 10000.0,
+        "spark_driver_heap_bytes": null,
+        "feature_rows": 1396350.0,
+        "peak_process_tree_rss_bytes": 7824838656.0,
+        "startup_seconds": 6.00004568696022e-07,
+        "read_seconds": 0.1766717999998945,
+        "summary_seconds": 0.8526973999978509,
+        "rolling_seconds": 582.6294332000252,
+        "write_seconds": 3.584613699989859,
+        "pipeline_seconds": 583.6588077000051,
+        "total_seconds": 587.2434219999996,
+        "status": "ok",
+        "scale": 50,
+        "repetition": 1,
+        "input_sha256": "7bf3bbc74209616a25d23b2131bad8973e632166996206c7eefc0edb4f8ab036",
+        "elapsed_before_stop_seconds": null
+      },
+      {
+        "engine": "pandas",
+        "input_rows": 3372700.0,
+        "summary_rows": 20000.0,
+        "spark_driver_heap_bytes": null,
+        "feature_rows": 2792700.0,
+        "peak_process_tree_rss_bytes": 13823127552.0,
+        "startup_seconds": 6.00004568696022e-07,
+        "read_seconds": 0.3358836000261362,
+        "summary_seconds": 1.7369508999981915,
+        "rolling_seconds": 1073.279371099983,
+        "write_seconds": 10.196968900010688,
+        "pipeline_seconds": 1075.3525436999917,
+        "total_seconds": 1085.549513200007,
+        "status": "ok",
+        "scale": 100,
+        "repetition": 1,
+        "input_sha256": "338f03ff25aade693a97a6b6c2939eb5b243ea99ba5598667df3a4d58ffaabe7",
+        "elapsed_before_stop_seconds": null
+      },
+      {
+        "engine": "pandas",
+        "input_rows": null,
+        "summary_rows": null,
+        "spark_driver_heap_bytes": null,
+        "feature_rows": null,
+        "peak_process_tree_rss_bytes": null,
+        "startup_seconds": null,
+        "read_seconds": null,
+        "summary_seconds": null,
+        "rolling_seconds": null,
+        "write_seconds": null,
+        "pipeline_seconds": null,
+        "total_seconds": null,
+        "status": "timeout",
+        "scale": 200,
+        "repetition": 1,
+        "input_sha256": "f93d541397fe63187d45876e225d865bb17fe2829b675328246e1c1707b88978",
+        "elapsed_before_stop_seconds": 1800.023099399987
+      },
+      {
+        "engine": "spark",
+        "input_rows": 33727.0,
+        "summary_rows": 200.0,
+        "spark_driver_heap_bytes": 12884901888.0,
+        "feature_rows": 27927.0,
+        "peak_process_tree_rss_bytes": 1708339200.0,
+        "startup_seconds": 13.483090299996547,
+        "read_seconds": 4.801491600024747,
+        "summary_seconds": 1.167125699983444,
+        "rolling_seconds": 6.722225299978163,
+        "write_seconds": 4.00003045797348e-07,
+        "pipeline_seconds": 12.690852900006576,
+        "total_seconds": 26.173943200003123,
+        "status": "ok",
+        "scale": 1,
+        "repetition": 1,
+        "input_sha256": "b4a6faeac568806dab85821fcdd127e346427b63d744356f8c4319ae4478419b",
+        "elapsed_before_stop_seconds": null
+      },
+      {
+        "engine": "spark",
+        "input_rows": 337270.0,
+        "summary_rows": 2000.0,
+        "spark_driver_heap_bytes": 12884901888.0,
+        "feature_rows": 279270.0,
+        "peak_process_tree_rss_bytes": 1737801728.0,
+        "startup_seconds": 4.377420600008918,
+        "read_seconds": 5.110085699998308,
+        "summary_seconds": 1.0940469999914058,
+        "rolling_seconds": 25.23881900002016,
+        "write_seconds": 1.00000761449337e-07,
+        "pipeline_seconds": 31.44295979998424,
+        "total_seconds": 35.820380399993155,
+        "status": "ok",
+        "scale": 10,
+        "repetition": 1,
+        "input_sha256": "c5f291679ebecfde8c8d69b6b66c550e80ba3bf5e1a8a23461a3f856d557dc90",
+        "elapsed_before_stop_seconds": null
+      },
+      {
+        "engine": "spark",
+        "input_rows": 1686350.0,
+        "summary_rows": 10000.0,
+        "spark_driver_heap_bytes": 12884901888.0,
+        "feature_rows": 1396350.0,
+        "peak_process_tree_rss_bytes": 4934565888.0,
+        "startup_seconds": 4.139232199988328,
+        "read_seconds": 6.922318700002506,
+        "summary_seconds": 1.0551498999993782,
+        "rolling_seconds": 97.70146209999804,
+        "write_seconds": 3.00002284348011e-07,
+        "pipeline_seconds": 105.67893920000644,
+        "total_seconds": 109.81817139999475,
+        "status": "ok",
+        "scale": 50,
+        "repetition": 1,
+        "input_sha256": "7bf3bbc74209616a25d23b2131bad8973e632166996206c7eefc0edb4f8ab036",
+        "elapsed_before_stop_seconds": null
+      },
+      {
+        "engine": "spark",
+        "input_rows": 3372700.0,
+        "summary_rows": 20000.0,
+        "spark_driver_heap_bytes": 12884901888.0,
+        "feature_rows": 2792700.0,
+        "peak_process_tree_rss_bytes": 9026519040.0,
+        "startup_seconds": 4.203078000020469,
+        "read_seconds": 7.927205300016794,
+        "summary_seconds": 1.2166230999864638,
+        "rolling_seconds": 187.13222949998453,
+        "write_seconds": 3.00002284348011e-07,
+        "pipeline_seconds": 196.2760645000089,
+        "total_seconds": 200.4791425000294,
+        "status": "ok",
+        "scale": 100,
+        "repetition": 1,
+        "input_sha256": "338f03ff25aade693a97a6b6c2939eb5b243ea99ba5598667df3a4d58ffaabe7",
+        "elapsed_before_stop_seconds": null
+      },
+      {
+        "engine": "spark",
+        "input_rows": 6745400.0,
+        "summary_rows": 40000.0,
+        "spark_driver_heap_bytes": 12884901888.0,
+        "feature_rows": 5585400.0,
+        "peak_process_tree_rss_bytes": 12200890368.0,
+        "startup_seconds": 4.202489300019806,
+        "read_seconds": 11.143715100013653,
+        "summary_seconds": 1.4463184000051117,
+        "rolling_seconds": 379.62790900000255,
+        "write_seconds": 1.00000761449337e-07,
+        "pipeline_seconds": 392.2179502000217,
+        "total_seconds": 396.4204395000416,
+        "status": "ok",
+        "scale": 200,
+        "repetition": 1,
+        "input_sha256": "f93d541397fe63187d45876e225d865bb17fe2829b675328246e1c1707b88978",
+        "elapsed_before_stop_seconds": null
+      }
+    ],
+    "metadata": {
+      "status": "complete",
+      "author": "Phan Nguyễn Mai Phương",
+      "student_id": "25002711",
+      "scales": [
+        1,
+        10,
+        50,
+        100,
+        200
+      ],
+      "repetitions": 1,
+      "parity": {
+        "1": {
+          "features": {
+            "rows": 27927,
+            "columns": 129,
+            "all_cells_match": true
+          },
+          "summary": {
+            "rows": 200,
+            "columns": 5,
+            "all_cells_match": true
+          }
+        }
+      },
+      "python": "3.12.14",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "cpu_logical": 22,
+      "ram_bytes": 25092706304,
+      "spark_master": "local[4]",
+      "spark_partitions": 4,
+      "window": 30,
+      "spark_driver_memory": "12g",
+      "spark_executor_memory": "12g",
+      "rss_sampling_seconds": 0.05,
+      "os_cache_cleared": false,
+      "parquet_writer": "PyArrow on driver; Spark write_seconds includes toArrow collection",
+      "timeout_seconds": 1800.0,
+      "scope": "local replicated data; no distributed-cluster throughput claim",
+      "source_sha256": "9e031b0d6430512fbce9af344b3110aeeb17429d44f394f28e370130d13560f8",
+      "versions": {
+        "pandas": "2.3.3",
+        "numpy": "2.3.3",
+        "pyarrow": "23.0.1",
+        "pyspark": "4.0.1",
+        "psutil": "7.2.2"
+      },
+      "source_code_sha256": {
+        "scalability.py": "ebe7fbf9a07424e6dcdeef8b71b8b8308e63f69590f6af6c7523bdf0682f95da",
+        "rolling_spark.py": "fdbaa38cbe6847f76cd715475af88f0d7bb451396bf02ff04d37c6260e7b2475",
+        "benchmark.py": "0075293dacaecd0b9d3bf0234f8c692eac9a9aec256087014f643a3d7976a6c9",
+        "pandas_pipeline.py": "b3e563844b51ff179e31bf4a16ff5cad487ccda97e89dd4dfcbacd6dd3e3861f"
+      }
+    },
+    "summary": {
+      "largest_common_scale": 100,
+      "pandas_over_spark_ratio": 5.478775756174502,
+      "first_pandas_stop_scale": 200
+    },
+    "metadata_pending": false,
+    "source": "outputs/benchmarks/20261021/compute_only.csv"
+  },
   "diagnostics": {
     "top10_nasa_share": 0.7553559019179925,
     "oof_mean_pred_150_200": 147.16069144672653,
@@ -338,6 +604,7 @@
   ],
   "eda": {
     "lifetime": {
+      "count": 100.0,
       "min": 128.0,
       "50%": 199.0,
       "max": 362.0,
@@ -364,6 +631,9 @@
     "n_reject": 15,
     "n_degenerate": 6,
     "resamples": 10000,
+    "n_engines": 100,
+    "comparison_cycles": 30,
+    "fdr_q": 0.05,
     "same_direction": [
       "sensor_2",
       "sensor_3",
@@ -399,6 +669,9 @@
       "rmse": 20.541266675083385,
       "nasa_score": 1513.257655888328
     },
+    "n_test_engines": 100,
+    "cv_splits": 5,
+    "n_train_engines": 100,
     "ci_mae": {
       "ci_lower": 12.728606926330093,
       "ci_upper": 18.086553527187498
@@ -1823,6 +2096,19 @@
         "status": "Bình thường"
       }
     ],
+    "example": {
+      "priority": 22,
+      "engine_id": 90,
+      "current_cycle": 146,
+      "rul_pred": 31.2191,
+      "cycles_to_maintenance": 1,
+      "maintenance_cycle": 147,
+      "predicted_failure_cycle": 177,
+      "anomaly_evaluable": true,
+      "anomaly_detected": true,
+      "anomaly_cycle": 67.0,
+      "status": "Theo dõi tăng cường"
+    },
     "status_check": {
       "index": [
         0,
@@ -2295,6 +2581,8 @@
       "rolling_features_test": 10196
     },
     "feature_columns": 126,
+    "n_sensors": 21,
+    "n_statistics": 6,
     "benchmark": [
       {
         "scale": 1,

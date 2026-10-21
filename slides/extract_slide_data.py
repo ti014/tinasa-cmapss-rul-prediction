@@ -43,7 +43,7 @@ def eda() -> dict:
     always = const[const["constant_engines"] == const["total_engines"]]["measurement"].tolist()
     partial = const[(const["constant_engines"] > 0) & (const["constant_engines"] < const["total_engines"])]
     return {
-        "lifetime": {k: float(life[k]) for k in ("min", "50%", "max", "mean")},
+        "lifetime": {k: float(life[k]) for k in ("count", "min", "50%", "max", "mean")},
         "always_constant": sorted(always, key=lambda s: (s.split("_")[0], int(s.split("_")[1]))),
         "partially_constant": partial[["measurement", "constant_engines"]].to_dict("records"),
     }
@@ -57,7 +57,13 @@ def statistics() -> dict:
         "n_reject": int(reject.sum()),
         "n_degenerate": int((inf["test_status"] == "all_zero_difference").sum()),
         "resamples": int(inf["bootstrap_resamples"].iloc[0]),
-        "same_direction": inf.loc[inf["n_positive"].eq(100) | inf["n_negative"].eq(100), "sensor"].tolist(),
+        "n_engines": int(inf["n_pairs"].iloc[0]),
+        "comparison_cycles": read_json(OUT / "degradation/summary.json")["anomaly_config"]["baseline_cycles"],
+        "fdr_q": float(inf["fdr_q"].iloc[0]),
+        "same_direction": inf.loc[
+            inf["n_positive"].eq(inf["n_pairs"]) | inf["n_negative"].eq(inf["n_pairs"]),
+            "sensor",
+        ].tolist(),
     }
 
 
@@ -84,12 +90,20 @@ def modeling() -> dict:
     residual = evaluation["y_pred"] - evaluation["y_true"]
     worst = evaluation.loc[evaluation["absolute_error"].idxmax()]
     warning = read_json(OUT / "modeling" / "tables" / "warning_summary.json")
-    low_rul = evaluation.loc[evaluation["y_true"].le(30)]
+    low_rul = evaluation.loc[evaluation["y_true"].le(warning["rul_threshold"])]
     high_rul = evaluation.loc[evaluation["y_true"].gt(60)]
     cv = models.set_index("model_name")
-    warning_event = pd.read_csv(OUT / "modeling/tables/warning_events.csv").set_index("engine_id").loc[1]
+    info = read_json(OUT / "modeling/run_info.json")
+    events = pd.read_csv(OUT / "modeling/tables/warning_events.csv")
+    example_engine = read_json(OUT / "degradation/summary.json")["example_engine"]
+    warning_event = events.loc[
+        events["engine_id"].eq(example_engine) & events["model_name"].eq(info["selected_model"])
+    ].iloc[0]
     return {
         "final": final["metrics"],
+        "n_test_engines": int(evaluation["engine_id"].nunique()),
+        "cv_splits": info["config"]["n_splits"],
+        "n_train_engines": warning["n_engines"],
         "ci_mae": final["bootstrap"]["intervals"]["mean_engine_mae"],
         "bootstrap_resamples": final["bootstrap"]["resamples"],
         "cv": models[["model_name", "mean_engine_mae", "std_engine_mae", "selected"]].to_dict("records"),
@@ -100,7 +114,7 @@ def modeling() -> dict:
         "test_rul_min": float(evaluation["y_true"].min()),
         "test_rul_max": float(evaluation["y_true"].max()),
         "ridge_minus_hgb_mae": float(cv.loc["ridge_alpha_1", "mean_engine_mae"] - cv.loc["hist_gradient_boosting", "mean_engine_mae"]),
-        "example_warning": {"engine_id": 1, "first_warning_cycle": int(warning_event["first_warning_cycle"]),
+        "example_warning": {"engine_id": int(warning_event["engine_id"]), "first_warning_cycle": int(warning_event["first_warning_cycle"]),
                             "failure_cycle": int(warning_event["failure_cycle"])},
         "worst": {
             "engine_id": int(worst["engine_id"]),
@@ -132,6 +146,7 @@ def maintenance() -> dict:
         **summary,
         # NaN không hợp lệ trong JSON; động cơ chưa có bất thường ghi anomaly_cycle = null.
         "schedule": schedule.astype(object).where(schedule.notna(), None).to_dict("records"),
+        "example": schedule.loc[schedule["engine_id"].eq(90)].iloc[0].to_dict(),
         "status_check": pd.read_csv(OUT / "maintenance/tables/status_vs_actual.csv").astype(str).to_dict("split"),
         "watch_above_60": int(watch["y_true"].gt(60).sum()),
         "normal_min_actual_rul": float(normal["y_true"].min()),
@@ -204,6 +219,8 @@ def pipeline() -> dict:
         "window": feat["window_cycles"],
         "feature_rows": feat["row_counts"],
         "feature_columns": feat["feature_contract"]["feature_column_count"],
+        "n_sensors": len(feat["feature_contract"]["sensors"]),
+        "n_statistics": len(feat["feature_contract"]["statistics"]),
         "benchmark": [
             {"scale": r["scale"], "rows": r["input_rows"], "seconds": r["duration_seconds"]} for r in cold
         ],
@@ -291,6 +308,49 @@ def diagnostics() -> dict:
     }
 
 
+def benchmark_scaling() -> dict:
+    """Đọc cả lượt thành công lẫn lượt dừng, giữ dữ liệu đang đo ở trạng thái chờ."""
+    folder = OUT / "benchmarks/20261021"
+    source, info = folder / "compute_only.csv", folder / "run_info.json"
+    spark_run = folder / "spark_compute_only/measurements.csv"
+    metadata = read_json(info) if info.exists() else {"status": "pending"}
+    records = []
+    summary = {"largest_common_scale": None, "pandas_over_spark_ratio": None,
+               "first_pandas_stop_scale": None}
+    if (folder / "measurements.csv").exists() and spark_run.exists():
+        # So phần tính toán: Pandas lấy lượt đầy đủ trừ bước ghi; Spark lấy lượt --no-write,
+        # vì trên Windows bước ghi của Spark phải gom về driver và hết heap từ 100×.
+        pandas_rows = pd.read_csv(folder / "measurements.csv").query("engine == 'pandas'").copy()
+        pandas_rows["pipeline_seconds"] -= pandas_rows["write_seconds"]
+        frame = pd.concat([pandas_rows, pd.read_csv(spark_run)], ignore_index=True)
+        frame.to_csv(source, index=False)
+        required = {"engine", "scale", "status", "pipeline_seconds", "rolling_seconds",
+                    "peak_process_tree_rss_bytes", "elapsed_before_stop_seconds"}
+        if missing := required - set(frame.columns):
+            raise ValueError(f"Benchmark thiếu cột: {sorted(missing)}")
+        if not frame["status"].isin(("ok", "failed", "timeout")).all():
+            raise ValueError("Benchmark có trạng thái không hợp lệ")
+        frame = frame.replace([float("inf"), -float("inf")], float("nan"))
+        records = frame.astype(object).where(frame.notna(), None).to_dict("records")
+        ok = frame.loc[frame["status"].eq("ok") & frame["pipeline_seconds"].gt(0)]
+        times = ok.groupby(["scale", "engine"])["pipeline_seconds"].median().unstack()
+        if {"pandas", "spark"} <= set(times.columns):
+            common = times[["pandas", "spark"]].dropna().sort_index()
+            if not common.empty:
+                scale = common.index[-1]
+                summary["largest_common_scale"] = int(scale)
+                summary["pandas_over_spark_ratio"] = float(
+                    common.loc[scale, "pandas"] / common.loc[scale, "spark"]
+                )
+        stopped = frame.loc[frame["engine"].eq("pandas") &
+                            frame["status"].isin(("failed", "timeout")), "scale"]
+        if not stopped.empty:
+            summary["first_pandas_stop_scale"] = int(stopped.min())
+    return {"records": records, "metadata": metadata, "summary": summary,
+            "metadata_pending": not info.exists(),
+            "source": source.relative_to(ROOT).as_posix()}
+
+
 def main() -> None:
     from cmapss.followup_results import load_followup_results
     from cmapss.project import FOLLOWUP_RUN
@@ -298,13 +358,14 @@ def main() -> None:
     followup, followup_paired = load_followup_results(ROOT)
     benchmark = pd.read_csv(OUT / "benchmarks/20260929/measurements.csv")
     benchmark = benchmark.groupby(["engine", "scale"], as_index=False).median(numeric_only=True)
-    # Pandas has no JVM heap; omit that unused nullable field from strict JSON.
+    # Pandas không có JVM heap; bỏ trường không dùng để JSON không chứa NaN.
     benchmark = benchmark.drop(columns=["spark_driver_heap_bytes"], errors="ignore")
     data = {
         "provenance": {"improvement_run": IMPROVEMENT_RUN.as_posix(), "followup_run": FOLLOWUP_RUN.as_posix()},
         "followup": followup.to_dict(orient="records"),
         "followup_paired": followup_paired.to_dict(orient="records"),
         "stage_benchmark": benchmark.to_dict(orient="records"),
+        "benchmark_scaling": benchmark_scaling(),
         "diagnostics": diagnostics(),
         "subsets": subsets(),
         "eda": eda(),
@@ -313,7 +374,11 @@ def main() -> None:
         "modeling": modeling(),
         "maintenance": maintenance(),
         "degradation": read_json(OUT / "degradation/summary.json"),
-        "example_anomaly": pd.read_csv(OUT / "degradation/tables/anomaly_events.csv").query("engine_id == 1").to_dict("records"),
+        "example_anomaly": pd.read_csv(OUT / "degradation/tables/anomaly_events.csv").loc[
+            lambda frame: frame["engine_id"].eq(
+                read_json(OUT / "degradation/summary.json")["example_engine"]
+            )
+        ].to_dict("records"),
         "noise_summary": pd.read_csv(OUT / "degradation/tables/noise_summary.csv").to_dict("records"),
         "hdfs": read_json(OUT / "hdfs/summary.json"),
         "benchmark_parity": read_json(OUT / "benchmarks/20260929/run_info.json")["parity"],

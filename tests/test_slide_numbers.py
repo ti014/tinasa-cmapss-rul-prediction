@@ -43,3 +43,16 @@ def test_builder_does_not_repeat_audited_numbers():
     for literal in ("4,38", "46,95", "3,78", "41/59", "31–38", "4–27", "kiểm định chéo", "hiếm khi vượt"):
         assert literal not in source
     assert "dự đoán trung bình dừng quanh" in source
+
+
+def test_scaling_benchmark_keeps_failed_runs_as_data():
+    data = _extractor().benchmark_scaling()
+    assert data["source"] == "outputs/benchmarks/20261021/compute_only.csv"
+    assert all(row["status"] in {"ok", "failed", "timeout"} for row in data["records"])
+    assert any(row["status"] != "ok" for row in data["records"])
+    # Pandas chỉ tính phần tính toán: thời gian pipeline đã trừ bước ghi file.
+    full = pd.read_csv(ROOT / "outputs/benchmarks/20261021/measurements.csv")
+    pandas_10x = full.query("engine == 'pandas' and scale == 10").iloc[0]
+    row = next(r for r in data["records"] if r["engine"] == "pandas" and r["scale"] == 10)
+    assert row["pipeline_seconds"] == pytest.approx(
+        pandas_10x["pipeline_seconds"] - pandas_10x["write_seconds"])

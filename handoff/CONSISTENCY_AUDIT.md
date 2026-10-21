@@ -35,6 +35,10 @@ này sau mỗi commit.
 | Vẽ lại 6 PNG degradation, maintenance, diagnostics mà report nhúng; nhãn 'cycle' trong script hình và dashboard; thay nốt chữ 'engine' trong report; ngày report 21/10 | E1, B1, B2, E4 | Claude | Xong (bảng số trong outputs/ không đổi) | `db5c1d1` |
 | Vẽ lại 3 hình modeling (chạy lại huấn luyện: dự đoán, fold và metric trùng tuyệt đối với bản cũ) | E1 | Claude | Xong | xem commit cùng dòng này |
 | Vẽ lại hình EDA `sensor_rul_by_engine.png` từ lần chạy notebook 01 (bảng số trùng từng byte với bản cũ) | E1 | Claude | Xong | xem commit cùng dòng này |
+| Xuất PDF deck bằng PowerPoint, cập nhật ảnh slide trong sổ tay, build lại sổ tay | — | Claude | Xong | `c4c085c` |
+| Chạy lại notebook 00, 02, 05, 06 (00 chạy HDFS thật, MapReduce/Spark khớp Pandas) | — | Claude | Xong | `ea66ceb` |
+| Review chéo mục 6 của Codex: so AST trước/sau, bỏ qua chuỗi, `__future__` và annotation; chỉ còn thay đổi đã giao | C1–C3 | Claude review Codex | Xong, không phát hiện đổi logic | |
+| Review chéo phần chữ Claude đã sửa (report, speech, handoff, README) | B1–B7 | Codex review Claude | Đang làm | |
 
 ## Kết luận
 

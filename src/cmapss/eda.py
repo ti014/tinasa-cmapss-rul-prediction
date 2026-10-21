@@ -1,5 +1,7 @@
 """Phép tính dùng lại trong notebook EDA; chỉ phân tích observations train."""
 
+from __future__ import annotations
+
 from collections.abc import Sequence
 
 import numpy as np
@@ -10,6 +12,43 @@ from scipy.stats import spearmanr
 def _require_train(data: pd.DataFrame) -> None:
     if data.empty or not data["split"].eq("train").fillna(False).all():
         raise ValueError("EDA chỉ nhận dữ liệu train không rỗng; không dùng test.")
+
+
+def engine_lifetimes(data: pd.DataFrame) -> pd.DataFrame:
+    """Tổng hợp cycle đầu/cuối và số quan sát của từng động cơ train."""
+    from cmapss.data.contracts import OBSERVATION_COLUMNS
+    from cmapss.etl.pandas_pipeline import build_engine_summary
+
+    _require_train(data)
+    # Notebook truyền train đã ghép nhãn RUL; engine summary chỉ nhận đúng cột observations.
+    return build_engine_summary(data.loc[:, list(OBSERVATION_COLUMNS)]).rename(columns={"n_cycles": "n_observations"}).loc[
+        :, ["engine_id", "first_cycle", "last_cycle", "n_observations"]
+    ]
+
+
+def within_engine_variability(data: pd.DataFrame, columns: Sequence[str]) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Tính độ biến thiên từng phép đo và số động cơ có giá trị hằng."""
+    _require_train(data)
+    measurements = data.melt(id_vars="engine_id", value_vars=list(columns),
+                             var_name="measurement", value_name="value")
+    within = measurements.groupby(["engine_id", "measurement"], as_index=False).agg(
+        n_observations=("value", "size"), n_unique=("value", "nunique"),
+        min=("value", "min"), max=("value", "max"), mean=("value", "mean"), std=("value", "std"),
+    )
+    within["range"] = within["max"] - within["min"]
+    within["is_constant"] = within.n_unique.eq(1)
+    counts = within.groupby("measurement", as_index=False).agg(
+        constant_engines=("is_constant", "sum"), total_engines=("engine_id", "size"),
+    )
+    return within, counts
+
+
+def engine_cycle_correlations(data: pd.DataFrame, column: str) -> pd.Series:
+    """Tính Spearman rho giữa cycle và một đại lượng trong từng động cơ train."""
+    _require_train(data)
+    return data.groupby("engine_id").apply(
+        lambda group: spearmanr(group.cycle, group[column]).statistic, include_groups=False,
+    )
 
 
 def describe_measurements(data: pd.DataFrame, columns: Sequence[str]) -> pd.DataFrame:

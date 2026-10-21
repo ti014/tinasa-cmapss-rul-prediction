@@ -168,7 +168,7 @@ def _figure(relative_path: str, caption: str) -> None:
 
 def _engine_select(label: str, options: list[int], *, key: str, default: int | None = None) -> int:
     index = options.index(default) if default in options else 0
-    return int(st.selectbox(label, options, index=index, key=key, format_func=lambda value: f"Engine {int(value):03d}"))
+    return int(st.selectbox(label, options, index=index, key=key, format_func=lambda value: f"Động cơ {int(value):03d}"))
 
 
 def _model_label(name: str) -> str:
@@ -216,9 +216,9 @@ def page_overview(data: DashboardData, degradation: DegradationData, maintenance
             ("Báo cần bảo trì đúng",
              f"{evaluation['n_correct_needs_maintenance']}/{evaluation['n_flagged_needs_maintenance']}",
              "Kiểm tra bằng nhãn test sau khi lịch đã được ghi ra file."),
-            ("Bất thường báo trước hỏng", f"{format_metric(anomaly['lead_median'], 0)} cycles",
+            ("Bất thường báo trước hỏng", f"{format_metric(anomaly['lead_median'], 0)} cycle",
              "Trung vị trên 100 động cơ train; Health Index giảm quá 3σ so với 30 cycle đầu."),
-            ("MAE RUL trên test", f"{format_metric(metrics.get('mean_engine_mae', 0), 2)} cycles",
+            ("MAE RUL trên test", f"{format_metric(metrics.get('mean_engine_mae', 0), 2)} cycle",
              "Sai số tuyệt đối trung bình tại cycle quan sát cuối của 100 động cơ test."),
         ]
     )
@@ -260,8 +260,8 @@ def page_exploration(exploration: ExplorationData) -> None:
         [
             ("Động cơ train", f"{lifetimes['engine_id'].nunique():,}"),
             ("Tổng số cycle train", f"{int(lifetimes['n_observations'].sum()):,}"),
-            ("Tuổi thọ ngắn nhất", f"{int(lifetimes['n_observations'].min())} cycles"),
-            ("Tuổi thọ dài nhất", f"{int(lifetimes['n_observations'].max())} cycles"),
+            ("Tuổi thọ ngắn nhất", f"{int(lifetimes['n_observations'].min())} cycle"),
+            ("Tuổi thọ dài nhất", f"{int(lifetimes['n_observations'].max())} cycle"),
         ]
     )
 
@@ -467,14 +467,14 @@ def page_rul(data: DashboardData) -> None:
 
 
 def page_warning(data: DashboardData) -> None:
-    st.header("Cảnh báo sớm: RUL dự đoán ≤ 30 cycles")
+    st.header("Cảnh báo sớm: RUL dự đoán ≤ 30 cycle")
     summary = data.warning_summary
     _metric_row(
         [
-            ("Ngưỡng RUL", f"{int(summary['rul_threshold'])} cycles"),
+            ("Ngưỡng RUL", f"{int(summary['rul_threshold'])} cycle"),
             ("Động cơ có cảnh báo", f"{int(summary['n_warning'])}/{int(summary['n_engines'])}"),
             ("Bị bỏ lỡ", f"{int(summary['n_missed_warning'])}"),
-            ("Lead time trung bình", f"{format_metric(summary['mean_lead_time_cycles'], 2)} cycles"),
+            ("Lead time trung bình", f"{format_metric(summary['mean_lead_time_cycles'], 2)} cycle"),
         ]
     )
     _card(
@@ -717,7 +717,7 @@ def page_timeseries(data: DashboardData) -> None:
             [
                 ("Bậc ARIMA", str(row.get("order", "n/a"))),
                 ("MAE đoạn kiểm tra", format_metric(row["mae"])),
-                ("Tỷ lệ bao phủ 95%", f"{float(row['coverage_95']) * 100:.2f}%"),
+                ("Tỷ lệ bao phủ 95%", f"{format_metric(float(row['coverage_95']) * 100, 2)}%"),
                 ("ADF p-value", format_metric(diagnostic.iloc[0]["adf_pvalue"]) if not diagnostic.empty else "n/a"),
             ]
         )
@@ -769,7 +769,7 @@ def page_denoise(degradation: DegradationData) -> None:
     summary, noise = degradation.summary, degradation.noise
     _metric_row(
         [
-            ("Span EWMA", f"{summary['ewma_span']} cycles", "α = 2 / (span + 1); giá trị tại cycle t chỉ dùng cycle t và trước đó."),
+            ("Span EWMA", f"{summary['ewma_span']} cycle", "α = 2 / (span + 1); giá trị tại cycle t chỉ dùng cycle t và trước đó."),
             ("Mức giảm dao động (trung vị)", f"{format_metric(summary['noise_reduction_pct_median'], 1)}%",
              "Độ lệch chuẩn của bước nhảy giữa hai cycle liền kề, trước và sau EWMA."),
             ("Sensor được làm mượt", f"{len(summary['sensors'])}/21", "Bảy sensor còn lại hằng hoặc gần hằng."),
@@ -799,8 +799,8 @@ def page_denoise(degradation: DegradationData) -> None:
     st.altair_chart(chart, width="stretch")
     row = noise.loc[noise["sensor"] == sensor].iloc[0]
     st.caption(
-        f"{sensor}: độ lệch chuẩn bước nhảy giữa hai cycle giảm từ {row['diff_std_raw']:.4f} xuống "
-        f"{row['diff_std_smoothed']:.4f} ({row['reduction_pct']:.1f}%), tính trên 100 động cơ train."
+        f"{sensor}: độ lệch chuẩn bước nhảy giữa hai cycle giảm từ {format_metric(row['diff_std_raw'], 4)} xuống "
+        f"{format_metric(row['diff_std_smoothed'], 4)} ({format_metric(row['reduction_pct'], 1)}%), tính trên 100 động cơ train."
     )
     left, right = st.columns([1.3, 1])
     with left:
@@ -829,10 +829,10 @@ def page_anomaly(degradation: DegradationData) -> None:
     _metric_row(
         [
             ("Động cơ được phát hiện", f"{anomaly['n_detected']}/{anomaly['n_engines']}", "Phát hiện trước khi hỏng, trên train."),
-            ("Báo trước hỏng (trung vị)", f"{format_metric(anomaly['lead_median'], 0)} cycles",
+            ("Báo trước hỏng (trung vị)", f"{format_metric(anomaly['lead_median'], 0)} cycle",
              f"Tứ phân vị {format_metric(anomaly['lead_q1'], 0)}–{format_metric(anomaly['lead_q3'], 0)}."),
             ("Thời điểm có dấu hiệu", f"{anomaly['detection_life_fraction_median'] * 100:.0f}% vòng đời", "Trung vị."),
-            ("Nếu không khử nhiễu", f"{format_metric(raw['lead_median'], 1)} cycles", "Cùng quy tắc trên Health Index từ tín hiệu gốc."),
+            ("Nếu không khử nhiễu", f"{format_metric(raw['lead_median'], 1)} cycle", "Cùng quy tắc trên Health Index từ tín hiệu gốc."),
         ]
     )
     engine_id = _engine_select("Động cơ train", sorted(events["engine_id"].unique()), key="an_engine")
@@ -859,7 +859,7 @@ def page_anomaly(degradation: DegradationData) -> None:
         f"phát hiện bất thường ở cycle {int(event['detection_cycle'])}, tức {int(event['lead_cycles'])} cycle trước khi hỏng")
     st.caption(
         f"Động cơ {engine_id:03d}: {detection}; hỏng ở cycle {int(event['failure_cycle'])}. Vùng xám là {config['baseline_cycles']} "
-        f"cycles tham chiếu; đường đứt là ngưỡng {config['z_threshold']:g}σ; vạch cam là lúc phát hiện, vạch đen là lúc hỏng."
+        f"cycle tham chiếu; đường đứt là ngưỡng {config['z_threshold']:g}σ; vạch cam là lúc phát hiện, vạch đen là lúc hỏng."
     )
     left, right = st.columns([1.3, 1])
     with left:
@@ -898,7 +898,7 @@ def page_anomaly(degradation: DegradationData) -> None:
     chosen = grid["z_threshold"].eq(config["z_threshold"]) & grid["persistence"].eq(config["persistence"])
     st.dataframe(
         table.style.apply(lambda row: ["font-weight: 700"] * len(row) if chosen.loc[row.name] else [""] * len(row), axis=1)
-        .format({"Lead time trung vị": "{:.1f}", "% vòng đời lúc phát hiện": "{:.1f}"}),
+        .format({"Lead time trung vị": lambda v: format_metric(v, 1), "% vòng đời lúc phát hiện": lambda v: format_metric(v, 1)}),
         hide_index=True, width="stretch",
     )
     st.caption(

@@ -242,7 +242,10 @@ def load_cross_dataset(repo_root: str | Path = ".") -> pd.DataFrame:
 
 
 def format_metric(value: float | int, decimals: int = 4) -> str:
-    return f"{float(value):,.{decimals}f}"
+    """Định dạng số kiểu Việt: phẩy thập phân, chấm hàng nghìn."""
+    from cmapss.presentation import format_number_vi
+
+    return format_number_vi(value, decimals)
 
 
 def selected_engine_ids(data: DashboardData) -> list[int]:

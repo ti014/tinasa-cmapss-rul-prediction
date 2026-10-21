@@ -26,7 +26,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_format_metric_is_stable() -> None:
-    assert format_metric(1234.56789) == "1,234.5679"
+    assert format_metric(1234.56789) == "1.234,5679"
     assert format_metric(42, decimals=0) == "42"
 
 

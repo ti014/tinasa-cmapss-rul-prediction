@@ -10,7 +10,7 @@
 
 % Sổ tay thuyết trình Đề tài 8 -- Phan Nguyễn Mai Phương, MSHV 25002711.
 % Hình slide: handoff/assets/slides/slideNN.png (xuất từ PowerPoint).
-% Hình dashboard: handoff/assets/dashboard/*.png (chụp bằng Playwright).
+% Hình dashboard: handoff/assets/dashboard/*.png (chụp bằng scripts/capture_dashboard_screenshots.py).
 
 \definecolor{iuhblue}{HTML}{21409A}
 \definecolor{iuhgold}{HTML}{FCB525}
@@ -539,7 +539,7 @@ cho thấy điểm sức khỏe của nó đã bật đèn vàng từ cycle \num
 
 \subsection*{Bước 2 -- Khử nhiễu (30 giây, hết lúc 17:40)}
 \shot{denoise.png}{0.4}
-\clickbox{Thanh trái: bấm \textbf{Khử nhiễu}. Giữ Engine 001 và sensor\_11. Chỉ đường xám rồi đường
+\clickbox{Thanh trái: bấm \textbf{Khử nhiễu}. Giữ Động cơ 001 và sensor\_11. Chỉ đường xám rồi đường
 xanh. Nếu được hỏi thêm, đổi ô Sensor sang \texttt{sensor\_4}.}
 \say
 Đây là quán cà phê ồn ào em nói lúc nãy: đường xám là tiếng ồn, đường xanh là ý chính sau khi lọc.
@@ -548,7 +548,7 @@ Có thể đổi sang bất kỳ động cơ hay cảm biến nào, hình dạng
 \clearpage
 \subsection*{Bước 3 -- Xu hướng và bất thường (35 giây, hết lúc 18:15)}
 \shot{anomaly.png}{0.5}
-\clickbox{Thanh trái: bấm \textbf{Xu hướng \& bất thường}. Giữ Engine 001. Chỉ vùng xám $\rightarrow$
+\clickbox{Thanh trái: bấm \textbf{Xu hướng \& bất thường}. Giữ Động cơ 001. Chỉ vùng xám $\rightarrow$
 đường đứt $\rightarrow$ vạch cam $\rightarrow$ vạch đen, rồi histogram bên dưới.}
 \say
 Vùng xám là lúc động cơ còn khỏe, đường đứt là ngưỡng sốt. Điểm sức khỏe rớt qua ngưỡng và nằm dưới đó
@@ -558,7 +558,7 @@ cả 100 động cơ đều được báo trước như vậy.
 \subsection*{Bước 4 -- Cảnh báo sớm (25 giây, hết lúc 18:40)}
 \shot{warning.png}{0.42}
 \clickbox{Thanh trái: bấm \textbf{Cảnh báo sớm}. Ô ``Xem quỹ đạo của động cơ'': chọn
-\texttt{Engine 001}. Chỉ vạch đứng ở cycle 162.}
+\texttt{Động cơ 001}. Chỉ vạch đứng ở cycle 162.}
 \say
 Cùng động cơ 1, đèn đỏ bật ở cycle \num{162}. Vậy là: vàng ở 84, đỏ ở 162, hỏng ở 192.
 

@@ -39,6 +39,7 @@ này sau mỗi commit.
 | Chạy lại notebook 00, 02, 05, 06 (00 chạy HDFS thật, MapReduce/Spark khớp Pandas) | — | Claude | Xong | `ea66ceb` |
 | Review chéo mục 6 của Codex: so AST trước/sau, bỏ qua chuỗi, `__future__` và annotation; chỉ còn thay đổi đã giao | C1–C3 | Claude review Codex | Xong, không phát hiện đổi logic | |
 | Review chéo phần chữ Claude đã sửa (report, speech, handoff, README): 17 phát hiện (1 cao, 2 trung bình, 14 thấp). Claude áp 13; từ chối 4 phát hiện đòi mọi bảng 4 chữ số và sửa lại quy ước định dạng số cho rõ | B1–B7, A4 | Codex review, Claude sửa | Xong | xem commit cùng dòng này |
+| Dashboard: nhãn "Động cơ 001", chữ 'cycle', phẩy thập phân qua `format_metric`; chụp lại 6 ảnh demo, thêm script chụp, cập nhật sổ tay | B1, B2 | Claude | Xong (492 đạt, 1 bỏ qua) | xem commit cùng dòng này |
 
 ## Kết luận
 

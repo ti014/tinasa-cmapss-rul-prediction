@@ -121,3 +121,19 @@ Trong notebook, phần chữ khớp với output do chính notebook in ra (noteb
 - `report/sections/theory.tex`, `glossary.tex` và các file `experiments/*.md`.
 
 Các số đếm thuật ngữ dùng regex, nên có thể lệch vài đơn vị.
+
+## Làm lại câu chuyện dữ liệu (21/10/2026)
+
+Kế hoạch và câu chuyện chung: `handoff/STORYLINE.md`. Mốc đọc thử như giám khảo:
+`handoff/archive/COLD_READ_20261021.md`.
+
+| Bước | Việc | Người làm | Trạng thái | Commit |
+|---|---|---|---|---|
+| 0 | Chốt câu chuyện tám cảnh, quy tắc trong `AGENTS.md` | Claude | Xong | `ed5cece`, `bc2d663` |
+| 1a | Đọc thử như giám khảo lần 1: 28 chỗ khó hiểu, ít nhất 62 thuật ngữ chưa giải thích, lẫn train/test | Codex | Xong | `bc2d663` |
+| 1b | Benchmark 1×–200×: ở 100× Spark tính nhanh hơn 5,5 lần; ở 200× Pandas không xong trong 30 phút | Claude | Xong | `80fc333` |
+| 2 | Deck 14 slide chính và 6 dự phòng theo câu chuyện | Codex soạn (dừng vì máy chủ quá tải), Claude hoàn tất | Xong | `f64efcd` |
+| 2 | Lời nói theo 14 slide, câu trả lời big data bằng số đo | Claude | Xong | `11e1a43` |
+| 3 | Report: tóm tắt theo câu chuyện, ghi rõ train/test, sửa chỗ khó hiểu, mục 6.7 big data, giữ 40 trang | Claude | Xong | `9e93512`, `375079f` |
+| 4 | Notebook ghi rõ phục vụ cảnh nào; thứ tự trang dashboard đã khớp | Claude | Xong | xem commit cùng dòng này |
+| 5 | Đọc thử như giám khảo lần 2, so với lần 1 | Codex | Đang làm | |

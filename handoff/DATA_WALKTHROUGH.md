@@ -76,7 +76,7 @@ Reader tách mỗi dòng theo whitespace, yêu cầu đúng 26 trường và gá
 `engine_id/cycle` có kiểu int64; settings/sensors có kiểu float64.
 
 Trong **một subset**, Pandas concat hai bảng theo chiều dòng. PySpark thực hiện
-`unionByName`. Cả hai giữ `split` để phân biệt động cơ train 1 với test engine 1.
+`unionByName`. Cả hai giữ `split` để phân biệt động cơ train 1 với động cơ test 1.
 Đây là union các observations, không phải join lịch sử train/test với nhau.
 File RUL test được giữ riêng đến đánh giá cuối; dòng thứ i của file thuộc
 test engine i theo quy ước bộ dữ liệu.
@@ -106,7 +106,7 @@ FROM train_targets
 WHERE split = 'train' AND engine_id = 1 AND cycle = 100;
 ```
 
-Kết quả FD001 đã đối chiếu: engine train 1 có 192 cycle, từ 1 đến 192;
+Kết quả FD001 đã đối chiếu: động cơ train 1 có 192 cycle, từ 1 đến 192;
 target tại cycle 100 là 92. Không có bảng `observations` trong SQLite này.
 
 Để lấy các giá trị sensor, module features đọc
@@ -172,7 +172,7 @@ window lấy 30 observations từ 71 đến 100. `sensor_11__last = 47,64`,
 Cycle 101 không tham gia feature tại cycle 100. Join features/targets giữ
 17.731 train rows, không nhân lên thành các tổ hợp cycle.
 
-Một engine dài T cycle có T−29 feature rows với window 30.
+Một động cơ dài T cycle có T−29 feature rows với window 30.
 Tổng FD001: 20.631−100×29 = 17.731 train rows;
 13.096−100×29 = 10.196 test rows. Engine quá ngắn khiến pipeline báo lỗi,
 không tự loại engine, padding hoặc rút ngắn window.
@@ -185,7 +185,7 @@ không tự loại engine, padding hoặc rút ngắn window.
 
 | Hai đối tượng | Quan hệ trong một subset | Cách sử dụng |
 |---|---|---|
-| Engine summary – observations | 1:N theo split/engine | Một engine có nhiều cycle |
+| Engine summary – observations | 1:N theo split/engine | Một động cơ có nhiều cycle |
 | Train observation – train target | 1:1 theo split/engine/cycle | Một nhãn cho mỗi observation train |
 | Observation ở endpoint – feature row | 1:0..1 theo split/engine/cycle | 29 cycle đầu chưa đủ window; từ cycle 30 có một row |
 | Train feature – train target tương ứng | 1:1 trên các khóa đủ window | Join có `validate="one_to_one"` trong modeling |
@@ -267,8 +267,8 @@ phân tán.
 “Trong một subset, chương trình đọc hai file observations cùng schema rồi
 union theo dòng và giữ split. Dữ liệu sensor nằm trong Parquet, bảng tổng hợp
 và nhãn train nằm trong SQLite. Chương trình group theo engine, lấy 30 cycle
-gần nhất, tạo 126 features rồi join đúng cycle với RUL train. Engine train 1
-ở cycle 100 dùng cycle 71–100 và có target 92. Quan hệ chính là một engine
+gần nhất, tạo 126 features rồi join đúng cycle với RUL train. Động cơ train 1
+ở cycle 100 dùng cycle 71–100 và có target 92. Quan hệ chính là một động cơ
 có nhiều observations; join features/targets là một–một. PySpark chạy
 local[4] để kiểm tra ETL và rolling tương đương Pandas, còn modeling dùng
 Pandas/scikit-learn. Benchmark scale 1×/10× có đọc và ghi, nhưng Spark ghi

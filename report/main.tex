@@ -90,9 +90,10 @@ thời điểm cần bảo trì, kèm biểu đồ xu hướng cảnh báo sớm
 Dữ liệu được kiểm tra schema, khóa và tính liên tục của cycle, rồi lưu theo các lớp
 Bronze, Silver và Gold bằng Parquet và SQLite. ETL và rolling features được viết
 bằng cả Pandas và PySpark; hai implementation khớp hoàn toàn trên cùng input, và ở
-scale $10\times$, Spark local nhanh hơn Pandas khoảng 3,4 lần. Tín hiệu được khử
-nhiễu bằng EWMA span 10, giảm khoảng 86\% dao động ngắn hạn mà vẫn giữ xu hướng suy
-giảm, rồi tổng hợp theo window 30 cycle thành 126 đặc trưng.
+scale $10\times$, Spark local nhanh hơn Pandas khoảng 3,4 lần. Nhánh RUL tổng
+hợp sensor gốc theo window 30 cycle thành 126 đặc trưng. Nhánh phân tích tín hiệu
+khử nhiễu bằng EWMA span 10, giảm khoảng 86\% dao động ngắn hạn mà vẫn giữ xu hướng
+suy giảm, để tạo Health Index và phát hiện bất thường.
 
 Kết quả gồm hai mức cảnh báo. Mức một dùng Health Index từ tín hiệu đã khử nhiễu:
 khi chỉ số giảm quá 3 độ lệch chuẩn so với 30 cycle đầu, cả 100/100 động cơ train

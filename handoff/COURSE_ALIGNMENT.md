@@ -48,7 +48,7 @@ slide, dashboard và kịch bản dùng cùng một mô hình, một bảng cả
 | Phân tích chuỗi thời gian từ cảm biến | `src/cmapss/data/readers.py`; mỗi quan sát có `engine_id`, `cycle`, 3 settings, 21 sensor; Mục 2 báo cáo | **Đạt** trong phạm vi dữ liệu batch mô phỏng |
 | Xử lý nhiễu tín hiệu | `src/cmapss/degradation/denoise.py`: EWMA span 10, chỉ dùng quá khứ; giảm trung vị 86,3% dao động; hình trước/sau; Mục 5.2 và 6.2 | **Đạt**; giới hạn: không có tín hiệu sạch để đối chiếu |
 | Chuẩn hóa dữ liệu | Kiểm tra schema/kiểu trong ETL; StandardScaler cho Ridge (trong fold) và trước PCA (Health Index) | **Đạt**; HGB dùng thang gốc vì cây không phụ thuộc thang đo |
-| Tổng hợp theo time window | Window nhân quả 30 cycle, 126 đặc trưng; parity Pandas–PySpark | **Đạt** |
+| Tổng hợp theo time window | Window 30 cycle, chỉ dùng dữ liệu hiện tại và quá khứ, 126 đặc trưng; parity Pandas–PySpark | **Đạt** |
 | Phát hiện dấu hiệu bất thường | `src/cmapss/degradation/anomaly.py`: Health Index giảm quá 3σ so với 30 cycle đầu, 5 cycle liên tiếp; 100/100 động cơ train, trung vị 121 cycle trước khi hỏng; phân tích độ nhạy 9 cấu hình (2/3/4σ × 3/5/10 cycle) đều phát hiện 100/100, lead time nhỏ nhất ≥ 50 cycle (Bảng 18); Mục 5.3 và 6.3 | **Đạt**; giới hạn: chưa đo trực tiếp được tỷ lệ báo động giả |
 | Trực quan hóa xu hướng suy giảm | Quỹ đạo sensor, kiểm định đầu/cuối, Health Index, quỹ đạo cảnh báo | **Đạt** |
 | Dự đoán thời điểm cần bảo trì | `src/cmapss/maintenance/`: lịch cho 100 động cơ test; 21/21 báo cần bảo trì là đúng; Mục 6.6 | **Đạt** trong phạm vi FD001 và điểm cắt test; giới hạn: 12 động cơ còn xa hỏng (RUL thật ≥ 77) có lịch muộn hơn lúc hỏng 4–27 cycle |

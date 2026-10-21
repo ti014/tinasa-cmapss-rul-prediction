@@ -260,8 +260,8 @@ năm ô vàng ở hàng dưới cùng (Thu thập $\rightarrow$ Lưu trữ).}
 Ba lớp Đồng, Bạc, Vàng giống quy trình làm trang sức. Cột bên trái là ba bước chuẩn bị chung.
 \num{Bước 1} tải dữ liệu thẳng từ trang của NASA và kiểm tra mã băm để chắc không sai một byte.
 \num{Bước 2} là lớp Đồng: file text gốc, giữ nguyên, không bao giờ ghi đè. \num{Bước 3} là cửa
-kiểm hàng: đủ 26 cột chưa, đúng kiểu số chưa, có dòng nào trùng không, các cycle có liền
-mạch không, rồi tính RUL cho train. Ô nét đứt bên dưới là bản chạy lại trên Hadoop: MapReduce
+kiểm hàng: đủ 26 cột chưa, đúng kiểu số chưa, có dòng nào trùng không, chỉ số cycle của từng
+động cơ có liên tục không, rồi tính RUL cho train. Ô nét đứt bên dưới là bản chạy lại trên Hadoop: MapReduce
 tính lại bảng 200 động cơ và khớp hoàn toàn, nhưng không đi vào mô hình.
 
 \num{Nhánh A} dự đoán RUL. A1 lưu lớp Bạc, là dữ liệu đã kiểm tra dạng Parquet, và lớp Vàng,
@@ -314,7 +314,7 @@ còn lại.
 \lookbox{Chỉ đường \textbf{xám} lởm chởm, rồi đường \textbf{xanh} mượt ở hình sensor\_11. Sau đó
 chỉ dòng sensor\_4 trong bảng, rồi dòng ``Công thức'' phía dưới.}
 \say
-Đường xám là số đo thật của động cơ 1: lên xuống lởm chởm từng cycle, giống nghe ai nói trong
+Đường xám là số đo thật của động cơ train 1: dao động mạnh từ cycle này sang cycle khác, giống nghe ai nói trong
 quán cà phê ồn ào. Mình không cần nghe rõ từng tiếng, chỉ cần nắm được ý chính.
 
 Em dùng \num{EWMA}, trung bình trượt có trọng số mũ. Cách tính giống cách mình đánh giá phong độ
@@ -504,8 +504,8 @@ vàng ``Giới hạn''.}
 Bốn lần vấp. Một: dữ liệu không ghi lúc nào động cơ bắt đầu yếu, nên em so mỗi động cơ với chính nó
 lúc khỏe. Hai: dữ liệu theo thời gian rất dễ lộ đề, nên phải chia theo động cơ chứ không chia theo
 dòng. Ba: hạ tầng. Spark trên Windows không chịu ghi file, còn Hadoop trong Docker thì lần đầu báo
-chạy xong mà kho vẫn thiếu bản sao; em học được là chạy xong chưa đủ, phải kiểm tra lại kho. Bốn, và đây là bài học lớn nhất: em từng mất khá nhiều thời gian chỉ để giảm vài cycle sai
-số, rồi nhận ra người vận hành cần \num{một cảnh báo dễ hiểu} hơn là một con số đẹp hơn.
+chạy xong mà kho vẫn thiếu bản sao; em học được là chạy xong chưa đủ, phải kiểm tra lại kho. Bốn, và đây là bài học lớn nhất: em từng mất khá nhiều thời gian chỉ để giảm sai số vài
+cycle, rồi nhận ra người vận hành cần \num{một cảnh báo dễ hiểu} hơn là một con số đẹp hơn.
 
 Giới hạn: đây là dữ liệu mô phỏng, chưa có chi phí bảo trì, Hadoop và Spark mới chạy trên một máy, và
 kết quả cảnh báo trên train hơi lạc quan.

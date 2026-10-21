@@ -7,10 +7,10 @@ services:
     hostname: namenode
     command: ["hdfs", "namenode"]
     ports:
-      - "9870:9870"
+      - "${CMAPSS_NAMENODE_PORT:-9870}:9870"
     env_file: ./config
     environment:
-      ENSURE_NAMENODE_DIR: "/tmp/hadoop-root/dfs/name"
+      ENSURE_NAMENODE_DIR: "/tmp/hadoop-hadoop/dfs/name"
 
   datanode:
     image: apache/hadoop:3.4.3
@@ -23,7 +23,7 @@ services:
     hostname: resourcemanager
     command: ["yarn", "resourcemanager"]
     ports:
-      - "8088:8088"
+      - "${CMAPSS_YARN_PORT:-8088}:8088"
     env_file: ./config
 
   nodemanager:

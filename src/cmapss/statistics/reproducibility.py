@@ -277,7 +277,11 @@ def _run_notebook(
         "--ExecutePreprocessor.kernel_name=python3",
     ]
     start = time.perf_counter()
-    completed = _run_command(command, cwd=project_root, env=env)
+    notebook_env = {
+        **env,
+        "CMAPSS_STATISTICS_NOTEBOOK_OUTPUT": str(project_root / "outputs/statistics"),
+    }
+    completed = _run_command(command, cwd=project_root, env=notebook_env)
     elapsed = time.perf_counter() - start
     return {
         "command": _stringify_command(command),

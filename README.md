@@ -484,7 +484,6 @@ protocol. These results are train-only and are not feature selection.
 ![FD001 train statistics workflow](assets/diagrams/fd001-statistics.svg)
 
 [Editable draw.io source](assets/diagrams/fd001-statistics.drawio) ·
-[Browser URL file](assets/diagrams/fd001-statistics.drawio-url.txt) ·
 [Methods, tables, validation, and limits](outputs/statistics/README.md)
 
 For example, the 100 train engines have a median lifetime of 199 cycles.

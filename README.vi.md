@@ -470,7 +470,6 @@ không phải lựa chọn đặc trưng (feature selection).
 ![Quy trình thống kê train FD001](assets/diagrams/fd001-statistics.svg)
 
 [Nguồn draw.io có thể chỉnh sửa](assets/diagrams/fd001-statistics.drawio) ·
-[File URL mở bằng trình duyệt](assets/diagrams/fd001-statistics.drawio-url.txt) ·
 [Phương pháp, bảng, validation và giới hạn](outputs/statistics/README.md)
 
 Ví dụ: trung vị tuổi thọ của 100 động cơ train là 199 cycle. Sáu sensor hằng

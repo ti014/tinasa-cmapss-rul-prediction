@@ -94,9 +94,8 @@ quát hóa sang điều kiện vận hành hoặc fault mode khác.
 
 ## Giới hạn
 
-- Phân tích PCA--ARIMA train-only đã được ghi tại
-  [`outputs/timeseries`](../timeseries/README.md); dashboard đọc các artifact
-  modeling và timeseries tại `app.py`. Phân tích lỗi theo sensor vẫn chưa có.
+- Dashboard đọc các artifact modeling qua `app.py`. Phân tích lỗi theo sensor
+  vẫn chưa có.
 - Có thể chạy `python -m cmapss.reproducibility` để tái tạo toàn bộ chuỗi từ raw
   vào output root mới và đối chiếu metric, bảng, hình cùng dashboard loader.
 - Chưa cắt prediction âm vì lần chạy hiện tại không sinh giá trị âm; config ghi

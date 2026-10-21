@@ -12,8 +12,6 @@ import argparse
 import hashlib
 import io
 import json
-import shutil
-import tempfile
 import urllib.request
 import zipfile
 from datetime import datetime, timezone

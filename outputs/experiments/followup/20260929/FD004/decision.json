@@ -1,6 +1,0 @@
-{
-  "meets_predeclared_outer_gate": true,
-  "recommendation": "candidate_supported_for_further_validation",
-  "interval_scope": "conditional on fitted outer predictions",
-  "test_used_for_selection": false
-}

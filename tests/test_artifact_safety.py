@@ -359,7 +359,7 @@ def test_cleanup_error_does_not_hide_primary_error(
 
     monkeypatch.setattr(artifacts, "_remove_workspace", fail_cleanup)
     with pytest.raises(ValueError, match="primary stage error") as raised:
-        with artifacts.staged_artifact_bundle(tmp_path / "bundle", ["data"]) as stage:
+        with artifacts.staged_artifact_bundle(tmp_path / "bundle", ["data"]):
             raise ValueError("primary stage error")
     assert "injected cleanup error" in raised.value.__notes__[0]
     assert not (tmp_path / "bundle").exists()

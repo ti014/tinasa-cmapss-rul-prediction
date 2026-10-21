@@ -1,6 +1,0 @@
-{
-  "meets_predeclared_outer_gate": false,
-  "recommendation": "retain_baseline",
-  "interval_scope": "conditional on fitted outer predictions",
-  "test_used_for_selection": false
-}

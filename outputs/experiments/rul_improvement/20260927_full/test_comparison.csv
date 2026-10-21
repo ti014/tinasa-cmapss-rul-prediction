@@ -1,3 +1,0 @@
-model,evaluation,n_rows,n_engines,mean_window_mae,mean_engine_mae,rmse,nasa_score,low_rul_engine_mae,n_low_rul_engines
-baseline,test_final_observed_cycle,100,100,15.349047436930459,15.349047436930459,20.541266675083385,1513.257655888328,4.383042419332335,25
-selected_final,test_final_observed_cycle,100,100,15.349047436930459,15.349047436930459,20.541266675083385,1513.257655888328,4.383042419332335,25

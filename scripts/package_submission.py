@@ -44,9 +44,8 @@ INCLUDE = [
 EXCLUDE_NAMES = {"__pycache__", ".pytest_cache", ".ipynb_checkpoints", "fit_cache", "node_modules", "bin"}
 EXCLUDE_PATTERNS = ["*.pyc", "*.log", "*.aux", "*.xdv", "*.out", "*.toc", "*.blg", "*.bbl", "*.synctex.gz"]
 
-# Thử nghiệm phụ không thuộc báo cáo: notebook 04, 05 và kết quả của chúng.
-EXCLUDE_PREFIXES = ("notebooks/04_", "notebooks/05_", "outputs/notebook04/", "outputs/notebook05/",
-                    "outputs/experiments/", "outputs/timeseries/")
+# Thư mục chạy nghiên cứu audit_study; báo cáo chỉ dùng ba file đầu vào ở EVIDENCE_INPUTS.
+EXCLUDE_PREFIXES = ("outputs/experiments/",)
 # Đầu vào của scripts/build_course_alignment_evidence.py (nguồn kết quả ngưỡng 30/40).
 EVIDENCE_INPUTS = {f"outputs/experiments/multiscale_comparison/20261006_study02/{name}"
                    for name in ("outer_predictions.parquet", "manifest.json", "aggregate_metrics.csv")}

@@ -26,10 +26,10 @@ sys.path.insert(0, str(ROOT / "src"))
 from cmapss.data.contracts import SENSORS  # noqa: E402
 from cmapss.modeling.audit_study import (  # noqa: E402
     WarningPolicy,
-    _warning_readout,
     build_endpoint_panel,
     warning_events,
 )
+from cmapss.modeling.audit_study.evaluation import _warning_readout  # noqa: E402
 
 
 AUTHOR = "Phan Nguyễn Mai Phương"
@@ -312,7 +312,6 @@ def build_smoothing_evidence(observations: pd.DataFrame) -> tuple[pd.DataFrame, 
     """
     train = observations.loc[observations["split"].eq("train")].copy()
     train.sort_values(["engine_id", "cycle"], inplace=True)
-    sensor_records: list[dict[str, Any]] = []
     engine_records: list[dict[str, Any]] = []
     for engine_id, group in train.groupby("engine_id", sort=True):
         group = group.sort_values("cycle")

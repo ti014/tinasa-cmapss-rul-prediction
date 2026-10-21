@@ -64,12 +64,10 @@ nbformat==5.10.4
 nest-asyncio==1.6.0
 notebook-shim==0.2.4
 numpy==2.3.3
-nvidia-nccl-cu13==2.32.3 ; sys_platform == 'linux'
 packaging==25.0
 pandas==2.3.3
 pandocfilters==1.5.1
 parso==0.8.7
-patsy==1.0.3
 pexpect==4.9.0 ; sys_platform != 'emscripten' and sys_platform != 'win32'
 pillow==12.3.0
 platformdirs==4.11.11
@@ -98,13 +96,11 @@ rfc3987-syntax==1.1.0
 rpds-py==2026.6.3
 scikit-learn==1.9.1
 scipy==1.16.2
-seaborn==0.13.2
 send2trash==2.1.0
 setuptools==84.0.0
 six==1.17.0
 soupsieve==2.9.2
 stack-data==0.6.3
-statsmodels==0.14.5
 terminado==0.18.1
 threadpoolctl==3.7.0
 tinycss2==1.5.1
@@ -118,4 +114,3 @@ wcwidth==0.8.4
 webcolors==25.10.0
 webencodings==0.6.1
 websocket-client==1.9.2
-xgboost==3.4.1

@@ -1,8 +1,0 @@
-{
-  "hgb_cap125/fold_1": "outputs/experiments/lightgbm_comparison/20261005_study01/fit_cache/a158eac289a092552648e954446fa02c33bef6ffa9e2e035f4629184f622acad.parquet",
-  "hgb_cap125/fold_2": "outputs/experiments/lightgbm_comparison/20261005_study01/fit_cache/8ddcd0ec37b077e01f737161ce4ab0b88a93f1efdd7dbbde61c2544917f46b48.parquet",
-  "hgb_cap125/fold_3": "outputs/experiments/lightgbm_comparison/20261005_study01/fit_cache/38ef83b5c7153e9ffe79903c4615a7e316a70a8f75b58e6b9ab66bb7242aebe2.parquet",
-  "hgb_uncapped/fold_1": "outputs/experiments/lightgbm_comparison/20261005_study01/fit_cache/59a7d1c666f67d6c8a5cd54b740cb0deb4a58861f041564bae9ae21216165825.parquet",
-  "hgb_uncapped/fold_2": "outputs/experiments/lightgbm_comparison/20261005_study01/fit_cache/29a16684654aa6686ba4aef408e29e54e3b741ea01f9e435fcbc84d247553ad1.parquet",
-  "hgb_uncapped/fold_3": "outputs/experiments/lightgbm_comparison/20261005_study01/fit_cache/1972d2d703b420dd84197da5f40704bbf4b919aab8d34a244107f6cfb23377ac.parquet"
-}

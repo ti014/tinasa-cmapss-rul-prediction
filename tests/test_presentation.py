@@ -16,7 +16,7 @@ def test_vietnamese_numbers(value, digits, expected):
 
 def test_shared_plot_style_keeps_category_labels():
     from matplotlib import pyplot as plt
-    from cmapss.presentation import COLORS, FONT, apply_plot_style, style_figure
+    from cmapss.presentation import FONT, apply_plot_style, style_figure
 
     apply_plot_style()
     fig, ax = plt.subplots()

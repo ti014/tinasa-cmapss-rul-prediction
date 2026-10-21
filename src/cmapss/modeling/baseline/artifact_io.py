@@ -12,7 +12,6 @@ import json
 
 from matplotlib import pyplot as plt
 import joblib
-import matplotlib
 import pandas as pd
 
 from cmapss.modeling.baseline.config import ModelingResult

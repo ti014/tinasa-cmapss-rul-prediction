@@ -70,9 +70,6 @@ def create_spark_session(app_name: str = "cmapss-etl") -> Any:
 def _read_raw(spark: Any, path: Path, split: str) -> Any:
     """Đọc file whitespace thành DataFrame Spark với schema raw contract."""
     _, F, T = _spark_modules()
-    raw_schema = T.StructType(
-        [T.StructField(column, T.StringType(), nullable=False) for column in RAW_COLUMNS]
-    )
     lines = spark.read.text(str(path)).where(F.length(F.trim("value")) > 0)
     tokens = F.split(F.trim(F.col("value")), r"\s+")
     selected = [

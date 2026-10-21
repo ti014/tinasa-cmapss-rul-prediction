@@ -1,5 +1,0 @@
-procedure,on_time_rate,on_time_count,late_or_missed_rate,missed_warning_count,early_alarm_burden,mean_transitions,mean_retractions,engines_with_retractions,median_lead_time,min_lead_time,max_lead_time,n_engines
-hgb_baseline169,0.94,94,0.06,0,0.05215879218132075,1.74,0.37,30,37.0,25.0,68.0,100
-hgb_initial_profile42,0.95,95,0.05,0,0.0724435480423483,1.38,0.19,18,41.0,26.0,83.0,100
-hgb_multiscale10_30,0.91,91,0.09,0,0.05272628648158194,1.56,0.28,23,38.0,27.0,54.0,100
-selected_pipeline,0.94,94,0.06,0,0.05215879218132075,1.74,0.37,30,37.0,25.0,68.0,100

@@ -4,7 +4,6 @@ from pathlib import Path
 import importlib.util
 
 import pandas as pd
-import pytest
 
 from cmapss.modeling.contracts import RUL_BINS
 

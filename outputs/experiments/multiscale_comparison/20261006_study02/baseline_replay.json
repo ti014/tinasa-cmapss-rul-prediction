@@ -1,9 +1,0 @@
-{
-  "applicable": true,
-  "keys_match": true,
-  "raw_truth_match": true,
-  "prediction_max_abs_delta": 0.0,
-  "tolerance": 1e-08,
-  "reference": "outputs\\experiments\\lightgbm_comparison\\20261005_study01\\outer_predictions.parquet",
-  "passed": true
-}

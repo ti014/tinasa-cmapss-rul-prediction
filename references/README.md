@@ -51,7 +51,6 @@ Xem [hướng dẫn đọc](reading-guide.md) để biết phần cần đọc, 
 | M9 `sklearnGroupedCV` | [scikit-learn — grouped cross-validation](https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation-iterators-for-grouped-data) | Ranh giới group trong cross-validation |
 | M10 `sklearnPCA` | [scikit-learn — PCA](https://scikit-learn.org/stable/modules/decomposition.html#pca) | Phép chiếu và phương sai; không chứng minh PCA tự tạo health signal |
 | M11 `hyndman2021fpp3` | Hyndman & Athanasopoulos (2021), [Forecasting: Principles and Practice, 3rd ed.](https://otexts.com/fpp3/) | Đã đọc các mục 5.4, 9.1, 9.5, 9.7; dùng lý thuyết, không chuyển pipeline sang R |
-| M12 `statsmodelsADF` | [statsmodels — ADF](https://www.statsmodels.org/stable/generated/statsmodels.tsa.stattools.adfuller.html) | Giả thuyết unit root và cấu hình diagnostic |
 | M13 `sparkSQLGuide` | [Apache Spark — SQL and DataFrames](https://spark.apache.org/docs/latest/sql-programming-guide.html) | Dữ liệu có schema; chưa có benchmark hoặc phiên bản Spark được chọn |
 
 Không tải thêm PDF trong lượt này. Các URL `stable`/`latest` là tài liệu online

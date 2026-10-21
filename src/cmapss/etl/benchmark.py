@@ -6,7 +6,6 @@ import platform
 import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Iterable
 
 import pandas as pd
 

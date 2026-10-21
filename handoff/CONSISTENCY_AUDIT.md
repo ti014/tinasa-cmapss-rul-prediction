@@ -6,6 +6,34 @@ Ngày rà soát: 21/10/2026, sau commit `1f10c85`. Phạm vi gồm `src/`, `test
 `notebooks/`, `report/`, `slides/`, `handoff/`, `README.md` và `README.vi.md`.
 Lượt rà soát này chỉ đọc file, không sửa nội dung nào.
 
+## Tiến độ sửa
+
+Cách phối hợp: Claude sửa phần chữ (`report/`, `handoff/`, `README*.md`). Codex
+sửa phần code (`src/`, `scripts/`, `slides/*.py`, `notebooks/`, `tests/`). Sandbox
+của Codex không ghi được `.git`, nên Codex chỉ sửa file và ghi tiến độ vào
+`tmp/codex_progress.md`. Claude chạy test, review rồi commit thay. Cập nhật bảng
+này sau mỗi commit.
+
+| Việc | Mục audit | Người làm | Trạng thái | Commit |
+|---|---|---|---|---|
+| Commit phần notebook và HDFS Codex làm trước đó | — | Codex sửa, Claude commit | Xong | `f390abf`, `1f10c85` |
+| Báo cáo audit và quy ước trong `AGENTS.md` | — | Claude | Xong | `85693ac` |
+| Speech: 12 sensor đổi cùng hướng | A1 | Claude | Xong | `b46ca07` |
+| Một hàm định dạng số và một hàm đọc dữ liệu thô dùng chung | C4 | Codex | Xong | `fcbd076` |
+| Một bộ bins nhóm RUL dùng chung | A7 | Codex | Xong | `80c5b31` |
+| Thuật ngữ trong report, speech, handoff: cycle, cross-validation, động cơ train N | B1, B3 | Claude | Xong | `ef6f50c` |
+| Một bảng màu, một font, trục dấu phẩy, nhãn hình tiếng Việt | E1, E2, D2, D3 | Codex sửa, Claude test và commit | Xong (485 test đạt) | `cf68703` |
+| Slide đọc số từ `slide_data.json`, sửa câu 145 cycle, đổi "kiểm định chéo" | A3, A9, B3 | Codex | Đang làm | |
+| Notebook: phẩy thập phân, mục "Lưu kết quả", gọi `cmapss.*` | D1, D4, D5, B2 | Codex | Chờ | |
+| Docstring, comment, thông báo lỗi tiếng Việt; return type | C1, C2, C3 | Codex | Chờ | |
+| Report: 12 sensor, dung lượng 44,9 MB, ghi chú run dựng lại | A2, A6, A8 | Claude | Xong | xem commit kế tiếp |
+| Số test trong report và handoff | A4 | Claude | Chờ Codex xong để chạy test lần cuối | |
+| Số trang: PDF thực tế 51 trang, giới hạn ghi là 50 | A5 | Người dùng quyết | Chờ quyết định | |
+| 47,40; thứ tự build deck; FD001–FD004 trong README | E3, E5, E7 | Claude | Xong | xem commit kế tiếp |
+| Ngày cập nhật tài liệu | E4 | Claude | Làm cuối cùng | |
+| Macro `\num` trong speech | E6 | — | Bỏ qua: chỉ ảnh hưởng cách in đậm, sửa 100+ chỗ không đổi nội dung | |
+| Vẽ lại PNG trong `outputs/` mà report nhúng, theo style mới | E1 | Claude | Chờ Codex xong | |
+
 ## Kết luận
 
 Số liệu chính khớp nhau ở mọi tài liệu. Ví dụ: MAE test 15,35, RMSE 20,54,

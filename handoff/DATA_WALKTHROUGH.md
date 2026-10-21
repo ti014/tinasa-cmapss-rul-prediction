@@ -116,7 +116,7 @@ projection (lấy một số cột). Đọc Parquet rồi lọc trong bộ nhớ
 triển khai query engine, SQL trên Parquet hoặc partition pruning.
 
 Ví dụ: lấy `sensor_11` của động cơ train 1 ở cycle 71–100 sẽ nhận 30 dòng.
-Giá trị trung bình là 47,395 theo thang gốc. Kết quả này đối chiếu được với
+Giá trị trung bình là 47,40 theo thang gốc. Kết quả này đối chiếu được với
 `sensor_11__mean` tại cycle 100 trong artifact features.
 Dashboard hiện đọc predictions/metrics/Health Index đã sinh, không cung cấp
 giao diện truy vấn raw sensor hoặc chạy lại ETL.
@@ -168,7 +168,7 @@ không được dùng để chọn sensor cho model.
 
 Ví dụ thực tế FD001: động cơ train 1 kết thúc ở cycle 192. Tại cycle 100,
 window lấy 30 observations từ 71 đến 100. `sensor_11__last = 47,64`,
-`sensor_11__mean = 47,395`; train target là `192 − 100 = 92` cycle.
+`sensor_11__mean = 47,40`; train target là `192 − 100 = 92` cycle.
 Cycle 101 không tham gia feature tại cycle 100. Join features/targets giữ
 17.731 train rows, không nhân lên thành các tổ hợp cycle.
 

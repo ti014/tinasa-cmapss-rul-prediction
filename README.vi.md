@@ -16,7 +16,7 @@ Repository này phục vụ báo cáo cuối kỳ môn Phân tích dữ liệu l
 Phân tích dữ liệu IoT và bảo trì dự đoán**. Bài toán: phân tích dữ liệu cảm biến
 thiết bị để phát hiện dấu hiệu bất thường và dự đoán thời điểm cần bảo trì. Dữ liệu
 là bộ mô phỏng động cơ turbofan NASA C-MAPSS; phân tích chính dùng FD001,
-FD002--FD004 chỉ dùng trong thử nghiệm mở rộng.
+FD002–FD004 chỉ dùng trong thử nghiệm mở rộng.
 
 ## Trạng thái
 
@@ -45,7 +45,7 @@ Sản phẩm bàn giao:
   [đối chiếu yêu cầu môn học](handoff/COURSE_ALIGNMENT.md).
 
 Thử nghiệm mở rộng (nested CV, thêm 42 đặc trưng lịch sử, similarity-based RUL,
-LightGBM, TCN, chuyển miền FD002--FD004, ARIMA) vẫn được giữ trong
+LightGBM, TCN, chuyển miền FD002–FD004, ARIMA) vẫn được giữ trong
 [`experiments/`](experiments/README.md) và `outputs/experiments/`. Không thử nghiệm
 nào thay đổi mô hình chính hay chính sách cảnh báo.
 
@@ -68,7 +68,7 @@ Sản phẩm đặc thù theo đề tài là **báo cáo dự đoán thời đi�
 
 ## Dữ liệu
 
-Báo cáo dùng bốn subset mô phỏng NASA C-MAPSS. FD001 là subset chính cho phân tích chi tiết; FD002--FD004 phục vụ đánh giá bổ sung.
+Báo cáo dùng bốn subset mô phỏng NASA C-MAPSS. FD001 là subset chính cho phân tích chi tiết; FD002–FD004 phục vụ đánh giá bổ sung.
 
 | Subset | Dòng train | Dòng test | Engine train | Engine test và nhãn |
 | --- | ---: | ---: | ---: | ---: |
@@ -86,7 +86,7 @@ Mỗi quan sát gồm:
 - Ba thông số vận hành (operational settings).
 - Giá trị của 21 cảm biến (sensor measurements).
 
-FD001 đại diện cho một điều kiện vận hành và một dạng suy giảm High-Pressure Compressor. FD002--FD004 mở rộng số điều kiện vận hành và dạng lỗi. Tín hiệu chứa nhiễu cảm biến mô phỏng. Ma trận metric bổ sung cho FD002--FD004 nằm trong `outputs/cross_dataset`.
+FD001 đại diện cho một điều kiện vận hành và một dạng suy giảm High-Pressure Compressor. FD002–FD004 mở rộng số điều kiện vận hành và dạng lỗi. Tín hiệu chứa nhiễu cảm biến mô phỏng. Ma trận metric bổ sung cho FD002–FD004 nằm trong `outputs/cross_dataset`.
 
 ### Nguồn gốc và tính toàn vẹn
 
@@ -97,7 +97,7 @@ FD001 đại diện cho một điều kiện vận hành và một dạng suy gi
 
 Đây là dữ liệu mô phỏng, không phải telemetry thu trực tiếp ngoài thực địa. Kết
 quả phục vụ so sánh học thuật tái lập, trong đó FD001 là subset chính và
-FD002--FD004 là các đánh giá bổ sung; kết quả chưa chứng minh hiệu quả khi triển khai thực tế.
+FD002–FD004 là các đánh giá bổ sung; kết quả chưa chứng minh hiệu quả khi triển khai thực tế.
 
 ## Kiến trúc dữ liệu
 
@@ -126,10 +126,10 @@ trình huấn luyện RUL lên cụm nhiều máy.
 
 ### Quan hệ dữ liệu và công cụ
 
-Mỗi dòng được định danh bởi `(split, engine_id, cycle)`. Một engine có nhiều
+Mỗi dòng được định danh bởi `(split, engine_id, cycle)`. Một động cơ có nhiều
 cycle; tại mỗi cycle có 3 operational settings, 21 sensors và nhãn RUL của
-train. Với engine kết thúc ở cycle 200, observation tại cycle 170 có RUL = 30.
-Rolling window tại cycle 170 lấy cycle 141--170 của cùng engine để tạo 126
+train. Với động cơ kết thúc ở cycle 200, observation tại cycle 170 có RUL = 30.
+Window 30 cycle tại cycle 170 lấy cycle 141–170 của cùng động cơ để tạo 126
 features (6 phép tóm tắt cho mỗi 21 sensor).
 
 | Bước | Công cụ | Đầu ra chính |
@@ -169,7 +169,7 @@ của mỗi lần chạy nằm riêng trong `/cmapss/notebook00/`; các containe
 chạy trong Compose project `cmapss-notebook00` để kiểm tra kết quả (NameNode:
 `http://localhost:9871`, YARN: `http://localhost:8089`). Notebook không huấn luyện mô hình RUL.
 
-FD001--FD004 được xử lý riêng trong các thư mục subset. Không union bốn subset
+FD001–FD004 được xử lý riêng trong các thư mục subset. Không union bốn subset
 thành một bảng chung vì khóa hiện tại chưa có `dataset_id`. Quan hệ chính là
 engine--observations một-nhiều; join feature với target và prediction với test
 label là một-một. Project chưa triển khai quan hệ nhiều-nhiều, Airflow hoặc
@@ -201,7 +201,7 @@ thang gốc; rolling feature pipeline không fit một scaler chung.
 
 ### Xây dựng đặc trưng
 
-Biểu diễn đặc trưng đã triển khai sử dụng trailing window dài 30 cycle. Artifact giữ đủ 21 sensors để chưa thực hiện feature selection trên toàn bộ train. Với mỗi sensor, các đặc trưng đã tạo gồm:
+Biểu diễn đặc trưng đã triển khai sử dụng window 30 cycle. Artifact giữ đủ 21 sensors để chưa thực hiện feature selection trên toàn bộ train. Với mỗi sensor, các đặc trưng đã tạo gồm:
 
 - Giá trị gần nhất.
 - Trung bình và sample standard deviation (`ddof=1`).
@@ -210,7 +210,7 @@ Biểu diễn đặc trưng đã triển khai sử dụng trailing window dài 3
 
 Window dùng giá trị sensor gốc trong Silver, không dùng tín hiệu EWMA hoặc Health
 Index. Mỗi window chỉ chứa dữ liệu của một động cơ và không sử dụng quan sát tương
-lai. Engine dưới 30 cycle bị từ chối thay vì padding, impute hoặc rút ngắn window.
+lai. Động cơ dưới 30 cycle bị từ chối thay vì padding, impute hoặc rút ngắn window.
 29 cycle đầu mỗi động cơ chưa đủ window, nên còn 17.731 dòng features train và
 10.196 dòng test; chỉ 100 dòng test ở cycle cuối được dùng để dự đoán cuối.
 
@@ -252,10 +252,10 @@ số cycle còn lại.
 Ví dụ: động cơ test 90 ở cycle 146 có RUL dự đoán 31,2, nên cần bảo trì ở cycle 147
 và đang ở mức theo dõi tăng cường vì Health Index đã báo bất thường từ cycle 67.
 
-### Đánh giá FD002--FD004
+### Đánh giá FD002–FD004
 
-Kho raw đã có đủ FD001--FD004. Ma trận bổ sung dùng cùng pipeline với window 10
-cycle vì test FD004 có engine ngắn nhất 19 cycle; kết quả này không thay thế
+Kho raw đã có đủ FD001–FD004. Ma trận bổ sung dùng cùng pipeline với window 10
+cycle vì test FD004 có động cơ ngắn nhất 19 cycle; kết quả này không thay thế
 metric chính FD001 dùng window 30. Evaluation nội bộ đạt MAE 21,9258 trên FD001,
 22,3556 trên FD002, 28,3255 trên FD003 và 27,2218 trên FD004. Khi giữ nguyên
 model fit trên FD001 rồi transfer sang dataset khác, MAE là 60,3215 trên FD002,
@@ -311,7 +311,7 @@ Spark local và xuất Arrow qua driver; thời gian đó không đo writer trê
 
 ## Quy trình đánh giá
 
-- Dùng trailing window 30 cycle.
+- Dùng window 30 cycle.
 - Chia các fold validation theo động cơ, không chia ngẫu nhiên các dòng hoặc window chồng lấn.
 - Chỉ fit scaler của Ridge và các mô hình RUL ứng viên trên training fold.
 - Giữ đủ 126 features RUL; mô hình chính không có feature selection hoặc PCA.
@@ -343,7 +343,7 @@ Cấu trúc repository hiện tại:
 ```text
 .
 ├── data/
-│   ├── raw/                 # FD001--FD004 nguyên bản và ghi chú nguồn
+│   ├── raw/                 # FD001–FD004 nguyên bản và ghi chú nguồn
 │   └── archive/             # Dữ liệu lưu để đối chiếu, không dùng cho mô hình chính
 ├── references/              # Tài liệu tham khảo và bối cảnh assignment
 ├── notebooks/               # 00 walkthrough dữ liệu, 01 EDA, 02 thống kê, 03–06 rà soát kết quả (đã chạy)
@@ -365,7 +365,7 @@ Cấu trúc repository hiện tại:
 ├── outputs/timeseries/      # Artifact Health Index và PCA--ARIMA train-only
 ├── outputs/degradation/     # Tín hiệu EWMA, Health Index, cycle phát hiện bất thường
 ├── outputs/maintenance/     # Lịch bảo trì 100 động cơ test, kế hoạch và bảng kiểm tra
-├── outputs/cross_dataset/   # ETL, features và kết quả transfer FD001--FD004
+├── outputs/cross_dataset/   # ETL, features và kết quả transfer FD001–FD004
 ├── assets/diagrams/         # Nguồn draw.io, bản xem trước SVG và file URL
 ├── pyproject.toml           # Thông tin package và dependency trực tiếp
 ├── requirements.txt         # Cài bằng pip: package và thư viện chạy chương trình
@@ -463,7 +463,7 @@ HGB. Dự đoán RUL và trạng thái bất thường chỉ được ghép ở 
 test được đọc sau khi ghi predictions hoặc lịch. Trên hình, bước 1--3 chuẩn bị
 dữ liệu; nhánh A dự đoán RUL, nhánh B theo dõi tín hiệu. Ô nét đứt (chạy lại trên
 Hadoop) chỉ kiểm tra lại bảng tổng hợp động cơ và không đi vào mô hình RUL. [Sơ đồ trong báo cáo](report/figures/pipeline.pdf)
-thể hiện cùng các ranh giới này; PCA–ARIMA và chuyển miền FD002--FD004 vẫn là thử
+thể hiện cùng các ranh giới này; PCA–ARIMA và chuyển miền FD002–FD004 vẫn là thử
 nghiệm mở rộng.
 
 ![Pipeline dữ liệu tổng thể FD001](assets/diagrams/fd001-pipeline.png)
@@ -640,7 +640,7 @@ Lần chạy hiện tại chọn `hist_gradient_boosting`, đạt mean engine-le
 Xem [artifact và validation modeling](outputs/modeling/README.md) để biết fold
 metrics, final predictions, final evaluation, hình và giới hạn.
 
-### Chạy đánh giá FD001--FD004
+### Chạy đánh giá FD001–FD004
 
 Sau khi muốn tái tạo ma trận within-subset và transfer, chạy:
 
@@ -653,7 +653,7 @@ Sau khi muốn tái tạo ma trận within-subset và transfer, chạy:
 
 Lệnh tạo bốn lần đánh giá nội bộ và ba lần đánh giá chuyển subset từ FD001. Xem [artifact
 ma trận](outputs/cross_dataset/README.md). Kết quả dùng window 10 vì FD004 có
-test engine ngắn nhất 19 cycle; không thay thế kết quả FD001 window 30.
+động cơ test ngắn nhất 19 cycle; không thay thế kết quả FD001 window 30.
 
 ### Chạy phân tích PCA--ARIMA
 
@@ -800,7 +800,7 @@ tra, giới hạn Windows/Linux và kết quả worker spawn thực tế.
 </details>
 
 [Báo cáo PDF](report/main.pdf) trình bày các phân tích FD001 đã kiểm chứng và ma
-trận bổ sung FD001--FD004. Xem [hướng dẫn báo cáo](report/README.md) để biết
+trận bổ sung FD001–FD004. Xem [hướng dẫn báo cáo](report/README.md) để biết
 cấu trúc nguồn và lệnh build PDF.
 
 ## Bối cảnh học thuật

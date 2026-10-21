@@ -46,11 +46,13 @@ kiểm tra riêng transfer từ FD001 sang FD002--FD004 với window 10 cycle. K
 không chứng minh khả năng mở rộng trên cụm máy, khả năng khái quát tới động cơ thực
 tế hoặc tính phù hợp của metric cho quyết định bảo trì.
 
-\subsection{Kiểm chứng mã nguồn ngày 07/10/2026}
+\subsection{Kiểm chứng mã nguồn}
 
-Bộ kiểm thử ngày 21/10/2026 đạt 492 kiểm thử, một kiểm thử TCN bị bỏ qua do chưa cài
-\texttt{torch}; 14 cảnh báo còn lại là deprecation warnings của dependency.
-Fault injection kiểm tra lỗi ghi Parquet, SQLite, metadata và lỗi publication;
+Lần chạy toàn bộ bộ kiểm thử ngày 21/10/2026 đạt 492 kiểm thử, một kiểm thử TCN bị
+bỏ qua do chưa cài \texttt{torch}; 14 cảnh báo còn lại là deprecation warnings của
+dependency.
+
+Các kiểm tra chuyên biệt ngày 07/10/2026 gồm: fault injection kiểm tra lỗi ghi Parquet, SQLite, metadata và lỗi publication;
 bộ output cũ được khôi phục khi rollback thành công. Hai worker chạy bằng
 \texttt{spawn} trên Windows fit HGB 2 iterations với 80 dòng và 169 features,
 đọc lại model cho prediction trùng chính xác và resume giữ checksum model.

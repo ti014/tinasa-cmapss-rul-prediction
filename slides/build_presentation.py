@@ -33,6 +33,8 @@ from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 from pptx.oxml.ns import qn
 from pptx.util import Inches, Pt
 
+from cmapss.presentation import format_number_vi as vn
+
 ROOT = Path(__file__).resolve().parents[1]
 TEMPLATE = ROOT / "slides/template/Template Powerpoint v2 (ty le 16-9).pptx"
 OUT = ROOT / "slides/cmapss_fd001_presentation.pptx"
@@ -81,12 +83,6 @@ SAME_DIRECTION = [row["sensor"] for row in INFERENCE
                   if "100" in (row["n_positive"], row["n_negative"])]
 assert {"sensor_4", "sensor_7", "sensor_11", "sensor_12", "sensor_20"} <= set(SAME_DIRECTION)
 SENS_ALL_DETECTED = all(row["n_detected"] == row["n_engines"] for row in SENS)
-
-
-def vn(x: float, d: int = 2) -> str:
-    """Định dạng số kiểu Việt Nam: phẩy thập phân, chấm hàng nghìn."""
-    text = f"{float(x):,.{d}f}"
-    return text.replace(",", "_").replace(".", ",").replace("_", ".")
 
 
 def rgb(hex_color: str) -> RGBColor:

@@ -22,15 +22,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+from cmapss.data.readers import read_observations
+from cmapss.presentation import format_number_vi as vn
+
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "outputs/diagnostics/figures"
 
 BLUE, ORANGE, AQUA = "#2a78d6", "#eb6834", "#1baf7a"
 GRAY, LIGHT_GRAY = "#8a8985", "#d9d8d4"
 INK, INK_2 = "#0b0b0b", "#52514e"
-RAW_COLUMNS = ["engine_id", "cycle", "setting_1", "setting_2", "setting_3"] + [
-    f"sensor_{i}" for i in range(1, 22)
-]
 
 plt.rcParams.update(
     {
@@ -57,13 +57,8 @@ plt.rcParams.update(
 )
 
 
-def vn(value: float, digits: int = 2) -> str:
-    """Format a number with Vietnamese decimal comma."""
-    return f"{value:.{digits}f}".replace(".", ",").replace("-", "−")
-
-
 def read_raw(name: str) -> pd.DataFrame:
-    return pd.read_csv(ROOT / "data/raw" / name, sep=r"\s+", header=None, names=RAW_COLUMNS)
+    return read_observations(ROOT / "data/raw" / name, split=name.split("_", 1)[0])
 
 
 def window_example() -> Path:

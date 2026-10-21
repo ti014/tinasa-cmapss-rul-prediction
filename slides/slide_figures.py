@@ -28,6 +28,9 @@ from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 from matplotlib.ticker import FuncFormatter
 
+from cmapss.data.readers import read_observations
+from cmapss.presentation import format_number_vi
+
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "slides/figures"
 
@@ -53,18 +56,12 @@ plt.rcParams.update({
 })
 
 
-def _vn(value: float, _pos: int | None = None) -> str:
-    """Nhãn trục kiểu Việt Nam: phẩy thập phân, dấu trừ U+2212."""
-    text = f"{value:g}"
-    return text.replace("-", "−").replace(".", ",")
-
-
 def _style(ax) -> None:
     ax.spines[["top", "right"]].set_visible(False)
     ax.grid(axis="y", color=LINE, linewidth=0.6)
     ax.set_axisbelow(True)
-    ax.xaxis.set_major_formatter(FuncFormatter(_vn))
-    ax.yaxis.set_major_formatter(FuncFormatter(_vn))
+    ax.xaxis.set_major_formatter(FuncFormatter(lambda value, pos: format_number_vi(value, None)))
+    ax.yaxis.set_major_formatter(FuncFormatter(lambda value, pos: format_number_vi(value, None)))
 
 
 def _save(fig, name: str) -> None:
@@ -74,8 +71,7 @@ def _save(fig, name: str) -> None:
 
 
 def _train_raw() -> pd.DataFrame:
-    columns = ["engine_id", "cycle", *(f"setting_{i}" for i in range(1, 4)), *(f"sensor_{i}" for i in range(1, 22))]
-    return pd.read_csv(ROOT / "data/raw/train_FD001.txt", sep=r"\s+", header=None, names=columns)
+    return read_observations(ROOT / "data/raw/train_FD001.txt", split="train")
 
 
 # ----------------------------------------------------------------------------- slide 8

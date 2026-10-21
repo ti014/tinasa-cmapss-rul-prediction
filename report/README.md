@@ -118,8 +118,8 @@ Pop-Location
 
 Lần build ngày 21/10/2026 tạo PDF 40 trang (đúng giới hạn 40 trang), không có
 lỗi biên dịch, citation hoặc reference chưa phân giải, và không có overfull box.
-Để đạt 40 trang, thân bài dùng cỡ chữ 11pt và giãn dòng 1,0, mục lục chỉ đến
-subsection, và ba listing Python ở Mục 4 được thay bằng tên file nguồn. Tectonic vẫn ghi cảnh báo môi trường về đường dẫn font Windows;
+Để đạt 40 trang, thân bài dùng cỡ chữ 11pt và giãn dòng 1,0, mục lục chỉ
+liệt kê các mục lớn, và ba listing Python ở Mục 4 được thay bằng tên file nguồn. Tectonic vẫn ghi cảnh báo môi trường về đường dẫn font Windows;
 đây không phải lỗi nội dung. Phần bibliography dùng line spacing 1,0 và cỡ chữ
 nhỏ hơn phần thân để giữ toàn bộ tài liệu tham khảo trong giới hạn trang.
 

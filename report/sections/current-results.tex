@@ -32,27 +32,7 @@ Pandas với tolerance $10^{-7}$. Trên cụm Hadoop một node, MapReduce và S
 dữ liệu từ HDFS cũng cho bảng \texttt{engine\_summary} khớp tuyệt đối với Pandas (200/200
 động cơ, Mục~\ref{sec:dp-hdfs}).
 
-Bảng~\ref{tab:followup-benchmark} đo toàn bộ pipeline (đọc Parquet, tổng hợp,
-rolling features, ghi) khi nhân bản FD001 lên 10 lần. Thời gian Pandas tăng gần
-tuyến tính, từ 10,54 lên 111,68 giây; Spark tăng từ 14,60 lên 32,68 giây. Ở
-scale $1\times$ Pandas nhanh hơn vì Spark tốn chi phí khởi động và điều phối; ở
-scale $10\times$ Spark nhanh hơn khoảng 3,4 lần nhờ chia việc cho bốn luồng.
-
-\begin{table}[H]\centering\small
-\caption[Benchmark pipeline local]{Benchmark local, trung vị ba lượt; thời gian giây, RSS gồm Python và
-JVM. Cột Pipeline không gồm thời gian khởi động Spark (5,5 giây).}
-\label{tab:followup-benchmark}\begin{tabular}{lrrrrrr}\toprule
-Engine & Scale & Đọc & Feature & Ghi & Pipeline & RSS (GiB)\\\midrule
-pandas & 1 & 0,05 & 10,30 & 0,15 & 10,54 & 0,25\\
-pandas & 10 & 0,09 & 110,39 & 0,97 & 111,68 & 1,73\\
-spark & 1 & 4,88 & 7,03 & 1,43 & 14,60 & 1,48\\
-spark & 10 & 5,28 & 22,12 & 4,08 & 32,68 & 3,05\\
-\bottomrule\end{tabular}\end{table}
-
-Phép đo dùng Spark \texttt{local[4]} trên một máy Windows, heap 4 GiB, ghi qua
-driver; dữ liệu nhân bản chỉ phục vụ đo hiệu năng, không dùng để huấn luyện. Kết
-quả cho thấy lý do giữ implementation Spark khi dữ liệu tăng, nhưng chưa phải bằng
-chứng trên cluster nhiều máy.
+Khả năng mở rộng của pipeline được đo riêng ở Mục~\ref{sec:res-scaling}.
 
 Tuổi thọ của 100 động cơ train dao động từ 128 đến 362 cycle
 (Bảng~\ref{tab:lifetime}). Phân phối lệch phải: trung bình 206,31 cycle lớn hơn
@@ -445,6 +425,47 @@ mô hình dự đoán dư RUL (Mục~\ref{sec:res-errors}). Cách vận hành d�
 chứng việc cập nhật này sẽ sửa kịp 12 trường hợp trên. Kết luận rút ra là không nên
 chốt lịch bảo trì xa chỉ từ một lần dự đoán.
 
+\subsection{Vì sao cần big data}
+\label{sec:res-scaling}
+\noindent\textit{Phần này trả lời: với dữ liệu lớn hơn FD001 nhiều lần, một máy chạy
+Pandas còn theo kịp không?}
+
+FD001 chỉ khoảng 5,7 MB, nên câu hỏi được trả lời bằng đo đạc thay vì lập luận. Dữ
+liệu được nhân bản 1×, 10×, 50×, 100× và 200× với ID động cơ mới, rồi Pandas và
+Spark \texttt{local[4]} cùng chạy phần tính toán: đọc Parquet, tổng hợp theo động cơ
+và tạo 126 đặc trưng window 30 cycle (Bảng~\ref{tab:scaling},
+Hình~\ref{fig:scaling}). Ở 100×, Pandas mất 1.075 giây, Spark 196 giây, nhanh hơn
+khoảng 5,5 lần. Ở 200×, Pandas không xong trong giới hạn 30 phút, còn Spark hoàn tất
+trong 392 giây. RAM đỉnh của Pandas tăng gần tuyến tính, 12,9 GiB ở 100×; ước tính
+200× cần khoảng 26 GiB, vượt 23,4 GiB của máy. Đây là suy luận từ xu hướng, chưa đo
+trực tiếp.
+
+\begin{table}[H]\centering\small
+\caption[Benchmark quy mô]{Thời gian tính toán (giây, không gồm ghi file) và RAM đỉnh
+của cây process (GiB), mỗi mức một lượt; máy 22 luồng, 23,4 GiB RAM.}
+\label{tab:scaling}\begin{tabular}{rrrrr}\toprule
+Mức & Pandas (giây) & Spark (giây) & Pandas (GiB) & Spark (GiB)\\\midrule
+1× & 11,5 & 12,7 & 0,3 & 1,6\\
+10× & 88,6 & 31,4 & 1,7 & 1,6\\
+50× & 583,7 & 105,7 & 7,3 & 4,6\\
+100× & 1.075,4 & 196,3 & 12,9 & 8,4\\
+200× & quá 1.800 & 392,2 & --- & 11,4\\
+\bottomrule\end{tabular}\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\linewidth]{../slides/figures/benchmark_scaling.png}
+\caption[Benchmark quy mô Pandas và Spark]{Thời gian tính toán và RAM đỉnh theo mức nhân
+bản (trục log). Dấu x là lượt Pandas dừng vì quá 30 phút.}
+\label{fig:scaling}
+\end{figure}
+
+Phép đo không gồm bước ghi file vì trên Windows thiếu \texttt{winutils}, Spark phải
+gom bảng đặc trưng về driver để ghi bằng PyArrow; bước gom này hết bộ nhớ từ 100×. Đây
+là giới hạn của môi trường, không phải của phần tính toán. Kết quả chạy trên một máy
+nên chỉ chứng minh lợi ích của xử lý song song theo partition, chưa phải lợi ích khi
+thêm máy; nguồn: \filepath{outputs/benchmarks/20261021/}.
+
 \subsection{Thử nghiệm mở rộng}
 \label{sec:res-extended}
 \label{sec:res-nested}
@@ -466,23 +487,9 @@ thay mô hình chính. Similarity-based RUL thua HGB ở cả 3/3 fold và bị 
 
 \paragraph{Chuyển sang FD002--FD004.} Với window 10 cycle, mô hình huấn luyện trên
 FD001 có MAE 47,39--60,32 cycle khi áp dụng trực tiếp lên ba subset còn lại, so với
-22,36--28,33 cycle khi mỗi subset tự huấn luyện, tức tăng 1,7--2,7 lần (Bảng~\ref{tab:cross-dataset}).
+22,36--28,33 cycle khi mỗi subset tự huấn luyện, tức tăng 1,7--2,7 lần.
 Nguyên nhân chính là điều kiện vận hành khác nhau (Mục~\ref{sec:disc-transfer}).
 
-\begin{table}[H]
-\centering\small
-\caption[Đánh giá chuyển miền]{MAE (cycle) khi huấn luyện nội bộ và khi chuyển mô hình FD001,
-window 10; khoảng tin cậy 95\% lấy mẫu lại động cơ 10.000 lần.}
-\label{tab:cross-dataset}
-\begin{tabular}{lll}
-\toprule
-Subset test & Huấn luyện nội bộ & Mô hình FD001\\\midrule
-FD002 & 22,36 [19,71; 25,05] & 60,32 [56,05; 64,80]\\
-FD003 & 28,33 [22,47; 34,55] & 47,39 [40,63; 54,35]\\
-FD004 & 27,22 [24,18; 30,37] & 58,57 [53,93; 63,30]\\
-\bottomrule
-\end{tabular}
-\end{table}
 
 \paragraph{Dự báo Health Index bằng ARIMA.} Trên 10 động cơ chọn trước, ARIMA dự
 báo 30\% cuối chuỗi Health Index với MAE trung bình 0,4110, thấp hơn hai baseline

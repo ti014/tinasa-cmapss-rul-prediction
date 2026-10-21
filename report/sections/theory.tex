@@ -1,9 +1,6 @@
 \section{Cơ sở lý thuyết}
 \label{sec:theory}
 
-\noindent\textit{Mục này trả lời: các công cụ dùng trong bài (EWMA, Health Index,
-mô hình RUL, HDFS và Spark) hoạt động thế nào, ở mức đủ để đọc phần kết quả.}
-
 \subsection{Dự đoán RUL và các nghiên cứu liên quan}
 Prognostics là lĩnh vực nghiên cứu diễn biến suy giảm của hệ thống và thời gian
 còn lại trước khi hỏng. Saxena và cộng sự xây dựng C-MAPSS để có dữ liệu
@@ -121,7 +118,7 @@ Khi kiểm định đồng thời 21 sensor, xác suất có ít nhất một k�
 tăng lên. Thủ tục Benjamini--Hochberg điều chỉnh các p-value để kiểm soát tỷ lệ
 phát hiện sai kỳ vọng (FDR) trong nhóm kiểm định~\cite{benjamini1995fdr,scipyFDR}.
 
-\subsection{Health Index, phát hiện bất thường và ARIMA}
+\subsection{Health Index và phát hiện bất thường}
 Health Index là một chỉ số duy nhất tóm tắt trạng thái của động cơ từ nhiều
 sensor. Báo cáo tạo Health Index bằng cách chuẩn hóa 21 sensor rồi lấy thành
 phần chính thứ nhất (PC1) của PCA~\cite{sklearnPCA}. PC1 là hướng có phương sai
@@ -131,24 +128,12 @@ sensor. Dấu của PC1 được chọn sao cho chỉ số giảm dần theo cyc
 
 Khi không có nhãn bất thường, một cách phổ biến là định nghĩa trạng thái bình
 thường từ chính dữ liệu ở giai đoạn vận hành ổn định, rồi báo khi giá trị lệch khỏi
-trạng thái đó quá một số lần độ lệch chuẩn. Ngưỡng ba độ lệch chuẩn tương ứng với
-xác suất rất nhỏ nếu dao động là ngẫu nhiên quanh mức tham chiếu; yêu cầu vượt
-ngưỡng nhiều cycle liên tiếp làm giảm thêm cảnh báo sinh ra từ một giá trị ngoại lai
-đơn lẻ. Cách làm này đo được
+trạng thái đó quá một số lần độ lệch chuẩn. Báo cáo dùng ngưỡng ba độ lệch chuẩn
+theo thông lệ, rồi kiểm tra lại với ngưỡng 2 và 4 ở
+Bảng~\ref{tab:anomaly-sensitivity}. Yêu cầu vượt ngưỡng nhiều cycle liên tiếp giúp
+một giá trị ngoại lai đơn lẻ không gây cảnh báo. Cách làm này đo được
 thời điểm phát hiện, nhưng không đo được tỷ lệ báo động giả nếu không có dữ liệu
 động cơ vận hành bình thường đến hết chuỗi quan sát.
-
-ARIMA chỉ phục vụ thử nghiệm mở rộng dự báo Health Index; nó không tham gia hai đèn
-cảnh báo hay lịch bảo trì chính. Chuỗi Health Index $h_t$ của từng động cơ được mô
-hình hóa bằng ARIMA$(p,d,q)$~\cite{hyndman2021fpp3}:
-\begin{equation}
-\phi(B)(1-B)^d h_t = c + \theta(B)\varepsilon_t,
-\label{eq:arima}
-\end{equation}
-trong đó $B$ là toán tử trễ, $\phi(B)$ và $\theta(B)$ là đa thức tự hồi quy bậc
-$p$ và trung bình trượt bậc $q$, $d$ là bậc sai phân và $\varepsilon_t$ là nhiễu
-trắng. Kiểm định ADF đánh giá tính dừng của chuỗi~\cite{statsmodelsADF}, còn
-kiểm định Ljung--Box kiểm tra phần dư sau khi fit còn tự tương quan hay không.
 
 \subsection{Hadoop: HDFS và MapReduce}
 \label{sec:theory-hadoop}

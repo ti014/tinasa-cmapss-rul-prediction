@@ -1,14 +1,11 @@
 \section{Tổ chức, truy vấn và biến đổi dữ liệu}
 \label{sec:data-processing}
 
-\noindent\textit{Mục này trả lời: dữ liệu đi từ file text gốc đến bảng đầu vào của
-mô hình như thế nào, và được lưu, truy vấn trên Parquet, SQLite, HDFS ra sao.}
-
-Mục này mô tả cách dữ liệu đi từ các file text gốc đến bảng đầu vào của mô hình,
-theo các câu hỏi về cách gom nhiều file, lưu trữ, truy vấn và biến đổi dữ liệu,
-qua những bước nào, dùng những cột nào, và các bảng quan hệ với nhau ra sao.
+Mục này trình bày quá trình tích hợp, lưu trữ, truy vấn và biến đổi dữ liệu từ
+file text gốc thành bảng đầu vào của mô hình, cùng quan hệ giữa các bảng.
 Hình~\ref{fig:data-flow} tóm tắt toàn bộ luồng; mỗi hộp là một bảng, ghi rõ một
-dòng biểu diễn điều gì và kích thước thực tế với FD001. Mọi ví dụ trong mục này
+dòng biểu diễn điều gì và kích thước thực tế với FD001. Việc tách nhãn test khỏi
+luồng tạo đặc trưng ngăn rò rỉ nhãn vào dự đoán. Mọi ví dụ trong mục này
 có thể chạy lại từng bước trong notebook
 \filepath{notebooks/00_data_pipeline_walkthrough.ipynb}; notebook gọi đúng các hàm
 của pipeline và in kết quả trung gian.
@@ -29,7 +26,7 @@ chỉ mô tả bước tạo đặc trưng.
 \centering
 \includegraphics[width=0.97\linewidth]{figures/data-flow.pdf}
 \caption[Luồng dữ liệu C-MAPSS]{Luồng dữ liệu từ ba file gốc đến dữ liệu huấn luyện và bước chấm điểm.
-Chữ trên mũi tên là phép biến đổi; đáp án test chỉ được mở sau khi dự đoán đã được lưu.}
+Chữ trên mũi tên là phép biến đổi; nhãn test chỉ dùng để đánh giá sau khi đã lưu dự đoán.}
 \label{fig:data-flow}
 \end{figure}
 
@@ -70,7 +67,7 @@ khóa, để truy vấn nhanh bằng SQL.
 
 \begin{table}[H]
 \centering
-\caption[Các bảng FD001]{Các bảng được lưu cho FD001.}
+\caption[Các bảng FD001]{Các bảng được lưu cho FD001; kích thước là số dòng $\times$ số cột.}
 \label{tab:layers}
 \small
 \begin{tabular}{l L{4.0cm} L{3.2cm} r L{3.0cm}}
@@ -92,11 +89,9 @@ thay bộ cũ; nếu bước thay thế lỗi, bộ cũ được khôi phục. F
 (\texttt{run\_info.json}) được ghi sau cùng và lưu hash của dữ liệu đầu vào, nên mỗi
 bộ kết quả luôn đi kèm đúng phiên bản dữ liệu đã tạo ra nó.
 
-\paragraph{Kiểm thử.} Bộ kiểm thử tự động gồm 492 kiểm thử đạt (một kiểm thử bỏ
-qua vì môi trường thiếu \texttt{torch}), lần chạy ngày 21/10/2026. Các kiểm thử bao
-gồm kiểm tra checksum khi thu thập, schema, khóa, ranh giới window, mapper và
-reducer của job MapReduce, công thức EWMA, quy tắc bất thường, lịch bảo trì và việc
-nhãn test chỉ được đọc sau khi đã ghi dự đoán.
+\paragraph{Kiểm thử.} Bộ kiểm thử tự động kiểm tra checksum khi thu thập, schema,
+khóa, ranh giới window, mapper và reducer của job MapReduce, công thức EWMA, quy tắc
+bất thường, lịch bảo trì và việc nhãn test chỉ được đọc sau khi đã ghi dự đoán.
 
 \subsection{Lưu trữ phân tán trên HDFS}
 \label{sec:dp-hdfs}
@@ -119,7 +114,8 @@ Spark 4.0.1 client. Lệnh \texttt{python -m cmapss.hdfs} thực hiện bốn b�
 Bảng~\ref{tab:hdfs} tóm tắt lần chạy ngày 09/10/2026. Hadoop chia input thành ba phần
 (input split) và chạy ba map task cùng một reduce task. Cả MapReduce và Spark đều cho
 bảng 200 động cơ khớp tuyệt đối với Pandas. Hình~\ref{fig:hdfs} là giao diện web của
-NameNode và YARN trong lần chạy này.
+NameNode và YARN trong lần chạy này. Hình xác nhận dữ liệu đã lưu trên HDFS và
+job đã hoàn thành trên YARN, nhưng không chứng minh khả năng mở rộng nhiều node.
 
 \begin{table}[H]\centering\small
 \caption[Kết quả bước HDFS]{Kết quả bước HDFS trên cụm Hadoop một node (\filepath{outputs/hdfs/summary.json}).}
@@ -147,8 +143,9 @@ block 128 MB). Dưới: các job MapReduce đã hoàn thành trên YARN.}
 
 Cụm chỉ có một node nên bước này không đo lợi ích hiệu năng của xử lý phân tán. Mục
 đích là chứng minh cùng dữ liệu và cùng phép tính chạy được trên HDFS, MapReduce và
-Spark, cho kết quả giống hệt Pandas. Với file lớn hơn 128 MB, HDFS sẽ chia file thành
-nhiều block trên nhiều DataNode và YARN chạy nhiều map task song song trên các block đó.
+Spark, cho kết quả giống hệt Pandas. Khi file lớn hơn 128 MB, HDFS chia file thành nhiều
+block. Trên cụm nhiều node, các block nằm ở nhiều DataNode và YARN chạy map task song
+song trên từng phần.
 
 \subsection{Truy vấn dữ liệu}
 \label{sec:dp-query}
@@ -207,7 +204,8 @@ WHERE cycle IN (29, 30, 100);
 \label{sec:features}
 Biến đổi ở đây là bước T trong ETL: đổi kiểu, gom dòng, tổng hợp, tạo nhãn và tạo
 đặc trưng. Bảng~\ref{tab:transform-steps} liệt kê sáu bước theo thứ tự, kèm kích
-thước bảng sau mỗi bước.
+thước bảng sau mỗi bước. Số dòng giảm khi chỉ giữ window đầy đủ, còn phép ghép
+nhãn bảo toàn số dòng đặc trưng; đây là cơ sở kiểm tra tính đúng của biến đổi.
 
 \begin{table}[H]
 \centering
@@ -269,8 +267,7 @@ Bảng~\ref{tab:column-roles} cho biết mỗi nhóm cột được dùng vào v
 chỉ nhận 126 cột đặc trưng, đặt tên theo mẫu \texttt{<sensor>\_\_<thống kê>}, ví dụ
 \texttt{sensor\_11\_\_mean}. Ba cột khóa chỉ dùng để join và chia fold theo động
 cơ. Ba operational settings không nằm trong tập đặc trưng: FD001 chỉ có một điều
-kiện vận hành nên settings gần như không đổi; với FD002 và FD004, lựa chọn này trở
-thành một giới hạn (Mục~\ref{sec:disc-transfer}).
+kiện vận hành nên settings gần như không đổi.
 
 \begin{table}[H]
 \centering

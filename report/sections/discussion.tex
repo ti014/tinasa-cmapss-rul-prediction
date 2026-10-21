@@ -1,9 +1,6 @@
 \section{Thảo luận}
 \label{sec:discussion}
 
-\noindent\textit{Mục này trả lời: vì sao kết quả như vậy, mô hình sai ở đâu, và
-những kết luận nào chưa đủ căn cứ.}
-
 Mục này giải thích các kết quả ở Mục~\ref{sec:results}: sai số của mô hình RUL đến
 từ đâu, vì sao một phần cảnh báo bị trễ và hai mức cảnh báo bổ sung cho nhau thế
 nào. Các số liệu chẩn đoán được tính lại từ artifact đã có bằng
@@ -20,7 +17,7 @@ chất khi RUL vượt khoảng 150 cycle. Ở vùng này, dự đoán trung bì
 \begin{table}[H]
 \centering
 \caption[Sai số OOF theo RUL]{Sai số OOF của HGB trên 17.731 window train, chia theo RUL thật.
-Sai số có dấu bằng dự đoán trừ thật.}
+Sai số có dấu bằng dự đoán trừ thật; RUL và sai số có đơn vị cycle.}
 \label{tab:oof-by-rul}
 \small
 \begin{tabular}{lrrrr}
@@ -47,7 +44,8 @@ khi RUL thật lớn hơn khoảng 150.}
 \end{figure}
 
 Hiện tượng này khớp với kết quả phát hiện bất thường ở Mục~\ref{sec:res-trend}:
-Health Index đi ngang trong khoảng 39\% đầu vòng đời (trung vị) rồi mới giảm rõ.
+Health Index thường chỉ vượt ngưỡng bất thường khi động cơ đã qua khoảng 39\% vòng
+đời (trung vị).
 Ở giai đoạn vận hành ổn định, sensor chủ yếu phản ánh dao động đo và khác biệt ban đầu giữa
 các động cơ, nên khó phân biệt một động cơ còn 160 cycle với một động cơ còn 300
 cycle. Điều này cũng giải thích vì sao MAE cross-validation (20,21 cycle) cao hơn
@@ -57,11 +55,9 @@ thật của test chỉ từ 7 đến 145.
 Ở vùng giữa (RUL 61--125), mô hình có xu hướng dự đoán cao hơn thật khoảng 13--15
 cycle. Mười sai số lớn nhất trên test rơi vào các động cơ có RUL thật 77--137 và
 đều là dự đoán cao, nên sai số test lặp lại đúng xu hướng đã thấy trên OOF. So với
-nghiên cứu liên quan, Li và cộng sự báo cáo RMSE 12,61 cycle trên FD001 với CNN khi
-RUL cap 125 cycle~\cite{li2018rul}; RMSE của báo cáo là 20,54 cycle. Hai kết
-quả không so trực tiếp được vì khác số sensor, cách chuẩn hóa và mô hình, nhưng
-khoảng cách gợi ý rằng sáu thống kê trên window có thể làm mất một phần thông tin về
-hình dạng chuỗi.
+nghiên cứu liên quan, Li và cộng sự báo cáo RMSE 13,32 cycle trên FD001 với CNN khi
+không dùng RUL cap~\cite{li2018rul}; RMSE của báo cáo là 20,54 cycle. Hai kết quả
+không so trực tiếp được vì khác số sensor, cách chuẩn hóa và mô hình.
 
 \subsection{Vì sao gần một nửa cảnh báo bị trễ}
 \label{sec:disc-warning}
@@ -82,9 +78,9 @@ cycle 230.}
 
 Mô hình học một quan hệ trung bình giữa mức sensor và RUL. Động cơ ngắn đời suy
 giảm nhanh hơn trung bình, nên tại cùng một mức sensor, RUL thật của chúng thấp hơn
-điều mô hình kỳ vọng và RUL dự đoán chạm ngưỡng 30 muộn hơn thực tế. Đây là loại lỗi
-nguy hiểm nhất: động cơ hỏng nhanh nhất lại nhận cảnh báo muộn nhất. Ngưỡng 40 giảm
-tỷ lệ trễ từ 49\% xuống 6\% với chi phí báo sớm nhiều hơn khoảng bốn lần
+điều mô hình kỳ vọng và RUL dự đoán chạm ngưỡng 30 muộn hơn thực tế. Vì vậy, cảnh báo
+trễ rơi nhiều vào các động cơ hỏng sớm. Ngưỡng 40 giảm tỷ lệ trễ từ 49\% xuống 6\%,
+đổi lại tỷ lệ cycle bị báo sớm tăng khoảng bốn lần
 (Bảng~\ref{tab:warning-alignment}); chọn ngưỡng cụ thể cần chi phí bảo trì và
 downtime, mà dữ liệu không có.
 
@@ -97,18 +93,6 @@ lịch bảo trì. Bảng~\ref{tab:maintenance-check} xác nhận cách chia nà
 mức hai không có trường hợp dương tính giả, còn mức một rộng hơn (59 động cơ) và vẫn giữ
 được 4 động cơ mà mức hai bỏ qua.
 
-\subsection{Vì sao mô hình FD001 không chuyển được sang subset khác}
-\label{sec:disc-transfer}
-Với FD002 và FD004, chỉ khoảng 14--15\% giá trị test của 9 sensor có xu hướng nằm
-trong khoảng min--max của train FD001, do sáu điều kiện vận hành đẩy mức sensor ra
-xa điều kiện duy nhất của FD001. Mô hình cây không ngoại suy được, nên dự đoán gần
-như hằng số (độ lệch chuẩn khoảng 13 cycle) và cao hơn RUL thật khoảng 50 cycle.
-Với FD003, giá trị sensor nằm trong miền FD001 (94,7\%) nhưng dự đoán vẫn cao hơn
-thật trung bình 45 cycle; một giả thuyết hợp lý là dạng lỗi fan của FD003 làm sensor
-thay đổi khác với suy giảm HPC mà mô hình đã học. Hai kiểu thất bại này cần hai cách
-xử lý: chuẩn hóa theo điều kiện vận hành cho FD002/FD004, và dữ liệu có dạng lỗi
-tương ứng cho FD003.
-
 \subsection{Ý nghĩa đối với xử lý dữ liệu lớn}
 Với 265.256 quan sát trên cả bốn subset, dữ liệu C-MAPSS vẫn vừa trong bộ nhớ
 của một máy, nên Pandas đủ dùng. Giá trị của phần dữ liệu lớn trong báo cáo nằm ở
@@ -120,7 +104,7 @@ máy, ở 100× Spark tính nhanh hơn Pandas khoảng 5,5 lần, và ở 200× 
 trong 30 phút.
 
 Bảng~\ref{tab:big-data-5v} đối chiếu năm khía cạnh của bài toán với bằng chứng thực
-tế và giới hạn tương ứng.
+tế và giới hạn tương ứng. Bằng chứng tập trung ở tính tương đương dữ liệu và tính toán trên một máy; chưa xác nhận xử lý streaming hay hiệu quả kinh tế của bảo trì.
 
 \begin{table}[H]
 \centering
@@ -131,8 +115,8 @@ tế và giới hạn tương ứng.
 \toprule
 Khía cạnh & Bằng chứng trong báo cáo & Giới hạn hiện tại \\\midrule
 Volume & 265.256 quan sát từ bốn subset; dữ liệu raw khoảng 44,9 MB; lưu trên HDFS; benchmark nhân bản đến 200×. & FD001 gốc vẫn vừa bộ nhớ một máy; ở 200× Pandas không xong trong 30 phút; dữ liệu nhân bản chỉ đo chi phí kỹ thuật. \\
-Velocity & Pipeline batch theo từng subset; khử nhiễu, bất thường và cảnh báo đều tính nhân quả theo cycle. & Chưa có streaming hoặc yêu cầu độ trễ thời gian thực. \\
-Variety & 21 sensor, 3 operational settings, chuỗi run-to-failure, nhãn RUL; lưu qua text, Parquet, SQLite. & Cùng một nguồn cảm biến dạng bảng; chưa có dữ liệu phi cấu trúc. \\
+Velocity & Xử lý theo lô. Khử nhiễu, phát hiện bất thường và cảnh báo chỉ dùng dữ liệu đến cycle hiện tại, nên tính lại được khi có cycle mới. & Chưa có streaming hoặc yêu cầu độ trễ thời gian thực. \\
+Variety & Một nguồn dữ liệu dạng bảng gồm 21 sensor và 3 operational settings, lưu dưới ba dạng text, Parquet và SQLite. & Cùng một nguồn cảm biến dạng bảng; chưa có dữ liệu phi cấu trúc. \\
 Veracity & Manifest MD5/SHA-256 của nguồn, contract schema, kiểm tra khóa và cycle, giá trị thiếu, parity Pandas--PySpark--MapReduce, khử nhiễu EWMA. & Chưa kiểm chứng với lỗi cảm biến và dữ liệu thiếu của hệ thống thực. \\
 Value & Phát hiện bất thường, dự đoán RUL và hai mức cảnh báo sớm. & Chưa có chi phí bảo trì, downtime hoặc KPI kinh tế. \\
 \bottomrule
@@ -142,7 +126,9 @@ Value & Phát hiện bất thường, dự đoán RUL và hai mức cảnh báo 
 \subsection{Giới hạn}
 \label{sec:limitations}
 \paragraph{Về dữ liệu.} C-MAPSS là dữ liệu mô phỏng; động cơ thực tế có lỗi cảm
-biến, dữ liệu thiếu và điều kiện vận hành phức tạp hơn. Dữ liệu không có chi phí
+biến, dữ liệu thiếu và điều kiện vận hành phức tạp hơn. Mô hình chỉ được huấn luyện
+và đánh giá trên FD001, tức một điều kiện vận hành và một dạng lỗi; báo cáo chưa kiểm
+tra mô hình trên các subset còn lại. Dữ liệu không có chi phí
 bảo trì hay cách quy đổi cycle sang thời gian thực, nên lịch bảo trì ở
 Mục~\ref{sec:res-maintenance} chỉ tính bằng cycle với biên an toàn cố định 30 cycle,
 chưa tối ưu theo chi phí.
@@ -170,8 +156,6 @@ cơ suy giảm nhanh; (3) chạy pipeline Spark trên cụm nhiều máy với d
 \section{Khó khăn và bài học rút ra}
 \label{sec:lessons}
 
-\noindent\textit{Mục này trả lời: điều gì đã khó, và rút ra được gì cho lần sau.}
-
 \paragraph{Khó khăn 1: dữ liệu không có nhãn bất thường.} Đề tài yêu cầu phát hiện
 dấu hiệu bất thường, nhưng C-MAPSS không ghi lúc nào động cơ bắt đầu hỏng. Cách xử
 lý là so sánh mỗi động cơ với chính nó trong 30 cycle đầu, giai đoạn vận hành ổn
@@ -190,7 +174,7 @@ dòng.
 thiếu Hadoop native (\texttt{winutils.exe}) nên không ghi file trực tiếp được. Cách xử lý là dùng
 JRE portable, ghi qua Arrow từ driver và kiểm tra parity với Pandas sau mỗi bước.
 Bài học: khi có hai implementation, phải đối chiếu từng giá trị chứ không chỉ số
-dòng; parity bằng 0 là bằng chứng mạnh hơn mọi lời mô tả.
+dòng; sai lệch parity bằng 0 xác nhận tính tương đương trong phạm vi đối chiếu.
 
 \paragraph{Khó khăn 4: dựng Hadoop trong Docker.} Image \texttt{apache/hadoop:3.3.6}
 không có Python nên job Hadoop Streaming viết bằng Python không chạy được; cách xử
@@ -199,9 +183,3 @@ nên ghi file với replication 3 trong khi chỉ có một DataNode, và \textt
 báo các block thiếu bản sao; cách xử lý là truyền \texttt{dfs.replication=1} cho
 Spark. Bài học: job báo thành công chưa đủ, cần kiểm tra trạng thái HDFS bằng
 \texttt{fsck} sau khi ghi.
-
-\paragraph{Khó khăn 5: dễ sa vào tối ưu mô hình.} Nhiều vòng thử cải thiện RUL
-(window, siêu tham số, trọng số, thêm đặc trưng lịch sử, similarity) tốn nhiều thời
-gian nhưng không đổi kết luận chính. Bài học: với bài toán bảo trì dự đoán, một
-pipeline dữ liệu đúng, cảnh báo dễ hiểu và giới hạn được nói rõ có giá trị hơn vài
-cycle MAE.

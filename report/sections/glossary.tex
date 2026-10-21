@@ -29,10 +29,8 @@ YARN & Thành phần quản lý tài nguyên của Hadoop, cấp phát và chạ
 EWMA & Exponentially weighted moving average, trung bình trượt có trọng số mũ; báo cáo dùng span 10 để khử nhiễu sensor.\\
 GroupKFold & Cross-validation chia fold theo nhóm; ở đây mỗi nhóm là một động cơ, nên mọi window của một động cơ nằm cùng một fold.\\
 OOF & Out-of-fold: dự đoán cho một động cơ được tạo bởi mô hình không dùng động cơ đó khi huấn luyện.\\
-Nested CV & Cross-validation lồng nhau: vòng trong chọn cấu hình, vòng ngoài đánh giá cả quy trình chọn.\\
 MAE / RMSE & Sai số tuyệt đối trung bình / căn bậc hai của sai số bình phương trung bình, tính bằng cycle.\\
 NASA score & Điểm phạt bất đối xứng, phạt dự đoán trễ (cao hơn RUL thật) nặng hơn dự đoán sớm.\\
-CI & Confidence interval, khoảng tin cậy.\\
 HGB & HistGradientBoostingRegressor của scikit-learn.\\
 Data leakage & Rò rỉ dữ liệu: thông tin không có tại thời điểm dự đoán (như nhãn test hoặc cycle tương lai) lọt vào quá trình huấn luyện hoặc chọn mô hình.\\
 EDA & Exploratory Data Analysis, phân tích khám phá dữ liệu.\\
@@ -43,12 +41,8 @@ Parity & Đối chiếu kết quả của hai implementation (Pandas và PySpark
 Lead time & Thời gian báo trước: số cycle từ cảnh báo đầu tiên đến khi động cơ hỏng.\\
 Health Index (HI) & Chỉ số sức khỏe, tổng hợp trạng thái động cơ, ở đây là thành phần chính thứ nhất của 21 sensor đã chuẩn hóa (14 sensor có xu hướng được khử nhiễu trước).\\
 Cảnh báo mức 1 / mức 2 & Mức 1: Health Index giảm quá 3 độ lệch chuẩn so với 30 cycle đầu trong 5 cycle liên tiếp (dấu hiệu bất thường). Mức 2: RUL dự đoán không vượt quá 30 cycle (cần bảo trì).\\
-Lịch bảo trì & Bảng cho mỗi động cơ test: cycle hiện tại, RUL dự đoán, cycle cần bảo trì (lúc RUL dự đoán chạm 30) và trạng thái.\\
+Lịch bảo trì & Bảng cho mỗi động cơ test: cycle hiện tại, RUL dự đoán, cycle dự kiến cần bảo trì (cycle hiện tại cộng phần RUL dự đoán vượt quá 30) và trạng thái.\\
 PCA & Principal Component Analysis, phân tích thành phần chính.\\
-ARIMA & Mô hình chuỗi thời gian tự hồi quy, sai phân và trung bình trượt.\\
-AIC & Akaike Information Criterion, tiêu chí chọn bậc mô hình.\\
-ADF & Kiểm định Augmented Dickey--Fuller về nghiệm đơn vị (tính dừng).\\
-Ljung--Box & Kiểm định tự tương quan của phần dư.\\
 Wilcoxon & Kiểm định dấu-hạng Wilcoxon cho dữ liệu ghép cặp.\\
 BH / FDR & Hiệu chỉnh Benjamini--Hochberg nhằm kiểm soát False Discovery Rate (tỷ lệ phát hiện sai).\\
 

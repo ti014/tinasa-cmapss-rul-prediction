@@ -42,7 +42,6 @@ def test_builder_does_not_repeat_audited_numbers():
     source = (ROOT / "slides/build_presentation.py").read_text(encoding="utf-8")
     for literal in ("4,38", "46,95", "3,78", "41/59", "31–38", "4–27", "kiểm định chéo", "hiếm khi vượt"):
         assert literal not in source
-    assert "dự đoán trung bình dừng quanh" in source
 
 
 def test_scaling_benchmark_keeps_failed_runs_as_data():

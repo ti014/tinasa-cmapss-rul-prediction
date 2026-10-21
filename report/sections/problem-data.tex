@@ -1,9 +1,6 @@
 \section{Giới thiệu}
 \label{sec:intro}
 
-\noindent\textit{Mục này trả lời: bài toán của người làm bảo trì là gì, và báo cáo
-đặt ra những câu hỏi nào để giải nó.}
-
 \subsection{Bối cảnh và bài toán}
 Bảo trì dự đoán cần trả lời hai câu hỏi: thiết bị đã có dấu hiệu bất thường
 chưa, và còn vận hành được bao lâu trước khi hỏng. Câu hỏi thứ hai được đo bằng
@@ -68,13 +65,10 @@ liệu thành đặc trưng. Mục~\ref{sec:method} mô tả khử nhiễu, phá
 mô hình và cảnh báo. Mục~\ref{sec:results} trình bày kết quả,
 Mục~\ref{sec:discussion} thảo luận và nêu giới hạn, Mục~\ref{sec:lessons} nêu khó
 khăn và bài học, Mục~\ref{sec:conclusion} kết luận. Phân tích chính dùng FD001; ba
-subset FD002--FD004 chỉ dùng trong thử nghiệm mở rộng.
+subset FD002--FD004 chỉ đi qua bước ETL.
 
 \section{Dữ liệu}
 \label{sec:data}
-
-\noindent\textit{Mục này trả lời: trong tay có những dữ liệu gì, và chúng có đủ
-sạch để dùng không. Ví dụ: động cơ sống ngắn nhất 128 cycle, dài nhất 362 cycle.}
 
 \subsection{Nguồn dữ liệu}
 Bài làm dùng bộ NASA Turbofan Engine (C-MAPSS). Toàn bộ dữ liệu phân tích trong báo
@@ -143,9 +137,9 @@ train và 249 test.
 
 FD001 được chọn làm subset chính vì chỉ có một điều kiện vận hành và một dạng
 lỗi. Khi các yếu tố này cố định, biến động của sensor chủ yếu phản ánh quá trình
-suy giảm, giúp việc diễn giải từng bước phân tích rõ ràng hơn. FD002--FD004 chỉ dùng
-trong thử nghiệm mở rộng, để kiểm tra mô hình FD001 khi điều kiện vận hành và dạng
-lỗi thay đổi.
+suy giảm, giúp việc diễn giải từng bước phân tích rõ ràng hơn. FD002--FD004 chỉ đi
+qua bước ETL (đọc, kiểm tra contract, lưu Silver và Gold), để pipeline xử lý đủ
+265.256 bản ghi của bộ dữ liệu; mô hình chỉ được huấn luyện và đánh giá trên FD001.
 
 \subsection{Cấu trúc và ý nghĩa các cột}
 Mỗi dòng trong file train và test là một cycle của một động cơ, gồm 26 giá trị
@@ -257,7 +251,7 @@ Sensor & Số giá trị & Min--max & Ghi chú\\
 
 Sensor hằng không mang thông tin về suy giảm và không có hệ số tương quan xác
 định. Báo cáo vẫn giữ đủ 21 sensor trong các bảng thống kê để kết quả phản ánh
-toàn bộ dữ liệu, thay vì chỉ những sensor cho kết quả đẹp.
+toàn bộ dữ liệu, thay vì chỉ những sensor có xu hướng rõ.
 
 \subsection{Kiểm tra chất lượng và cách xử lý}
 Trước mọi phân tích, bộ đọc dữ liệu kiểm tra: mỗi dòng có đúng 26 trường, mọi
@@ -270,7 +264,8 @@ tiếp khi tạo window. Mỗi lần chạy lưu mã băm SHA-256 của file đ�
 biết phiên bản dữ liệu đã dùng.
 
 Bảng~\ref{tab:data-quality-actions} tóm tắt các đặc điểm dữ liệu cần lưu ý và
-cách báo cáo xử lý.
+cách báo cáo xử lý. Việc bảo toàn thứ tự chuỗi và tách nhãn khỏi đặc trưng
+là điều kiện để đánh giá mô hình mà không sử dụng thông tin tương lai.
 
 \begin{table}[H]
 \centering

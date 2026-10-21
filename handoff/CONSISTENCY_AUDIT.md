@@ -137,3 +137,42 @@ Kế hoạch và câu chuyện chung: `handoff/STORYLINE.md`. Mốc đọc thử
 | 3 | Report: tóm tắt theo câu chuyện, ghi rõ train/test, sửa chỗ khó hiểu, mục 6.7 big data, giữ 40 trang | Claude | Xong | `9e93512`, `375079f` |
 | 4 | Notebook ghi rõ phục vụ cảnh nào; thứ tự trang dashboard đã khớp | Claude | Xong | xem commit cùng dòng này |
 | 5 | Đọc thử như giám khảo lần 2 (agent Claude độc lập vì Codex quá tải): điểm khó hiểu 28 → 24, thuật ngữ chưa giải thích khoảng 48 → 31; phát hiện ngưỡng 40 bị bỏ rơi, động cơ 90 là ca sót, lời nói lệch slide, big data chưa nói quyết định có đổi không | Claude | Xong, đã sửa | ``af04d3d``, ``2cf9d9a``, xem commit cùng dòng này |
+## Tách giọng văn: báo cáo học thuật, slide kể chuyện (21/10/2026)
+
+Người dùng chốt: kể chuyện chỉ ở slide, lời nói và dashboard; báo cáo viết theo văn
+phong học thuật. Quy tắc đã ghi vào `AGENTS.md` (mục "Câu chuyện chung") và
+`handoff/STORYLINE.md`. Không số liệu nào thay đổi.
+
+| Việc | Người làm | Trạng thái |
+|---|---|---|
+| Report: viết lại tóm tắt theo khung học thuật, bỏ câu "Mục này trả lời…", bỏ "đèn vàng/đèn đỏ/vào xưởng", thêm diễn giải cho hình và bảng; vẫn 40 trang, không tham chiếu hỏng | Codex | Xong |
+| Slide: tiêu đề là câu kết luận; mỗi slide chính một hình và vài con số; bỏ bảng 4 chữ số, hộp giải thích và đường dẫn nguồn ở chân slide (nguồn chuyển vào ghi chú) | Claude | Xong |
+| Slide dùng chính file hình do module, notebook sinh ra và ảnh chụp dashboard; bỏ 8 hình vẽ lại trong `slides/figures/`, chỉ giữ hình benchmark | Claude | Xong |
+| Lời nói: sửa chỉ dẫn nhìn và vài câu cho khớp hình mới (sensor 11 và 12, động cơ train 1 thay ví dụ giả định 200 cycle) | Claude | Xong |
+
+## Deck 20 slide, giọng nghiêm túc, phần dữ liệu lớn dày hơn (21/10/2026)
+
+| Việc | Người làm | Trạng thái |
+|---|---|---|
+| Deck 20 slide chính, bỏ slide dự phòng: giới thiệu (3), dữ liệu và hạ tầng (9), phân tích và dự đoán (6), kết luận (2) | Claude | Xong |
+| Bỏ ẩn dụ "đèn vàng/đèn đỏ", "vào xưởng", "câu hỏi buổi sáng" ở slide, notebook, quy ước; dùng "cảnh báo mức một/mức hai" | Claude | Xong |
+| Phần dữ liệu dùng tư liệu thật: bảng bốn tập con, bốn dòng đầu `train_FD001.txt`, kiểm tra chất lượng, sơ đồ luồng dữ liệu của report, ảnh YARN, log `hdfs dfs -ls` và `fsck`, bảng đối chiếu PySpark–Pandas, truy vấn SQL chạy thật trên `etl.sqlite`, bảng sáu bước biến đổi | Claude | Xong; số trích bởi `data_platform()` trong `slides/extract_slide_data.py` |
+| Build lại bốn sơ đồ PDF của report (nguồn `.tex` đã sửa "cycle" nhưng PDF còn bản 13/10) | Claude | Xong |
+| Thêm giảng viên hướng dẫn TS. Võ Thị Thanh Vân: bìa slide, slide cuối, bìa report, bìa sổ tay | Claude | Xong |
+| Sổ tay lời nói viết lại cho 20 slide, giọng nghiêm túc, thêm câu hỏi phản biện về dữ liệu lớn | Codex | Xong |
+
+## Bỏ thử nghiệm phụ khỏi report và bài nộp (21/10/2026)
+
+Hai bên rà report theo góc nhìn hội đồng (Claude và Codex đọc độc lập). Kết luận: bỏ hẳn
+các thử nghiệm không đổi kết quả chính nhưng mở thêm câu hỏi ngoài phạm vi dữ liệu lớn.
+Codex quá tải nhiều lần nên Claude làm toàn bộ. Số liệu chính không đổi.
+
+| Việc | Người làm | Trạng thái |
+|---|---|---|
+| Report: bỏ nested CV, bản 169 đặc trưng, similarity, chuyển miền FD002–FD004, ARIMA (lý thuyết, phương pháp, kết quả, thảo luận, thuật ngữ, Khó khăn 5); FD002–FD004 chỉ đi qua ETL; thêm giới hạn "chỉ huấn luyện và đánh giá trên FD001" | Claude | Xong; 40 trang, không tham chiếu hỏng |
+| Report: sửa 11 câu nói quá (ngưỡng 40 trên test, 39% vòng đời, cách tính cycle bảo trì, hai động cơ chưa đủ dữ liệu, benchmark, block/DataNode, 5V, cảnh báo trễ, độ nhạy tham số, so sánh CNN, 3 sigma); bỏ ngoại suy 200×, số test, Seaborn, CI | Claude | Xong |
+| So sánh với Li và cộng sự đổi từ RMSE 12,61 (có RUL cap 125) sang 13,32 (không RUL cap), đối chiếu Table 4 của bài báo | Claude | Xong |
+| Xóa `report/sections/appendix.tex`, `followup-tables.tex`, sơ đồ nested CV; viết lại `report/README.md` | Claude | Xong |
+| Dashboard bỏ mục "Thử nghiệm mở rộng" (còn 8 trang); slide bỏ dữ liệu ARIMA, nested CV, chuyển miền khỏi `slide_data.json`; ghi chú slide 4 và sổ tay ghi FD002–FD004 chỉ qua ETL | Claude | Xong |
+| Xóa code thử nghiệm: 8 package trong `modeling/`, `similarity.py`, phần ARIMA của `timeseries/`, `cross_dataset.py`, `followup_results.py`, `features/enhanced.py`, 21 script, 21 file test, thư mục `experiments/`, notebook 04 và 05. Giữ `audit_study/` (nguồn kết quả ngưỡng 30/40) và `timeseries/health_index.py` (dùng cho khử nhiễu, lịch bảo trì) | Claude | Xong; 272 test đạt |
+| Zip: bỏ `outputs/experiments/`, `outputs/timeseries/`, kết quả chuyển miền; thêm bốn `FD00x/etl/run_info.json` (nguồn bảng bốn subset) và ba file đầu vào của `build_course_alignment_evidence.py` | Claude | Xong |

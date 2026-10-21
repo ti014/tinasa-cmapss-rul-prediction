@@ -7,6 +7,10 @@ from pathlib import Path
 import subprocess
 import sys
 
+import pytest
+
+from cmapss.statistics import reproducibility
+
 from cmapss.statistics.reproducibility import (
     BLOCKED_TEST_FILENAMES,
     TRAIN_FILENAME,
@@ -60,3 +64,26 @@ def test_train_only_runtime_guard_allows_train_and_blocks_test_files(tmp_path: P
         assert TRAIN_ONLY_AUDIT_RULE in combined_output
         assert TRAIN_ONLY_AUTHORITY in combined_output
         assert filename in combined_output
+
+
+def test_notebook_validation_targets_compared_artifacts_and_preserves_guard(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured = {}
+    env = {"PYTHONPATH": "runtime-guard", "MPLBACKEND": "module://matplotlib_inline.backend_inline"}
+
+    def fake_run(command, *, cwd, env):
+        captured.update(env)
+        return subprocess.CompletedProcess(command, 0, "", "")
+
+    monkeypatch.setattr(reproducibility, "_run_command", fake_run)
+    result = reproducibility._run_notebook(
+        project_root=tmp_path, python_executable=Path(sys.executable),
+        notebook_path=tmp_path / "notebook.ipynb", env=env, timeout_seconds=1200,
+    )
+
+    assert result["exit_code"] == 0
+    assert captured["CMAPSS_STATISTICS_NOTEBOOK_OUTPUT"] == str(tmp_path / "outputs/statistics")
+    assert captured["PYTHONPATH"] == env["PYTHONPATH"]
+    assert captured["MPLBACKEND"] == env["MPLBACKEND"]
+    assert "CMAPSS_STATISTICS_NOTEBOOK_OUTPUT" not in env

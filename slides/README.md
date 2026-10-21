@@ -76,12 +76,3 @@ powershell -File scripts/export_slides.ps1
 Bước cuối cần Windows có PowerPoint. Font dùng trong deck là Arial để hiển thị
 đúng tiếng Việt trên mọi máy; font gốc của template (Bai Jamjuree, SF Pro Display)
 không được cài trên máy dựng.
-
-## Bản cũ
-
-Script pptxgenjs của deck 07/10/2026 nằm tại
-[`archive/build_presentation_pptxgenjs.cjs`](archive/build_presentation_pptxgenjs.cjs);
-`package.json` và `pnpm-lock.yaml` chỉ còn phục vụ script này. Deck 18 slide trước
-ngày 28/09/2026 (PPTX, nguồn Beamer và PDF Beamer) nằm trong
-[`archive/decks/`](archive/decks/); script build/finalize cũ nằm trong
-[`archive/builders/`](archive/builders/).

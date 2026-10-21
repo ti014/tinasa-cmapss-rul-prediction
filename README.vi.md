@@ -336,9 +336,7 @@ Cấu trúc repository hiện tại:
 ├── uv.lock                  # Phiên bản dependencies đã khóa
 ├── report/                  # Nguồn LaTeX/PDF và hình của báo cáo
 ├── slides/                  # Deck 20 slide trên template IUH, bản PDF, script trích số liệu và builder
-│   └── archive/             # Deck/script cũ để đối chiếu
 ├── handoff/                 # Kịch bản demo và checklist bàn giao cuối
-│   └── archive/             # Kịch bản Markdown cũ
 ├── app.py                   # Entry point Streamlit (gọi cmapss.dashboard_app)
 ├── README.md                # Tài liệu tiếng Anh
 └── README.vi.md             # Tài liệu tiếng Việt
@@ -734,6 +732,15 @@ cấu trúc nguồn và lệnh build PDF.
 Repository hỗ trợ báo cáo cuối kỳ môn **Phân tích dữ liệu lớn**. Báo cáo phân
 biệt kết quả quan sát được, diễn giải và giới hạn; mọi số liệu đều được đối chiếu
 với dữ liệu và quy trình tái lập tương ứng.
+
+## Quy trình thực hiện
+
+Tác giả xác định câu hỏi nghiên cứu, chọn bộ dữ liệu, phương pháp và đọc lại kết
+quả. Trợ lý lập trình AI (Claude và Codex) được dùng để soạn mã, test, tài liệu,
+slide và chạy các bước kiểm tra nhất quán. Mọi số liệu trong báo cáo và slide lấy
+từ file trong `outputs/` do mã của repository sinh ra, và tác giả đã đối chiếu
+với các file đó. Các commit đầu có trailer đồng tác giả AI; trailer này được bỏ
+khi dọn lịch sử để công khai, và mục này là bản ghi về việc sử dụng AI.
 
 ## Tài liệu tham khảo
 

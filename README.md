@@ -348,9 +348,7 @@ Current repository structure:
 ├── uv.lock                  # Locked dependency versions
 ├── report/                  # LaTeX source, PDF, figures, and evidence
 ├── slides/                  # 20-slide deck on the IUH template, PDF export, data extractor and builder
-│   └── archive/             # Superseded decks and builders
 ├── handoff/                 # Demo script and final handoff checklist
-│   └── archive/             # Legacy speech source
 ├── app.py                   # Streamlit entry point (calls cmapss.dashboard_app)
 ├── README.md                # English documentation
 └── README.vi.md             # Vietnamese documentation
@@ -764,6 +762,17 @@ This repository supports a final report for the **Big Data Analysis** course.
 The report distinguishes observed results from interpretations. All
 generated analysis, code, citations, and conclusions remain subject to human
 review and reproducibility checks.
+
+## Development Process
+
+The author defined the research questions, chose the dataset and methods, and
+reviewed the results. AI coding assistants (Claude and Codex) were used to
+draft code, tests, documentation and slides, and to run consistency checks.
+Every number in the report and slides comes from files in `outputs/` produced
+by the code in this repository, and the author checked them against those
+files. Earlier commits carried AI co-author trailers; they were removed when
+the history was cleaned for publication, and this section is the record of
+that use.
 
 ## References
 

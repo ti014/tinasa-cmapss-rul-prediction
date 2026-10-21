@@ -96,3 +96,9 @@ Desktop.ini
 !/outputs/experiments/multiscale_comparison/20261006_study02/outer_predictions.parquet
 !/outputs/experiments/multiscale_comparison/20261006_study02/manifest.json
 !/outputs/experiments/multiscale_comparison/20261006_study02/aggregate_metrics.csv
+
+# Local tool configuration and internal working notes (kept on disk, not published).
+/.claude/
+/handoff/CONSISTENCY_AUDIT.md
+# Third-party papers: download them from the links in references/papers/README.md.
+/references/papers/R[34578]_*.pdf

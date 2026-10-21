@@ -155,7 +155,19 @@ def maintenance() -> dict:
                    "due_min": int(missed["cycles_to_maintenance"].min()), "due_max": int(missed["cycles_to_maintenance"].max())},
         "late": {"n_engines": int(len(late)), "min_actual_rul": float(late["y_true"].min()),
                  "delay_min": int(late["delay"].min()), "delay_max": int(late["delay"].max())},
+        "missed_engines": missed[["engine_id", "rul_pred", "y_true"]].to_dict("records"),
+        # Kiểm chứng trên test ngưỡng 40 đã chọn từ train OOF; không dùng test để chọn ngưỡng.
+        "threshold_40_test": _threshold_check(evaluation, 40, threshold),
     }
+
+
+def _threshold_check(evaluation: pd.DataFrame, flag_at: float, need_at: float) -> dict:
+    """Số động cơ test bị báo, báo đúng, bắt được và báo sớm khi bật đèn đỏ ở `flag_at`."""
+    flagged = evaluation["y_pred"].le(flag_at)
+    need = evaluation["y_true"].le(need_at)
+    return {"flagged": int(flagged.sum()), "correct": int((flagged & need).sum()),
+            "actual": int(need.sum()), "early": int((flagged & ~need).sum()),
+            "early_true_rul": sorted(evaluation.loc[flagged & ~need, "y_true"].astype(int).tolist())}
 
 
 def alignment() -> dict:

@@ -2156,6 +2156,39 @@
       "min_actual_rul": 77.0,
       "delay_min": 4,
       "delay_max": 27
+    },
+    "missed_engines": [
+      {
+        "engine_id": 90,
+        "rul_pred": 31.2191,
+        "y_true": 28
+      },
+      {
+        "engine_id": 37,
+        "rul_pred": 31.3637,
+        "y_true": 21
+      },
+      {
+        "engine_id": 18,
+        "rul_pred": 37.3757,
+        "y_true": 28
+      },
+      {
+        "engine_id": 40,
+        "rul_pred": 38.4593,
+        "y_true": 28
+      }
+    ],
+    "threshold_40_test": {
+      "flagged": 28,
+      "correct": 25,
+      "actual": 25,
+      "early": 3,
+      "early_true_rul": [
+        34,
+        38,
+        69
+      ]
     }
   },
   "degradation": {

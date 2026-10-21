@@ -17,7 +17,6 @@ Chạy từ thư mục gốc repository:
 
 from __future__ import annotations
 
-import csv
 import io
 import json
 from pathlib import Path
@@ -41,9 +40,8 @@ OUT = ROOT / "slides/cmapss_fd001_presentation.pptx"
 TOTAL = 20
 
 D = json.loads((ROOT / "slides/slide_data.json").read_text(encoding="utf-8"))
-DEG = json.loads((ROOT / "outputs/degradation/summary.json").read_text(encoding="utf-8"))
-with (ROOT / "outputs/degradation/tables/noise_summary.csv").open(encoding="utf-8") as file:
-    NOISE = {row["sensor"]: row for row in csv.DictReader(file)}
+DEG = D["degradation"]
+NOISE = {row["sensor"]: row for row in D["noise_summary"]}
 
 # Màu lấy từ template IUH: xanh thương hiệu và vàng của đường viền footer.
 BLUE, GOLD = COLORS["blue"].lstrip("#"), COLORS["gold"].lstrip("#")
@@ -63,23 +61,18 @@ M, P, A, DG, I = D["modeling"], D["pipeline"], D["alignment"], D["diagnostics"],
 FD = {row["name"]: row for row in D["subsets"]}
 WARN = {f"{r['model']}_{r['threshold']}": r for r in A["warning_policies"]}
 AN, AN_RAW, ACFG = DEG["anomaly_smoothed"], DEG["anomaly_raw_for_comparison"], DEG["anomaly_config"]
-MNT = json.loads((ROOT / "outputs/maintenance/summary.json").read_text(encoding="utf-8"))
-HDFS = json.loads((ROOT / "outputs/hdfs/summary.json").read_text(encoding="utf-8"))
+MNT = D["maintenance"]
+HDFS = D["hdfs"]
 assert HDFS["mapreduce_vs_pandas"]["exact_match"] and HDFS["spark_vs_pandas"]["exact_match"]
 # Đối chiếu rolling features Pandas–PySpark ở cả ba lượt benchmark.
-BENCH_PARITY = json.loads((ROOT / "outputs/benchmarks/20260929/run_info.json").read_text(encoding="utf-8"))["parity"]
+BENCH_PARITY = D["benchmark_parity"]
 ROLLING_ROWS = {run["features"]["rows"] for run in BENCH_PARITY.values()}
 assert len(ROLLING_ROWS) == 1 and all(run["features"]["all_cells_match"] for run in BENCH_PARITY.values())
-with (ROOT / "outputs/maintenance/tables/status_vs_actual.csv").open(encoding="utf-8") as file:
-    MNT_CHECK = list(csv.reader(file))
-with (ROOT / "outputs/degradation/tables/anomaly_sensitivity.csv").open(encoding="utf-8") as file:
-    SENS = [row for row in csv.DictReader(file) if row["signal"] == "ewma"]
+MNT_CHECK = [MNT["status_check"]["columns"], *MNT["status_check"]["data"]]
+SENS = D["sensitivity"]
 SENS_LEAD_MIN = min(float(row["lead_min"]) for row in SENS)
 # Sensor thay đổi cùng chiều ở mọi động cơ train (kiểm định đầu/cuối vòng đời).
-with (ROOT / "outputs/statistics/tables/sensor_inference.csv").open(encoding="utf-8") as file:
-    INFERENCE = list(csv.DictReader(file))
-SAME_DIRECTION = [row["sensor"] for row in INFERENCE
-                  if "100" in (row["n_positive"], row["n_negative"])]
+SAME_DIRECTION = D["statistics"]["same_direction"]
 assert {"sensor_4", "sensor_7", "sensor_11", "sensor_12", "sensor_20"} <= set(SAME_DIRECTION)
 SENS_ALL_DETECTED = all(row["n_detected"] == row["n_engines"] for row in SENS)
 
@@ -652,7 +645,7 @@ def slide_eda():
                 "Thời lượng: 25 giây.\nTuổi thọ train từ 128 đến 362 cycle, trung vị 199, lệch phải vì có vài động cơ chạy "
                 "rất lâu.\nBảy cột không đổi trong cả 100 động cơ: sensor 1, 5, 10, 16, 18, 19 và setting_3. Sensor_6 không "
                 "đổi ở 38/100 động cơ nên cũng bị bỏ. Vì vậy bước làm mượt chỉ áp dụng cho 14 sensor có xu hướng. Không "
-                "dùng EDA để chọn đặc trưng (feature selection), để tránh rò rỉ vào kiểm định chéo.")
+                "dùng EDA để chọn đặc trưng (feature selection), để tránh rò rỉ vào cross-validation.")
     picture(s, "slides/figures/engine_lifetimes.png", 0.92, 2.5, 7.4, 2.55, align="left")
     for i, (label, value) in enumerate((("Ngắn nhất", life["min"]), ("Trung vị", life["50%"]), ("Trung bình", life["mean"]),
                                         ("Dài nhất", life["max"]))):
@@ -691,7 +684,7 @@ def slide_denoise():
     for key in ("sensor_4", "sensor_9", "sensor_11", "sensor_12", "sensor_14"):
         r = NOISE[key]
         raw, smooth = float(r["diff_std_raw"]), float(r["diff_std_smoothed"])
-        rows.append([key, vn(raw, 3 if raw < 1 else 2), vn(smooth, 3 if smooth < 1 else 2), f"{vn(float(r['reduction_pct']), 1)}%"])
+        rows.append([key, vn(raw, 4), vn(smooth, 4), f"{vn(float(r['reduction_pct']), 1)}%"])
     table(s, rows, 8.95, 2.5, [1.1, 0.72, 0.98, 0.7], row_h=0.4, size=11, align_right_from=1)
     text(s, 8.95, 4.98, 3.42, 0.45, "Cách đo: độ lệch chuẩn của chênh lệch giữa hai cycle liền kề, tính riêng từng động cơ.",
          size=10.5, color=SLATE)
@@ -820,25 +813,25 @@ def slide_rul():
     f = M["final"]
     cv = {r["model_name"]: r for r in M["cv"]}
     s = content(5, 13, "Mô hình dự đoán RUL",
-                f"HistGradientBoosting (HGB), chọn bằng kiểm định chéo 5 fold chia theo động cơ (GroupKFold); MAE tập test {vn(f['mean_engine_mae'])} cycle",
+                f"HistGradientBoosting (HGB), chọn bằng cross-validation 5 fold chia theo động cơ (GroupKFold); MAE tập test {vn(f['mean_engine_mae'])} cycle",
                 "outputs/modeling/tables/model_metrics.csv; outputs/modeling/tables/final_metrics.json; "
                 "outputs/modeling/predictions/final_evaluation.parquet",
                 "Thời lượng: 1 phút 10 giây.\nCách đánh giá: GroupKFold 5 fold theo động cơ, mọi cửa sổ của một động cơ nằm "
                 "cùng một phía. Nếu chia ngẫu nhiên theo dòng, kết quả sẽ tốt hơn thực tế vì hai cửa sổ liền kề trùng 29/30 "
                 "cycle. Mỗi động cơ có tổng trọng số bằng 1. Dự đoán trên phần động cơ mà mô hình chưa thấy khi huấn luyện "
-                "gọi là dự đoán OOF (out-of-fold).\nBảng trên: so sánh ba mô hình bằng GroupKFold. HGB có MAE 20,21 cycle, "
-                "thấp hơn Ridge 3,78 cycle và chưa bằng một nửa MAE của baseline trung vị (46,95).\nTrên test: MAE "
+                f"gọi là dự đoán OOF (out-of-fold).\nBảng trên: HGB có MAE {vn(cv['hist_gradient_boosting']['mean_engine_mae'])} cycle, "
+                f"thấp hơn Ridge {vn(M['ridge_minus_hgb_mae'])} cycle; baseline trung vị có MAE {vn(cv['median_baseline']['mean_engine_mae'])}.\nTrên test: MAE "
                 f"{vn(f['mean_engine_mae'])} cycle, khoảng tin cậy 95% [{vn(M['ci_mae']['ci_lower'], 2)}; "
                 f"{vn(M['ci_mae']['ci_upper'], 2)}], RMSE {vn(f['rmse'], 2)}, NASA score {vn(f['nasa_score'], 0)}.\nMAE test "
-                "thấp hơn MAE kiểm định chéo vì test chỉ có một điểm cuối mỗi chuỗi, RUL thực tế từ 7 đến 145; "
-                "kiểm định chéo tính cả đầu đời có RUL rất lớn.\nĐọc hình: điểm càng gần đường chéo càng đúng; vùng RUL "
+                f"thấp hơn MAE cross-validation vì test chỉ có một điểm cuối mỗi chuỗi, RUL thực tế từ {vn(M['test_rul_min'], 0)} đến {vn(M['test_rul_max'], 0)}; "
+                "cross-validation tính cả đầu đời có RUL rất lớn.\nĐọc hình: điểm càng gần đường chéo càng đúng; vùng RUL "
                 "thấp bám đường chéo tốt hơn.")
     table(s, [
         ["Mô hình (GroupKFold 5 fold)", "MAE", "Độ lệch chuẩn (5 fold)"],
-        ["Baseline trung vị", vn(cv["median_baseline"]["mean_engine_mae"]), vn(cv["median_baseline"]["std_engine_mae"])],
-        ["Ridge (α = 1)", vn(cv["ridge_alpha_1"]["mean_engine_mae"]), vn(cv["ridge_alpha_1"]["std_engine_mae"])],
-        ["HistGradientBoosting", vn(cv["hist_gradient_boosting"]["mean_engine_mae"]),
-         vn(cv["hist_gradient_boosting"]["std_engine_mae"])],
+        ["Baseline trung vị", vn(cv["median_baseline"]["mean_engine_mae"], 4), vn(cv["median_baseline"]["std_engine_mae"], 4)],
+        ["Ridge (α = 1)", vn(cv["ridge_alpha_1"]["mean_engine_mae"], 4), vn(cv["ridge_alpha_1"]["std_engine_mae"], 4)],
+        ["HistGradientBoosting", vn(cv["hist_gradient_boosting"]["mean_engine_mae"], 4),
+         vn(cv["hist_gradient_boosting"]["std_engine_mae"], 4)],
     ], 0.92, 2.5, [2.7, 1.0, 2.0], row_h=0.42, size=12.5, highlight=3, align_right_from=1)
     cards = [
         (vn(f["mean_engine_mae"]), "MAE test (cycle)", f"khoảng tin cậy 95%: {vn(M['ci_mae']['ci_lower'])}–{vn(M['ci_mae']['ci_upper'])}",
@@ -862,13 +855,14 @@ def slide_errors():
     s = content(5, 14, "Phân tích sai số dự đoán",
                 "Sai số nhỏ hơn khi RUL thực tế nhỏ; mô hình hay dự đoán cao hơn thực tế, nên dễ cảnh báo muộn",
                 "outputs/modeling/predictions/final_evaluation.parquet; outputs/diagnostics/error_diagnostics.json",
-                "Thời lượng: 40 giây.\nHình: sai số bằng RUL dự đoán trừ RUL thực tế, xếp theo RUL thực tế. MAE chỉ 4,38 cycle "
-                "với 25 động cơ có RUL thực tế ≤ 30, tức đúng vùng cần cảnh báo; khoảng 21 cycle khi RUL trên 60.\n"
+                f"Thời lượng: 40 giây.\nHình: sai số bằng RUL dự đoán trừ RUL thực tế, xếp theo RUL thực tế. MAE {vn(M['low_rul']['mae'])} cycle "
+                f"với {M['low_rul']['n_engines']} động cơ có RUL thực tế ≤ 30; MAE {vn(M['high_rul_mae'])} cycle khi RUL trên 60.\n"
                 f"{M['n_over']} dự đoán cao hơn thực tế, {M['n_under']} thấp hơn. Ví dụ động cơ {w['engine_id']}: RUL thực tế "
                 f"{vn(w['y_true'], 0)}, dự đoán {vn(w['y_pred'], 1)}, sai {vn(w['abs_error'], 1)} cycle. 10 động cơ sai nhiều "
                 f"nhất đóng góp {vn(DG['top10_nasa_share'] * 100, 1)}% tổng NASA score.\nNguyên nhân: khi động cơ còn khỏe, "
-                "tín hiệu cảm biến gần như đi ngang nên khó phân biệt còn 160 hay 300 cycle; trong dự đoán OOF, giá trị dự "
-                "đoán hiếm khi vượt quá khoảng 145 cycle.")
+                "tín hiệu cảm biến gần như đi ngang nên khó phân biệt còn 160 hay 300 cycle; trong dự đoán OOF, "
+                f"dự đoán trung bình dừng quanh {vn(min(DG['oof_mean_pred_150_200'], DG['oof_mean_pred_200_400']), 0)}–"
+                f"{vn(max(DG['oof_mean_pred_150_200'], DG['oof_mean_pred_200_400']), 0)} cycle khi RUL thật trên 150.")
     picture(s, "slides/figures/final_residuals_by_rul.png", 0.92, 2.45, 5.9, 4.1, align="left")
     text(s, 7.3, 2.5, 5.1, 0.34, "Chiều của sai số (100 động cơ test)", size=15, bold=True, color=BLUE)
     width = 5.1
@@ -884,7 +878,7 @@ def slide_errors():
                                         ("Sai số", vn(w["abs_error"], 1)))):
         text(s, 7.52 + i * 1.6, 4.3, 1.55, 0.6, value, size=24, bold=True, color=GOLD_DARK if i == 2 else BLUE)
         text(s, 7.52 + i * 1.6, 4.95, 1.55, 0.4, f"{label} (cycle)", size=11.5, color=SLATE)
-    text(s, 7.3, 5.75, 5.12, 0.8, f"MAE chỉ 4,38 cycle khi RUL thực tế ≤ 30. 10 động cơ sai nhiều nhất đóng góp "
+    text(s, 7.3, 5.75, 5.12, 0.8, f"MAE {vn(M['low_rul']['mae'])} cycle khi RUL thực tế ≤ 30. 10 động cơ sai nhiều nhất đóng góp "
          f"{vn(DG['top10_nasa_share'] * 100, 1)}% tổng NASA score.", size=12.5, color=SLATE)
 
 
@@ -893,21 +887,26 @@ def slide_warning():
     wg = M["warning"]
     tm, ld = wg["timing"], wg["lead"]
     w30, w40 = WARN["hgb126_30"], WARN["hgb126_40"]
+    example = M["example_warning"]
+    anomaly_cycle = int(next(row for row in D["example_anomaly"] if row["engine_id"] == 1)["detection_cycle"])
     s = content(5, 15, "Cơ chế cảnh báo sớm hai mức",
-                "Ngưỡng RUL dự đoán ≤ 30: không bỏ sót động cơ, báo trước trung vị 30 cycle, nhưng 49% báo muộn",
+                f"Ngưỡng RUL dự đoán ≤ 30: báo trước trung vị {vn(ld['median'], 0)} cycle, {vn(w30['late_or_missed_rate'] * 100, 0)}% báo muộn",
                 "outputs/modeling/tables/warning_events.csv; outputs/course_alignment/20261007/warning_fixed_policies.csv",
                 "Thời lượng: 1 phút 20 giây.\nĐây là biểu đồ xu hướng cảnh báo sớm, sản phẩm đặc thù của đề tài, minh họa "
                 "trên động cơ train 1. Đường xanh là RUL thực tế, đường đỏ là RUL dự đoán OOF, đường cam là ngưỡng 30 cycle; "
-                "động cơ 1 được cảnh báo ở cycle 162, hỏng ở 192. Cùng quy tắc này được áp dụng cho động cơ test ở slide 16.\n"
+                f"động cơ train 1 được cảnh báo ở cycle {example['first_warning_cycle']}, hỏng ở {example['failure_cycle']}. "
+                "Cùng quy tắc này được áp dụng cho động cơ test ở slide 16.\n"
                 f"Bảng bên phải dùng dự đoán OOF trên 100 động cơ train. Ở ngưỡng 30: {tm['before_threshold']} động cơ được "
                 f"báo trước khi RUL thực tế chạm 30, {tm['at_threshold']} đúng lúc, {tm['after_threshold']} muộn nhưng vẫn "
                 f"trước khi hỏng; không bỏ sót động cơ nào. Thời gian báo trước (lead time) trung vị {vn(ld['median'], 0)} "
                 f"cycle, ngắn nhất {vn(ld['min'], 0)}. Vì OOF cũng dùng để chọn mô hình, kết quả này hơi lạc quan.\n"
-                "Cảnh báo muộn tập trung ở động cơ suy giảm nhanh. Ngưỡng 40 nâng tỷ lệ kịp thời từ 51% lên 94%, đổi lại "
-                "tỷ lệ báo quá sớm tăng khoảng bốn lần, từ 1,3% lên 5,3%. Chọn ngưỡng thật cần chi phí bảo trì, dữ liệu "
-                "không có.\nGhép hai mức trên động cơ 1: cycle 84 bất thường, cycle 162 RUL dự đoán ≤ 30, cycle 192 hỏng.")
+                f"Cảnh báo muộn tập trung ở động cơ suy giảm nhanh. Ngưỡng 40 nâng tỷ lệ kịp thời từ {vn(w30['on_time_rate'] * 100)}% "
+                f"lên {vn(w40['on_time_rate'] * 100)}%, đổi lại tỷ lệ báo quá sớm từ {vn(w30['early_alarm_burden'] * 100)}% "
+                f"lên {vn(w40['early_alarm_burden'] * 100)}%. Chọn ngưỡng thật cần chi phí bảo trì, dữ liệu không có.\n"
+                f"Ghép hai mức trên động cơ train 1: cycle {anomaly_cycle} bất thường, cycle {example['first_warning_cycle']} "
+                f"RUL dự đoán ≤ 30, cycle {example['failure_cycle']} hỏng.")
     _, py, _, ph = picture(s, "slides/figures/warning_trajectory.png", 0.92, 2.45, 6.35, 3.6, align="left")
-    text(s, 0.92, py + ph + 0.06, 6.35, 0.3, "Minh họa trên động cơ train 1: cảnh báo mức 2 tại cycle 162; hỏng tại cycle 192.",
+    text(s, 0.92, py + ph + 0.06, 6.35, 0.3, f"Động cơ train 1: cảnh báo mức 2 tại cycle {example['first_warning_cycle']}; hỏng tại cycle {example['failure_cycle']}.",
          size=11, color=SLATE)
     text(s, 7.6, 2.45, 4.82, 0.3, "Dự đoán OOF trên 100 động cơ train", size=13, bold=True, color=BLUE)
     table(s, [
@@ -921,8 +920,9 @@ def slide_warning():
          "thực tế còn trên 30. OOF: dự đoán trên động cơ mô hình chưa thấy khi huấn luyện.", size=10, color=SLATE)
     rect(s, 7.6, 4.62, 4.82, 1.93, TINT)
     text(s, 7.82, 4.7, 4.4, 0.32, "Hai mức cảnh báo trên động cơ 1", size=14, bold=True, color=BLUE)
-    events = [("84", "Mức 1 · Health Index bất thường", GOLD), ("162", "Mức 2 · RUL dự đoán ≤ 30", BLUE),
-              ("192", "Hỏng", RED)]
+    events = [(str(anomaly_cycle), "Mức 1 · Health Index bất thường", GOLD),
+              (str(example['first_warning_cycle']), "Mức 2 · RUL dự đoán ≤ 30", BLUE),
+              (str(example['failure_cycle']), "Hỏng", RED)]
     for i, (cycle, label, color) in enumerate(events):
         y = 5.12 + i * 0.47
         rect(s, 7.82, y, 0.95, 0.38, color)
@@ -934,6 +934,8 @@ def slide_warning():
 # ============================================================================ 16. Lịch bảo trì
 def slide_maintenance():
     ev, counts, plan = MNT["evaluation"], MNT["status_counts"], MNT["planning"]
+    missed, late = MNT["missed"], MNT["late"]
+    example = next(row for row in MNT["schedule"] if row["engine_id"] == 90)
     s = content(5, 16, "Báo cáo dự đoán thời điểm bảo trì",
                 f"{ev['n_correct_needs_maintenance']}/{ev['n_flagged_needs_maintenance']} động cơ được xếp cần bảo trì đều có "
                 f"RUL thực tế ≤ 30, không báo nhầm; bắt được {ev['n_correct_needs_maintenance']}/"
@@ -941,26 +943,29 @@ def slide_maintenance():
                 "outputs/maintenance/tables/maintenance_schedule.csv; outputs/maintenance/summary.json",
                 "Thời lượng: 1 phút 15 giây.\nĐây là sản phẩm đặc thù của đề tài: mỗi động cơ test có một dòng gồm cycle "
                 "hiện tại, RUL dự đoán, cycle cần bảo trì (lúc RUL dự đoán chạm 30) và trạng thái. Bảng dưới trích 5 dòng. "
-                "Ví dụ động cơ 90 ở cycle 146, RUL dự đoán 31,2, nên cần bảo trì ở cycle 147.\nTrạng thái: cần bảo trì nếu "
+                f"Ví dụ động cơ {example['engine_id']} ở cycle {example['current_cycle']}, RUL dự đoán {vn(example['rul_pred'])}, "
+                f"nên cần bảo trì ở cycle {example['maintenance_cycle']}.\nTrạng thái: cần bảo trì nếu "
                 "RUL dự đoán ≤ 30; theo dõi tăng cường nếu Health Index đã báo bất thường; còn lại bình thường.\nHình trái: "
                 "100 động cơ test xếp theo RUL dự đoán. Hình phải: "
                 f"{counts['Cần bảo trì']} cần bảo trì ngay, {counts['Theo dõi tăng cường']} theo dõi, {counts['Bình thường']} "
                 f"bình thường. Kế hoạch: thêm {plan['1–25']} động cơ đến hạn trong 25 cycle tới và {plan['26–50']} trong "
                 "26–50 cycle tới.\nKiểm tra bằng nhãn test sau khi đã ghi lịch: "
                 f"{ev['n_actual_needs_maintenance']} động cơ thật sự cần bảo trì; {ev['n_correct_needs_maintenance']} được "
-                "báo đúng; 4 động cơ còn lại có RUL dự đoán 31–38 nên đến hạn sau 1–8 cycle và vẫn ở mức theo dõi. Cả 20 "
-                "động cơ bình thường có RUL thực tế trên 60.\nGiới hạn: mức theo dõi còn rộng, 41/59 động cơ có RUL thực tế "
-                "trên 60. 12 động cơ còn xa mới hỏng (RUL thực tế từ 77) có lịch muộn hơn lúc hỏng 4–27 cycle, vì mô hình "
+                f"báo đúng; {missed['n_engines']} động cơ còn lại có RUL dự đoán {vn(missed['rul_pred_min'])}–{vn(missed['rul_pred_max'])}, "
+                f"đến hạn sau {missed['due_min']}–{missed['due_max']} cycle. Cả {counts['Bình thường']} động cơ bình thường "
+                f"có RUL thực tế ít nhất {vn(MNT['normal_min_actual_rul'], 0)} cycle.\nGiới hạn: mức theo dõi còn rộng, "
+                f"{MNT['watch_above_60']}/{counts['Theo dõi tăng cường']} động cơ có RUL thực tế trên 60. "
+                f"{late['n_engines']} động cơ còn xa mới hỏng (RUL thực tế từ {vn(late['min_actual_rul'], 0)}) có lịch muộn hơn lúc hỏng "
+                f"{late['delay_min']}–{late['delay_max']} cycle, vì mô hình "
                 "dự đoán cao hơn thực tế ở vùng RUL lớn.")
     picture(s, "slides/figures/fleet_status.png", 0.92, 2.45, 7.45, 2.15, align="left")
 
     # Trích lịch bảo trì theo từng động cơ: đủ ba trạng thái.
-    with (ROOT / "outputs/maintenance/tables/maintenance_schedule.csv").open(encoding="utf-8") as file:
-        schedule = {row["engine_id"]: row for row in csv.DictReader(file)}
+    schedule = {str(row["engine_id"]): row for row in MNT["schedule"]}
     rows = [["Động cơ", "Trạng thái", "Cycle hiện tại", "RUL dự đoán", "Cycle cần bảo trì"]]
     for engine in ("34", "41", "90", "91", "11"):
         r = schedule[engine]
-        rows.append([engine, r["status"], r["current_cycle"], vn(float(r["rul_pred"]), 1), r["maintenance_cycle"]])
+        rows.append([engine, r["status"], str(r["current_cycle"]), vn(r["rul_pred"], 4), str(r["maintenance_cycle"])])
     table(s, rows, 0.92, 4.72, [0.95, 2.15, 1.35, 1.3, 1.7], row_h=0.3, size=10.5, align_right_from=2)
 
     text(s, 8.65, 2.5, 3.77, 0.34, "Đối chiếu với RUL thực tế", size=14, bold=True, color=BLUE)
@@ -970,9 +975,9 @@ def slide_maintenance():
     rect(s, 8.65, 4.72, 3.77, 1.83, BLUE)
     text(s, 8.85, 4.8, 3.4, 1.7, [
         [(f"{ev['n_correct_needs_maintenance']}/{ev['n_actual_needs_maintenance']}", {"bold": True, "color": GOLD, "size": 20}),
-         (" động cơ có RUL thực tế ≤ 30 được xếp cần bảo trì; 4 động cơ còn lại đến hạn sau 1–8 cycle.", {"color": WHITE})],
+         (f" động cơ có RUL thực tế ≤ 30 được xếp cần bảo trì; {missed['n_engines']} động cơ còn lại đến hạn sau {missed['due_min']}–{missed['due_max']} cycle.", {"color": WHITE})],
         [("Giới hạn: ", {"bold": True, "color": GOLD}),
-         ("12 động cơ còn xa mới hỏng có lịch muộn hơn lúc hỏng 4–27 cycle.", {"color": ICE})],
+         (f"{late['n_engines']} động cơ còn xa mới hỏng có lịch muộn hơn lúc hỏng {late['delay_min']}–{late['delay_max']} cycle.", {"color": ICE})],
     ], size=11, space_after=6)
 
 
@@ -993,10 +998,11 @@ def slide_extended():
                 f"tăng khoảng {vn(min(c / w for c, w in zip(cross, within)), 1)}–{vn(max(c / w for c, w in zip(cross, within)), 1)} "
                 "lần. Với FD002 và FD004 chỉ khoảng 15% giá trị sensor nằm trong miền FD001 nên dự đoán gần như hằng số; "
                 "FD003 có thêm dạng lỗi ở quạt (Fan).\nBên phải là ba thử nghiệm cải thiện, không cái nào thay mô hình chính: "
-                f"kiểm định chéo lồng nhau (nested CV) chọn lại đúng cấu hình gốc, cảnh báo muộn tăng từ {o['baseline']['late']} "
+                f"cross-validation lồng nhau (nested CV) chọn lại đúng cấu hình gốc, cảnh báo muộn tăng từ {o['baseline']['late']} "
                 f"lên {o['weights']['late']}; thêm cột cycle và 42 đặc trưng lịch sử giảm MAE OOF từ {vn(t126)} xuống "
-                f"{vn(t169)} nhưng tỷ lệ cảnh báo kịp thời ở ngưỡng 30 giảm từ 51% xuống 45%; ARIMA dự báo Health Index với "
-                f"MAE {vn(ts['mae']['ARIMA'], 2)}, nhưng chỉ tốt hơn cách kéo thẳng xu hướng gần nhất (drift) ở 7/10 động cơ.")
+                f"{vn(t169)} nhưng tỷ lệ cảnh báo kịp thời ở ngưỡng 30 từ {vn(WARN['hgb126_30']['on_time_rate'] * 100)}% "
+                f"xuống {vn(WARN['hgb169_30']['on_time_rate'] * 100)}%; ARIMA dự báo Health Index với "
+                f"MAE {vn(ts['mae']['ARIMA'], 2)}, tốt hơn drift ở {ts['n_better_than_drift']}/{ts['n_engines']} động cơ.")
     bar_chart(s, 0.92, 2.45, 6.5, 4.1, targets,
               [("Huấn luyện trên chính subset đó", within),
                ("Dùng lại mô hình FD001", cross)],
@@ -1005,9 +1011,11 @@ def slide_extended():
         ("Nested CV: cửa sổ, siêu tham số, trọng số",
          f"Chọn lại đúng cấu hình gốc; số cảnh báo muộn tăng từ {o['baseline']['late']} lên {o['weights']['late']}/100."),
         ("Thêm cột cycle và 42 đặc trưng lịch sử",
-         f"169 đặc trưng: MAE OOF {vn(t126)} → {vn(t169)}; tỷ lệ cảnh báo kịp thời (ngưỡng 30) giảm từ 51% xuống 45%."),
+         f"169 đặc trưng: MAE OOF {vn(t126)} → {vn(t169)}; tỷ lệ kịp thời (ngưỡng 30) "
+         f"{vn(WARN['hgb126_30']['on_time_rate'] * 100)}% → {vn(WARN['hgb169_30']['on_time_rate'] * 100)}%."),
         ("ARIMA dự báo Health Index",
-         f"MAE {vn(ts['mae']['ARIMA'])} so với {vn(ts['mae']['drift'])} của cách kéo thẳng xu hướng (drift); tốt hơn ở 7/10 động cơ."),
+         f"MAE {vn(ts['mae']['ARIMA'])} so với {vn(ts['mae']['drift'])} của drift; "
+         f"tốt hơn ở {ts['n_better_than_drift']}/{ts['n_engines']} động cơ."),
     ]
     for i, (head, body) in enumerate(items):
         y = 2.5 + i * 1.37
@@ -1023,12 +1031,15 @@ def slide_conclusion():
                 "Trả lời năm câu hỏi nghiên cứu; kết luận chỉ áp dụng cho dữ liệu mô phỏng C-MAPSS FD001",
                 "report/sections/conclusion.tex; các artifact đã dẫn ở slide 6–16",
                 "Thời lượng: 50 giây.\nQ1: dữ liệu đạt mọi kiểm tra schema, khóa, cycle; Pandas và PySpark khớp tuyệt đối.\n"
-                "Q2: EWMA giảm khoảng 86% dao động; cửa sổ 30 cycle tạo 126 đặc trưng.\nQ3: 15/21 sensor thay đổi; Health "
+                f"Q2: EWMA giảm khoảng {vn(DEG['noise_reduction_pct_median'])}% dao động; window {P['window']} cycle "
+                f"tạo {P['feature_columns']} đặc trưng.\nQ3: {D['statistics']['n_reject']}/{D['statistics']['n_sensors']} sensor thay đổi; Health "
                 f"Index phát hiện bất thường ở 100/100 động cơ train, trung vị {vn(AN['lead_median'], 0)} cycle trước khi "
                 f"hỏng.\nQ4: MAE test {vn(f['mean_engine_mae'])} cycle, nhỏ nhất ở vùng gần hỏng.\nQ5: hai kết quả khác "
-                "nhau. Trên lịch bảo trì của tập test: báo cần bảo trì 21 động cơ, đúng cả 21, bắt được 21/25 động cơ cần "
-                "bảo trì. Trên dự đoán OOF của tập train: cảnh báo không bỏ sót động cơ nào, báo trước trung vị 30 cycle, "
-                "nhưng 49% muộn; ngưỡng 40 giảm tỷ lệ muộn xuống 6%.\nSản phẩm: lịch dự đoán thời điểm cần bảo trì kèm biểu "
+                f"nhau. Trên lịch bảo trì test: báo cần bảo trì {MNT['evaluation']['n_flagged_needs_maintenance']} động cơ, "
+                f"đúng {MNT['evaluation']['n_correct_needs_maintenance']}/{MNT['evaluation']['n_actual_needs_maintenance']} động cơ cần bảo trì. "
+                f"Trên OOF train: báo trước trung vị {vn(M['warning']['lead']['median'], 0)} cycle; "
+                f"{vn(WARN['hgb126_30']['late_or_missed_rate'] * 100)}% muộn, ngưỡng 40 còn "
+                f"{vn(WARN['hgb126_40']['late_or_missed_rate'] * 100)}%.\nSản phẩm: lịch dự đoán thời điểm cần bảo trì kèm biểu "
                 "đồ xu hướng cảnh báo sớm.")
     ev = MNT["evaluation"]
     cards = [
@@ -1038,10 +1049,10 @@ def slide_conclusion():
          "dao động sau EWMA; 126 đặc trưng từ cửa sổ 30 cycle"),
         ("Q3", "Xu hướng, bất thường", f"{AN['n_detected']}/{AN['n_engines']}",
          f"động cơ train được phát hiện, trung vị {vn(AN['lead_median'], 0)} cycle trước khi hỏng"),
-        ("Q4", "Dự đoán RUL", f"{vn(f['mean_engine_mae'])}", "MAE tập test (cycle); chỉ 4,38 khi RUL ≤ 30"),
+        ("Q4", "Dự đoán RUL", f"{vn(f['mean_engine_mae'])}", f"MAE tập test (cycle); {vn(M['low_rul']['mae'])} khi RUL ≤ 30"),
         ("Q5", "Cảnh báo, lịch bảo trì", f"{ev['n_correct_needs_maintenance']}/{ev['n_flagged_needs_maintenance']}",
          f"báo cần bảo trì trên test đều đúng, bắt {ev['n_correct_needs_maintenance']}/{ev['n_actual_needs_maintenance']}; "
-         "OOF train: không bỏ sót, 49% muộn"),
+         f"OOF train: {vn(WARN['hgb126_30']['late_or_missed_rate'] * 100)}% muộn"),
     ]
     for i, (q, head, value, desc) in enumerate(cards):
         x, y = 0.92 + (i % 3) * 3.9, 2.5 + (i // 3) * 2.1

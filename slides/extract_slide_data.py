@@ -57,6 +57,7 @@ def statistics() -> dict:
         "n_reject": int(reject.sum()),
         "n_degenerate": int((inf["test_status"] == "all_zero_difference").sum()),
         "resamples": int(inf["bootstrap_resamples"].iloc[0]),
+        "same_direction": inf.loc[inf["n_positive"].eq(100) | inf["n_negative"].eq(100), "sensor"].tolist(),
     }
 
 
@@ -66,9 +67,11 @@ def timeseries() -> dict:
     mae = {"ARIMA": float(arima["mae"].mean())}
     for name, frame in base.groupby("baseline_name"):
         mae[name] = float(frame["mae"].mean())
+    drift = base.loc[base["baseline_name"].eq("drift")].set_index("engine_id")["mae"]
     return {
         "n_engines": int(len(arima)),
         "mae": mae,
+        "n_better_than_drift": int((arima.set_index("engine_id")["mae"] < drift).sum()),
         "coverage_min": float(arima["coverage_95"].min()),
         "coverage_max": float(arima["coverage_95"].max()),
     }
@@ -81,6 +84,10 @@ def modeling() -> dict:
     residual = evaluation["y_pred"] - evaluation["y_true"]
     worst = evaluation.loc[evaluation["absolute_error"].idxmax()]
     warning = read_json(OUT / "modeling" / "tables" / "warning_summary.json")
+    low_rul = evaluation.loc[evaluation["y_true"].le(30)]
+    high_rul = evaluation.loc[evaluation["y_true"].gt(60)]
+    cv = models.set_index("model_name")
+    warning_event = pd.read_csv(OUT / "modeling/tables/warning_events.csv").set_index("engine_id").loc[1]
     return {
         "final": final["metrics"],
         "ci_mae": final["bootstrap"]["intervals"]["mean_engine_mae"],
@@ -88,6 +95,13 @@ def modeling() -> dict:
         "cv": models[["model_name", "mean_engine_mae", "std_engine_mae", "selected"]].to_dict("records"),
         "n_over": int((residual > 0).sum()),
         "n_under": int((residual < 0).sum()),
+        "low_rul": {"n_engines": int(len(low_rul)), "mae": float(low_rul["absolute_error"].mean())},
+        "high_rul_mae": float(high_rul["absolute_error"].mean()),
+        "test_rul_min": float(evaluation["y_true"].min()),
+        "test_rul_max": float(evaluation["y_true"].max()),
+        "ridge_minus_hgb_mae": float(cv.loc["ridge_alpha_1", "mean_engine_mae"] - cv.loc["hist_gradient_boosting", "mean_engine_mae"]),
+        "example_warning": {"engine_id": 1, "first_warning_cycle": int(warning_event["first_warning_cycle"]),
+                            "failure_cycle": int(warning_event["failure_cycle"])},
         "worst": {
             "engine_id": int(worst["engine_id"]),
             "y_true": float(worst["y_true"]),
@@ -99,6 +113,33 @@ def modeling() -> dict:
             "timing": warning["timing_counts"],
             "lead": warning["lead_time_distribution"],
         },
+    }
+
+
+def maintenance() -> dict:
+    """Gom lịch và số liệu đối chiếu từ artifact bảo trì đã lưu."""
+    summary = read_json(OUT / "maintenance/summary.json")
+    schedule = pd.read_csv(OUT / "maintenance/tables/maintenance_schedule.csv")
+    evaluation = pd.read_parquet(OUT / "modeling/predictions/final_evaluation.parquet")
+    checked = schedule.merge(evaluation[["engine_id", "y_true"]], on="engine_id", validate="one_to_one")
+    threshold = summary["rul_threshold"]
+    missed = checked.loc[checked["y_true"].le(threshold) & checked["status"].ne("Cần bảo trì")]
+    late = checked.assign(delay=checked["maintenance_cycle"] - checked["current_cycle"] - checked["y_true"])
+    late = late.loc[late["delay"].gt(0)]
+    watch = checked.loc[checked["status"].eq("Theo dõi tăng cường")]
+    normal = checked.loc[checked["status"].eq("Bình thường")]
+    return {
+        **summary,
+        # NaN không hợp lệ trong JSON; động cơ chưa có bất thường ghi anomaly_cycle = null.
+        "schedule": schedule.astype(object).where(schedule.notna(), None).to_dict("records"),
+        "status_check": pd.read_csv(OUT / "maintenance/tables/status_vs_actual.csv").astype(str).to_dict("split"),
+        "watch_above_60": int(watch["y_true"].gt(60).sum()),
+        "normal_min_actual_rul": float(normal["y_true"].min()),
+        "missed": {"n_engines": int(len(missed)),
+                   "rul_pred_min": float(missed["rul_pred"].min()), "rul_pred_max": float(missed["rul_pred"].max()),
+                   "due_min": int(missed["cycles_to_maintenance"].min()), "due_max": int(missed["cycles_to_maintenance"].max())},
+        "late": {"n_engines": int(len(late)), "min_actual_rul": float(late["y_true"].min()),
+                 "delay_min": int(late["delay"].min()), "delay_max": int(late["delay"].max())},
     }
 
 
@@ -270,6 +311,13 @@ def main() -> None:
         "statistics": statistics(),
         "timeseries": timeseries(),
         "modeling": modeling(),
+        "maintenance": maintenance(),
+        "degradation": read_json(OUT / "degradation/summary.json"),
+        "example_anomaly": pd.read_csv(OUT / "degradation/tables/anomaly_events.csv").query("engine_id == 1").to_dict("records"),
+        "noise_summary": pd.read_csv(OUT / "degradation/tables/noise_summary.csv").to_dict("records"),
+        "hdfs": read_json(OUT / "hdfs/summary.json"),
+        "benchmark_parity": read_json(OUT / "benchmarks/20260929/run_info.json")["parity"],
+        "sensitivity": pd.read_csv(OUT / "degradation/tables/anomaly_sensitivity.csv").query("signal == 'ewma'").to_dict("records"),
         "alignment": alignment(),
         "pipeline": pipeline(),
         "improvement": improvement(),

@@ -394,7 +394,10 @@ Sau khi lịch đã được ghi ra file, nhãn test mới được dùng để 
 $\leq30$), 21 động cơ được báo đúng ở mức cần bảo trì, và không động cơ nào được
 báo cần bảo trì khi RUL thật còn trên 30. Bốn động cơ còn lại (18, 37, 40, 90) có
 RUL dự đoán 31--38 nên được xếp đến hạn sau 1--8 cycle; chúng vẫn nằm ở mức theo
-dõi tăng cường nên không bị bỏ sót hoàn toàn. Cả 20 động cơ bình thường đều có RUL
+dõi tăng cường nên không bị bỏ sót hoàn toàn. Nếu bật đèn đỏ ở ngưỡng 40, ngưỡng được
+đề xuất từ phân tích độ nhạy trên train (Mục~\ref{sec:res-warning}), thì trên test hệ
+thống bắt đủ 25/25 động cơ cần bảo trì, đổi lại 3 động cơ bị báo sớm (RUL thật 34, 38
+và 69 cycle). Lịch chính giữ ngưỡng 30 vì ngưỡng này được chốt trước khi đọc nhãn test. Cả 20 động cơ bình thường đều có RUL
 thật trên 60. Sai số tuyệt đối trung bình của số cycle còn lại đến lúc bảo trì là
 14,21 cycle.
 
@@ -437,8 +440,8 @@ và tạo 126 đặc trưng window 30 cycle (Bảng~\ref{tab:scaling},
 Hình~\ref{fig:scaling}). Ở 100×, Pandas mất 1.075 giây, Spark 196 giây, nhanh hơn
 khoảng 5,5 lần. Ở 200×, Pandas không xong trong giới hạn 30 phút, còn Spark hoàn tất
 trong 392 giây. RAM đỉnh của Pandas tăng gần tuyến tính, 12,9 GiB ở 100×; ước tính
-200× cần khoảng 26 GiB, vượt 23,4 GiB của máy. Đây là suy luận từ xu hướng, chưa đo
-trực tiếp.
+200× cần khoảng 24--26 GiB, sát hoặc vượt 23,4 GiB của máy. Đây là suy luận từ xu
+hướng, chưa đo trực tiếp.
 
 \begin{table}[H]\centering\small
 \caption[Benchmark quy mô]{Thời gian tính toán (giây, không gồm ghi file) và RAM đỉnh
@@ -461,10 +464,13 @@ bản (trục log). Dấu x là lượt Pandas dừng vì quá 30 phút.}
 \end{figure}
 
 Phép đo không gồm bước ghi file vì trên Windows thiếu \texttt{winutils}, Spark phải
-gom bảng đặc trưng về driver để ghi bằng PyArrow; bước gom này hết bộ nhớ từ 100×. Đây
-là giới hạn của môi trường, không phải của phần tính toán. Kết quả chạy trên một máy
-nên chỉ chứng minh lợi ích của xử lý song song theo partition, chưa phải lợi ích khi
-thêm máy; nguồn: \filepath{outputs/benchmarks/20261021/}.
+gom bảng đặc trưng về driver để ghi bằng PyArrow; bước ghi đầy đủ thất bại từ 50× (vượt
+trần kết quả của driver) và hết heap ở 100×--200×. Đây là giới hạn của môi trường, không
+phải của phần tính toán. Ba điểm cần đọc đúng: Pandas chạy một luồng còn Spark bốn luồng,
+nên một phần chênh lệch đến từ song song hóa; giới hạn 30 phút do bài tự đặt, ngoại suy
+tuyến tính cho Pandas 200× khoảng 35 phút; và với 100 động cơ FD001, bỏ Spark thì lịch
+bảo trì không đổi. Spark cần khi đội động cơ lớn hơn hàng chục lần, và kết quả trên một
+máy chưa chứng minh lợi ích khi thêm máy; nguồn: \filepath{outputs/benchmarks/20261021/}.
 
 \subsection{Thử nghiệm mở rộng}
 \label{sec:res-extended}

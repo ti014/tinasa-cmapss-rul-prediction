@@ -33,7 +33,8 @@ này sau mỗi commit.
 | Ngày cập nhật tài liệu | E4 | Claude | Làm cuối cùng | |
 | Macro `\num` trong speech | E6 | — | Bỏ qua: chỉ ảnh hưởng cách in đậm, sửa 100+ chỗ không đổi nội dung | |
 | Vẽ lại 6 PNG degradation, maintenance, diagnostics mà report nhúng; nhãn 'cycle' trong script hình và dashboard; thay nốt chữ 'engine' trong report; ngày report 21/10 | E1, B1, B2, E4 | Claude | Xong (bảng số trong outputs/ không đổi) | `db5c1d1` |
-| Vẽ lại 3 hình modeling và 1 hình EDA | E1 | Claude | Chờ: hình modeling cần chạy lại huấn luyện; hình EDA chờ Codex xong `eda.py` | |
+| Vẽ lại 3 hình modeling (chạy lại huấn luyện: dự đoán, fold và metric trùng tuyệt đối với bản cũ) | E1 | Claude | Xong | xem commit cùng dòng này |
+| Vẽ lại hình EDA `sensor_rul_by_engine.png` | E1 | Claude | Chưa làm | |
 
 ## Kết luận
 

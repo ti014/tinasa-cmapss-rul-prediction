@@ -70,14 +70,14 @@ Sản phẩm đặc thù theo đề tài là **báo cáo dự đoán thời đi�
 
 Báo cáo dùng bốn subset mô phỏng NASA C-MAPSS. FD001 là subset chính cho phân tích chi tiết; FD002–FD004 phục vụ đánh giá bổ sung.
 
-| Subset | Dòng train | Dòng test | Engine train | Engine test và nhãn |
+| Subset | Dòng train | Dòng test | Động cơ train | Động cơ test và nhãn |
 | --- | ---: | ---: | ---: | ---: |
 | FD001 | 20.631 | 13.096 | 100 | 100 |
 | FD002 | 53.759 | 33.991 | 260 | 259 |
 | FD003 | 24.720 | 16.596 | 100 | 100 |
 | FD004 | 61.249 | 41.214 | 249 | 248 |
 
-Mỗi subset có các file `train_FD00x.txt`, `test_FD00x.txt` và `RUL_FD00x.txt`. Lịch sử train kết thúc khi hỏng; lịch sử test bị cắt, kèm một nhãn RUL riêng tại cycle quan sát cuối của mỗi engine. Quy mô được đối chiếu với [artifact ETL theo subset](outputs/cross_dataset/README.md).
+Mỗi subset có các file `train_FD00x.txt`, `test_FD00x.txt` và `RUL_FD00x.txt`. Lịch sử train kết thúc khi hỏng; lịch sử test bị cắt, kèm một nhãn RUL riêng tại cycle quan sát cuối của mỗi động cơ. Quy mô được đối chiếu với [artifact ETL theo subset](outputs/cross_dataset/README.md).
 
 Mỗi quan sát gồm:
 
@@ -148,7 +148,7 @@ rộng qua ETL Bronze/Silver/Gold, Parquet, PySpark parity và benchmark 1x/10x/
 
 Pandas đã được dùng trong notebook EDA, làm reference cho ETL, thống kê và
 chuẩn bị dữ liệu mô hình. PySpark tái hiện ETL và rolling features để đối chiếu.
-Benchmark bổ sung 1x/10x đo cả hai engine, gồm I/O và RSS của process tree;
+Benchmark bổ sung 1x/10x đo cả Pandas và Spark, gồm I/O và RSS của process tree;
 Spark ghi qua Arrow trên driver. Bộ dữ liệu gốc chỉ có dung
 lượng vài MB, vì vậy repository không tuyên bố FD001 tự thân chứng minh khả
 năng xử lý dữ liệu quy mô lớn.
@@ -189,7 +189,7 @@ thang gốc; rolling feature pipeline không fit một scaler chung.
 - Bảo đảm khóa `(split, engine_id, cycle)` không trùng.
 - Kiểm tra cycle liên tục trong từng động cơ.
 - Ghi lại số dòng trước và sau mỗi phép biến đổi.
-- Giữ phạm vi engine ID riêng biệt giữa train và test.
+- Giữ phạm vi ID động cơ riêng biệt giữa train và test.
 
 ### Phân tích thống kê
 
@@ -267,8 +267,8 @@ Xem [artifact ma trận transfer](outputs/cross_dataset/README.md).
 ### Phân tích ARIMA
 
 ARIMA là phân tích chuỗi thời gian phụ, không phải mô hình RUL chính. Pipeline
-đã triển khai chọn 10 engine validation trước khi dự báo, huấn luyện StandardScaler và
-PCA trên 90 engine train còn lại rồi transform các engine được chọn, sau đó dùng 70% đầu chuỗi để fit và
+đã triển khai chọn 10 động cơ validation trước khi dự báo, huấn luyện StandardScaler và
+PCA trên 90 động cơ train còn lại rồi transform các động cơ được chọn, sau đó dùng 70% đầu chuỗi để fit và
 30% cuối để đánh giá. Phép biến đổi và cách chia dữ liệu này tách biệt với Health
 Index dùng cho bất thường/lịch bảo trì:
 
@@ -277,10 +277,10 @@ Index dùng cho bất thường/lịch bảo trì:
 - Chẩn đoán tính dừng Augmented Dickey-Fuller.
 - Chẩn đoán tự tương quan phần dư Ljung-Box.
 
-Lần chạy hiện tại fit hội tụ cả 10 engine; MAE nằm trong khoảng 0,1515--1,0372
+Lần chạy hiện tại fit hội tụ cả 10 động cơ; MAE nằm trong khoảng 0,1515--1,0372
 và tỷ lệ bao phủ khoảng dự đoán 95% nằm trong khoảng 21,43%--97,03%. ADF không bác
 bỏ tính không dừng trên các đoạn huấn luyện. Sau khi điều chỉnh Ljung--Box theo
-`p+q`, engine 69 và 70 có p-value dưới 0,05. ARIMA không được áp dụng trực tiếp lên
+`p+q`, động cơ 69 và 70 có p-value dưới 0,05. ARIMA không được áp dụng trực tiếp lên
 nhãn RUL train; dự báo Health Index không phải RUL.
 Trên cùng đoạn dữ liệu giữ lại để kiểm tra, MAE trung bình của ARIMA là 0,4110, của `drift` là 0,7469 và
 của `last_value` là 0,9478; đây là so sánh mô tả, chưa phải bằng chứng ưu thế
@@ -302,7 +302,7 @@ Thành phần Big Data tập trung vào vòng đời dữ liệu và khả năng
 - Kiểm tra tương đương về số dòng, khóa và giá trị tổng hợp giữa hai công cụ xử lý.
 - Thử nghiệm khả năng mở rộng ở các mức dữ liệu 1×, 10× và 100×.
 
-Dữ liệu nhân bản cho thử nghiệm khả năng mở rộng sử dụng engine ID mới và được tách hoàn toàn khỏi phân tích khoa học cũng như quá trình huấn luyện mô hình.
+Dữ liệu nhân bản cho thử nghiệm khả năng mở rộng sử dụng ID động cơ mới và được tách hoàn toàn khỏi phân tích khoa học cũng như quá trình huấn luyện mô hình.
 
 Các dịch vụ Hadoop chạy trong Docker trên một máy. Artifact HDFS chứng minh bước
 lưu trữ, chạy job và đối chiếu chính xác bảng tổng hợp động cơ, không chứng minh
@@ -437,7 +437,7 @@ validation.py    Kiểm tra schema, khóa và cycle
 targets.py       Tạo và kiểm tra train RUL
 statistics/
   config.py       Cấu hình suy luận đã chốt
-  pairs.py        Tạo và kiểm tra cặp engine/sensor
+  pairs.py        Tạo và kiểm tra cặp động cơ/sensor
   inference.py    Bootstrap, Wilcoxon, FDR và tóm tắt theo sensor
   validation.py   Kiểm tra bảng suy luận sensor
   artifact_io.py  CSV/JSON, hash và reader round-trip
@@ -449,7 +449,7 @@ statistics_artifacts.py
                   Compatibility import cho bộ ghi artifact
 ```
 
-Ví dụ: engine train kết thúc tại cycle 200 thì `rul = 200 - cycle`.
+Ví dụ: động cơ train kết thúc tại cycle 200 thì `rul = 200 - cycle`.
 Hàm tạo nhãn từ chối quan sát test. Xem [data contract](data/CONTRACTS.md)
 để biết các điều kiện và giới hạn kiểm tra.
 
@@ -521,7 +521,7 @@ Ví dụ: trung vị tuổi thọ của 100 động cơ train là 199 cycle. Sá
 trên toàn train; `sensor_6` biến thiên trên toàn tập nhưng hằng trong 38 động cơ.
 Hai hình suy luận dùng panel riêng cho từng sensor vì các sensor khác thang đo.
 `sensor_6` cho thấy p-value nhỏ không đồng nghĩa với thay đổi lớn theo đơn vị
-đo; `sensor_9` cho thấy cần đọc phân phối theo engine cùng mean và CI. Đây là
+đo; `sensor_9` cho thấy cần đọc phân phối theo động cơ cùng mean và CI. Đây là
 kết quả train-only, chưa phải lựa chọn đặc trưng cho mô hình. Kiểm tra chạy lặp
 notebook hai lần từ fresh kernel cho hai CSV và hai PNG giống nhau; runtime
 audit đã chặn thử nghiệm mở `test_FD001.txt` và `RUL_FD001.txt`.
@@ -636,7 +636,7 @@ cuối:
 ```
 
 Lần chạy hiện tại chọn `hist_gradient_boosting`, đạt mean engine-level MAE
-15,3490, RMSE 20,5413 và NASA score 1.513,2577 trên 100 test engines.
+15,3490, RMSE 20,5413 và NASA score 1.513,2577 trên 100 động cơ test.
 Xem [artifact và validation modeling](outputs/modeling/README.md) để biết fold
 metrics, final predictions, final evaluation, hình và giới hạn.
 
@@ -667,8 +667,8 @@ Sau khi ETL và modeling đã ghi artifact, chạy phân tích Health Index ph�
 ```
 
 Artifact hiện có 20.631 dòng Health Index train và 704 điểm dự báo trên đoạn giữ lại để kiểm tra của
-10 engine. Xem [artifact và validation PCA--ARIMA](outputs/timeseries/README.md)
-để biết quy tắc chọn engine, metric, hình và giới hạn.
+10 động cơ. Xem [artifact và validation PCA--ARIMA](outputs/timeseries/README.md)
+để biết quy tắc chọn động cơ, metric, hình và giới hạn.
 
 ### Chạy khử nhiễu và phát hiện bất thường
 
@@ -734,7 +734,7 @@ query string, ví dụ `http://localhost:8501/?page=Lịch bảo trì`.
 | Dữ liệu & EDA | `outputs/eda`, `outputs/features` | Phân phối tuổi thọ, Spearman sensor–RUL, quỹ đạo sensor |
 | Khử nhiễu | `outputs/degradation` | Tín hiệu gốc và sau EWMA theo động cơ/sensor, mức giảm dao động |
 | Xu hướng & bất thường | `outputs/degradation`, `outputs/statistics` | Health Index, ngưỡng 3σ, lúc phát hiện, phân phối thời gian báo trước |
-| Dự đoán RUL | `outputs/modeling` | So sánh model trong CV, một test engine, quỹ đạo OOF |
+| Dự đoán RUL | `outputs/modeling` | So sánh model trong CV, một động cơ test, quỹ đạo OOF |
 | Cảnh báo sớm | `outputs/modeling/tables` | Ngưỡng 30 cycle, phân loại thời điểm, quỹ đạo cảnh báo |
 | Lịch bảo trì | `outputs/maintenance` | Bảng 100 động cơ, kế hoạch, chi tiết từng động cơ, kiểm tra bằng nhãn test |
 | Thử nghiệm mở rộng | `outputs/cross_dataset`, `outputs/experiments`, `outputs/timeseries` | Ba tab: chuyển miền, cải thiện, ARIMA |

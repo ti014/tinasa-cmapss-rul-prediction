@@ -3,8 +3,8 @@
 **Học viên:** Phan Nguyễn Mai Phương · **MSHV:** 25002711 · **Đồng bộ:** 12/10/2026.
 
 Pipeline hiện có đọc từng subset, nối các dòng train/test có cùng schema, lưu
-observations trong Parquet, tạo nhãn train và tổng hợp theo engine. Từ lịch sử
-của từng engine, pipeline tạo 126 đặc trưng trên window 30 cycle để dự đoán RUL.
+observations trong Parquet, tạo nhãn train và tổng hợp theo động cơ. Từ lịch sử
+của từng động cơ, pipeline tạo 126 đặc trưng trên window 30 cycle để dự đoán RUL.
 Tài liệu này giải thích hành vi đã triển khai, đối chiếu với code và các artifact
 đã lưu đến 09/10/2026 (gồm EWMA, lịch bảo trì và Hadoop/HDFS một node).
 Lượt đồng bộ ngày 12/10/2026 không chạy lại training hay thay số liệu
@@ -41,7 +41,7 @@ yêu cầu; transcript nhận dạng tiếng nói có lỗi chỉ bổ sung bố
 
 | Yêu cầu | Đã thực hiện | Giới hạn cần nói rõ |
 |---|---|---|
-| Chuỗi cảm biến, nhiều tín hiệu | 21 sensor theo engine/cycle, EDA và thống kê train | Dữ liệu mô phỏng batch, chưa có streaming hoặc thiết bị thật |
+| Chuỗi cảm biến, nhiều tín hiệu | 21 sensor theo động cơ/cycle, EDA và thống kê train | Dữ liệu mô phỏng batch, chưa có streaming hoặc thiết bị thật |
 | Chuẩn hóa và time window | Schema/type ở ETL; scaler riêng cho Ridge và Health Index; 30-cycle rolling features | HGB dùng feature theo thang gốc; không có một bước scaling chung trước mọi model |
 | Xử lý nhiễu | EWMA span 10 theo từng động cơ, chỉ dùng quá khứ; giảm trung vị 86,3% dao động ngắn hạn | Không có tín hiệu sạch để chứng minh đã loại đúng nhiễu đo |
 | Xu hướng và bất thường | Quỹ đạo sensor, so sánh đầu/cuối, Health Index; bất thường khi giảm quá 3σ so với 30 cycle đầu | Chưa đo được tỷ lệ báo động giả vì không có nhãn điểm bắt đầu suy giảm |
@@ -54,7 +54,7 @@ yêu cầu; transcript nhận dạng tiếng nói có lỗi chỉ bổ sung bố
 data/raw/                         Dữ liệu NASA bất biến
 ├── train_FD001.txt               26 trường trên mỗi dòng, không header
 ├── test_FD001.txt                Cùng schema observations
-├── RUL_FD001.txt                 Một nhãn endpoint cho mỗi test engine
+├── RUL_FD001.txt                 Một nhãn endpoint cho mỗi động cơ test
 └── ...                          Ba file tương tự cho FD002–FD004
 outputs/etl/                     Kết quả chính FD001
 ├── silver/observations.parquet   33.727 dòng, 27 cột sau khi thêm split
@@ -79,11 +79,11 @@ Trong **một subset**, Pandas concat hai bảng theo chiều dòng. PySpark th�
 `unionByName`. Cả hai giữ `split` để phân biệt động cơ train 1 với động cơ test 1.
 Đây là union các observations, không phải join lịch sử train/test với nhau.
 File RUL test được giữ riêng đến đánh giá cuối; dòng thứ i của file thuộc
-test engine i theo quy ước bộ dữ liệu.
+động cơ test i theo quy ước bộ dữ liệu.
 
 FD001–FD004 hiện lưu và xử lý **riêng**, không union thành một bảng toàn cục.
 Khóa `(split, engine_id, cycle)` chỉ duy nhất trong một subset. Nếu xây bảng
-chung trong tương lai, cần giữ `dataset_id` trong khóa để tránh trùng engine
+chung trong tương lai, cần giữ `dataset_id` trong khóa để tránh trùng động cơ
 giữa các subset. Schema hiện tại chưa có cột đó.
 
 Nguồn: [reader](../src/cmapss/data/readers.py),
@@ -127,11 +127,11 @@ giao diện truy vấn raw sensor hoặc chạy lại ETL.
 |---|---|---|
 | Reader | Text → typed observations | Tách trường, gán schema/type, thêm split; lỗi width/type/key/cycle bị từ chối |
 | Silver | Hai bảng train/test → observations Parquet | Concat/union, sắp theo khóa; giữ 33.727 dòng FD001 |
-| Train target | Train observations → train_targets | Group theo engine lấy cycle cuối, RUL = max_cycle − cycle |
-| Engine summary | Observations → 200 engine rows | Group theo split/engine, count/min/max cycle |
+| Train target | Train observations → train_targets | Group theo động cơ lấy cycle cuối, RUL = max_cycle − cycle |
+| Engine summary | Observations → 200 dòng, mỗi dòng một động cơ | Group theo split/engine, count/min/max cycle |
 | Features | Observations → rolling feature rows | Sort, group theo split/engine, window 30, tính 6 thống kê/sensor |
 | Model input | Train features + targets → X/y | Join one-to-one bằng 3 cột khóa, X gồm 126 features, y là rul |
-| Final evaluation | Predictions đã ghi + test labels → errors/metrics | Join one-to-one theo split/engine, một prediction mỗi engine |
+| Final evaluation | Predictions đã ghi + test labels → errors/metrics | Join one-to-one theo split/engine, một prediction mỗi động cơ |
 
 Transform (biến đổi dữ liệu) ở đây gồm đổi kiểu, gom dòng, tổng hợp, tạo nhãn
 và tạo đặc trưng. Nó không phải kiến trúc mô hình Transformer. Việc tạo RUL
@@ -149,7 +149,7 @@ contract.
 Chuẩn hóa schema/type ở ETL khác scaling giá trị: Ridge fit StandardScaler
 trên training fold; Health Index dùng cho bất thường và lịch bảo trì fit
 StandardScaler/PCA trên toàn bộ train đã khử nhiễu (không dùng nhãn), còn Health
-Index của phân tích ARIMA fit trên 90 train engines không thuộc 10 engine đánh giá. HGB được chọn dùng features theo thang gốc.
+Index của phân tích ARIMA fit trên 90 động cơ train không thuộc 10 động cơ đánh giá. HGB được chọn dùng features theo thang gốc.
 Không có scaler chung nằm trước bước rolling features trong pipeline RUL.
 
 ## 4. Columns, features và feature selection
@@ -174,8 +174,8 @@ Cycle 101 không tham gia feature tại cycle 100. Join features/targets giữ
 
 Một động cơ dài T cycle có T−29 feature rows với window 30.
 Tổng FD001: 20.631−100×29 = 17.731 train rows;
-13.096−100×29 = 10.196 test rows. Engine quá ngắn khiến pipeline báo lỗi,
-không tự loại engine, padding hoặc rút ngắn window.
+13.096−100×29 = 10.196 test rows. Động cơ quá ngắn khiến pipeline báo lỗi,
+không tự loại động cơ, padding hoặc rút ngắn window.
 
 ## 5. Quan hệ dữ liệu và join
 
@@ -197,8 +197,8 @@ many-to-many join đã triển khai. 126 feature columns cũng không tạo quan
 1:N giữa các bản ghi. Không cần thêm bảng liên kết nhiều-nhiều nếu bài toán
 không có thực thể yêu cầu quan hệ đó.
 
-Ví dụ join sai: engine 1 có 163 train feature rows và 192 target rows.
-Join chỉ bằng engine ID sẽ ghép mọi feature cycle với mọi target cycle,
+Ví dụ join sai: động cơ 1 có 163 train feature rows và 192 target rows.
+Join chỉ bằng ID động cơ sẽ ghép mọi feature cycle với mọi target cycle,
 tạo 163×192 = 31.296 dòng. Join đầy đủ ba khóa trả đúng 163 dòng.
 Index trong SQLite hỗ trợ truy vấn; unique key validation nằm ở code,
 không có foreign key constraint được khai báo trong SQLite hiện tại.
@@ -219,7 +219,7 @@ Parquet, ba boundary PySpark tương đương Pandas và phép đo tổng hợp 
 
 PySpark benchmark chạy `local[4]` với bốn partition và heap driver/executor 4 GiB.
 Cùng input Parquet được đo ở scale 1× (33.727 observations) và 10× (337.270
-observations), ba lượt cho mỗi engine. Stage gồm đọc, engine summary, rolling
+observations), ba lượt cho mỗi động cơ. Stage gồm đọc, engine summary, rolling
 features và ghi; startup Spark được báo riêng, còn peak RSS lấy theo cả process
 tree. Lượt ghi Spark qua `toArrow` rồi PyArrow trên driver trong môi trường
 Windows, nên `write_seconds` và `pipeline_seconds` không phải phép đo của
@@ -266,7 +266,7 @@ phân tán.
 
 “Trong một subset, chương trình đọc hai file observations cùng schema rồi
 union theo dòng và giữ split. Dữ liệu sensor nằm trong Parquet, bảng tổng hợp
-và nhãn train nằm trong SQLite. Chương trình group theo engine, lấy 30 cycle
+và nhãn train nằm trong SQLite. Chương trình group theo động cơ, lấy 30 cycle
 gần nhất, tạo 126 features rồi join đúng cycle với RUL train. Động cơ train 1
 ở cycle 100 dùng cycle 71–100 và có target 92. Quan hệ chính là một động cơ
 có nhiều observations; join features/targets là một–một. PySpark chạy

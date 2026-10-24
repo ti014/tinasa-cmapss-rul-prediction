@@ -59,7 +59,7 @@ matplotlib-inline==0.2.2
 mistune==3.3.4
 narwhals==2.26.0
 nbclient==0.10.2
-nbconvert==7.17.1
+nbconvert==7.17.2
 nbformat==5.10.4
 nest-asyncio==1.6.0
 notebook-shim==0.2.4
